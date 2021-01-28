@@ -16,6 +16,8 @@ struct WorkoutImport {
     var totalTimerTime: ImportValue
     
     var startPosition: ImportValue
+    var totalAscent: ImportValue
+    var totalDescent: ImportValue
     
     var totalDistance: ImportValue
     var avgSpeed: ImportValue
@@ -42,6 +44,8 @@ struct WorkoutImport {
         totalTimerTime = ImportValue(valueType: .time, field: session.interpretedField(key: "total_timer_time"))
                 
         startPosition = ImportValue(valueType: .location, field: session.interpretedField(key: "start_position"))
+        totalAscent = ImportValue(valueType: .altitude, field: session.interpretedField(key: "total_ascent"))
+        totalDescent = ImportValue(valueType: .altitude, field: session.interpretedField(key: "total_descent"))
         
         totalDistance = ImportValue(valueType: .distance, field: session.interpretedField(key: "total_distance"))
         avgSpeed = ImportValue(valueType: .speed, field: session.interpretedField(key: "avg_speed"))
@@ -85,6 +89,25 @@ extension WorkoutImport {
         }
         
         return intervals
+    }
+    
+    var locations: [CLLocation] {
+        records.compactMap { record in
+            guard let coordinate = record.position.coordinateValue else { return nil }
+            guard let timestamp = record.timestamp.dateValue else { return nil }
+            let altitude = record.altitude.altitudeValue ?? 0.0
+            let speed = record.speed.speedValue ?? 0.0
+            
+            return CLLocation(
+                coordinate: coordinate,
+                altitude: altitude,
+                horizontalAccuracy: 0,
+                verticalAccuracy: 0,
+                course: -1,
+                speed: speed,
+                timestamp: timestamp
+            )
+        }
     }
     
 }

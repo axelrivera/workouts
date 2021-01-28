@@ -10,19 +10,19 @@ import HealthKit
 extension HKQuantityType {
     
     static func distanceCycling() -> HKQuantityType {
-        HKQuantityType.quantityType(forIdentifier: .distanceCycling)!
+        HKSampleType.quantityType(forIdentifier: .distanceCycling)!
     }
     
     static func distanceWalkingRunning() -> HKQuantityType {
-        HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)!
+        HKSampleType.quantityType(forIdentifier: .distanceWalkingRunning)!
     }
     
     static func activeEnergyBurned() -> HKQuantityType {
-        HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+        HKSampleType.quantityType(forIdentifier: .activeEnergyBurned)!
     }
     
     static func heartRate() -> HKQuantityType {
-        HKQuantityType.quantityType(forIdentifier: .heartRate)!
+        HKSampleType.quantityType(forIdentifier: .heartRate)!
     }
     
 }

@@ -59,12 +59,6 @@ struct WorkoutsView: View {
                             Label("Import Workout", systemImage: "square.and.arrow.down")
                         })
                         
-                        #if DEBUG
-                        Button(action: { workoutManager.processSampleWorkout() }, label: {
-                            Label("Import Sample Workout", systemImage: "bicycle.circle")
-                        })
-                        #endif
-                        
                         Divider()
                         
                         Button(action: { activeSheet = .settings }) {
@@ -92,14 +86,8 @@ struct WorkoutsView: View {
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
-    static var workoutManager: WorkoutManager = {
-       let manager = WorkoutManager()
-        manager.generateSampleData()
-        return manager
-    }()
-    
     static var previews: some View {
         WorkoutsView()
-            .environmentObject(workoutManager)
+            .environmentObject(WorkoutManager())
     }
 }

@@ -27,7 +27,7 @@
 		1645B92C25B350BB00B04478 /* WorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91E25B350BB00B04478 /* WorkoutsView.swift */; };
 		1645B93A25B353DD00B04478 /* WorkoutDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93825B353DD00B04478 /* WorkoutDataStore.swift */; };
 		1645B93B25B353DD00B04478 /* DetailsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93925B353DD00B04478 /* DetailsManager.swift */; };
-		1645B93F25B3546B00B04478 /* HKQuantityType+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93E25B3546B00B04478 /* HKQuantityType+Additions.swift */; };
+		1645B93F25B3546B00B04478 /* HealthKit+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93E25B3546B00B04478 /* HealthKit+Additions.swift */; };
 		1645B94325B35F6E00B04478 /* TextRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94225B35F6E00B04478 /* TextRow.swift */; };
 		1645B94625B3612700B04478 /* RowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94525B3612700B04478 /* RowItem.swift */; };
 		1645B94925B3669E00B04478 /* TimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94825B3669E00B04478 /* TimePicker.swift */; };
@@ -77,7 +77,7 @@
 		1645B91E25B350BB00B04478 /* WorkoutsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WorkoutsView.swift; sourceTree = "<group>"; };
 		1645B93825B353DD00B04478 /* WorkoutDataStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WorkoutDataStore.swift; sourceTree = "<group>"; };
 		1645B93925B353DD00B04478 /* DetailsManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetailsManager.swift; sourceTree = "<group>"; };
-		1645B93E25B3546B00B04478 /* HKQuantityType+Additions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HKQuantityType+Additions.swift"; sourceTree = "<group>"; };
+		1645B93E25B3546B00B04478 /* HealthKit+Additions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "HealthKit+Additions.swift"; sourceTree = "<group>"; };
 		1645B94225B35F6E00B04478 /* TextRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRow.swift; sourceTree = "<group>"; };
 		1645B94525B3612700B04478 /* RowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowItem.swift; sourceTree = "<group>"; };
 		1645B94825B3669E00B04478 /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
@@ -181,7 +181,7 @@
 		1645B93125B3514000B04478 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				1645B93E25B3546B00B04478 /* HKQuantityType+Additions.swift */,
+				1645B93E25B3546B00B04478 /* HealthKit+Additions.swift */,
 				1645B91625B350BA00B04478 /* TimeHelper.swift */,
 				1645B91825B350BB00B04478 /* Color+Additions.swift */,
 				1645B91425B350BA00B04478 /* UTType+Additions.swift */,
@@ -380,7 +380,7 @@
 				16A3A5EA25B8F477003D1AB2 /* Log.swift in Sources */,
 				1645B94325B35F6E00B04478 /* TextRow.swift in Sources */,
 				1645B92225B350BB00B04478 /* UTType+Additions.swift in Sources */,
-				1645B93F25B3546B00B04478 /* HKQuantityType+Additions.swift in Sources */,
+				1645B93F25B3546B00B04478 /* HealthKit+Additions.swift in Sources */,
 				1645B92B25B350BB00B04478 /* WorkoutSummary.swift in Sources */,
 				1645B92A25B350BB00B04478 /* DetailView.swift in Sources */,
 				1645B92425B350BB00B04478 /* TimeHelper.swift in Sources */,

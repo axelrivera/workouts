@@ -45,6 +45,9 @@ class GarminFitTests: XCTestCase {
         XCTAssertEqual(cycling.avgTemperature.temperatureValue, Cycling.avgTemp)
         XCTAssertEqual(cycling.maxTemperature.temperatureValue, Cycling.maxTemp)
         
+        let locations = cycling.locations
+        XCTAssertFalse(locations.isEmpty)
+        
         // Intervals
         let intervals = cycling.intervals
         

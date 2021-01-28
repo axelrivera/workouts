@@ -111,20 +111,3 @@ extension WorkoutManager {
     }
     
 }
-
-// MARK: - Sample Data
-
-extension WorkoutManager {
-    
-    func processSampleWorkout() {
-        importWorkout(at: Self.sampleWorkoutFile)
-    }
-    
-    static var sampleWorkoutFile: URL {
-        guard let url = Bundle.main.url(forResource: "cycling_example.fit", withExtension: nil) else {
-            fatalError("invalid url for sample workout")
-        }
-        return url
-    }
-    
-}

@@ -111,110 +111,153 @@ extension WorkoutDataStore {
     
     static func saveWorkoutImport(_ workoutImport: WorkoutImport, completionHandler: @escaping (Result<Bool, DataError>) -> Void) {
         Log.debug("start: \(workoutImport.startDate?.debugDescription ?? "n/a"), end: \(workoutImport.endDate?.debugDescription ?? "n/a")")
-        
         guard let start = workoutImport.startDate, let end = workoutImport.endDate else {
             fatalError("missing dates")
         }
         
-        let energyBurned = HKQuantity(unit: .kilocalorie(), doubleValue: workoutImport.totalEnergyBurned.caloriesValue ?? 0.0)
-        let distance = HKQuantity(unit: .meter(), doubleValue: workoutImport.totalDistance.distanceValue ?? 0.0)
-        let duration = workoutImport.totalElapsedTime.timeValue ?? 0.0
+        // TODO: Add Support for Activity Type
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = .cycling
+        configuration.locationType = .outdoor
+        configuration.lapLength = HKQuantity(unit: .mile(), doubleValue: 1.0)
         
-        // Metadata
-        // HKMetadataKeyWeatherTemperature
-        // HKMetadataKeyAverageSpeed
-        // HKMetadataKeyMaximumSpeed
+        let builder = HKWorkoutBuilder(healthStore: healthStore, configuration: configuration, device: .local())
+        let routeBuilder = HKWorkoutRouteBuilder(healthStore: healthStore, device: .local())
         
-        Log.debug("trying to save workout import: \(workoutImport.records.count)")
-        
-        var metadata: [String: Any]? = [String: Any]()
-        if let avgTemperature = workoutImport.avgTemperature.temperatureValue {
-            metadata?[HKMetadataKeyWeatherTemperature] = HKQuantity(unit: .degreeCelsius(), doubleValue: avgTemperature)
-        }
-        
-        if let avgSpeed = workoutImport.avgSpeed.speedValue {
-            let unit = HKUnit.meter().unitDivided(by: .second())
-            metadata?[HKMetadataKeyAverageSpeed] = HKQuantity(unit: unit, doubleValue: avgSpeed)
-        }
-        
-        if let maxSpeed = workoutImport.maxSpeed.speedValue {
-            let unit = HKUnit.meter().unitDivided(by: .second())
-            metadata?[HKMetadataKeyMaximumSpeed] = HKQuantity(unit: unit, doubleValue: maxSpeed)
-        }
-        
-        if let newMetadata = metadata, newMetadata.isEmpty {
-            metadata = nil
-        }
-        
-        let workout = HKWorkout(
-            activityType: .cycling,
-            start: start,
-            end: end,
-            duration: duration,
-            totalEnergyBurned: energyBurned,
-            totalDistance: distance,
-            metadata: metadata
-        )
-        
-        healthStore.save(workout) { (success, error) in
+        builder.beginCollection(withStart: start) { (success, error) in
             guard success else {
-                Log.debug("save unsuccessful: \(error?.localizedDescription ?? "n/a")")
+                Log.debug("begin collection failed: \(error?.localizedDescription ?? "n/a")")
                 completionHandler(.failure(dataError(.failure, system: error)))
                 return
             }
-            
-            let samples = samplesForWorkout(workout, workoutImport: workoutImport)
-            healthStore.add(samples, to: workout) { (success, error) in
+        }
+        
+        let samples = self.samples(for: workoutImport.intervals)
+        builder.add(samples) { (success, error) in
+            guard success else {
+                Log.debug("samples failed: \(error?.localizedDescription ?? "n/a")")
+                completionHandler(.failure(dataError(.failure, system: error)))
+                return
+            }
+                        
+            builder.endCollection(withEnd: end) { (success, error) in
                 guard success else {
-                    Log.debug("adding samples failed: \(error?.localizedDescription ?? "n/a")")
+                    Log.debug("end collection failed: \(error?.localizedDescription ?? "n/a")")
                     completionHandler(.failure(dataError(.failure, system: error)))
                     return
                 }
                 
-                completionHandler(.success(true))
+                builder.addMetadata(metadata(for: workoutImport)) { (success, error) in
+                    if let error = error {
+                        Log.debug("failed to save metadata: \(error.localizedDescription)")
+                    }
+                }
+                
+                let locations = workoutImport.locations
+                Log.debug("adding \(locations.count)")
+                
+                routeBuilder.insertRouteData(locations) { (success, error) in
+                    if let error = error {
+                        Log.debug("adding route data failed: \(error.localizedDescription)")
+                        completionHandler(.failure(dataError(.failure, system: error)))
+                        return
+                    }
+                    
+                    builder.finishWorkout { (workout, error) in
+                        guard let workout = workout else {
+                            Log.debug("finish workout failed: \(error?.localizedDescription ?? "n/a"))")
+                            completionHandler(.failure(dataError(.failure, system: error)))
+                            return
+                        }
+                        
+                        routeBuilder.finishRoute(with: workout, metadata: nil) { (route, error) in
+                            if let error = error {
+                                Log.debug("finish route failed: \(error.localizedDescription)")
+                                completionHandler(.failure(DataError.system(error)))
+                                return
+                            }
+                            completionHandler(.success(true))
+                        }
+                    }
+                }
             }
         }
     }
     
-    static func samplesForWorkout(_ workout: HKWorkout, workoutImport: WorkoutImport) ->  [HKSample] {
+    static func samples(for intervals: [ImportInterval]) ->  [HKSample] {
         var samples = [HKSample]()
         
-        for interval in workoutImport.intervals {
-            guard let start = interval.startDate, let end = interval.endDate else { Log.info("missing date"); continue }
-            
+        for interval in intervals {
+            guard let start = interval.startDate, let end = interval.endDate else { continue }
+
+            // TODO: - Update distances depending on activity type
             if let distance = interval.distance {
-                let quantity = HKQuantitySample(
-                    type: HKQuantityType.distanceCycling(),
+                let sample = HKCumulativeQuantitySample(
+                    type: .distanceCycling(),
                     quantity: HKQuantity(unit: .meter(), doubleValue: distance),
-                    start: start,
-                    end: end
+                    start: start, end: end
                 )
-                samples.append(quantity)
+                samples.append(sample)
             }
             
             if let heartRate = interval.heartRate {
                 let unit = HKUnit.count().unitDivided(by: HKUnit.minute())
-                let quantity = HKQuantitySample(
-                    type: HKQuantityType.heartRate(),
+                let sample = HKQuantitySample(
+                    type: .heartRate(),
                     quantity: HKQuantity(unit: unit, doubleValue: heartRate),
                     start: start,
                     end: end
                 )
-                samples.append(quantity)
+                samples.append(sample)
             }
             
             if let energyBurned = interval.energyBurned {
-                let quantity = HKQuantitySample(
+                let sample = HKCumulativeQuantitySample(
                     type: .activeEnergyBurned(),
-                    quantity: HKQuantity(unit: .kilocalorie(), doubleValue: energyBurned),
+                    quantity: HKQuantity(unit: .kilocalorie(),
+                                         doubleValue: energyBurned),
                     start: start,
                     end: end
                 )
-                samples.append(quantity)
+                samples.append(sample)
             }
         }
         
         return samples
+    }
+    
+    static func metadata(for workoutImport: WorkoutImport) -> [String: Any] {
+        var dictionary = [String: Any]()
+        
+        if let avgTemperature = workoutImport.avgTemperature.temperatureValue {
+            dictionary[HKMetadataKeyWeatherTemperature] = HKQuantity(unit: .degreeCelsius(), doubleValue: avgTemperature)
+        }
+
+        if let avgSpeed = workoutImport.avgSpeed.speedValue {
+            let unit = HKUnit.meter().unitDivided(by: .second())
+            dictionary[HKMetadataKeyAverageSpeed] = HKQuantity(unit: unit, doubleValue: avgSpeed)
+        }
+
+        if let maxSpeed = workoutImport.maxSpeed.speedValue {
+            let unit = HKUnit.meter().unitDivided(by: .second())
+            dictionary[HKMetadataKeyMaximumSpeed] = HKQuantity(unit: unit, doubleValue: maxSpeed)
+        }
+        
+        if let totalAscent = workoutImport.totalAscent.altitudeValue {
+            dictionary[HKMetadataKeyElevationAscended] = HKQuantity(unit: .meter(), doubleValue: totalAscent)
+        }
+        
+        if let totalDescent = workoutImport.totalDescent.altitudeValue {
+            dictionary[HKMetadataKeyElevationDescended] = HKQuantity(unit: .meter(), doubleValue: totalDescent)
+        }
+        
+        // TODO: Pending Metadata
+        // Average METs
+        // Humidity
+        // Time Zone
+        // Elevation Ascended
+        
+        return dictionary
     }
     
 }
