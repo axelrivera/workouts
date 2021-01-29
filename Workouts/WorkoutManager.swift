@@ -9,69 +9,72 @@ import Foundation
 import HealthKit
 import Combine
 import FitFileParser
+import MapKit
 
 class WorkoutManager: ObservableObject {
     let healthStore = HKHealthStore()
     
     @Published var workouts = [Workout]()
-    @Published var summary = WorkoutSummary()
-        
-    func fetchWorkouts() {
-        let sampleType = HKSampleType.workoutType()
-        let predicate = HKQuery.predicateForWorkouts(with: .cycling)
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        
-        let query = HKSampleQuery(
-            sampleType: sampleType,
-            predicate: predicate,
-            limit: HKObjectQueryNoLimit,
-            sortDescriptors: [sortDescriptor]) { (query, samples, error) in
-            if let error = error {
-                Log.debug("workout query failed: \(error.localizedDescription)")
-                return
-            }
-            
-            let workouts = samples as? [HKWorkout] ?? [HKWorkout]()
-            self.updateUI(for: workouts)
-        }
-        
-        HKHealthStore().execute(query)
+    
+    var workoutQuery: HKAnchoredObjectQuery?
+    var lastWorkoutAnchor: HKQueryAnchor?
+    
+    init() {
+        fetchWorkouts()
     }
     
-    func updateUI(for objects: [HKWorkout]) {
-        var workouts = [Workout]()
+    func fetchWorkouts() {
+        // TODO: Add Permission Validation Here
         
-        let totalWorkouts = objects.count
-        var distance: Double = 0
-        var energyBurned: Double = 0
-        var elapsedTime: Double = 0
-        
-        objects.forEach { object in
-            let workout = Workout(object: object)
-            workouts.append(workout)
+        if let query = workoutQuery {
+            healthStore.stop(query)
+            lastWorkoutAnchor = nil
             
-            distance += workout.distance
-            energyBurned += workout.energyBurned
-            elapsedTime += workout.elapsedTime
+            DispatchQueue.main.async {
+                self.workouts = [Workout]()
+            }
         }
         
-        let summary = WorkoutSummary(
-            total: totalWorkouts,
-            distance: distance,
-            energyBurned: energyBurned,
-            elapsedTime: elapsedTime
-        )
+        let query = HKAnchoredObjectQuery(
+            type: .workoutType(),
+            predicate: nil,
+            anchor: lastWorkoutAnchor,
+            limit: HKObjectQueryNoLimit) { (query, samples, deleted, anchor, error) in
+            guard let samples = samples as? [HKWorkout], let deleted = deleted else { return }
+            
+            self.lastWorkoutAnchor = anchor
+            
+            let workouts = samples.map { Workout(object: $0) }
+            DispatchQueue.main.async {
+                self.workouts.append(contentsOf: workouts)
+                
+                for object in deleted {
+                    if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
+                        self.workouts.remove(at: index)
+                    }
+                }
+            }
+        }
         
-        DispatchQueue.main.async {
-            self.workouts = workouts
-            self.summary = summary
+        query.updateHandler = { (query, samples, deleted, anchor, error) in
+            guard let samples = samples as? [HKWorkout], let deleted = deleted else { return }
+            
+            self.lastWorkoutAnchor = anchor
+            
+            let workouts = samples.map { Workout(object: $0) }
+            DispatchQueue.main.async {
+                self.workouts.insert(contentsOf: workouts, at: 0)
+                
+                for object in deleted {
+                    if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
+                        self.workouts.remove(at: index)
+                    }
+                }
+            }
         }
-    }
-
-    func generateSampleData() {
-        for _ in 0 ..< 10 {
-            workouts.append(Workout.sample)
-        }
+        
+        workoutQuery = query
+        healthStore.execute(query)
     }
     
     func importWorkous(at urls: [URL]) {

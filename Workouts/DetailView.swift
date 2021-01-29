@@ -7,12 +7,20 @@
 
 import SwiftUI
 import MapKit
+import Foundation
 
 struct DetailView: View {
     @ObservedObject var workout: Workout
+    @ObservedObject var detailManager = DetailManager()
     
     var body: some View {
         Form {
+            Section {
+                WorkoutMap(points: $detailManager.points)
+                    .frame(width: .infinity, height: 200.0, alignment: .center)
+            }
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            
             Section {
                 TextRow(item: RowItem(text: "Date", detail: dateString))
                 TextRow(item: RowItem(text: "Start", detail: startTimeString))
@@ -31,6 +39,7 @@ struct DetailView: View {
                 TextRow(item: RowItem(text: "Max Heart Rate", detail: "150 BPM"))
             }
         }
+        .onAppear { detailManager.fetchRoute(for: workout.id) }
         .navigationTitle("Workout Detail")
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(InsetGroupedListStyle())
@@ -38,6 +47,7 @@ struct DetailView: View {
 }
 
 extension DetailView {
+    
     private static var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long

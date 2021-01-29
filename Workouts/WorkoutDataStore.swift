@@ -26,6 +26,16 @@ struct WorkoutDataStore {
         return error
     }
     
+    static func fetchWorkout(for id: UUID, completionHandler: @escaping (HKWorkout?) -> Void) {
+        let predicate = HKQuery.predicateForObject(with: id)
+        
+        let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: 1, sortDescriptors: nil) { (query, samples, error) in
+            let workout = samples?.first as? HKWorkout
+            completionHandler(workout)
+        }
+        healthStore.execute(query)
+    }
+    
     static func predicateForActivities(_ activities: [HKWorkoutActivityType]) -> NSPredicate {
         if activities.isEmpty { fatalError("activities cannot be empty") }
         let predicates = activities.map({ HKQuery.predicateForWorkouts(with: $0) })
@@ -51,28 +61,38 @@ struct WorkoutDataStore {
         healthStore.execute(query)
     }
     
-    static func fetchRoute(for id: UUID, completionHandler: @escaping (Result<[HKWorkoutRoute], DataError>) -> Void) {
-        
-        Log.debug("fetching route for: \(id)")
-        let predicate = HKQuery.predicateForObject(with: id)
+    static func fetchRoute(for workout: HKWorkout, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
+        let predicate = HKQuery.predicateForObjects(from: workout)
         let query = HKAnchoredObjectQuery(
             type: HKSeriesType.workoutRoute(),
             predicate: predicate,
             anchor: nil,
             limit: HKObjectQueryNoLimit) { (query, samples, deletedObjects, anchor, error) in
             healthStore.stop(query)
-            
-            Log.debug("route finished with count: \(samples?.count ?? -1)")
-            
+                                    
             if let error = error {
-                Log.debug("route failed: \(error.localizedDescription)")
-            }
-            
-            guard let samples = samples as? [HKWorkoutRoute] else {
-                completionHandler(.failure(dataError(.missingData, system: error)))
+                completionHandler(.failure(error))
                 return
             }
-            completionHandler(.success(samples))
+                        
+            guard let samples = samples as? [HKWorkoutRoute] else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+                        
+            var coordinates = [CLLocationCoordinate2D]()
+            samples.forEach { route in
+                fetchLocation(for: route) { (locations) in
+                    coordinates.append(contentsOf: locations.map({ $0.coordinate }))
+                } completionHandler: { result in
+                    switch result {
+                    case .success:
+                        completionHandler(.success(coordinates))
+                    case .failure(let error):
+                        completionHandler(.failure(error))
+                    }
+                }
+            }
         }
 
 //        query.updateHandler = { (query, samples, deleted, anchor, error) in
@@ -82,22 +102,31 @@ struct WorkoutDataStore {
         healthStore.execute(query)
     }
     
-    static func fetchLocation(for route: HKWorkoutRoute, updateHandler: @escaping ([CLLocation]) -> Void, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+    static func fetchRoute(for id: UUID, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
+        Log.debug("fetching route for: \(id)")
+        fetchWorkout(for: id) { (workout) in
+            guard let workout = workout else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+            fetchRoute(for: workout, completionHandler: completionHandler)
+        }
+    }
+    
+    private static func fetchLocation(for route: HKWorkoutRoute, updateHandler: @escaping ([CLLocation]) -> Void, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         let store = HKHealthStore()
         
         let query = HKWorkoutRouteQuery(route: route) { (query, locations, done, error) in
-            DispatchQueue.main.async {
-                guard let locations = locations else {
-                    completionHandler(.failure(error ?? DataError.missingData))
-                    return
-                }
-                
-                updateHandler(locations)
-                
-                if done {
-                    completionHandler(.success(true))
-                    store.stop(query)
-                }
+            guard let locations = locations else {
+                completionHandler(.failure(error ?? DataError.missingData))
+                return
+            }
+            
+            updateHandler(locations)
+            
+            if done {
+                completionHandler(.success(true))
+                store.stop(query)
             }
         }
         healthStore.execute(query)

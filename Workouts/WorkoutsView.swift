@@ -37,9 +37,6 @@ struct WorkoutsView: View {
                     }
                 }
             }
-            .onAppear {
-                workoutManager.fetchWorkouts()
-            }
             .listStyle(PlainListStyle())
             .navigationTitle("Workouts")
             .toolbar {
