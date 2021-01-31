@@ -148,7 +148,7 @@ extension WorkoutDataStore {
         let configuration = HKWorkoutConfiguration()
         configuration.activityType = .cycling
         configuration.locationType = .outdoor
-        configuration.lapLength = HKQuantity(unit: .mile(), doubleValue: 1.0)
+        configuration.lapLength = HKQuantity(unit: .mile(), doubleValue: 5.0)
         
         let builder = HKWorkoutBuilder(healthStore: healthStore, configuration: configuration, device: .local())
         let routeBuilder = HKWorkoutRouteBuilder(healthStore: healthStore, device: .local())
@@ -168,6 +168,14 @@ extension WorkoutDataStore {
                 completionHandler(.failure(dataError(.failure, system: error)))
                 return
             }
+            
+            // TODO: Implement Events
+//            let events = self.events(for: workoutImport)
+//            builder.addWorkoutEvents(events) { (success, error) in
+//                if let error = error {
+//                    Log.debug("adding workout events failed: \(error.localizedDescription)")
+//                }
+//            }
                         
             builder.endCollection(withEnd: end) { (success, error) in
                 guard success else {
@@ -213,7 +221,7 @@ extension WorkoutDataStore {
         }
     }
     
-    static func samples(for intervals: [ImportInterval]) ->  [HKSample] {
+    private static func samples(for intervals: [WorkoutImport.Interval]) ->  [HKSample] {
         var samples = [HKSample]()
         
         for interval in intervals {
@@ -255,28 +263,33 @@ extension WorkoutDataStore {
         return samples
     }
     
-    static func metadata(for workoutImport: WorkoutImport) -> [String: Any] {
+//    private static func events(for workoutImport: WorkoutImport) -> [HKWorkoutEvent] {
+//        var events = [HKWorkoutEvent]()
+//        return events
+//    }
+    
+    private static func metadata(for metadata: WorkoutMetadata) -> [String: Any] {
         var dictionary = [String: Any]()
         
-        if let avgTemperature = workoutImport.avgTemperature.temperatureValue {
+        if let avgTemperature = metadata.avgTemperature.temperatureValue {
             dictionary[HKMetadataKeyWeatherTemperature] = HKQuantity(unit: .degreeCelsius(), doubleValue: avgTemperature)
         }
 
-        if let avgSpeed = workoutImport.avgSpeed.speedValue {
+        if let avgSpeed = metadata.avgSpeed.speedValue {
             let unit = HKUnit.meter().unitDivided(by: .second())
             dictionary[HKMetadataKeyAverageSpeed] = HKQuantity(unit: unit, doubleValue: avgSpeed)
         }
 
-        if let maxSpeed = workoutImport.maxSpeed.speedValue {
+        if let maxSpeed = metadata.maxSpeed.speedValue {
             let unit = HKUnit.meter().unitDivided(by: .second())
             dictionary[HKMetadataKeyMaximumSpeed] = HKQuantity(unit: unit, doubleValue: maxSpeed)
         }
         
-        if let totalAscent = workoutImport.totalAscent.altitudeValue {
+        if let totalAscent = metadata.totalAscent.altitudeValue {
             dictionary[HKMetadataKeyElevationAscended] = HKQuantity(unit: .meter(), doubleValue: totalAscent)
         }
         
-        if let totalDescent = workoutImport.totalDescent.altitudeValue {
+        if let totalDescent = metadata.totalDescent.altitudeValue {
             dictionary[HKMetadataKeyElevationDescended] = HKQuantity(unit: .meter(), doubleValue: totalDescent)
         }
         
