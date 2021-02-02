@@ -9,35 +9,83 @@ import Foundation
 import CoreLocation
 import FitFileParser
 
-struct WorkoutImport: WorkoutMetadata {
-    var timestamp: Value
-    var start: Value
-    var totalElapsedTime: Value
-    var totalTimerTime: Value
+class WorkoutImport: ObservableObject, Identifiable, WorkoutMetadata {
+    enum Status {
+        case new, processing, processed, notSupported, failed
+    }
     
-    var startPosition: Value
-    var totalAscent: Value
-    var totalDescent: Value
+    enum Sport: String {
+        case cycling, running, walking, other
+        
+        init(string: String) {
+            self = Sport(rawValue: string) ?? .other
+        }
+        
+        var isSupported: Bool {
+            Self.supportedSports.contains(self)
+        }
+        
+        var title: String {
+            switch self {
+            case .cycling:
+                return "Cycle"
+            case .running:
+                return "Run"
+            case .walking:
+                return "Walk"
+            default:
+                return "Generic Activity"
+            }
+        }
+        
+        static var supportedSports: [Sport] = [.cycling]
+    }
     
-    var totalDistance: Value
-    var avgSpeed: Value
-    var maxSpeed: Value
+    let id = UUID()
     
-    var avgHeartRate: Value
-    var maxHeartRate: Value
-    var totalEnergyBurned: Value
+    @Published var status: Status
     
-    var avgCadence: Value
-    var maxCadence: Value
+    var sport: Sport
+    var indoor = false
     
-    var avgTemperature: Value
-    var maxTemperature: Value
+    var timestamp: Value = .init(valueType: .date, value: 0)
+    var start: Value = .init(valueType: .date, value: 0)
+    var totalElapsedTime: Value = .init(valueType: .time, value: 0)
+    var totalTimerTime: Value = .init(valueType: .time, value: 0)
+    
+    var startPosition: Value = .init(valueType: .location, value: nil)
+    var totalAscent: Value = .init(valueType: .altitude, value: 0)
+    var totalDescent: Value = .init(valueType: .altitude, value: 0)
+    
+    var totalDistance: Value = .init(valueType: .distance, value: 0)
+    var avgSpeed: Value = .init(valueType: .speed, value: 0)
+    var maxSpeed: Value = .init(valueType: .speed, value: 0)
+    
+    var avgHeartRate: Value = .init(valueType: .heartRate, value: 0)
+    var maxHeartRate: Value = .init(valueType: .heartRate, value: 0)
+    var totalEnergyBurned: Value = .init(valueType: .calories, value: 0)
+    
+    var avgCadence: Value = .init(valueType: .cadence, value: 0)
+    var maxCadence: Value = .init(valueType: .cadence, value: 0)
+    
+    var avgTemperature: Value = .init(valueType: .temperature, value: 0)
+    var maxTemperature: Value = .init(valueType: .temperature, value: 0)
     
     var records = [Record]()
     var events = [Event]()
     
+    init(status: Status, sport: Sport) {
+        self.status = status
+        self.sport = sport
+    }
+    
     init?(fit: FitFile) {
+        guard let sport = fit.messages(forMessageType: .sport).first else { return nil }
         guard let session = fit.messages(forMessageType: .session).first else { return nil }
+        
+        self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
+        status = self.sport.isSupported ? .new : .notSupported
+        indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
         
         timestamp = .init(valueType: .date, field: session.interpretedField(key: "timestamp"))
         start = .init(valueType: .date, field: session.interpretedField(key: "start_time"))
@@ -68,7 +116,7 @@ struct WorkoutImport: WorkoutMetadata {
         // Events
         events = fit.messages(forMessageType: .event).compactMap { (message) -> Event? in
             Event(message: message)
-        }        
+        }
     }
 }
 
@@ -116,6 +164,69 @@ extension WorkoutImport {
                 timestamp: timestamp
             )
         }
+    }
+    
+}
+
+// MARK: - Presentation
+
+extension WorkoutImport {
+    
+    var formattedTitle: String {
+        String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.title)
+    }
+    
+    var formattedDistance: String {
+        let distance = Measurement<UnitLength>(value: totalDistance.distanceValue ?? 0, unit: .meters)
+        let distanceInMiles = distance.converted(to: .miles)
+        let formatter = MeasurementFormatter()
+        return formatter.string(from: distanceInMiles)
+    }
+    
+    var formattedDate: String {
+        guard let date = startDate else { return "" }
+        
+        if date.isWithinNumberOfDays(7) {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "EEEE"
+            return formatter.string(for: date) ?? ""
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+            return formatter.string(for: date) ?? ""
+        }
+    }
+    
+}
+
+// MARK: - Helper Methods
+
+extension WorkoutImport {
+    
+    private static let indoorSubsports = [
+        "treadmill",
+        "indoor_cycling",
+        "indoor_walking",
+        "indoor_running",
+        "virtual_activity"
+    ]
+    
+    static func isIndoor(subsport: String) -> Bool {
+        indoorSubsports.contains(subsport)
+    }
+    
+    static func isFileSupported(fit: FitFile) -> Bool {
+        guard let field = fit.messages(forMessageType: .sport).first?.interpretedField(key: "sport") else { return false }
+        return Sport(string: field.name ?? "").isSupported
+    }
+    
+}
+
+extension WorkoutImport: Equatable {
+    
+    static func == (lhs: WorkoutImport, rhs: WorkoutImport) -> Bool {
+        lhs.id == rhs.id
     }
     
 }

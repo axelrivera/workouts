@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WorkoutsView: View {
     enum ActiveSheet: Identifiable {
-        case add, document, settings
+        case add, workoutImport, settings
         var id: Int { hashValue }
     }
     
@@ -48,13 +48,14 @@ struct WorkoutsView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button(action: { activeSheet = .add }) {
-                            Label("New Workout", systemImage: "plus.circle")
-                        }
+                        // TODO: Enable Manual Workouts
+//                        Button(action: { activeSheet = .add }) {
+//                            Label("New Workout", systemImage: "plus.circle")
+//                        }
                         
-                        Button(action: { activeSheet = .document }, label: {
-                            Label("Import Workout", systemImage: "square.and.arrow.down")
-                        })
+                        Button(action: { activeSheet = .workoutImport }) {
+                            Label("Import Workouts", systemImage: "square.and.arrow.down")
+                        }
                         
                         Divider()
                         
@@ -63,17 +64,17 @@ struct WorkoutsView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
+                            .imageScale(.large)
                     }
                 }
             }
-            .sheet(item: $activeSheet) { item in
+            .fullScreenCover(item: $activeSheet) { item in
                 switch item {
                 case .add:
                     AddView()
-                case .document:
-                    DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
-                        workoutManager.importWorkous(at: urls)
-                    }
+                case .workoutImport:
+                    ImportView()
+                        .environmentObject(ImportManager())
                 case .settings:
                     SettingsView()
                 }

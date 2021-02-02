@@ -30,6 +30,8 @@
 		1645B94325B35F6E00B04478 /* TextRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94225B35F6E00B04478 /* TextRow.swift */; };
 		1645B94625B3612700B04478 /* RowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94525B3612700B04478 /* RowItem.swift */; };
 		1645B94925B3669E00B04478 /* TimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94825B3669E00B04478 /* TimePicker.swift */; };
+		165F154125C82B9600A2CE59 /* ImportRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154025C82B9600A2CE59 /* ImportRow.swift */; };
+		165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154425C853E900A2CE59 /* ImportOperation.swift */; };
 		16755ED825BBAC6E002E73BA /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91A25B350BB00B04478 /* AppData.swift */; };
 		16755EE225BBAD93002E73BA /* GarminUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16755EDB25BBACC5002E73BA /* GarminUtils.swift */; };
 		16755EE525BBAD94002E73BA /* GarminUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16755EDB25BBACC5002E73BA /* GarminUtils.swift */; };
@@ -46,6 +48,10 @@
 		16A0660F25C48FB500019096 /* WorkoutImport+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0660D25C48FB500019096 /* WorkoutImport+Events.swift */; };
 		16A0661525C4A60D00019096 /* WorkoutMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0661425C4A60D00019096 /* WorkoutMetadata.swift */; };
 		16A0661625C4A60D00019096 /* WorkoutMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0661425C4A60D00019096 /* WorkoutMetadata.swift */; };
+		16A0662425C63E9C00019096 /* FitUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662325C63E9C00019096 /* FitUtils.swift */; };
+		16A0662825C642EA00019096 /* ImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662725C642EA00019096 /* ImportView.swift */; };
+		16A0662F25C7209F00019096 /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662E25C7209E00019096 /* ImportManager.swift */; };
+		16A0663325C751FD00019096 /* Date+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0663225C751FD00019096 /* Date+Additions.swift */; };
 		16A3A5EA25B8F477003D1AB2 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A3A5E925B8F477003D1AB2 /* Log.swift */; };
 		16AD0F9A25B5DA2C0092FA91 /* WorkoutImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AD0F9925B5DA2C0092FA91 /* WorkoutImport.swift */; };
 		16AD0F9E25B5E58A0092FA91 /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 16AD0F9D25B5E58A0092FA91 /* FitFileParser */; };
@@ -92,6 +98,8 @@
 		1645B94225B35F6E00B04478 /* TextRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRow.swift; sourceTree = "<group>"; };
 		1645B94525B3612700B04478 /* RowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowItem.swift; sourceTree = "<group>"; };
 		1645B94825B3669E00B04478 /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
+		165F154025C82B9600A2CE59 /* ImportRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRow.swift; sourceTree = "<group>"; };
+		165F154425C853E900A2CE59 /* ImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOperation.swift; sourceTree = "<group>"; };
 		16755EDB25BBACC5002E73BA /* GarminUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminUtils.swift; sourceTree = "<group>"; };
 		16A065E725C3679D00019096 /* WorkoutMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMap.swift; sourceTree = "<group>"; };
 		16A065EB25C3715300019096 /* MKCoordinateRegion+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MKCoordinateRegion+Additions.swift"; sourceTree = "<group>"; };
@@ -101,6 +109,10 @@
 		16A0660825C48EC000019096 /* WorkoutImport+Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutImport+Interval.swift"; sourceTree = "<group>"; };
 		16A0660D25C48FB500019096 /* WorkoutImport+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutImport+Events.swift"; sourceTree = "<group>"; };
 		16A0661425C4A60D00019096 /* WorkoutMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMetadata.swift; sourceTree = "<group>"; };
+		16A0662325C63E9C00019096 /* FitUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitUtils.swift; sourceTree = "<group>"; };
+		16A0662725C642EA00019096 /* ImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportView.swift; sourceTree = "<group>"; };
+		16A0662E25C7209E00019096 /* ImportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportManager.swift; sourceTree = "<group>"; };
+		16A0663225C751FD00019096 /* Date+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Additions.swift"; sourceTree = "<group>"; };
 		16A3A5E925B8F477003D1AB2 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		16AD0F9925B5DA2C0092FA91 /* WorkoutImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutImport.swift; sourceTree = "<group>"; };
 		16E759E725BB9B60007E6FE6 /* WorkoutsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WorkoutsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -155,6 +167,7 @@
 				1645B92F25B3510A00B04478 /* Model + Data */,
 				1645B93725B3533600B04478 /* Services */,
 				1645B93025B3511800B04478 /* Views */,
+				16A0662B25C6449E00019096 /* View Managers */,
 				1645B93125B3514000B04478 /* Utilities */,
 				1645B93225B3515500B04478 /* Supporting Files */,
 			);
@@ -207,6 +220,8 @@
 				16A3A5E925B8F477003D1AB2 /* Log.swift */,
 				16755EDB25BBACC5002E73BA /* GarminUtils.swift */,
 				16A065EB25C3715300019096 /* MKCoordinateRegion+Additions.swift */,
+				16A0662325C63E9C00019096 /* FitUtils.swift */,
+				16A0663225C751FD00019096 /* Date+Additions.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -237,6 +252,7 @@
 				1645B91E25B350BB00B04478 /* WorkoutsView.swift */,
 				1645B91125B350BA00B04478 /* AddView.swift */,
 				1645B91C25B350BB00B04478 /* DetailView.swift */,
+				16A0662725C642EA00019096 /* ImportView.swift */,
 			);
 			name = Main;
 			sourceTree = "<group>";
@@ -258,6 +274,7 @@
 				1645B94525B3612700B04478 /* RowItem.swift */,
 				1645B94825B3669E00B04478 /* TimePicker.swift */,
 				16A065E725C3679D00019096 /* WorkoutMap.swift */,
+				165F154025C82B9600A2CE59 /* ImportRow.swift */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -265,10 +282,8 @@
 		1645B93725B3533600B04478 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				1645B91325B350BA00B04478 /* WorkoutManager.swift */,
 				1645B91B25B350BB00B04478 /* HealthData.swift */,
 				1645B93825B353DD00B04478 /* WorkoutDataStore.swift */,
-				16A065F125C37F1500019096 /* DetailManager.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -284,6 +299,17 @@
 				16A0660D25C48FB500019096 /* WorkoutImport+Events.swift */,
 			);
 			name = Imports;
+			sourceTree = "<group>";
+		};
+		16A0662B25C6449E00019096 /* View Managers */ = {
+			isa = PBXGroup;
+			children = (
+				1645B91325B350BA00B04478 /* WorkoutManager.swift */,
+				16A065F125C37F1500019096 /* DetailManager.swift */,
+				16A0662E25C7209E00019096 /* ImportManager.swift */,
+				165F154425C853E900A2CE59 /* ImportOperation.swift */,
+			);
+			name = "View Managers";
 			sourceTree = "<group>";
 		};
 		16E759E825BB9B60007E6FE6 /* WorkoutsTests */ = {
@@ -411,6 +437,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1645B92525B350BB00B04478 /* TimeSelectView.swift in Sources */,
+				16A0662825C642EA00019096 /* ImportView.swift in Sources */,
 				16A3A5EA25B8F477003D1AB2 /* Log.swift in Sources */,
 				1645B94325B35F6E00B04478 /* TextRow.swift in Sources */,
 				1645B92225B350BB00B04478 /* UTType+Additions.swift in Sources */,
@@ -418,6 +445,7 @@
 				1645B92B25B350BB00B04478 /* WorkoutSummary.swift in Sources */,
 				1645B92A25B350BB00B04478 /* DetailView.swift in Sources */,
 				1645B92425B350BB00B04478 /* TimeHelper.swift in Sources */,
+				165F154125C82B9600A2CE59 /* ImportRow.swift in Sources */,
 				16A0660925C48EC000019096 /* WorkoutImport+Interval.swift in Sources */,
 				16A065F225C37F1500019096 /* DetailManager.swift in Sources */,
 				16A0660E25C48FB500019096 /* WorkoutImport+Events.swift in Sources */,
@@ -428,7 +456,9 @@
 				161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */,
 				1645B92625B350BB00B04478 /* Color+Additions.swift in Sources */,
 				16A065E825C3679D00019096 /* WorkoutMap.swift in Sources */,
+				16A0663325C751FD00019096 /* Date+Additions.swift in Sources */,
 				1645B93A25B353DD00B04478 /* WorkoutDataStore.swift in Sources */,
+				16A0662F25C7209F00019096 /* ImportManager.swift in Sources */,
 				1645B92125B350BB00B04478 /* WorkoutManager.swift in Sources */,
 				16AD0F9A25B5DA2C0092FA91 /* WorkoutImport.swift in Sources */,
 				1645B91F25B350BB00B04478 /* AddView.swift in Sources */,
@@ -439,6 +469,8 @@
 				1645B92025B350BB00B04478 /* Workout.swift in Sources */,
 				1645B92725B350BB00B04478 /* SettingsView.swift in Sources */,
 				1645B92825B350BB00B04478 /* AppData.swift in Sources */,
+				165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */,
+				16A0662425C63E9C00019096 /* FitUtils.swift in Sources */,
 				1645B94625B3612700B04478 /* RowItem.swift in Sources */,
 				16A0661525C4A60D00019096 /* WorkoutMetadata.swift in Sources */,
 			);
