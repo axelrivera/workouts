@@ -43,7 +43,6 @@ struct DetailMapView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Text("Done")
-                            .bold()
                     }
                 }
             }

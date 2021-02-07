@@ -131,7 +131,7 @@ extension AddView {
     
     func saveButton() -> some View {
         Button(action: { presentationMode.wrappedValue.dismiss() }) {
-            Text("Save").bold()
+            Text("Save")
         }
     }
     

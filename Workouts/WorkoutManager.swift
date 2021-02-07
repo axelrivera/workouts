@@ -63,8 +63,8 @@ class WorkoutManager: ObservableObject {
             switch result {
             case .success:
                 Log.debug("fetch data succeeded")
-                self.shouldRequestReadingAuthorization = false
                 self.updateState(.ok)
+                self.updateShouldRequestReadingAuthorization(false)
                 self.fetchWorkouts()
                 completionHandler(true)
             case .failure(let error):
@@ -139,6 +139,12 @@ class WorkoutManager: ObservableObject {
 // MARK: User Interface
 
 extension WorkoutManager {
+    
+    func updateShouldRequestReadingAuthorization(_ shouldRequestReadingAuthorization: Bool) {
+        DispatchQueue.main.async {
+            self.shouldRequestReadingAuthorization = shouldRequestReadingAuthorization
+        }
+    }
     
     func updateState(_ state: State) {
         DispatchQueue.main.async {

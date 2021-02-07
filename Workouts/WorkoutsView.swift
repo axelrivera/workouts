@@ -42,7 +42,7 @@ struct WorkoutsView: View {
                 if workoutManager.state == .empty || workoutManager.state == .notAvailable {
                     Color.systemBackground
                         .ignoresSafeArea()
-                    AuthMessageView(workoutState: workoutManager.state)
+                    WorkoutEmptyView(workoutState: workoutManager.state)
                 }
             }
             .navigationTitle("Workouts")

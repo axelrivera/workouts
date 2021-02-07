@@ -46,42 +46,45 @@ extension HealthData {
     
     class func readPermissions() -> Set<HKObjectType> {
         [
-            HKQuantityType.activeEnergyBurned(),
-            HKQuantityType.heartRate(),
-            HKQuantityType.distanceCycling(),
-            HKQuantityType.distanceWalkingRunning(),
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
+            HKQuantityType.distanceCycling(),
+            HKQuantityType.distanceWalkingRunning(),
+            HKQuantityType.activeEnergyBurned(),
+            HKQuantityType.heartRate(),
+            
         ]
     }
     
     class func writePermissions() -> Set<HKSampleType> {
         [
-            HKQuantityType.activeEnergyBurned(),
-            HKQuantityType.heartRate(),
-            HKQuantityType.distanceCycling(),
-            HKQuantityType.distanceWalkingRunning(),
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
+            HKQuantityType.distanceCycling(),
+            HKQuantityType.distanceWalkingRunning(),
+            HKQuantityType.activeEnergyBurned(),
+            HKQuantityType.heartRate(),
         ]
     }
     
-    class func requestReadingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestHealthAuthorization(read: readPermissions(), write: nil, completionHandler: completionHandler)
-    }
-    
-    class func requestWritingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestHealthAuthorization(read: nil, write: writePermissions(), completionHandler: completionHandler)
-    }
+    // MARK: - Request Status
     
     class func requestStatusForReading(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestStatus(read: readPermissions(), completionHandler: completionHandler)
+    }
+    
+//    class func requestStatusForWriting(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+//        requestStatus(read: readPermissions(), write: writePermissions(), completionHandler: completionHandler)
+//    }
+    
+    class func requestStatus(read: Set<HKObjectType> = [], write: Set<HKSampleType> = [], completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
             completionHandler(.failure(DataError.dataNotAvailable))
             return
         }
         
         Log.debug("requesting permissions for reading")
-        healthStore.getRequestStatusForAuthorization(toShare: [], read: readPermissions()) { (status, error) in
+        healthStore.getRequestStatusForAuthorization(toShare: write, read: read) { (status, error) in
             Log.debug("got status: \(status.rawValue)")
             if let error = error {
                 Log.debug("error: \(error.localizedDescription)")
@@ -94,6 +97,48 @@ extension HealthData {
             
             completionHandler(.success(status == .shouldRequest))
         }
+    }
+    
+    class func validateWritingStatus() -> HKAuthorizationStatus {
+        let permissions = writePermissions()
+        
+        var notDeterminedResults = [Bool]()
+        var deniedResults = [Bool]()
+        var authorizedResults = [Bool]()
+        
+        for object in permissions {
+            let status = healthStore.authorizationStatus(for: object)
+            switch status {
+            case .notDetermined:
+                notDeterminedResults.append(true)
+            case .sharingDenied:
+                deniedResults.append(true)
+            case .sharingAuthorized:
+                authorizedResults.append(true)
+            default:
+                break
+            }
+        }
+        
+        var resultStatus: HKAuthorizationStatus
+        if !notDeterminedResults.isEmpty {
+            resultStatus = .notDetermined
+        } else if !deniedResults.isEmpty {
+            resultStatus = .sharingDenied
+        } else {
+            resultStatus = .sharingAuthorized
+        }
+        return resultStatus
+    }
+    
+    // MARK: - Authorization
+    
+    class func requestReadingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestHealthAuthorization(read: readPermissions(), write: nil, completionHandler: completionHandler)
+    }
+    
+    class func requestWritingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestHealthAuthorization(read: readPermissions(), write: writePermissions(), completionHandler: completionHandler)
     }
     
     private class func requestHealthAuthorization(read: Set<HKObjectType>?, write: Set<HKSampleType>?, completionHandler: @escaping (Result<Bool, Error>) -> Void) {

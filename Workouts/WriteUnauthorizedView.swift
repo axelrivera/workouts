@@ -1,5 +1,5 @@
 //
-//  DataErrorView.swift
+//  WriteUnauthorizedView.swift
 //  Workouts
 //
 //  Created by Axel Rivera on 2/7/21.
@@ -7,22 +7,23 @@
 
 import SwiftUI
 
-struct DataErrorView: View {
+struct WriteUnauthorizedView: View {
     var body: some View {
         VStack(spacing: 20.0) {
             Image(systemName: "heart.slash.fill")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, height: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+                .frame(width: 100, height: 100, alignment: .center)
                 .foregroundColor(.red)
-            Text("Health data is not available on this device.")
+            Text("Writing permission for workouts is disabled. Open the Health app and go to to Profile, Apps, Workouts to enable write permissions.")
                 .multilineTextAlignment(.center)
         }
+        .padding()
     }
 }
 
-struct DataErrorView_Previews: PreviewProvider {
+struct WriteUnauthorizedView_Previews: PreviewProvider {
     static var previews: some View {
-        DataErrorView()
+        WriteUnauthorizedView()
     }
 }

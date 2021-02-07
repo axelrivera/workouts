@@ -33,7 +33,6 @@ extension SettingsView {
     func doneButton() -> some View{
         Button(action: { presentationMode.wrappedValue.dismiss() }) {
             Text("Done")
-                .bold()
         }
     }
     

@@ -20,38 +20,45 @@ struct ImportView: View {
     
     @Environment(\.presentationMode) var presentationMode
     @StateObject var importManager: ImportManager = ImportManager()
+    @State var isProcessingDocuments = false
     
     @State var activeSheet: ActiveSheet?
     @State var activeAlert: ActiveAlert?
     
     var body: some View {
         NavigationView {
-            VStack {
-                if importManager.workouts.isEmpty {
-                    Spacer()
-                    VStack(alignment: .center, spacing: 10.0) {
-                        Image(systemName: "icloud.and.arrow.down")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, height: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                        Text("Tap the + icon to import one or more workouts from iCloud. Only FIT files are supported.")
-                            .multilineTextAlignment(.center)
-                            .padding()
-                    }
-                    .foregroundColor(.secondary)
-                    Spacer()
-                } else {
+            ZStack {
+                VStack {
                     Form {
                         ForEach(importManager.workouts) { workout in
                             ImportRow(workout: workout)
                         }
                         .onDelete(perform: importManager.deleteWorkout)
                     }
+                    .onAppear {
+                        importManager.requestWritingAuthorization { (success) in
+                            Log.debug("writing authorization succeeded: \(success)")
+                        }
+                    }
+                    RoundButton(text: "Import", action: processImports)
+                        .padding()
+                        .disabled(importManager.isImportDisabled)
                 }
                 
-                RoundButton(text: "Import", action: processImports)
-                    .padding()
-                    .disabled(!importManager.canImport || importManager.isProcessingImports)
+                if isProcessingDocuments {
+                    Color.systemBackground
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 20.0) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                        Text("Processing Files")
+                    }
+                } else if importManager.state != .ok {
+                    Color.systemBackground
+                        .ignoresSafeArea()
+                    ImportEmptyView(importState: importManager.state)
+                }
             }
             .navigationBarTitle("Import Workouts")
             .navigationBarItems(leading: dismissButton(), trailing: addButton())
@@ -59,7 +66,13 @@ struct ImportView: View {
                 switch item {
                 case .document:
                     DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
-                        importManager.processDocuments(at: urls)
+                        Log.debug("processing documents")
+                        
+                        isProcessingDocuments = true
+                        importManager.processDocuments(at: urls) {
+                            Log.debug("finish processing documents")
+                            isProcessingDocuments = false
+                        }
                     }
                 }
             }
@@ -89,7 +102,7 @@ private extension ImportView {
         Button(action: { activeSheet = .document }) {
             Image(systemName: "plus")
         }
-        .disabled(importManager.isProcessingImports)
+        .disabled(importManager.isAddImportDisabled)
     }
     
     func dismissButton() -> some View {
@@ -121,7 +134,8 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-//        manager.loadSampleWorkouts()
+        manager.state = .ok
+        manager.loadSampleWorkouts()
         return manager
     }()
     

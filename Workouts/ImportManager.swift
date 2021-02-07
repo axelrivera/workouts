@@ -10,8 +10,19 @@ import FitFileParser
 import HealthKit
 
 class ImportManager: ObservableObject {
+    enum State {
+        case ok, empty, notAuthorized, notAvailable
+        
+        var isWhitelisted: Bool {
+            Self.whitelisted.contains(self)
+        }
+        
+        static let whitelisted: [State] = [.ok, .empty]
+    }
+    
     @Published var workouts = [WorkoutImport]()
     @Published var isProcessingImports = false
+    @Published var state = State.empty
     
     private var urls = [URL]()
     
@@ -22,17 +33,61 @@ class ImportManager: ObservableObject {
     }()
 }
 
+// MARK: - Authorization
+
+extension ImportManager {
+    
+    func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
+        HealthData.requestWritingAuthorization { result in
+            switch result {
+            case .success:
+                let validationStatus = HealthData.validateWritingStatus()
+                self.updateState(with: validationStatus)
+                completionHandler(true)
+            case .failure(let error):
+                if case HealthData.DataError.dataNotAvailable = error {
+                    self.updateState(.notAvailable)
+                }
+                completionHandler(false)
+            }
+        }
+    }
+    
+    func updateState(with status: HKAuthorizationStatus) {
+        DispatchQueue.main.async {
+            switch status {
+            case .sharingAuthorized:
+                self.state = self.workouts.isEmpty ? .empty : .ok
+            default:
+                self.state = .notAuthorized
+            }
+        }
+    }
+    
+    func updateState(_ state: State) {
+        DispatchQueue.main.async {
+            self.state = state
+        }
+    }
+    
+}
+
 // MARK: - Selection Logic
 
 extension ImportManager {
     func deleteWorkout(at offsets: IndexSet) {
         DispatchQueue.main.async {
             self.workouts.remove(atOffsets: offsets)
+            self.state = self.workouts.isEmpty ? .empty : .ok
         }
     }
+        
+    var isImportDisabled: Bool {
+        return newWorkouts.isEmpty || isProcessingImports || !state.isWhitelisted
+    }
     
-    var canImport: Bool {
-        !newWorkouts.isEmpty
+    var isAddImportDisabled: Bool {
+        isProcessingImports || !state.isWhitelisted
     }
     
     var newWorkouts: [WorkoutImport] {
@@ -66,23 +121,29 @@ extension ImportManager {
         workouts = [WorkoutImport]()
     }
     
-    func processDocuments(at urls: [URL]) {
+    func processDocuments(at urls: [URL], completionHandler: @escaping (() -> Void)) {
         reset()
         
-        var workouts = [WorkoutImport]()
-        self.urls = urls
-        for url in urls {
-            guard let fit = FitFile(file: url) else { continue }
-            guard let workout = WorkoutImport(fit: fit) else { continue }
+        DispatchQueue.global(qos: .userInitiated).async {
+            var workouts = [WorkoutImport]()
+            self.urls = urls
+            for url in urls {
+                guard let fit = FitFile(file: url) else { continue }
+                guard let workout = WorkoutImport(fit: fit) else { continue }
+                
+                workouts.append(workout)
+            }
             
-            workouts.append(workout)
-        }
-        
-        DispatchQueue.main.async {
-            self.workouts = workouts.sorted(by: { (lhs, rhs) -> Bool in
+            let sortedWorkouts = workouts.sorted(by: { (lhs, rhs) -> Bool in
                 guard let leftDate = lhs.startDate, let rightDate = rhs.startDate else { return false }
                 return leftDate > rightDate
             })
+            
+            DispatchQueue.main.async {
+                self.workouts = sortedWorkouts
+                self.state = self.workouts.isEmpty ? .empty : .ok
+                completionHandler()
+            }
         }
     }
     
