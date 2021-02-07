@@ -7,78 +7,112 @@
 
 import SwiftUI
 import MapKit
-import Foundation
 
 struct DetailView: View {
+    enum ActiveSheet: Identifiable {
+        case map
+        var id: Int { hashValue }
+    }
+    
     @ObservedObject var workout: Workout
-    @ObservedObject var detailManager = DetailManager()
+    @StateObject var detailManager = DetailManager()
+    
+    @State var activeSheet: ActiveSheet?
     
     var body: some View {
         Form {
             Section {
-                WorkoutMap(points: $detailManager.points)
-                    .frame(width: .infinity, height: 200.0, alignment: .center)
+                Button(action: { activeSheet = .map }) {
+                    WorkoutMap(points: $detailManager.points)
+                        .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+                        .disabled(true)
+                }
             }
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             
             Section {
-                TextRow(item: RowItem(text: "Date", detail: dateString))
-                TextRow(item: RowItem(text: "Start", detail: startTimeString))
-                TextRow(item: RowItem(text: "Moving Time", detail: "TODO"))
-                TextRow(item: RowItem(text: "Elapsed Time", detail: elapsedTimeString))
+                TextRow(item: RowItem(text: "Date", detail: formattedRelativeDateString(for: workout.startDate)))
+                TextRow(item: RowItem(text: "Start", detail: formattedTimeString(for: workout.startDate)))
+                TextRow(item: RowItem(text: "Total Time", detail: formattedTimeDurationString(for: workout.elapsedTime)))
             }
             Section(header: Text("Distance")) {
-                TextRow(item: RowItem(text: "Distance", detail: workout.distanceString))
+                TextRow(item: RowItem(text: "Distance", detail: formattedDistanceString(for: workout.distance)))
             }
-            Section(header: Text("Speed")) {
-                TextRow(item: RowItem(text: "Avg. Speed", detail: "10 MPH"))
-                TextRow(item: RowItem(text: "Max. Speed", detail: "10 MPH"))
+            
+            if showSpeedSection(workout: workout) {
+                Section(header: Text("Speed")) {
+                    if let average = workout.avgSpeed {
+                        TextRow(item: RowItem(text: "Avg. Speed", detail: formattedSpeedString(for: average)))
+                    }
+                    
+                    if let maximum = workout.maxSpeed {
+                        TextRow(item: RowItem(text: "Max. Speed", detail: formattedSpeedString(for: maximum)))
+                    }
+                }
             }
-            Section(header: Text("Heart Rate")) {
-                TextRow(item: RowItem(text: "Avg. Heart Rate", detail: "130 BPM"))
-                TextRow(item: RowItem(text: "Max Heart Rate", detail: "150 BPM"))
+            
+            if detailManager.showHeartRateSection {
+                Section(header: Text("Heart Rate")) {
+                    if let average = detailManager.avgHeartRate {
+                        TextRow(item: RowItem(text: "Avg. Heart Rate", detail: formattedHeartRateString(for: average)))
+                    }
+                    
+                    if let maximum = detailManager.maxHeartRate {
+                        TextRow(item: RowItem(text: "Max Heart Rate", detail: formattedHeartRateString(for: maximum)))
+                    }
+                }
+            }
+            
+            Section(header: Text("Energy")) {
+                TextRow(item: RowItem(text: "Calories", detail: formattedCaloriesString(for: workout.energyBurned)))
+            }
+            
+            if showCadenceSection(workout: workout) {
+                Section(header: Text("Cadence")) {
+                    if let average = workout.avgCyclingCadence {
+                        TextRow(item: RowItem(text: "Avg. Cadence", detail: formattedCyclingCadenceString(for: average)))
+                    }
+                    
+                    if let maximum = workout.maxCyclingCadence {
+                        TextRow(item: RowItem(text: "Max Cadence", detail: formattedCyclingCadenceString(for: maximum)))
+                    }
+                }
+            }
+            
+            Section {
+                TextRow(item: RowItem(text: "Source", detail: workout.source))
+                
+                if let device = workout.device {
+                    TextRow(item: RowItem(text: "Device", detail: device))
+                }
             }
         }
-        .onAppear { detailManager.fetchRoute(for: workout.id) }
-        .navigationTitle("Workout Detail")
+        .onAppear(perform: { detailManager.workout = workout.id })
+        .navigationTitle(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(InsetGroupedListStyle())
+        .sheet(item: $activeSheet) { (item) in
+            switch item {
+            case .map:
+                DetailMapView(workout: workout, detailManager: detailManager)
+            }
+        }
     }
 }
 
 extension DetailView {
     
-    private static var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter
-    }()
-    
-    private static var timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter
-    }()
-    
-    var dateString: String {
-        Self.dateFormatter.string(from: workout.startDate)
+    func showSpeedSection(workout: Workout) -> Bool {
+        workout.avgSpeed != nil || workout.maxSpeed != nil
     }
     
-    var startTimeString: String {
-        Self.timeFormatter.string(from: workout.startDate)
-    }
-    
-    var elapsedTimeString: String {
-        formattedTimer(for: Int(workout.elapsedTime))
+    func showCadenceSection(workout: Workout) -> Bool {
+        workout.avgCyclingCadence != nil || workout.maxCyclingCadence != nil
     }
     
 }
 
 struct DetailView_Previews: PreviewProvider {
-    static var workout = Workout.sample
-    
     static var previews: some View {
         DetailView(workout: Workout.sample)
     }

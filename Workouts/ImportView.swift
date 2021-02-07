@@ -27,23 +27,31 @@ struct ImportView: View {
     var body: some View {
         NavigationView {
             VStack {
-                Form {
-                    ForEach(importManager.workouts) { workout in
-                        ImportRow(workout: workout)
+                if importManager.workouts.isEmpty {
+                    Spacer()
+                    VStack(alignment: .center, spacing: 10.0) {
+                        Image(systemName: "icloud.and.arrow.down")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, height: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+                        Text("Tap the + icon to import one or more workouts from iCloud. Only FIT files are supported.")
+                            .multilineTextAlignment(.center)
+                            .padding()
                     }
-                    .onDelete(perform: importManager.deleteWorkout)
+                    .foregroundColor(.secondary)
+                    Spacer()
+                } else {
+                    Form {
+                        ForEach(importManager.workouts) { workout in
+                            ImportRow(workout: workout)
+                        }
+                        .onDelete(perform: importManager.deleteWorkout)
+                    }
                 }
                 
-                Button(action: processImports) {
-                    Text("Import")
-                        .frame(minWidth: 0, maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color.accentColor)
-                        .cornerRadius(12)
-                }
-                .padding()
-                .disabled(!importManager.canImport || importManager.isProcessingImports)
+                RoundButton(text: "Import", action: processImports)
+                    .padding()
+                    .disabled(!importManager.canImport || importManager.isProcessingImports)
             }
             .navigationBarTitle("Import Workouts")
             .navigationBarItems(leading: dismissButton(), trailing: addButton())
@@ -113,7 +121,7 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.loadSampleWorkouts()
+//        manager.loadSampleWorkouts()
         return manager
     }()
     

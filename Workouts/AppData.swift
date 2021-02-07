@@ -6,3 +6,6 @@
 //
 
 import Foundation
+
+let MetadataKeyAvgCyclingCadence = "arn_metadata_avg_cycling_cadence"
+let MetadataKeyMaxCyclingCadence = "arn_metadata_max_cycling_cadence"

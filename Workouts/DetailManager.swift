@@ -15,8 +15,48 @@ class DetailManager: ObservableObject {
         span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
     )
     
-    func fetchRoute(for id: UUID) {
-        WorkoutDataStore.fetchRoute(for: id) { (result) in
+    @Published var avgHeartRate: Double?
+    @Published var maxHeartRate: Double?
+    
+    var workout: UUID? {
+        didSet {
+            fetchData()
+        }
+    }
+    
+}
+
+extension DetailManager {
+    
+    func fetchData() {
+        fetchHeartRate()
+        fetchRoute()
+    }
+    
+    var showHeartRateSection: Bool {
+        avgHeartRate != nil || maxHeartRate != nil
+    }
+    
+    func fetchHeartRate() {
+        guard let workout = workout else { return }
+        
+        WorkoutDataStore.fetchHeartRateSample(for: workout) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let sample):
+                    self.avgHeartRate = sample.avg
+                    self.maxHeartRate = sample.max
+                case .failure(let error):
+                    Log.debug("fetching heart rate failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    func fetchRoute() {
+        guard let workout = workout else { return }
+        
+        WorkoutDataStore.fetchRoute(for: workout) { (result) in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let coordinates):
@@ -29,6 +69,5 @@ class DetailManager: ObservableObject {
             }
         }
     }
-    
     
 }

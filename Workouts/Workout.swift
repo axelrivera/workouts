@@ -10,29 +10,44 @@ import HealthKit
 
 class Workout: ObservableObject {
     var id = UUID()
+    
+    var activityType = HKWorkoutActivityType.other
     var indoor = false
     var startDate: Date = Date()
     var endDate: Date = Date()
-    var energyBurned: Double = 0.0
-    var distance: Double = 0.0
-    var source = ""
+    var energyBurned: Double = 0
+    var distance: Double = 0
+    var source: String = ""
+    var device: String?
     
-    var avgSpeed: Double = 0.0
-    var maxSpeed: Double = 0.0
+    var avgSpeed: Double?
+    var maxSpeed: Double?
+        
+    var avgCyclingCadence: Double?
+    var maxCyclingCadence: Double?
     
     init() {
-        
+        // initialize empty object
     }
     
     convenience init(object: HKWorkout) {
         self.init()
         id = object.uuid
+        activityType = object.workoutActivityType
         indoor = object.metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
         startDate = object.startDate
         endDate = object.endDate
         energyBurned = object.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
-        distance = object.totalDistance?.doubleValue(for: .mile()) ?? 0
+        distance = object.totalDistance?.doubleValue(for: .meter()) ?? 0
+        
+        avgSpeed = object.avgSpeed?.doubleValue(for: .metersPerSecond())
+        maxSpeed = object.maxSpeed?.doubleValue(for: .metersPerSecond())
+        
+        avgCyclingCadence = object.avgCyclingCadence
+        maxCyclingCadence = object.maxCyclingCadence
+        
         source = object.sourceRevision.source.name
+        device = object.device?.name
     }
     
     static var sample: Workout {
@@ -58,41 +73,6 @@ extension Workout {
 // MARK: - Strings
 
 extension Workout {
-    
-    private static let numberFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
-        return formatter
-    }()
-    
-    private var numberFormatter: NumberFormatter {
-        type(of: self).numberFormatter
-    }
-    
-    private func stringForValue(_ value: Any) -> String {
-        numberFormatter.string(from: value as? NSNumber ?? 0) ?? "n/a"
-    }
-    
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .none
-        return formatter
-    }()
-    
-    private var dateFormatter: DateFormatter {
-        type(of: self).dateFormatter
-    }
-    
-    var distanceString: String {
-        String(format: "%@ MI", stringForValue(distance))
-    }
-    
-    var dateString: String {
-        dateFormatter.string(from: startDate)
-    }
     
     var descriptionString: String {
         indoor ? "Indoor Cycle" : "Outdoor Cycle"

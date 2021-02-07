@@ -14,8 +14,9 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
-                Button(action: authAction) {
-                    Text("Request HealthKit Permissions")
+                Section(header: Text("Preferences")) {
+                    Text("Distance")
+                    Text("Temperature")
                 }
             }
             .navigationBarTitle("Settings")
@@ -28,17 +29,6 @@ struct SettingsView: View {
 // MARK: - Methods
 
 extension SettingsView {
-    
-    func authAction() {
-        HealthData.requestHealthAuthorization { result in
-            switch result {
-            case .success(let success):
-                Log.debug("authorization succeeded: \(success)")
-            case .failure(let error):
-                Log.debug("authorization failed: \(error.localizedDescription)")
-            }
-        }
-    }
     
     func doneButton() -> some View{
         Button(action: { presentationMode.wrappedValue.dismiss() }) {

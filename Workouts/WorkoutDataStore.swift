@@ -36,29 +36,27 @@ struct WorkoutDataStore {
         healthStore.execute(query)
     }
     
+    static func fetchTotalWorkouts(completionHandler: @escaping (Result<Int, Error>) -> Void) {
+        let query = HKSampleQuery(
+            sampleType: .workoutType(),
+            predicate: nil, limit: HKObjectQueryNoLimit,
+            sortDescriptors: nil) { (query, samples, error) in
+            if let error = error {
+                completionHandler(.failure(error))
+                return
+            }
+            
+            let samples = samples as? [HKWorkout] ?? [HKWorkout]()
+            completionHandler(.success(samples.count))
+        }
+        healthStore.execute(query)
+        
+    }
+    
     static func predicateForActivities(_ activities: [HKWorkoutActivityType]) -> NSPredicate {
         if activities.isEmpty { fatalError("activities cannot be empty") }
         let predicates = activities.map({ HKQuery.predicateForWorkouts(with: $0) })
         return NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
-    }
-    
-    static func fetchWorkouts(for activities: [HKWorkoutActivityType], completionHandler: @escaping (Result<[HKWorkout], DataError>) -> Void) {
-        let predicate = predicateForActivities(activities)
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        
-        let query = HKSampleQuery(
-            sampleType: .workoutType(),
-            predicate: predicate,
-            limit: HKObjectQueryNoLimit,
-            sortDescriptors: [sortDescriptor]) { (query, samples, error) in
-            guard let samples = samples as? [HKWorkout] else {
-                completionHandler(.failure(dataError(.missingData, system: error)))
-                return
-            }
-            
-            completionHandler(.success(samples))
-        }
-        healthStore.execute(query)
     }
     
     static func fetchRoute(for workout: HKWorkout, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
@@ -128,6 +126,44 @@ struct WorkoutDataStore {
                 completionHandler(.success(true))
                 store.stop(query)
             }
+        }
+        healthStore.execute(query)
+    }
+    
+}
+
+// MARK: - Heart Rate
+
+extension WorkoutDataStore {
+    
+    typealias HeartRateSample = (avg: Double?, max: Double?)
+    
+    static func fetchHeartRateSample(for workout: UUID, completionHandler: @escaping (Result<HeartRateSample, Error>) -> Void) {
+        fetchWorkout(for: workout) { (workout) in
+            guard let workout = workout else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+            fetchHeartRateSample(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
+        }
+    }
+    
+    static func fetchHeartRateSample(start: Date, end: Date, completionHandler: @escaping (Result<HeartRateSample, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        
+        let query = HKStatisticsQuery(
+            quantityType: .heartRate(),
+            quantitySamplePredicate: predicate,
+            options: [.discreteAverage, .discreteMax]) { (query, statistics, error) in
+            guard let statistics = statistics else {
+                completionHandler(.failure(error ?? DataError.failure))
+                return
+            }
+            
+            let avg = statistics.averageQuantity()?.doubleValue(for: HKUnit.bpm())
+            let max = statistics.maximumQuantity()?.doubleValue(for: HKUnit.bpm())
+            
+            completionHandler(.success((avg, max)))
         }
         healthStore.execute(query)
     }
@@ -238,10 +274,9 @@ extension WorkoutDataStore {
             }
             
             if let heartRate = interval.heartRate {
-                let unit = HKUnit.count().unitDivided(by: HKUnit.minute())
                 let sample = HKQuantitySample(
                     type: .heartRate(),
-                    quantity: HKQuantity(unit: unit, doubleValue: heartRate),
+                    quantity: HKQuantity(unit: HKUnit.bpm(), doubleValue: heartRate),
                     start: start,
                     end: end
                 )
@@ -270,28 +305,13 @@ extension WorkoutDataStore {
     
     private static func metadata(for metadata: WorkoutMetadata) -> [String: Any] {
         var dictionary = [String: Any]()
-        
-        if let avgTemperature = metadata.avgTemperature.temperatureValue {
-            dictionary[HKMetadataKeyWeatherTemperature] = HKQuantity(unit: .degreeCelsius(), doubleValue: avgTemperature)
-        }
-
-        if let avgSpeed = metadata.avgSpeed.speedValue {
-            let unit = HKUnit.meter().unitDivided(by: .second())
-            dictionary[HKMetadataKeyAverageSpeed] = HKQuantity(unit: unit, doubleValue: avgSpeed)
-        }
-
-        if let maxSpeed = metadata.maxSpeed.speedValue {
-            let unit = HKUnit.meter().unitDivided(by: .second())
-            dictionary[HKMetadataKeyMaximumSpeed] = HKQuantity(unit: unit, doubleValue: maxSpeed)
-        }
-        
-        if let totalAscent = metadata.totalAscent.altitudeValue {
-            dictionary[HKMetadataKeyElevationAscended] = HKQuantity(unit: .meter(), doubleValue: totalAscent)
-        }
-        
-        if let totalDescent = metadata.totalDescent.altitudeValue {
-            dictionary[HKMetadataKeyElevationDescended] = HKQuantity(unit: .meter(), doubleValue: totalDescent)
-        }
+        dictionary[HKMetadataKeyWeatherTemperature] = metadata.avgTemperatureQuantity
+        dictionary[HKMetadataKeyAverageSpeed] = metadata.avgSpeedQuantity
+        dictionary[HKMetadataKeyMaximumSpeed] = metadata.maxSpeedQuantity
+        dictionary[HKMetadataKeyElevationAscended] = metadata.totalAscentQuantity
+        dictionary[HKMetadataKeyElevationDescended] = metadata.totalDescentQuantity
+        dictionary[MetadataKeyAvgCyclingCadence] = metadata.avgCadenceValue
+        dictionary[MetadataKeyMaxCyclingCadence] = metadata.maxCadenceValue
         
         // TODO: Pending Metadata
         // Average METs
@@ -299,72 +319,7 @@ extension WorkoutDataStore {
         // Time Zone
         // Elevation Ascended
         
-        return dictionary
-    }
-    
-}
-
-// MARK: - Quantities
-
-extension WorkoutDataStore {
-    typealias DoubleResultHandler = (Result<Double, Error>) -> Void
-    typealias IntegerResultHandler = (Result<Int, Error>) -> Void
-    
-    static func fetchTotalWorkouts(for activities: [HKWorkoutActivityType], completionHandler: @escaping IntegerResultHandler) {
-        fetchWorkouts(for: activities) { result in
-            switch result {
-            case .success(let workouts):
-                completionHandler(.success(workouts.count))
-            case .failure(let error):
-                completionHandler(.failure(error))
-            }
-        }
-    }
-    
-    static func fetchTotalCalories(for activities: [HKWorkoutActivityType], completionHandler: @escaping DoubleResultHandler) {
-        fetchStatisticsSumValue(
-            for: HKQuantityTypeIdentifier.activeEnergyBurned,
-            unit: .kilocalorie(),
-            predicate: nil,
-            completionHandler: completionHandler
-        )
-    }
-    
-    static func fetchTotalDistance(for activities: [HKWorkoutActivityType], completionHandler: @escaping DoubleResultHandler) {
-        fetchStatisticsSumValue(
-            for: HKQuantityTypeIdentifier.distanceCycling,
-            unit: .mile(),
-            predicate: predicateForActivities(activities),
-            completionHandler: completionHandler
-        )
-    }
-    
-    private static func fetchStatisticsSumValue(for identifier: HKQuantityTypeIdentifier, unit: HKUnit, predicate: NSPredicate? = nil, completionHandler: @escaping DoubleResultHandler) {
-        guard let quantityType = HKQuantityType.quantityType(forIdentifier: identifier) else {
-            fatalError("invalid quantity type")
-        }
-        
-        let options = HKStatisticsOptions.cumulativeSum
-        let query = HKStatisticsQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: options) { (query, statistics, error) in
-            guard let quantity = quantity(for: statistics, options: options) else {
-                completionHandler(.failure(DataError.missingData))
-                return
-            }
-            
-            let value = quantity.doubleValue(for: unit)
-            completionHandler(.success(value))
-        }
-        healthStore.execute(query)
-    }
-    
-    private static func quantity(for statistics: HKStatistics?, options: HKStatisticsOptions) -> HKQuantity? {
-        guard let statistics = statistics else { return nil }
-        switch options {
-        case .cumulativeSum:
-            return statistics.sumQuantity()
-        default:
-            return nil
-        }
+        return dictionary.compactMapValues({ $0 })
     }
     
 }

@@ -14,37 +14,45 @@ struct WorkoutsView: View {
     }
     
     @EnvironmentObject var workoutManager: WorkoutManager
-    
     @State var activeSheet: ActiveSheet?
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(workoutManager.workouts) { workout in
-                    NavigationLink(destination: DetailView(workout: workout)) {
-                        VStack(alignment: .leading) {
-                            Text(workout.descriptionString)
-                            Text(workout.distanceString)
-                                .font(.title2)
-                            HStack {
-                                Text(workout.source)
-                                Spacer()
-                                Text(workout.dateString)
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.secondaryLabel)
+            ZStack {
+                List {
+                    ForEach(workoutManager.workouts) { workout in
+                        NavigationLink(destination: DetailView(workout: workout)) {
+                            VStack(alignment: .leading) {
+                                Text(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
+                                Text(formattedDistanceString(for: workout.distance))
+                                    .font(.title2)
+                                HStack {
+                                    Text(workout.source)
+                                    Spacer()
+                                    Text(formattedRelativeDateString(for: workout.startDate))
+                                        .font(.subheadline)
+                                        .foregroundColor(Color.secondaryLabel)
+                                }
                             }
                         }
                     }
                 }
+                .listStyle(PlainListStyle())
+                
+                if workoutManager.state == .empty || workoutManager.state == .notAvailable {
+                    Color.systemBackground
+                        .ignoresSafeArea()
+                    AuthMessageView(workoutState: workoutManager.state)
+                }
             }
-            .listStyle(PlainListStyle())
             .navigationTitle("Workouts")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {}) {
-                        Text("All Workouts")
-                    }
-                }
+                // TODO: Implement workout filters
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    Button(action: {}) {
+//                        Text("All Workouts")
+//                    }
+//                }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
@@ -84,8 +92,15 @@ struct WorkoutsView: View {
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
+    static var workoutManager: WorkoutManager = {
+        let manager = WorkoutManager()
+        //manager.state = .empty
+        manager.workouts = WorkoutManager.sampleWorkouts()
+        return manager
+    }()
+    
     static var previews: some View {
         WorkoutsView()
-            .environmentObject(WorkoutManager())
+            .environmentObject(workoutManager)
     }
 }
