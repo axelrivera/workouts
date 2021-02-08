@@ -5,19 +5,24 @@
 //  Created by Axel Rivera on 1/31/21.
 //
 
-import Foundation
+import SwiftUI
 import FitFileParser
 import HealthKit
 
 class ImportManager: ObservableObject {
     enum State {
-        case ok, empty, notAuthorized, notAvailable
+        case processing, ok, empty, notAuthorized, notAvailable
         
         var isWhitelisted: Bool {
             Self.whitelisted.contains(self)
         }
         
+        var showEmptyView: Bool {
+            Self.emptyViewStates.contains(self)
+        }
+        
         static let whitelisted: [State] = [.ok, .empty]
+        static let emptyViewStates: [State] = [.empty, .notAuthorized, notAvailable]
     }
     
     @Published var workouts = [WorkoutImport]()
@@ -57,16 +62,22 @@ extension ImportManager {
         DispatchQueue.main.async {
             switch status {
             case .sharingAuthorized:
-                self.state = self.workouts.isEmpty ? .empty : .ok
+                withAnimation {
+                    self.state = self.workouts.isEmpty ? .empty : .ok
+                }
             default:
-                self.state = .notAuthorized
+                withAnimation {
+                    self.state = .notAuthorized
+                }
             }
         }
     }
     
     func updateState(_ state: State) {
         DispatchQueue.main.async {
-            self.state = state
+            withAnimation {
+                self.state = state
+            }
         }
     }
     
@@ -78,7 +89,9 @@ extension ImportManager {
     func deleteWorkout(at offsets: IndexSet) {
         DispatchQueue.main.async {
             self.workouts.remove(atOffsets: offsets)
-            self.state = self.workouts.isEmpty ? .empty : .ok
+            withAnimation {
+                self.state = self.workouts.isEmpty ? .empty : .ok
+            }
         }
     }
         
@@ -116,21 +129,15 @@ extension ImportManager {
         importQueue.cancelAllOperations()
     }
     
-    func reset() {
-        urls = [URL]()
-        workouts = [WorkoutImport]()
-    }
-    
     func processDocuments(at urls: [URL], completionHandler: @escaping (() -> Void)) {
-        reset()
+        self.urls = urls
+        workouts = [WorkoutImport]()
         
         DispatchQueue.global(qos: .userInitiated).async {
             var workouts = [WorkoutImport]()
-            self.urls = urls
             for url in urls {
                 guard let fit = FitFile(file: url) else { continue }
                 guard let workout = WorkoutImport(fit: fit) else { continue }
-                
                 workouts.append(workout)
             }
             
@@ -141,7 +148,6 @@ extension ImportManager {
             
             DispatchQueue.main.async {
                 self.workouts = sortedWorkouts
-                self.state = self.workouts.isEmpty ? .empty : .ok
                 completionHandler()
             }
         }

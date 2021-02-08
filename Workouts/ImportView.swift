@@ -30,10 +30,20 @@ struct ImportView: View {
             ZStack {
                 VStack {
                     Form {
-                        ForEach(importManager.workouts) { workout in
-                            ImportRow(workout: workout)
+                        if importManager.state == .processing {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                Spacer()
+                            }
+                            .id(UUID())
+                        } else {
+                            ForEach(importManager.workouts) { workout in
+                                ImportRow(workout: workout)
+                            }
+                            .onDelete(perform: importManager.deleteWorkout)
                         }
-                        .onDelete(perform: importManager.deleteWorkout)
                     }
                     .onAppear {
                         importManager.requestWritingAuthorization { (success) in
@@ -42,19 +52,11 @@ struct ImportView: View {
                     }
                     RoundButton(text: "Import", action: processImports)
                         .padding()
-                        .disabled(importManager.isImportDisabled)
+                        .disabled(withAnimation { importManager.isImportDisabled })
+                        .transition(AnyTransition.opacity)
                 }
                 
-                if isProcessingDocuments {
-                    Color.systemBackground
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 20.0) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                        Text("Processing Files")
-                    }
-                } else if importManager.state != .ok {
+                if importManager.state.showEmptyView {
                     Color.systemBackground
                         .ignoresSafeArea()
                     ImportEmptyView(importState: importManager.state)
@@ -68,10 +70,10 @@ struct ImportView: View {
                     DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
                         Log.debug("processing documents")
                         
-                        isProcessingDocuments = true
+                        importManager.state = .processing
                         importManager.processDocuments(at: urls) {
+                            importManager.state = urls.isEmpty ? .empty : .ok
                             Log.debug("finish processing documents")
-                            isProcessingDocuments = false
                         }
                     }
                 }
@@ -102,7 +104,7 @@ private extension ImportView {
         Button(action: { activeSheet = .document }) {
             Image(systemName: "plus")
         }
-        .disabled(importManager.isAddImportDisabled)
+        .disabled(withAnimation { importManager.isAddImportDisabled })
     }
     
     func dismissButton() -> some View {
@@ -134,7 +136,7 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .ok
+        manager.state = .processing
         manager.loadSampleWorkouts()
         return manager
     }()
