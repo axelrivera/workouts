@@ -71,6 +71,8 @@
 		16E75A0125BB9CD6007E6FE6 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A3A5E925B8F477003D1AB2 /* Log.swift */; };
 		16E75A0625BB9CF2007E6FE6 /* WorkoutImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AD0F9925B5DA2C0092FA91 /* WorkoutImport.swift */; };
 		16E75A0F25BB9D6E007E6FE6 /* cycling_example.fit in Resources */ = {isa = PBXBuildFile; fileRef = 16E75A0E25BB9D6E007E6FE6 /* cycling_example.fit */; };
+		16E8321D25D2096100382545 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8321C25D2096100382545 /* AppSettings.swift */; };
+		16E8322925D20B4500382545 /* Locale+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8322825D20B4500382545 /* Locale+Additions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -142,6 +144,8 @@
 		16E759E925BB9B60007E6FE6 /* GarminFitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminFitTests.swift; sourceTree = "<group>"; };
 		16E759EB25BB9B60007E6FE6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16E75A0E25BB9D6E007E6FE6 /* cycling_example.fit */ = {isa = PBXFileReference; lastKnownFileType = file; path = cycling_example.fit; sourceTree = "<group>"; };
+		16E8321C25D2096100382545 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		16E8322825D20B4500382545 /* Locale+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Locale+Additions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,6 +249,7 @@
 				16A065EB25C3715300019096 /* MKCoordinateRegion+Additions.swift */,
 				16A0662325C63E9C00019096 /* FitUtils.swift */,
 				16A0663225C751FD00019096 /* Date+Additions.swift */,
+				16E8322825D20B4500382545 /* Locale+Additions.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -265,6 +270,7 @@
 			children = (
 				161FDB6525B34D4B00929433 /* WorkoutsApp.swift */,
 				1645B91A25B350BB00B04478 /* AppData.swift */,
+				16E8321C25D2096100382545 /* AppSettings.swift */,
 			);
 			name = "App + Constants";
 			sourceTree = "<group>";
@@ -494,6 +500,7 @@
 				16A0660925C48EC000019096 /* WorkoutImport+Interval.swift in Sources */,
 				16A065F225C37F1500019096 /* DetailManager.swift in Sources */,
 				16A0660E25C48FB500019096 /* WorkoutImport+Events.swift in Sources */,
+				16E8321D25D2096100382545 /* AppSettings.swift in Sources */,
 				1645B92C25B350BB00B04478 /* WorkoutsView.swift in Sources */,
 				1645B94925B3669E00B04478 /* TimePicker.swift in Sources */,
 				16A065EC25C3715300019096 /* MKCoordinateRegion+Additions.swift in Sources */,
@@ -522,6 +529,7 @@
 				16682B6125CF15F300FC9317 /* WorkoutEmptyView.swift in Sources */,
 				1645B92825B350BB00B04478 /* AppData.swift in Sources */,
 				165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */,
+				16E8322925D20B4500382545 /* Locale+Additions.swift in Sources */,
 				16A0662425C63E9C00019096 /* FitUtils.swift in Sources */,
 				1645B94625B3612700B04478 /* RowItem.swift in Sources */,
 				16AB3DA325D096A10082A610 /* NotAvailableView.swift in Sources */,

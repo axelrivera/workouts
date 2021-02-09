@@ -8,6 +8,8 @@
 import Foundation
 import HealthKit
 
+// MARK: - Dates and Times
+
 func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
@@ -26,36 +28,40 @@ func formattedTimeString(for date: Date?) -> String {
     return DateFormatter.time.string(from: date)
 }
 
-// TODO: Implement Global Unit
+// MARK: - Distance and Speed
 
 func formattedDistanceString(for meters: Double?) -> String {
     let measurement = Measurement<UnitLength>(value: meters ?? 0, unit: .meters)
-    let conversion = measurement.converted(to: .miles)
-    return MeasurementFormatter.distance.string(from: conversion)
+    return MeasurementFormatter.distance.string(from: measurement)
 }
-
-// TODO: Implement Global Unit
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
     let measurement = Measurement<UnitSpeed>(value: metersPerSecond ?? 0, unit: .metersPerSecond)
-    let conversion = measurement.converted(to: .milesPerHour)
-    return MeasurementFormatter.distance.string(from: conversion)
+    return MeasurementFormatter.speed.string(from: measurement)
 }
+
+// MARK: - Heart Rate
 
 func formattedHeartRateString(for heartRate: Double?) -> String {
     let number = (heartRate ?? 0) as NSNumber
     return String(format: "%@ bpm", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
+// MARK: - Cadence
+
 func formattedCyclingCadenceString(for cadence: Double?) -> String {
     let number = (cadence ?? 0) as NSNumber
     return String(format: "%@ rpm", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
+// MARK: - Energy
+
 func formattedCaloriesString(for calories: Double?) -> String {
     let number = (calories ?? 0) as NSNumber
     return String(format: "%@ cal", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
+
+// MARK: - Activities
 
 func formattedActivityTypeString(for activityType: HKWorkoutActivityType, indoor: Bool) -> String {
     var strings = [String]()
@@ -144,26 +150,17 @@ private extension NumberFormatter {
 
 private extension MeasurementFormatter {
     
-    static let energy: MeasurementFormatter = {
-       let formatter = MeasurementFormatter()
-        formatter.numberFormatter = NumberFormatter.integer
-        formatter.unitStyle = .medium
-        return formatter
-    }()
-    
     static let distance: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distance
         formatter.unitStyle = .medium
-        
         return formatter
     }()
     
     static let speed: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.speed
-        formatter.unitStyle = .short
-        
+        formatter.unitStyle = .medium
         return formatter
     }()
     

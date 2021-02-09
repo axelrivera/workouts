@@ -10,14 +10,11 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var workoutManager: WorkoutManager
-        
+            
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Preferences")) {
-                    Text("Distance")
-                    Text("Temperature")
-                }
+                
             }
             .navigationBarTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
