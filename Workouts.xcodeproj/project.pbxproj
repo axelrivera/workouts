@@ -63,7 +63,7 @@
 		16ACF73525C8D61000CAFDBC /* FormatterUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16ACF73425C8D61000CAFDBC /* FormatterUtils.swift */; };
 		16ACF73A25C8D77C00CAFDBC /* Date+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0663225C751FD00019096 /* Date+Additions.swift */; };
 		16AD0F9A25B5DA2C0092FA91 /* WorkoutImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AD0F9925B5DA2C0092FA91 /* WorkoutImport.swift */; };
-		16AD0F9E25B5E58A0092FA91 /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 16AD0F9D25B5E58A0092FA91 /* FitFileParser */; };
+		16AD0F9E25B5E58A0092FA91 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; productRef = 16AD0F9D25B5E58A0092FA91 /* SwiftPackageProductDependency */; };
 		16D154E225D6ED4D00E2AC7C /* Sport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8323825D4B06200382545 /* Sport.swift */; };
 		16D154E525D6ED5300E2AC7C /* HealthKit+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93E25B3546B00B04478 /* HealthKit+Additions.swift */; };
 		16D154EA25D6ED7400E2AC7C /* TimeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91625B350BA00B04478 /* TimeHelper.swift */; };
@@ -168,7 +168,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
-				16AD0F9E25B5E58A0092FA91 /* FitFileParser in Frameworks */,
+				16AD0F9E25B5E58A0092FA91 /* BuildFile in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -410,7 +410,7 @@
 			);
 			name = Workouts;
 			packageProductDependencies = (
-				16AD0F9D25B5E58A0092FA91 /* FitFileParser */,
+				16AD0F9D25B5E58A0092FA91 /* SwiftPackageProductDependency */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Workouts.app */;
@@ -463,7 +463,7 @@
 			);
 			mainGroup = 161FDB5925B34D4B00929433;
 			packageReferences = (
-				16AD0F9C25B5E58A0092FA91 /* XCRemoteSwiftPackageReference "FitFileParser" */,
+				16AD0F9C25B5E58A0092FA91 /* RemoteSwiftPackageReference */,
 			);
 			productRefGroup = 161FDB6325B34D4B00929433 /* Products */;
 			projectDirPath = "";
@@ -722,7 +722,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
@@ -844,7 +844,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		16AD0F9C25B5E58A0092FA91 /* XCRemoteSwiftPackageReference "FitFileParser" */ = {
+		16AD0F9C25B5E58A0092FA91 /* RemoteSwiftPackageReference */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://axelrivera@github.com/roznet/FitFileParser.git";
 			requirement = {
@@ -855,9 +855,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		16AD0F9D25B5E58A0092FA91 /* FitFileParser */ = {
+		16AD0F9D25B5E58A0092FA91 /* SwiftPackageProductDependency */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 16AD0F9C25B5E58A0092FA91 /* XCRemoteSwiftPackageReference "FitFileParser" */;
+			package = 16AD0F9C25B5E58A0092FA91 /* RemoteSwiftPackageReference */;
 			productName = FitFileParser;
 		};
 /* End XCSwiftPackageProductDependency section */
