@@ -16,10 +16,14 @@ func formattedTimeDurationString(for duration: Double?) -> String {
 
 func formattedRelativeDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
-    if date.isWithinNumberOfDays(6) {
+    if Calendar.current.isDateInToday(date) {
+        return "Today"
+    } else if Calendar.current.isDateInYesterday(date) {
+        return "Yesterday"
+    } else if date.isWithinNumberOfDays(6) {
         return DateFormatter.relative.string(from: date)
     } else {
-        return DateFormatter.short.string(from: date)
+        return DateFormatter.medium.string(from: date)
     }
 }
 
@@ -106,6 +110,13 @@ private extension DateFormatter {
     static let short: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
+    static let medium: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter
     }()

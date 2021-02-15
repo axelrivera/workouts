@@ -34,10 +34,10 @@ struct ImportRow: View {
                     }
                 }
                 HStack {
-                    Text(workout.formattedDistance)
+                    Text(formattedDistanceString(for: workout.totalDistance.distanceValue))
                         .font(.title)
                     Spacer()
-                    Text(workout.formattedDate)
+                    Text(formattedRelativeDateString(for: workout.startDate))
                         .font(.subheadline)
                 }
             }

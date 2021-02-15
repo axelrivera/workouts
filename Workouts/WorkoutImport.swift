@@ -142,28 +142,6 @@ extension WorkoutImport {
         String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.title)
     }
     
-    var formattedDistance: String {
-        let distance = Measurement<UnitLength>(value: totalDistance.distanceValue ?? 0, unit: .meters)
-        let distanceInMiles = distance.converted(to: .miles)
-        let formatter = MeasurementFormatter()
-        return formatter.string(from: distanceInMiles)
-    }
-    
-    var formattedDate: String {
-        guard let date = startDate else { return "" }
-        
-        if date.isWithinNumberOfDays(7) {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE"
-            return formatter.string(for: date) ?? ""
-        } else {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            formatter.timeStyle = .none
-            return formatter.string(for: date) ?? ""
-        }
-    }
-    
 }
 
 // MARK: - Helper Methods
