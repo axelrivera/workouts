@@ -45,11 +45,8 @@ struct ImportView: View {
                             .onDelete(perform: importManager.deleteWorkout)
                         }
                     }
-                    .onAppear {
-                        importManager.requestWritingAuthorization { (success) in
-                            Log.debug("writing authorization succeeded: \(success)")
-                        }
-                    }
+                    .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
+                    
                     RoundButton(text: "Import", action: processImports)
                         .padding()
                         .disabled(withAnimation { importManager.isImportDisabled })
@@ -68,8 +65,6 @@ struct ImportView: View {
                 switch item {
                 case .document:
                     DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
-                        Log.debug("processing documents")
-                        
                         importManager.state = .processing
                         importManager.processDocuments(at: urls) {
                             importManager.state = urls.isEmpty ? .empty : .ok
@@ -136,7 +131,7 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .processing
+        manager.state = .ok
         manager.loadSampleWorkouts()
         return manager
     }()

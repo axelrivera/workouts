@@ -9,36 +9,9 @@ import Foundation
 import CoreLocation
 import FitFileParser
 
-class WorkoutImport: ObservableObject, Identifiable, WorkoutMetadata {
+class WorkoutImport: ObservableObject, Identifiable {
     enum Status {
         case new, processing, processed, notSupported, failed
-    }
-    
-    enum Sport: String {
-        case cycling, running, walking, other
-        
-        init(string: String) {
-            self = Sport(rawValue: string) ?? .other
-        }
-        
-        var isSupported: Bool {
-            Self.supportedSports.contains(self)
-        }
-        
-        var title: String {
-            switch self {
-            case .cycling:
-                return "Cycle"
-            case .running:
-                return "Run"
-            case .walking:
-                return "Walk"
-            default:
-                return "Generic Activity"
-            }
-        }
-        
-        static var supportedSports: [Sport] = [.cycling]
     }
     
     let id = UUID()
@@ -66,7 +39,9 @@ class WorkoutImport: ObservableObject, Identifiable, WorkoutMetadata {
     var totalEnergyBurned: Value = .init(valueType: .calories, value: 0)
     
     var avgCadence: Value = .init(valueType: .cadence, value: 0)
+    var avgFractionalCadence: Value = .init(valueType: .cadence, value: 0)
     var maxCadence: Value = .init(valueType: .cadence, value: 0)
+    var maxFractionalCadence: Value = .init(valueType: .cadence, value: 0)
     
     var avgTemperature: Value = .init(valueType: .temperature, value: 0)
     var maxTemperature: Value = .init(valueType: .temperature, value: 0)
@@ -86,7 +61,7 @@ class WorkoutImport: ObservableObject, Identifiable, WorkoutMetadata {
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
         status = self.sport.isSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
-        
+                
         timestamp = .init(valueType: .date, field: session.interpretedField(key: "timestamp"))
         start = .init(valueType: .date, field: session.interpretedField(key: "start_time"))
         totalElapsedTime = .init(valueType: .time, field: session.interpretedField(key: "total_elapsed_time"))
@@ -105,7 +80,9 @@ class WorkoutImport: ObservableObject, Identifiable, WorkoutMetadata {
         totalEnergyBurned = .init(valueType: .calories, field: session.interpretedField(key: "total_calories"))
         
         avgCadence = .init(valueType: .cadence, field: session.interpretedField(key: "avg_cadence"))
+        avgFractionalCadence = .init(valueType: .cadence, field: session.interpretedField(key: "avg_fractional_cadence"))
         maxCadence = .init(valueType: .cadence, field: session.interpretedField(key: "max_cadence"))
+        maxFractionalCadence = .init(valueType: .cadence, field: session.interpretedField(key: "max_fractional_cadence"))
         
         avgTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "avg_temperature"))
         maxTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "max_temperature"))
@@ -126,44 +103,33 @@ extension WorkoutImport {
         start.dateValue
     }
     
+    var totalAvgCadence: Value {
+        Value.totalCadence(for: avgCadence, fractional: avgFractionalCadence)
+    }
+    
+    var totalMaxCadence: Value {
+        Value.totalCadence(for: maxCadence, fractional: maxFractionalCadence)
+    }
+    
+    var avgMETValue: Double? {
+        let values = records.compactMap { record -> Double? in
+            guard let speed = record.speed.speedValue else { return nil }
+            return metValueFor(sport: sport, indoor: indoor, speed: speed)
+        }
+        if values.isEmpty { return nil }
+        
+        let sum = values.reduce(0, +)
+        return sum / Double(values.count)
+    }
+    
     var endDate: Date? {
         guard let startDate = startDate else { return nil }
         guard let duration = totalElapsedTime.timeValue else { return nil }
         return startDate.addingTimeInterval(duration)
     }
     
-    var intervals: [Interval] {
-        var intervals = [Interval]()
-        
-        var prevRecord: Record?
-        for record in records {
-            if let startRecord = prevRecord {
-                let interval = Interval(start: startRecord, end: record)
-                intervals.append(interval)
-            }
-            prevRecord = record
-        }
-        
-        return intervals
-    }
-    
     var locations: [CLLocation] {
-        records.compactMap { record in
-            guard let coordinate = record.position.coordinateValue else { return nil }
-            guard let timestamp = record.timestamp.dateValue else { return nil }
-            let altitude = record.altitude.altitudeValue ?? 0.0
-            let speed = record.speed.speedValue ?? 0.0
-            
-            return CLLocation(
-                coordinate: coordinate,
-                altitude: altitude,
-                horizontalAccuracy: 0,
-                verticalAccuracy: 0,
-                course: -1,
-                speed: speed,
-                timestamp: timestamp
-            )
-        }
+        records.compactMap { $0.location }
     }
     
 }

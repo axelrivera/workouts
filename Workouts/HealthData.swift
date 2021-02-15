@@ -52,7 +52,7 @@ extension HealthData {
             HKQuantityType.distanceWalkingRunning(),
             HKQuantityType.activeEnergyBurned(),
             HKQuantityType.heartRate(),
-            
+            HKQuantityType.weight()
         ]
     }
     

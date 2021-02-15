@@ -114,6 +114,12 @@ extension WorkoutImport {
             guard valueType == .temperature && unit == ValueType.unit(for: .temperature) else { return nil }
             return value as? Double
         }
+        
+        static func totalCadence(for cadence: Value, fractional: Value) -> Value {
+            let cadenceValue = cadence.cadenceValue ?? 0
+            let fractionalValue = fractional.cadenceValue ?? 0
+            return Value(valueType: .cadence, value: cadenceValue + fractionalValue)
+        }
     }
     
 }

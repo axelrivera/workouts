@@ -26,14 +26,14 @@ struct Settings<T> {
 
 struct AppSettings {
     struct Keys {
-        static let propertyName = "arn_property_name"
+        static let weightInKilograms = "arn_weight_in_kilograms"
     }
 
     static func synchronize() {
         UserDefaults.standard.synchronize()
     }
     
-    //    @Settings(Keys.nameOfKey, defaultValue: 0)
-    //    static var propertyName: Double
     
+    @Settings(Keys.weightInKilograms, defaultValue: nil)
+    static var weight: Double?
 }

@@ -84,55 +84,48 @@ class WorkoutManager: ObservableObject {
             return
         }
         
-        Log.debug("fetch workouts")
-        
+        ProfileDataStore.fetchWeightInKilograms { (weight) in
+            guard let weight = weight else { return }
+            AppSettings.weight = weight
+        }
+                
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
             predicate: nil,
             anchor: lastWorkoutAnchor,
             limit: HKObjectQueryNoLimit) { (query, samples, deleted, anchor, error) in
-            Log.debug("got results")
-            
-            if let error = error {
-                Log.debug("fetch workouts failed: \(error.localizedDescription)")
-            }
-            
-            guard let samples = samples as? [HKWorkout], let deleted = deleted else { return }
-            
             self.lastWorkoutAnchor = anchor
-            
-            let workouts = samples.map { Workout(object: $0) }
-            DispatchQueue.main.async {
-                self.workouts.append(contentsOf: workouts)
-                self.state = workouts.isEmpty ? .empty : .ok
-                
-                for object in deleted {
-                    if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
-                        self.workouts.remove(at: index)
-                    }
-                }
-            }
+            self.updateWorkouts(samples: samples, deleted: deleted)
         }
         
         query.updateHandler = { (query, samples, deleted, anchor, error) in
-            guard let samples = samples as? [HKWorkout], let deleted = deleted else { return }
-            
             self.lastWorkoutAnchor = anchor
-            
-            let workouts = samples.map { Workout(object: $0) }
-            DispatchQueue.main.async {
-                self.workouts.insert(contentsOf: workouts, at: 0)
-                
-                for object in deleted {
-                    if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
-                        self.workouts.remove(at: index)
-                    }
-                }
-            }
+            self.updateWorkouts(samples: samples, deleted: deleted)
         }
         
         workoutQuery = query
         healthStore.execute(query)
+    }
+    
+    func updateWorkouts(samples: [HKSample]?, deleted: [HKDeletedObject]?) {
+        let deletedObjects = deleted ?? [HKDeletedObject]()
+        for object in deletedObjects {
+            if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
+                DispatchQueue.main.async {
+                    self.workouts.remove(at: index)
+                    self.state = self.workouts.isEmpty ? .empty : .ok
+                }
+            }
+        }
+        
+        if let samples = samples as? [HKWorkout] {
+            let newWorkouts = samples.map { Workout(object: $0) }
+            DispatchQueue.main.async {
+                self.workouts.append(contentsOf: newWorkouts)
+                self.workouts.sort(by: { $0.startDate.compare($1.startDate) == .orderedDescending })
+                self.state = self.workouts.isEmpty ? .empty : .ok
+            }
+        }
     }
 }
 
@@ -144,6 +137,10 @@ extension WorkoutManager {
         DispatchQueue.main.async {
             self.shouldRequestReadingAuthorization = shouldRequestReadingAuthorization
         }
+    }
+    
+    func validateState() {
+        updateState(workouts.isEmpty ? .empty : .ok)
     }
     
     func updateState(_ state: State) {

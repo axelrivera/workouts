@@ -7,6 +7,7 @@
 
 import Foundation
 import FitFileParser
+import CoreLocation
 
 extension WorkoutImport {
     
@@ -18,6 +19,7 @@ extension WorkoutImport {
         let speed: Value
         let heartRate: Value
         let cadence: Value
+        let fractionalCadence: Value
         let temperature: Value
         
         init(message: FitMessage) {
@@ -28,8 +30,31 @@ extension WorkoutImport {
             speed = Value(valueType: .speed, field: message.interpretedField(key: "speed"))
             heartRate = Value(valueType: .heartRate, field: message.interpretedField(key: "heart_rate"))
             cadence = Value(valueType: .cadence, field: message.interpretedField(key: "cadence"))
+            fractionalCadence = Value(valueType: .cadence, field: message.interpretedField(key: "fractional_cadence"))
             temperature = Value(valueType: .temperature, field: message.interpretedField(key: "temperature"))
         }
+        
+        var totalCadence: Value {
+            Value.totalCadence(for: cadence, fractional: fractionalCadence)
+        }
+        
+        var location: CLLocation? {
+            guard let coordinate = position.coordinateValue else { return nil }
+            guard let timestamp = timestamp.dateValue else { return nil }
+            let altitude = self.altitude.altitudeValue ?? 0.0
+            let speed = self.speed.speedValue ?? 0.0
+            
+            return CLLocation(
+                coordinate: coordinate,
+                altitude: altitude,
+                horizontalAccuracy: -1,
+                verticalAccuracy: -1,
+                course: -1,
+                speed: speed,
+                timestamp: timestamp
+            )
+        }
+        
     }
     
 }

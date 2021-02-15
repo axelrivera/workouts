@@ -25,6 +25,10 @@ extension HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .heartRate)!
     }
     
+    static func weight() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .bodyMass)!
+    }
+    
 }
 
 extension HKQuantity {

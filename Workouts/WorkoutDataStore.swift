@@ -197,7 +197,7 @@ extension WorkoutDataStore {
             }
         }
         
-        let samples = self.samples(for: workoutImport.intervals)
+        let samples = self.samples(for: workoutImport.records, sport: workoutImport.sport, indoor: workoutImport.indoor)
         builder.add(samples) { (success, error) in
             guard success else {
                 Log.debug("samples failed: \(error?.localizedDescription ?? "n/a")")
@@ -257,45 +257,109 @@ extension WorkoutDataStore {
         }
     }
     
-    private static func samples(for intervals: [WorkoutImport.Interval]) ->  [HKSample] {
+    private static func samples(for records: [WorkoutImport.Record], sport: Sport, indoor: Bool) ->  [HKSample] {
         var samples = [HKSample]()
         
-        for interval in intervals {
-            guard let start = interval.startDate, let end = interval.endDate else { continue }
-
-            // TODO: - Update distances depending on activity type
-            if let distance = interval.distance {
-                let sample = HKCumulativeQuantitySample(
-                    type: .distanceCycling(),
-                    quantity: HKQuantity(unit: .meter(), doubleValue: distance),
-                    start: start, end: end
-                )
+        var prevRecord: WorkoutImport.Record?
+        for record in records {
+            if let sample = distanceSampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
                 samples.append(sample)
             }
             
-            if let heartRate = interval.heartRate {
-                let sample = HKQuantitySample(
-                    type: .heartRate(),
-                    quantity: HKQuantity(unit: HKUnit.bpm(), doubleValue: heartRate),
-                    start: start,
-                    end: end
-                )
+            if let sample = energySampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
                 samples.append(sample)
             }
             
-            if let energyBurned = interval.energyBurned {
-                let sample = HKCumulativeQuantitySample(
-                    type: .activeEnergyBurned(),
-                    quantity: HKQuantity(unit: .kilocalorie(),
-                                         doubleValue: energyBurned),
-                    start: start,
-                    end: end
-                )
+            if let sample = heartRateSampleFor(record: record) {
                 samples.append(sample)
             }
+            
+            prevRecord = record
         }
         
         return samples
+    }
+    
+    private static func distanceSampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record?, sport: Sport, indoor: Bool) -> HKSample? {
+        if indoor { return nil }
+        guard sport.hasDistanceSamples else { return nil }
+        
+        var quantityType: HKQuantityType?
+        switch sport {
+        case .cycling:
+            quantityType = .distanceCycling()
+        case .walking, .running:
+            quantityType = .distanceWalkingRunning()
+        default:
+            quantityType = nil
+        }
+        
+        if quantityType == nil { return nil }
+        
+        guard let timestamp = record.timestamp.dateValue else { return nil }
+        guard let endDistance = record.distance.distanceValue else { return nil }
+        let startDistance = prevRecord?.distance.distanceValue
+        
+        var distance: Double
+        if let startDistance = startDistance {
+            distance = endDistance - startDistance
+        } else {
+            distance = endDistance
+        }
+        
+        var metadata = [String: Any]()
+        if let cadence = record.totalCadence.cadenceValue {
+            metadata[MetadataKeySampleCadence] = cadence
+        }
+
+        if let temperature = record.temperature.temperatureValue {
+            metadata[MetadataKeySampleTemperature] = temperature
+        }
+        
+        let sample = HKCumulativeQuantitySample(
+            type: quantityType!,
+            quantity: HKQuantity(unit: .meter(), doubleValue: distance),
+            start: timestamp,
+            end: timestamp,
+            metadata: metadata.isEmpty ? nil : metadata
+        )
+        return sample
+    }
+    
+    private static func energySampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record?, sport: Sport, indoor: Bool) -> HKSample? {
+        guard let speed = record.speed.speedValue else { return nil }
+        guard let timestamp = record.timestamp.dateValue else { return nil }
+        
+        let end = timestamp
+        let start = prevRecord?.timestamp.dateValue ?? end
+        let durationInSeconds = end.timeIntervalSince1970 - start.timeIntervalSince1970
+        let duration = durationInSeconds / 60.0 // minutes
+                
+        let metValue = metValueFor(sport: sport, indoor: indoor, speed: speed)
+        let weight = AppSettings.weight ?? Constants.defaultWeight
+        let energyBurned = calculateCaloriesFor(duration: duration, metValue: metValue, weight: weight)
+        
+        Log.debug("sample calories: \(energyBurned), met: \(metValue), speed: \(speed)")
+        
+        let sample = HKCumulativeQuantitySample(
+            type: .activeEnergyBurned(),
+            quantity: HKQuantity(unit: .kilocalorie(), doubleValue: energyBurned),
+            start: timestamp,
+            end: timestamp
+        )
+        return sample
+    }
+    
+    private static func heartRateSampleFor(record: WorkoutImport.Record) -> HKSample? {
+        guard let timestamp = record.timestamp.dateValue else { return nil }
+        guard let heartRate = record.heartRate.heartRateValue else { return nil }
+        let sample = HKQuantitySample(
+            type: .heartRate(),
+            quantity: HKQuantity(unit: HKUnit.bpm(), doubleValue: heartRate),
+            start: timestamp,
+            end: timestamp
+        )
+        return sample
     }
     
 //    private static func events(for workoutImport: WorkoutImport) -> [HKWorkoutEvent] {
@@ -303,20 +367,19 @@ extension WorkoutDataStore {
 //        return events
 //    }
     
-    private static func metadata(for metadata: WorkoutMetadata) -> [String: Any] {
+    private static func metadata(for file: WorkoutImport) -> [String: Any] {
         var dictionary = [String: Any]()
-        dictionary[HKMetadataKeyWeatherTemperature] = metadata.avgTemperatureQuantity
-        dictionary[HKMetadataKeyAverageSpeed] = metadata.avgSpeedQuantity
-        dictionary[HKMetadataKeyMaximumSpeed] = metadata.maxSpeedQuantity
-        dictionary[HKMetadataKeyElevationAscended] = metadata.totalAscentQuantity
-        dictionary[HKMetadataKeyElevationDescended] = metadata.totalDescentQuantity
-        dictionary[MetadataKeyAvgCyclingCadence] = metadata.avgCadenceValue
-        dictionary[MetadataKeyMaxCyclingCadence] = metadata.maxCadenceValue
+        dictionary[HKMetadataKeyWeatherTemperature] = file.avgTemperatureQuantity
+        dictionary[HKMetadataKeyAverageSpeed] = file.avgSpeedQuantity
+        dictionary[HKMetadataKeyMaximumSpeed] = file.maxSpeedQuantity
+        dictionary[HKMetadataKeyElevationAscended] = file.totalAscentQuantity
+        dictionary[HKMetadataKeyElevationDescended] = file.totalDescentQuantity
+        dictionary[HKMetadataKeyAverageMETs] = file.avgMETQuantity
+        dictionary[MetadataKeyAvgCyclingCadence] = file.totalAvgCadenceValue
+        dictionary[MetadataKeyMaxCyclingCadence] = file.totalMaxCadenceValue
         
         // TODO: Pending Metadata
-        // Average METs
         // Humidity
-        // Time Zone
         // Elevation Ascended
         
         return dictionary.compactMapValues({ $0 })

@@ -7,7 +7,15 @@
 
 import Foundation
 
-let MetadataKeyAvgCyclingCadence = "arn_metadata_avg_cycling_cadence"
-let MetadataKeyMaxCyclingCadence = "arn_metadata_max_cycling_cadence"
-let MetadataKeyGearName = "arn_metadata_gear_name"
-let MetadataKeyAvgMET = "arn_metadata_avg_met"
+let MetadataKeyAvgCyclingCadence = "BWAvgCyclingCadence"
+let MetadataKeyMaxCyclingCadence = "BWMaxCyclingCadence"
+let MetadataKeyAvgMET = "BWAvgMETValue"
+
+// MARK: - Sample Metadata
+
+let MetadataKeySampleCadence = "BWCadence"
+let MetadataKeySampleTemperature = "BWTemperature"
+
+struct Constants {
+    static let defaultWeight: Double = 72.5748 // Use default weight of 160 lbs (72.5748 Kg)
+}

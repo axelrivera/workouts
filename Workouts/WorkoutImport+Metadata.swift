@@ -1,5 +1,5 @@
 //
-//  WorkoutMetadata.swift
+//  WorkoutImport+Metadata.swift
 //  Workouts
 //
 //  Created by Axel Rivera on 1/29/21.
@@ -8,19 +8,7 @@
 import Foundation
 import HealthKit
 
-protocol WorkoutMetadata {
-    
-    var avgTemperature: WorkoutImport.Value { get }
-    var avgSpeed: WorkoutImport.Value { get }
-    var maxSpeed: WorkoutImport.Value { get }
-    var totalAscent: WorkoutImport.Value { get}
-    var totalDescent: WorkoutImport.Value { get }
-    var avgCadence: WorkoutImport.Value { get }
-    var maxCadence: WorkoutImport.Value { get }
-    
-}
-
-extension WorkoutMetadata {
+extension WorkoutImport {
     
     var avgTemperatureQuantity: HKQuantity? {
         HKQuantity.quantity(for: avgTemperature.temperatureValue, unit: .celcius())
@@ -42,12 +30,17 @@ extension WorkoutMetadata {
         HKQuantity.quantity(for: totalDescent.altitudeValue, unit: .meter())
     }
     
-    var avgCadenceValue: Double? {
-        avgCadence.cadenceValue
+    var avgMETQuantity: HKQuantity? {
+        let unit = HKUnit(from: "kcal/(kg*hr)")
+        return HKQuantity.quantity(for: avgMETValue, unit: unit)
     }
     
-    var maxCadenceValue: Double? {
-        maxCadence.cadenceValue
+    var totalAvgCadenceValue: Double? {
+        totalAvgCadence.cadenceValue
+    }
+    
+    var totalMaxCadenceValue: Double? {
+        totalMaxCadence.cadenceValue
     }
     
 }

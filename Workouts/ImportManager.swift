@@ -200,7 +200,7 @@ extension ImportManager {
         workoutWithStatus(.new, sport: .cycling, indoor: false)
     }
     
-    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: WorkoutImport.Sport, indoor: Bool = false) -> WorkoutImport {
+    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, indoor: Bool = false) -> WorkoutImport {
         let workout = WorkoutImport(status: status, sport: sport)
         workout.indoor = indoor
         workout.start = .init(valueType: .date, value: Date().timeIntervalSince1970)

@@ -23,14 +23,15 @@ class GarminFitTests: XCTestCase {
     }
 
     func testGarminCyclingFile() throws {
+        // Main Values
         XCTAssertEqual(cycling.timestamp.dateValue, Cycling.timestamp)
         XCTAssertEqual(cycling.startDate, Cycling.startTime)
         XCTAssertEqual(cycling.totalElapsedTime.timeValue, Cycling.totalElapsedTime)
         XCTAssertEqual(cycling.totalTimerTime.timeValue, Cycling.totalTimerTime)
         
-        let coordinate = cycling.startPosition.coordinateValue
-        XCTAssertEqual(coordinate?.latitude, Cycling.startPositionLat)
-        XCTAssertEqual(coordinate?.longitude, Cycling.startPositionLong)
+        let coordinate = cycling.startPosition.coordinateValue!
+        XCTAssertEqual(coordinate.latitude, Cycling.startPositionLat)
+        XCTAssertEqual(coordinate.longitude, Cycling.startPositionLong)
         
         XCTAssertEqual(cycling.totalDistance.distanceValue, Cycling.totalDistance)
         XCTAssertEqual(cycling.avgSpeed.speedValue, Cycling.avgSpeed)
@@ -39,37 +40,31 @@ class GarminFitTests: XCTestCase {
         XCTAssertEqual(cycling.avgHeartRate.heartRateValue, Cycling.avgHeartRate)
         XCTAssertEqual(cycling.maxHeartRate.heartRateValue, Cycling.maxHeartRate)
         
-        XCTAssertEqual(cycling.avgCadence.cadenceValue, Cycling.avgCadence)
-        XCTAssertEqual(cycling.maxCadence.cadenceValue, Cycling.maxCadence)
+        XCTAssertEqual(cycling.totalAvgCadence.cadenceValue, Cycling.avgCadence + Cycling.avgFractionalCadence)
+        XCTAssertEqual(cycling.totalMaxCadence.cadenceValue, Cycling.maxCadence + Cycling.maxFractionalCadence)
         
         XCTAssertEqual(cycling.avgTemperature.temperatureValue, Cycling.avgTemp)
         XCTAssertEqual(cycling.maxTemperature.temperatureValue, Cycling.maxTemp)
         
-        let locations = cycling.locations
-        XCTAssertFalse(locations.isEmpty)
+        XCTAssertEqual(cycling.records.count, Cycling.totalRecords)
+        XCTAssertEqual(cycling.locations.count, Cycling.totalLocations)
         
-        // Intervals
-        let intervals = cycling.intervals
+        // Single Record
+        let record = cycling.records.first(where: { $0.timestamp.dateValue == Record.timestamp })!
         
-        var startDates = [Date]()
-        var endDates = [Date]()
-        var distances = [Double]()
-        var heartRates = [Double]()
-        var calories = [Double]()
+        XCTAssertEqual(record.timestamp.dateValue, Record.timestamp)
         
-        for interval in intervals {
-            if let start = interval.startDate { startDates.append(start) }
-            if let end = interval.endDate { endDates.append(end) }
-            if let distance = interval.distance { distances.append(distance) }
-            if let heartRate = interval.energyBurned { heartRates.append(heartRate) }
-            if let energyBurned = interval.energyBurned { calories.append(energyBurned) }
-        }
+        let recordCoordinate = record.position.coordinateValue!
+        XCTAssertEqual(recordCoordinate.latitude, Record.positionLat)
+        XCTAssertEqual(recordCoordinate.longitude, Record.positionLong)
         
-        XCTAssertFalse(startDates.isEmpty)
-        XCTAssertFalse(endDates.isEmpty)
-        XCTAssertFalse(distances.isEmpty)
-        XCTAssertFalse(heartRates.isEmpty)
-        XCTAssertFalse(calories.isEmpty)
+        let altitude = Double(floor(10000 * record.altitude.altitudeValue!) / 10000)
+        XCTAssertEqual(altitude, Record.altitude)
+        XCTAssertEqual(record.distance.distanceValue, Record.distance)
+        XCTAssertEqual(record.speed.speedValue, Record.speed)
+        XCTAssertEqual(record.heartRate.heartRateValue, Record.heartRate)
+        XCTAssertEqual(record.totalCadence.cadenceValue, Record.cadence + Record.fractionalCadence)
+        XCTAssertEqual(record.temperature.temperatureValue, Record.temperature)
     }
 
 }
@@ -77,6 +72,12 @@ class GarminFitTests: XCTestCase {
 private extension GarminFitTests {
     
     struct Cycling {
+        static let sport = Sport.cycling
+        static let indoor = false
+
+        static let totalRecords = 2075
+        static let totalLocations = 2070
+        
         // Time
         static let timestamp = GarminDate(for: 979075230)
         static let startTime = GarminDate(for: 979073076)
@@ -96,10 +97,27 @@ private extension GarminFitTests {
         static let maxHeartRate: Double = 152.0
         
         static let avgCadence: Double = 70.0
+        static let avgFractionalCadence: Double = 0.859375
+        
         static let maxCadence: Double = 90.0
+        static let maxFractionalCadence: Double = 0.0
         
         static let avgTemp: Double = 18.0
         static let maxTemp: Double = 19.0
+    }
+    
+    struct Record {
+        static let timestamp = GarminDate(for: 979073094)
+        static let positionLat: Double = SemicircleToDegree(340926889)
+        static let positionLong: Double = SemicircleToDegree(-970272231)
+        static let altitude: Double = 87.2000
+        static let distance: Double = 16.41
+        static let speed: Double = 2.799
+        static let heartRate: Double = 108.0
+        static let cadence: Double = 23.0
+        static let fractionalCadence: Double = 0.0
+        static let temperature: Double = 19.0
+        
     }
     
 }

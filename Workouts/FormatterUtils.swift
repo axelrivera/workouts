@@ -16,7 +16,7 @@ func formattedTimeDurationString(for duration: Double?) -> String {
 
 func formattedRelativeDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
-    if date.isWithinNumberOfDays(7) {
+    if date.isWithinNumberOfDays(6) {
         return DateFormatter.relative.string(from: date)
     } else {
         return DateFormatter.short.string(from: date)
@@ -59,6 +59,14 @@ func formattedCyclingCadenceString(for cadence: Double?) -> String {
 func formattedCaloriesString(for calories: Double?) -> String {
     let number = (calories ?? 0) as NSNumber
     return String(format: "%@ cal", NumberFormatter.integer.string(from: number) ?? "n/a")
+}
+
+// MARK: - Weight
+
+func formattedWeightString(for weight: Double?) -> String {
+    guard let weight = weight else { return "N/A" }
+    let measurement = Measurement<UnitMass>(value: weight, unit: .kilograms)
+    return MeasurementFormatter.mass.string(from: measurement)
 }
 
 // MARK: - Activities
@@ -160,6 +168,13 @@ private extension MeasurementFormatter {
     static let speed: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.speed
+        formatter.unitStyle = .medium
+        return formatter
+    }()
+    
+    static let mass: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.integer
         formatter.unitStyle = .medium
         return formatter
     }()
