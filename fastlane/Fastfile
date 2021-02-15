@@ -15,7 +15,6 @@
 
 default_platform(:ios)
 skip_docs
-update_code_signing_settings
 
 platform :ios do
   before_all do
