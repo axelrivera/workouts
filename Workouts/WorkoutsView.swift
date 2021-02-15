@@ -22,16 +22,18 @@ struct WorkoutsView: View {
                 List {
                     ForEach(workoutManager.workouts) { workout in
                         NavigationLink(destination: DetailView(workout: workout)) {
-                            VStack(alignment: .leading) {
+                            VStack(alignment: .leading, spacing: 2.0) {
                                 Text(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
                                 Text(formattedDistanceString(for: workout.distance))
-                                    .font(.title2)
+                                    .font(.title)
+                                    .foregroundColor(.accentColor)
                                 HStack {
                                     Text(workout.source)
+                                        .foregroundColor(.secondary)
                                     Spacer()
                                     Text(formattedRelativeDateString(for: workout.startDate))
                                         .font(.subheadline)
-                                        .foregroundColor(Color.secondaryLabel)
+                                        .foregroundColor(.secondary)
                                 }
                             }
                         }
