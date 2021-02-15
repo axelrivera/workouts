@@ -19,7 +19,6 @@ skip_docs
 platform :ios do
   before_all do
     ensure_git_status_clean
-    increment_build_number
   end
 
   desc "Push a new beta build to TestFlight"
@@ -34,12 +33,7 @@ platform :ios do
   end
 
   after_all do |lane|
-    build = Actions.lane_context[Actions::SharedValues::BUILD_NUMBER]
-
-    commit_version_bump(
-      message: "Build #{build}"
-    )
-
+    commit_build
     notify "Fastlane finished '#{lane}' successfully" # Mac OS X Notification
   end
 end
