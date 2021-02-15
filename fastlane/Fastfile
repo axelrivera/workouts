@@ -14,6 +14,8 @@
 # update_fastlane
 
 default_platform(:ios)
+skip_docs
+update_code_signing_settings
 
 platform :ios do
   desc "Push a new beta build to TestFlight"
@@ -23,7 +25,7 @@ platform :ios do
   end
 
   desc "Increment Build Number"
-  lane :increment_build_number do
+  lane :update_build_number do
     increment_build_number
   end
 end

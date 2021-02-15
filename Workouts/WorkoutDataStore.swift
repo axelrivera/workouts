@@ -369,6 +369,7 @@ extension WorkoutDataStore {
     
     private static func metadata(for file: WorkoutImport) -> [String: Any] {
         var dictionary = [String: Any]()
+        dictionary[HKMetadataKeyIndoorWorkout] = file.indoor
         dictionary[HKMetadataKeyWeatherTemperature] = file.avgTemperatureQuantity
         dictionary[HKMetadataKeyAverageSpeed] = file.avgSpeedQuantity
         dictionary[HKMetadataKeyMaximumSpeed] = file.maxSpeedQuantity
