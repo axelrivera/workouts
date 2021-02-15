@@ -36,9 +36,11 @@ struct ImportRow: View {
                 HStack {
                     Text(formattedDistanceString(for: workout.totalDistance.distanceValue))
                         .font(.title)
+                        .foregroundColor(.accentColor)
                     Spacer()
                     Text(formattedRelativeDateString(for: workout.startDate))
                         .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
             }
             
