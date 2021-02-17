@@ -57,7 +57,6 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    
     func requestReadingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
         HealthData.requestReadingAuthorization { result in
             switch result {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		160BB05325DC2C2C0059E493 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160BB05225DC2C2C0059E493 /* StatsView.swift */; };
 		161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FDB6525B34D4B00929433 /* WorkoutsApp.swift */; };
 		161FDB6A25B34D4E00929433 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161FDB6925B34D4E00929433 /* Assets.xcassets */; };
 		161FDB6D25B34D4E00929433 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 161FDB6C25B34D4E00929433 /* Preview Assets.xcassets */; };
@@ -99,6 +100,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		160BB05225DC2C2C0059E493 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		161FDB6225B34D4B00929433 /* Workouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Workouts.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		161FDB6525B34D4B00929433 /* WorkoutsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsApp.swift; sourceTree = "<group>"; };
 		161FDB6925B34D4E00929433 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -182,6 +184,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		160BB05125DC2C110059E493 /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+				160BB05225DC2C2C0059E493 /* StatsView.swift */,
+			);
+			name = Stats;
+			sourceTree = "<group>";
+		};
+		160BB05825DC2C4F0059E493 /* Workouts */ = {
+			isa = PBXGroup;
+			children = (
+				1645B91E25B350BB00B04478 /* WorkoutsView.swift */,
+				1645B91125B350BA00B04478 /* AddView.swift */,
+				1645B91C25B350BB00B04478 /* DetailView.swift */,
+				1697608025CB7EFD00CAF544 /* DetailMapView.swift */,
+				16A0662725C642EA00019096 /* ImportView.swift */,
+			);
+			name = Workouts;
+			sourceTree = "<group>";
+		};
 		161FDB5925B34D4B00929433 = {
 			isa = PBXGroup;
 			children = (
@@ -245,6 +267,8 @@
 			isa = PBXGroup;
 			children = (
 				1645B93425B351F500B04478 /* Main */,
+				160BB05825DC2C4F0059E493 /* Workouts */,
+				160BB05125DC2C110059E493 /* Stats */,
 				1645B93525B3520500B04478 /* Settings */,
 				1645B93625B3520C00B04478 /* Shared */,
 			);
@@ -294,11 +318,6 @@
 			isa = PBXGroup;
 			children = (
 				16682B6825CF416D00FC9317 /* ContentView.swift */,
-				1645B91E25B350BB00B04478 /* WorkoutsView.swift */,
-				1645B91125B350BA00B04478 /* AddView.swift */,
-				1645B91C25B350BB00B04478 /* DetailView.swift */,
-				1697608025CB7EFD00CAF544 /* DetailMapView.swift */,
-				16A0662725C642EA00019096 /* ImportView.swift */,
 			);
 			name = Main;
 			sourceTree = "<group>";
@@ -548,6 +567,7 @@
 				165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */,
 				16E8322925D20B4500382545 /* Locale+Additions.swift in Sources */,
 				1645B94625B3612700B04478 /* RowItem.swift in Sources */,
+				160BB05325DC2C2C0059E493 /* StatsView.swift in Sources */,
 				16E8323525D4AC1D00382545 /* EnergyUtils.swift in Sources */,
 				16AB3DA325D096A10082A610 /* NotAvailableView.swift in Sources */,
 				16A0661525C4A60D00019096 /* WorkoutImport+Metadata.swift in Sources */,

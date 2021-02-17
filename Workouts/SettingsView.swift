@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var workoutManager: WorkoutManager
     
     @State var weight: Double? = AppSettings.weight
@@ -42,8 +41,6 @@ struct SettingsView: View {
                 }
             }
             .navigationBarTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: doneButton())
         }
     }
 }
@@ -51,12 +48,6 @@ struct SettingsView: View {
 // MARK: - Methods
 
 extension SettingsView {
-    
-    func doneButton() -> some View{
-        Button(action: { presentationMode.wrappedValue.dismiss() }) {
-            Text("Done")
-        }
-    }
     
     func updateWeight() {
         ProfileDataStore.fetchWeightInKilograms { value in

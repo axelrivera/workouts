@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WorkoutsView: View {
     enum ActiveSheet: Identifiable {
-        case add, workoutImport, settings
+        case add
         var id: Int { hashValue }
     }
     
@@ -57,36 +57,16 @@ struct WorkoutsView: View {
 //                }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        // TODO: Enable Manual Workouts
-//                        Button(action: { activeSheet = .add }) {
-//                            Label("New Workout", systemImage: "plus.circle")
-//                        }
-                        
-                        Button(action: { activeSheet = .workoutImport }) {
-                            Label("Import Workouts", systemImage: "square.and.arrow.down")
-                        }
-                        
-                        Divider()
-                        
-                        Button(action: { activeSheet = .settings }) {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .imageScale(.large)
+                    Button(action: { activeSheet = .add }) {
+                        Image(systemName: "plus")
                     }
                 }
             }
             .fullScreenCover(item: $activeSheet) { item in
                 switch item {
                 case .add:
-                    AddView()
-                case .workoutImport:
                     ImportView()
                         .environmentObject(ImportManager())
-                case .settings:
-                    SettingsView()
                 }
             }
         }

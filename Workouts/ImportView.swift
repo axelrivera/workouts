@@ -56,7 +56,7 @@ struct ImportView: View {
                 if importManager.state.showEmptyView {
                     Color.systemBackground
                         .ignoresSafeArea()
-                    ImportEmptyView(importState: importManager.state)
+                    ImportEmptyView(importState: importManager.state, addAction: { activeSheet = .document })
                 }
             }
             .navigationBarTitle("Import Workouts")
@@ -131,7 +131,7 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .ok
+        manager.state = .empty
         manager.loadSampleWorkouts()
         return manager
     }()

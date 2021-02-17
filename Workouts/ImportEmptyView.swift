@@ -9,12 +9,13 @@ import SwiftUI
 
 struct ImportEmptyView: View {
     var importState: ImportManager.State
+    var addAction = {}
     
     var body: some View {
         Group {
             switch importState {
             case .empty:
-                NoFilesView()
+                NoFilesView(addAction: addAction)
             case .notAuthorized:
                 WriteUnauthorizedView()
             case .notAvailable:
@@ -29,6 +30,6 @@ struct ImportEmptyView: View {
 
 struct ImportEmptyView_Previews: PreviewProvider {
     static var previews: some View {
-        ImportEmptyView(importState: .notAuthorized)
+        ImportEmptyView(importState: .empty)
     }
 }

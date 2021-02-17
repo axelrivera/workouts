@@ -21,7 +21,7 @@ class ImportManager: ObservableObject {
             Self.emptyViewStates.contains(self)
         }
         
-        static let whitelisted: [State] = [.ok, .empty]
+        static let whitelisted: [State] = [.ok]
         static let emptyViewStates: [State] = [.empty, .notAuthorized, notAvailable]
     }
     
