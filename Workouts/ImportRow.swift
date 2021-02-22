@@ -13,7 +13,8 @@ struct ImportRow: View {
     var body: some View {
         HStack(spacing: 10.0) {
             if workout.status == .processing {
-                StatsView()
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
             } else {
                 Image(systemName: imageName(for: workout.status))
                     .foregroundColor(imageColor(for: workout.status))

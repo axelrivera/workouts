@@ -328,7 +328,8 @@ extension WorkoutDataStore {
     }
     
     private static func energySampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record?, sport: Sport, indoor: Bool) -> HKSample? {
-        guard let speed = record.speed.speedValue else { return nil }
+        guard let prevSpeed = prevRecord?.speed.speedValue, prevSpeed > 0 else { return nil }
+        guard let speed = record.speed.speedValue, speed > 0 else { return nil }
         guard let timestamp = record.timestamp.dateValue else { return nil }
         
         let end = timestamp

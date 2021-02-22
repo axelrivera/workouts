@@ -25,6 +25,7 @@ class StatsManager: ObservableObject {
     @Published var allStats: StatsSummary
     
     var summariesPublishers = [Timeframe: Cancellable]()
+    var refreshCancellable: Cancellable?
     
     init() {
         sport = AppSettings.defaultStatsFilter
@@ -33,6 +34,7 @@ class StatsManager: ObservableObject {
         yearStats = StatsSummary(sport: sport, timeframe: .year)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
         fetchSummaries()
+        addObservers()
     }
 }
 
@@ -94,6 +96,19 @@ extension StatsManager {
                 self.allStats = summary
             }
         }
+    }
+    
+}
+
+// MARK: - Observers
+
+extension StatsManager {
+    
+    func addObservers() {
+        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
+            .sink { _ in
+                self.fetchSummaries()
+            }
     }
     
 }

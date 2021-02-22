@@ -19,3 +19,7 @@ let MetadataKeySampleTemperature = "BWTemperature"
 struct Constants {
     static let defaultWeight: Double = 72.5748 // Use default weight of 160 lbs (72.5748 Kg)
 }
+
+extension Notification.Name {
+    static let didRefreshWorkouts = Notification.Name("arn_did_refresh_workouts")
+}

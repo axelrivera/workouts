@@ -115,6 +115,7 @@ class WorkoutManager: ObservableObject {
                 DispatchQueue.main.async {
                     self.workouts.remove(at: index)
                     self.state = self.workouts.isEmpty ? .empty : .ok
+                    self.postRefreshNotification()
                 }
             }
         }
@@ -125,8 +126,13 @@ class WorkoutManager: ObservableObject {
                 self.workouts.append(contentsOf: newWorkouts)
                 self.workouts.sort(by: { $0.startDate.compare($1.startDate) == .orderedDescending })
                 self.state = self.workouts.isEmpty ? .empty : .ok
+                self.postRefreshNotification()
             }
         }
+    }
+    
+    func postRefreshNotification() {
+        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
     }
 }
 
