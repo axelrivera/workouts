@@ -76,7 +76,7 @@ struct WorkoutsView: View {
 struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManager()
-        //manager.state = .empty
+        //manager.state = .notAvailable
         manager.workouts = WorkoutManager.sampleWorkouts()
         return manager
     }()

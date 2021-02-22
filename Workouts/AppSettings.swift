@@ -27,13 +27,33 @@ struct Settings<T> {
 struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
+        static let defaultStatsFilter = "arn_default_stats_filter"
+        
     }
 
     static func synchronize() {
         UserDefaults.standard.synchronize()
     }
     
+    private static func objectForKey(_ key: String) -> Any? {
+        UserDefaults.standard.object(forKey: key)
+    }
+    
+    private static func setValue(_ value: Any?, for key: String) {
+        UserDefaults.standard.setValue(value, forKey: key)
+    }
+    
     
     @Settings(Keys.weightInKilograms, defaultValue: nil)
     static var weight: Double?
+    
+    static var defaultStatsFilter: Sport {
+        get {
+            let string = objectForKey(Keys.defaultStatsFilter) as? String ?? ""
+            return Sport(rawValue: string) ?? .cycling
+        }
+        set {
+            setValue(newValue.rawValue, for: Keys.defaultStatsFilter)
+        }
+    }
 }

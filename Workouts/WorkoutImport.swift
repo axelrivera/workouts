@@ -139,7 +139,7 @@ extension WorkoutImport {
 extension WorkoutImport {
     
     var formattedTitle: String {
-        String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.title)
+        String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
     }
     
 }

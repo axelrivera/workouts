@@ -14,10 +14,15 @@ func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
 
+func formattedHoursMinutesDurationString(for duration: Double?) -> String {
+    let (h, m) = secondsToHoursMinutes(seconds: Int(duration ?? 0))
+    return String(format: "%dh %02dm", h, m)
+}
+
 func formattedRelativeDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     if Calendar.current.isDateInToday(date) {
-        return "Today"
+        return DateFormatter.time.string(from: date)
     } else if Calendar.current.isDateInYesterday(date) {
         return "Yesterday"
     } else if date.isWithinNumberOfDays(6) {
@@ -30,6 +35,21 @@ func formattedRelativeDateString(for date: Date?) -> String {
 func formattedTimeString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     return DateFormatter.time.string(from: date)
+}
+
+func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
+    guard let start = start else { return "n/a" }
+    
+    var strings = [DateFormatter.monthDay.string(from: start)]
+    if let end = end {
+        strings.append(DateFormatter.monthDay.string(from: end))
+    }
+    return strings.joined(separator: " - ")
+}
+
+func formattedMonthYearString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    return DateFormatter.monthYear.string(from: date)
 }
 
 // MARK: - Distance and Speed
@@ -68,9 +88,18 @@ func formattedCaloriesString(for calories: Double?) -> String {
 // MARK: - Weight
 
 func formattedWeightString(for weight: Double?) -> String {
-    guard let weight = weight else { return "N/A" }
+    guard let weight = weight else { return "n/a" }
     let measurement = Measurement<UnitMass>(value: weight, unit: .kilograms)
     return MeasurementFormatter.mass.string(from: measurement)
+}
+
+// MARK: - Elevation
+
+func formattedElevationString(for elevation: Double?) -> String {
+    guard let elevation = elevation else { return "n/a" }
+    let measurement = Measurement<UnitLength>(value: elevation, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .feet)
+    return MeasurementFormatter.elevation.string(from: conversion)
 }
 
 // MARK: - Activities
@@ -134,6 +163,18 @@ private extension DateFormatter {
         formatter.timeStyle = .short
         return formatter
     }()
+    
+    static let monthDay: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM dd"
+        return formatter
+    }()
+    
+    static let monthYear: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM YYYY"
+        return formatter
+    }()
 }
 
 // MARK: - Number Formatter Extensions
@@ -173,6 +214,13 @@ private extension MeasurementFormatter {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distance
         formatter.unitStyle = .medium
+        return formatter
+    }()
+    
+    static let elevation: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.integer
+        formatter.unitOptions = .providedUnit
         return formatter
     }()
     

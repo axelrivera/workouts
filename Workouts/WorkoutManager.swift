@@ -25,7 +25,7 @@ class WorkoutManager: ObservableObject {
     
     var workoutQuery: HKAnchoredObjectQuery?
     var lastWorkoutAnchor: HKQueryAnchor?
-    
+        
     func fetchRequestStatusForReading() {
         HealthData.requestStatusForReading { (result) in
             switch result {
@@ -77,6 +77,8 @@ class WorkoutManager: ObservableObject {
     }
     
     func fetchWorkouts() {
+        Log.debug("fetching workouts")
+        
         if let _ = workoutQuery {
             Log.debug("ignore fetching workouts")
             validateWorkoutStatusForReading()

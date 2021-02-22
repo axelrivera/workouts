@@ -39,7 +39,8 @@ struct WorkoutDataStore {
     static func fetchTotalWorkouts(completionHandler: @escaping (Result<Int, Error>) -> Void) {
         let query = HKSampleQuery(
             sampleType: .workoutType(),
-            predicate: nil, limit: HKObjectQueryNoLimit,
+            predicate: nil,
+            limit: HKObjectQueryNoLimit,
             sortDescriptors: nil) { (query, samples, error) in
             if let error = error {
                 completionHandler(.failure(error))

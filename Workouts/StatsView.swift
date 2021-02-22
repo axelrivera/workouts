@@ -8,120 +8,71 @@
 import SwiftUI
 
 struct StatsView: View {
+    @StateObject var statsManager = StatsManager()
+    
+    let availableSports: [Sport] = [.cycling, .running]
+    
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20.0) {
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        Text("Jan 18 - Jan 24")
-                            .font(.title3)
-                        
-                        HStack(spacing: 10.0) {
-                            VStack(alignment: .leading, spacing: 5.0) {
-                                Text("Distance")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("100.0 mi")
-                                    .font(.callout)
-                            }
-                            
-                            Divider()
-                            
-                            VStack(alignment: .leading, spacing: 5.0) {
-                                Text("Time")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("4h 48m")
-                                    .font(.callout)
-                            }
-                            
-                            Divider()
-                            
-                            VStack(alignment: .leading, spacing: 5.0) {
-                                Text("Elevation")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("1,000 ft")
-                                    .font(.callout)
-                            }
-                            
-                            Divider()
-                            
-                            VStack(alignment: .leading, spacing: 5.0) {
-                                Text("Calories")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("1,000 cal")
-                                    .font(.callout)
-                            }
-                            
-                        }
-                        .padding([.top, .bottom], 10.0)
-                        
-                        Text("Last 12 Weeks")
-                            .font(.headline)
-                        
-                        Text("Chart Goes Here")
-                            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0)
-                            .background(Color.divider)
+            List {
+                VStack(alignment: .leading, spacing: 10.0) {
+                    Text(formattedMonthDayRangeString(start: statsManager.weekStart, end: statsManager.weekEnd))
+                        .font(.title2)
+                    
+                    HStack(spacing: 10.0) {
+                        StatsWeekly(text: "Distance", detail: distanceString(for: statsManager.weekStats.distance), detailColor: .distance)
+                        Divider()
+                        StatsWeekly(text: "Time", detail: timeString(for: statsManager.weekStats.duration), detailColor: .time)
                     }
                     
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        StatsRow(text: "Avg Rides/Week", detail: "3")
-                        StatsRow(text: "Avg Time/Week", detail: "4h 30m")
-                        StatsRow(text: "Avg Distance/Week", detail: "60 mi")
-                        StatsRow(text: "Avg Calories/Week", detail: "100 ft")
-                    }
+                    Divider()
                     
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        Text("Current Month")
-                            .font(.title3)
-                            .padding(.bottom, 5.0)
-                        
-                        StatsRow(text: "Rides", detail: "3")
-                        StatsRow(text: "Time", detail: "4h 30m")
-                        StatsRow(text: "Distance", detail: "60 mi")
-                        StatsRow(text: "Elevation Gain", detail: "100 ft")
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        Text("Current Year")
-                            .font(.title3)
-                            .padding(.bottom, 5.0)
-                        
-                        StatsRow(text: "Rides", detail: "3")
-                        StatsRow(text: "Time", detail: "4h 30m")
-                        StatsRow(text: "Distance", detail: "60 mi")
-                        StatsRow(text: "Elevation Gain", detail: "100 ft")
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 10.0) {
-                        Text("All Time")
-                            .font(.title3)
-                            .padding(.bottom, 5.0)
-                        
-                        StatsRow(text: "Rides", detail: "3")
-                        StatsRow(text: "Time", detail: "4h 30m")
-                        StatsRow(text: "Distance", detail: "60 mi")
-                        StatsRow(text: "Elevation Gain", detail: "100 ft")
-                        StatsRow(text: "Longest Ride", detail: "60 mi")
-                        StatsRow(text: "Highest Climb", detail: "100 ft", last: true)
+                    HStack {
+                        StatsWeekly(text: "Elevation", detail: elevationString(for: statsManager.weekStats.elevation), detailColor: .elevation)
+                        Divider()
+                        StatsWeekly(text: "Calories", detail: caloriesString(for: statsManager.weekStats.energyBurned), detailColor: .calories)
                     }
                 }
-                .padding()
+                
+                Section(header: Text(formattedMonthYearString(for: statsManager.monthStart))) {
+                    StatsRow(text: sportTitle, detail: "\(statsManager.monthStats.count)")
+                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.monthStats.distance), detailColor: .distance)
+                    StatsRow(text: "Time", detail: timeString(for: statsManager.monthStats.duration), detailColor: .time)
+                    StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.monthStats.elevation), detailColor: .elevation)
+                    StatsRow(text: "Calories", detail: caloriesString(for: statsManager.monthStats.energyBurned), detailColor: .calories)
+                }
+                
+                Section(header: Text("Year to Date")) {
+                    StatsRow(text: sportTitle, detail: "\(statsManager.yearStats.count)")
+                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.yearStats.distance), detailColor: .distance)
+                    StatsRow(text: "Time", detail: timeString(for: statsManager.yearStats.duration), detailColor: .time)
+                    StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.yearStats.elevation), detailColor: .elevation)
+                }
+                
+                Section(header: Text("All Time")) {
+                    StatsRow(text: sportTitle, detail: "\(statsManager.allStats.count)")
+                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.allStats.distance), detailColor: .distance)
+                    
+                    if statsManager.sport == .cycling {
+                        StatsRow(text: "Longest Ride", detail: distanceString(for: statsManager.allStats.longestDistance), detailColor: .distance)
+                        StatsRow(text: "Highest Climb", detail: elevationString(for: statsManager.allStats.highestElevation), detailColor: .elevation)
+                    }
+                }
             }
+            .listStyle(InsetGroupedListStyle())
             .navigationBarTitle("Statistics")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button(action: {}, label: {
-                            Text("Outdoor ")
-                        })
-                        Button(action: {}, label: {
-                            Text("Running")
-                        })
+                        ForEach(availableSports) { sport in
+                            Button(action: {
+                                statsManager.sport = sport
+                            }, label: {
+                                Text(sport.title)
+                            })
+                        }
                     } label: {
-                        Text("Cycling")
+                        Text(statsManager.sport.title)
                     }
                 }
             }
@@ -129,11 +80,62 @@ struct StatsView: View {
     }
 }
 
-struct StatsRow: View {
+// MARK: - Methods
+
+extension StatsView {
     
+    var sportTitle: String {
+        switch statsManager.sport {
+        case .cycling:
+            return "Rides"
+        default:
+            return "Runs"
+        }
+    }
+    
+    func distanceString(for distance: Double?) -> String {
+        formattedDistanceString(for: distance)
+    }
+    
+    func timeString(for duration: Double?) -> String {
+        formattedHoursMinutesDurationString(for: duration)
+    }
+    
+    func elevationString(for elevation: Double?) -> String {
+        formattedElevationString(for: elevation)
+    }
+    
+    func caloriesString(for calories: Double?) -> String {
+        formattedCaloriesString(for: calories)
+    }
+    
+}
+
+// MARK: - SubViews
+
+struct StatsWeekly: View {
     var text: String
     var detail: String
-    var last = false
+    var detailColor = Color.primary
+    
+    var body: some View {
+        VStack(spacing: 5.0) {
+            Group {
+                Text(text)
+                    .foregroundColor(.secondary)
+                Text(detail)
+                    .font(.title)
+                    .foregroundColor(detailColor)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+struct StatsRow: View {
+    var text: String
+    var detail: String
+    var detailColor = Color.primary
     
     var body: some View {
         HStack {
@@ -141,11 +143,7 @@ struct StatsRow: View {
                 .foregroundColor(.secondary)
             Spacer()
             Text(detail)
-        }
-        .font(.callout)
-        
-        if !last {
-            Divider()
+                .foregroundColor(detailColor)
         }
     }
     
@@ -154,5 +152,6 @@ struct StatsRow: View {
 struct StatsView_Previews: PreviewProvider {
     static var previews: some View {
         StatsView()
+            .colorScheme(.dark)
     }
 }

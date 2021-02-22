@@ -21,3 +21,12 @@ extension Color {
     static let tertiarySystemBackground = Color(UIColor.tertiarySystemBackground)
     static let divider = Color(UIColor.separator)
 }
+
+// MARK: Asset Colors
+
+extension Color {
+    static let distance = Color("DistanceColor")
+    static let time = Color("TimeColor")
+    static let calories = Color("CaloriesColor")
+    static let elevation = Color("ElevationColor")
+}
