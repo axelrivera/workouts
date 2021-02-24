@@ -33,7 +33,6 @@ platform :ios do
   end
 
   after_all do |lane|
-    commit_build
     notify "Fastlane finished '#{lane}' successfully" # Mac OS X Notification
   end
 end
