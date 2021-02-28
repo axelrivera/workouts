@@ -16,6 +16,9 @@ extension WorkoutMap {
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
+        mapView.isZoomEnabled = false
+        mapView.isScrollEnabled = false
+        mapView.isUserInteractionEnabled = false
         mapView.delegate = context.coordinator
         
         return mapView

@@ -29,4 +29,6 @@ extension Color {
     static let time = Color("TimeColor")
     static let calories = Color("CaloriesColor")
     static let elevation = Color("ElevationColor")
+    static let speed = Color("SpeedColor")
+    static let cadence = Color("CadenceColor")
 }

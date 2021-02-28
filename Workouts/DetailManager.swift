@@ -7,6 +7,7 @@
 
 import Foundation
 import MapKit
+import SwiftUI
 
 class DetailManager: ObservableObject {
     @Published var points = [CLLocationCoordinate2D]()
@@ -15,13 +16,17 @@ class DetailManager: ObservableObject {
         span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5)
     )
     
+    @Published var showDetailMap = false
+    @Published var locationName: String?
     @Published var avgHeartRate: Double?
     @Published var maxHeartRate: Double?
     
-    var workout: UUID? {
-        didSet {
-            fetchData()
-        }
+    var isFetchingLocation = false
+    var workout: UUID
+    
+    init(workoutID: UUID) {
+        self.workout = workoutID
+        fetchData()
     }
     
 }
@@ -38,8 +43,6 @@ extension DetailManager {
     }
     
     func fetchHeartRate() {
-        guard let workout = workout else { return }
-        
         WorkoutDataStore.fetchHeartRateSample(for: workout) { result in
             DispatchQueue.main.async {
                 switch result {
@@ -53,19 +56,62 @@ extension DetailManager {
         }
     }
     
-    func fetchRoute() {
-        guard let workout = workout else { return }
-        
+    func fetchRoute() {        
         WorkoutDataStore.fetchRoute(for: workout) { (result) in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let coordinates):
-                    Log.debug("got coordinates: \(coordinates.count)")
                     self.region = MKCoordinateRegion(coordinates: coordinates)
                     self.points = coordinates
+                    
+                    Log.debug("total coordinates: \(coordinates.count)")
+                    
+                    if let coordinate = coordinates.first {
+                        self.fetchLocationName(coordinate: coordinate)
+                    }
                 case .failure(let error):
-                    Log.debug("fetch route failed: \(error.localizedDescription)")
+                    Log.debug("fetching route failed: \(error.localizedDescription)")
+                    self.showDetailMap = false
                 }
+            }
+        }
+    }
+    
+    func fetchLocationName(coordinate: CLLocationCoordinate2D) {
+        if isFetchingLocation { return }
+        isFetchingLocation = true
+        
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let geoCoder = CLGeocoder()
+        geoCoder.reverseGeocodeLocation(location) { placemarks, error -> Void in
+            self.isFetchingLocation = false
+            self.updateLocationIfNeeded(placemark: placemarks?.first)
+        }
+    }
+    
+    private func updateLocationIfNeeded(placemark: CLPlacemark?) {
+        if let placemark = placemark {
+            var strings = [String]()
+            if let city = placemark.locality {
+                strings.append(city)
+            }
+            
+            if let state = placemark.administrativeArea {
+                strings.append(state)
+            }
+            
+            if !strings.isEmpty {
+                self.locationName = strings.joined(separator: ", ")
+            }
+        }
+        
+        showDetailsMapIfNeeded()
+    }
+    
+    private func showDetailsMapIfNeeded() {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.showDetailMap = !self.points.isEmpty
             }
         }
     }

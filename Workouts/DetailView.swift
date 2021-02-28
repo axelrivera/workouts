@@ -11,109 +11,195 @@ import MapKit
 struct DetailView: View {
     enum ActiveSheet: Identifiable {
         case map
+        case analysis
         var id: Int { hashValue }
     }
     
     @ObservedObject var workout: Workout
-    @StateObject var detailManager = DetailManager()
+    @StateObject var detailManager: DetailManager
     
     @State var activeSheet: ActiveSheet?
+    @State var showMapOverlay = false
+    
+    init(workout: Workout) {
+        self.workout = workout
+        _detailManager = StateObject(wrappedValue: DetailManager(workoutID: workout.id))
+    }
     
     var body: some View {
-        Form {
-            Section {
+        List {
+            VStack(alignment: .leading, spacing: 0.0) {
+                Text(workout.title)
+                    .font(.title)
+                    .padding(.bottom, 5.0)
+                
+                HStack(alignment: .lastTextBaseline) {
+                    Text(formattedFullDateString(for: workout.startDate))
+                        .font(.headline)
+                        .padding(.bottom, 2.0)
+                    Text(formattedTimeRangeString(start: workout.startDate, end: workout.endDate))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding([.top, .bottom], 5.0)
+            
+            if detailManager.showDetailMap {
                 Button(action: { activeSheet = .map }) {
                     WorkoutMap(points: $detailManager.points)
                         .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                        .disabled(true)
+                        .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
+                        .cornerRadius(12.0)
                 }
-            }
-            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-            
-            Section {
-                TextRow(item: RowItem(text: "Date", detail: formattedRelativeDateString(for: workout.startDate)))
-                TextRow(item: RowItem(text: "Start", detail: formattedTimeString(for: workout.startDate)))
-                TextRow(item: RowItem(text: "Total Time", detail: formattedTimeDurationString(for: workout.elapsedTime)))
-            }
-            Section(header: Text("Distance")) {
-                TextRow(item: RowItem(text: "Distance", detail: formattedDistanceString(for: workout.distance)))
-            }
-            
-            if showSpeedSection(workout: workout) {
-                Section(header: Text("Speed")) {
-                    if let average = workout.avgSpeed {
-                        TextRow(item: RowItem(text: "Avg. Speed", detail: formattedSpeedString(for: average)))
-                    }
-                    
-                    if let maximum = workout.maxSpeed {
-                        TextRow(item: RowItem(text: "Max. Speed", detail: formattedSpeedString(for: maximum)))
-                    }
-                }
-            }
-            
-            if detailManager.showHeartRateSection {
-                Section(header: Text("Heart Rate")) {
-                    if let average = detailManager.avgHeartRate {
-                        TextRow(item: RowItem(text: "Avg. Heart Rate", detail: formattedHeartRateString(for: average)))
-                    }
-                    
-                    if let maximum = detailManager.maxHeartRate {
-                        TextRow(item: RowItem(text: "Max Heart Rate", detail: formattedHeartRateString(for: maximum)))
-                    }
-                }
-            }
-            
-            Section(header: Text("Energy")) {
-                TextRow(item: RowItem(text: "Calories", detail: formattedCaloriesString(for: workout.energyBurned)))
-            }
-            
-            if showCadenceSection(workout: workout) {
-                Section(header: Text("Cadence")) {
-                    if let average = workout.avgCyclingCadence {
-                        TextRow(item: RowItem(text: "Avg. Cadence", detail: formattedCyclingCadenceString(for: average)))
-                    }
-                    
-                    if let maximum = workout.maxCyclingCadence {
-                        TextRow(item: RowItem(text: "Max Cadence", detail: formattedCyclingCadenceString(for: maximum)))
-                    }
-                }
-            }
-            
-            Section {
-                TextRow(item: RowItem(text: "Source", detail: workout.source))
+                .buttonStyle(PlainButtonStyle())
                 
-                if let device = workout.device {
-                    TextRow(item: RowItem(text: "Device", detail: device))
+                if let locationName = detailManager.locationName {
+                    HStack(spacing: 5.0) {
+                        Image(systemName: "location.fill")
+                            .imageScale(.small)
+                        Text(locationName)
+                    }
                 }
+            }
+            
+            Group {
+                RoundButton(text: "Workout Analysis") {
+                    activeSheet = .analysis
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            ForEach(gridRows(for: workout, heartRate: detailManager.avgHeartRate)) { row in
+                HStack(spacing: 5.0) {
+                    if let left = row.left {
+                        DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
+                    }
+                    
+                    if let right = row.right {
+                        DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
+                    }
+                }
+            }
+            
+            HStack {
+                Text("Source")
+                Spacer()
+                Text("Workouts (iPhone)")
+                    .foregroundColor(.secondary)
             }
         }
-        .onAppear(perform: { detailManager.workout = workout.id })
-        .navigationTitle(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
+        .navigationTitle("Ride")
         .navigationBarTitleDisplayMode(.inline)
-        .listStyle(InsetGroupedListStyle())
+        .listStyle(PlainListStyle())
         .sheet(item: $activeSheet) { (item) in
             switch item {
             case .map:
                 DetailMapView(workout: workout, detailManager: detailManager)
+            case .analysis:
+                Text("WorkoutAnalysis")
             }
         }
     }
 }
 
 extension DetailView {
-    
-    func showSpeedSection(workout: Workout) -> Bool {
-        workout.avgSpeed != nil || workout.maxSpeed != nil
+    struct GridItem: Identifiable {
+        let id = UUID()
+        var text: String
+        var detail: String
+        var detailColor = Color.primary
     }
     
-    func showCadenceSection(workout: Workout) -> Bool {
-        workout.avgCyclingCadence != nil || workout.maxCyclingCadence != nil
+    struct GridRow: Identifiable {
+        let id = UUID()
+        var left: GridItem?
+        var right: GridItem?
+        
+        var isEmpty: Bool {
+            left == nil && right == nil
+        }
+        
+        var isPresent: Bool {
+            !isEmpty
+        }
+    }
+    
+    func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
+        var items = [GridItem]()
+        var item: GridItem
+        
+        if let distance = workout.distance {
+            item = GridItem(text: "Distance", detail: formattedDistanceString(for: distance), detailColor: .distance)
+            items.append(item)
+        }
+        
+        item = GridItem(text: "Time", detail: formattedHoursMinutesDurationString(for: workout.elapsedTime), detailColor: .time)
+        items.append(item)
+        
+        if let heartRate = heartRate {
+            item = GridItem(text: "Avg. Heart Rate", detail: formattedHeartRateString(for: heartRate), detailColor: .calories)
+            items.append(item)
+        }
+        
+        if let calories = workout.energyBurned {
+            item = GridItem(text: "Calories", detail: formattedCaloriesString(for: calories), detailColor: .calories)
+            items.append(item)
+        }
+        
+        if let speed = workout.avgSpeed {
+            item = GridItem(text: "Avg. Speed", detail: formattedSpeedString(for: speed), detailColor: .speed)
+            items.append(item)
+        }
+        
+        if let cadence = workout.avgCyclingCadence {
+            item = GridItem(text: "Avg. Cadence", detail: formattedCyclingCadenceString(for: cadence), detailColor: .cadence)
+            items.append(item)
+        }
+        
+        if let elevation = workout.elevationAscended {
+            item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+            items.append(item)
+        }
+        
+        var rows = [GridRow]()
+        
+        let chunkedItems = items.chunked(into: 2)
+        for row in chunkedItems {
+            if row.count == 2 {
+                rows.append(GridRow(left: row[0], right: row[1]))
+            } else if row.count == 1 {
+                rows.append(GridRow(left: row[0], right: nil))
+            }
+        }
+        
+        return rows
     }
     
 }
 
+struct DetailGridView: View {
+    var text: String
+    var detail: String
+    var detailColor = Color.primary
+    
+    var body: some View {
+        VStack(spacing: 0.0) {
+            Group {
+                Text(text)
+                Text(detail)
+                    .font(.title)
+                    .foregroundColor(detailColor)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
 struct DetailView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailView(workout: Workout.sample)
+        NavigationView {
+            DetailView(workout: Workout.sample)
+        }
+        .colorScheme(.dark)
     }
 }

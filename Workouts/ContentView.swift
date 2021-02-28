@@ -62,7 +62,8 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .onAppear(perform: {
-                workoutManager.state = .empty
+                workoutManager.workouts = WorkoutManager.sampleWorkouts()
+                workoutManager.state = .ok
                 workoutManager.shouldRequestReadingAuthorization = false
             })
             .environmentObject(workoutManager)

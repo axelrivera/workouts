@@ -14,9 +14,15 @@ func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
 
-func formattedHoursMinutesDurationString(for duration: Double?) -> String {
-    let (h, m) = secondsToHoursMinutes(seconds: Int(duration ?? 0))
-    return String(format: "%dh %02dm", h, m)
+func formattedHoursMinutesDurationString(for duration: Double?, includeSeconds: Bool = false) -> String {
+    let seconds = Int(duration ?? 0)
+    if includeSeconds {
+        let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+        return String(format: "%dh:%2dm:%2ds", h, m, s)
+    } else {
+        let (h, m) = secondsToHoursMinutes(seconds: seconds)
+        return String(format: "%dh:%02dm", h, m)
+    }
 }
 
 func formattedRelativeDateString(for date: Date?) -> String {
@@ -50,6 +56,20 @@ func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
 func formattedMonthYearString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     return DateFormatter.monthYear.string(from: date)
+}
+
+func formattedFullDateString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    return DateFormatter.dayShortMonthFormatter.string(from: date)
+}
+
+func formattedTimeRangeString(start: Date?, end: Date?) -> String {
+    guard let start = start else { return "n/a" }
+    var strings = [ DateFormatter.localizedString(from: start, dateStyle: .none, timeStyle: .short) ]
+    if let end = end {
+        strings.append(DateFormatter.localizedString(from: end, dateStyle: .none, timeStyle: .short))
+    }
+    return strings.joined(separator: " - ")
 }
 
 // MARK: - Distance and Speed
@@ -129,6 +149,24 @@ func formattedActivityTypeString(for activityType: HKWorkoutActivityType, indoor
 // MARK: - Date Extensions
 
 private extension DateFormatter {
+    
+    static let dayShortMonthFormat: String? = {
+        let template = "EEEEMMMdyyyy"
+        let locale = Locale.current
+        return DateFormatter.dateFormat(fromTemplate: template, options: 0, locale: locale)
+    }()
+    
+    static let dayShortMonthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        
+        if let format = dayShortMonthFormat {
+            formatter.dateFormat = format
+        } else {
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+        }
+        return formatter
+    }()
     
     static let relative: DateFormatter = {
         let formatter = DateFormatter()

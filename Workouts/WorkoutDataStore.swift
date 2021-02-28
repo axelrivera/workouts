@@ -68,13 +68,13 @@ struct WorkoutDataStore {
             anchor: nil,
             limit: HKObjectQueryNoLimit) { (query, samples, deletedObjects, anchor, error) in
             healthStore.stop(query)
-                                    
+                                                
             if let error = error {
                 completionHandler(.failure(error))
                 return
             }
-                        
-            guard let samples = samples as? [HKWorkoutRoute] else {
+                                    
+            guard let samples = samples as? [HKWorkoutRoute], !samples.isEmpty else {
                 completionHandler(.failure(DataError.failure))
                 return
             }
@@ -102,12 +102,12 @@ struct WorkoutDataStore {
     }
     
     static func fetchRoute(for id: UUID, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
-        Log.debug("fetching route for: \(id)")
         fetchWorkout(for: id) { (workout) in
             guard let workout = workout else {
                 completionHandler(.failure(DataError.failure))
                 return
             }
+            
             fetchRoute(for: workout, completionHandler: completionHandler)
         }
     }
@@ -116,11 +116,7 @@ struct WorkoutDataStore {
         let store = HKHealthStore()
         
         let query = HKWorkoutRouteQuery(route: route) { (query, locations, done, error) in
-            guard let locations = locations else {
-                completionHandler(.failure(error ?? DataError.missingData))
-                return
-            }
-            
+            let locations = locations ?? [CLLocation]()
             updateHandler(locations)
             
             if done {

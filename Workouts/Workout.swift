@@ -8,6 +8,8 @@
 import Foundation
 import HealthKit
 
+extension Workout: Identifiable {}
+
 class Workout: ObservableObject {
     var id = UUID()
     
@@ -15,16 +17,20 @@ class Workout: ObservableObject {
     var indoor = false
     var startDate: Date = Date()
     var endDate: Date = Date()
-    var energyBurned: Double = 0
-    var distance: Double = 0
     var source: String = ""
     var device: String?
+    
+    var distance: Double?
+    var energyBurned: Double?
     
     var avgSpeed: Double?
     var maxSpeed: Double?
         
     var avgCyclingCadence: Double?
     var maxCyclingCadence: Double?
+    
+    var elevationAscended: Double?
+    var elevationDescended: Double?
     
     init() {
         // initialize empty object
@@ -37,11 +43,15 @@ class Workout: ObservableObject {
         indoor = object.metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
         startDate = object.startDate
         endDate = object.endDate
-        energyBurned = object.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
-        distance = object.totalDistance?.doubleValue(for: .meter()) ?? 0
+        
+        energyBurned = object.totalEnergyBurned?.doubleValue(for: .kilocalorie())
+        distance = object.totalDistance?.doubleValue(for: .meter())
         
         avgSpeed = object.avgSpeed?.doubleValue(for: .metersPerSecond())
         maxSpeed = object.maxSpeed?.doubleValue(for: .metersPerSecond())
+        
+        elevationAscended = object.elevationAscended?.doubleValue(for: .meter())
+        elevationDescended = object.elevationDescended?.doubleValue(for: .meter())
         
         avgCyclingCadence = object.avgCyclingCadence
         maxCyclingCadence = object.maxCyclingCadence
@@ -52,30 +62,47 @@ class Workout: ObservableObject {
     
     static var sample: Workout {
         let workout = Workout()
+        workout.activityType = .cycling
         workout.startDate = Date().addingTimeInterval(-(60 * 60))
         workout.endDate = Date()
-        workout.distance = 30.0
+        workout.distance = 20000.0
         workout.energyBurned = 500.0
         workout.source = "Apple Watch"
         return workout
     }
 }
 
-extension Workout: Identifiable {}
-
 extension Workout {
+    
+    var title: String {
+        if HKWorkoutActivityType.indoorOutdoorList.contains(activityType) {
+            return [indoor ? "Indoor" : "Outdoor", activityType.name].joined(separator: " ")
+        } else {
+            return activityType.name
+        }
+    }
     
     var elapsedTime: Double {
         endDate.timeIntervalSince(startDate)
     }
+    
 }
 
-// MARK: - Strings
+// MARK: Optional Checks
 
 extension Workout {
     
-    var descriptionString: String {
-        indoor ? "Indoor Cycle" : "Outdoor Cycle"
+
+    var isAvgSpeedPresent: Bool {
+        avgSpeed != nil
+    }
+    
+    var isDistancePresent: Bool {
+        distance != nil
+    }
+    
+    var isElevationAscendedPresent: Bool {
+        elevationAscended != nil
     }
     
 }

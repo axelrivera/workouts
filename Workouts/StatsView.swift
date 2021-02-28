@@ -28,7 +28,7 @@ struct StatsView: View {
                     Divider()
                     
                     HStack {
-                        StatsWeekly(text: "Elevation", detail: elevationString(for: statsManager.weekStats.elevation), detailColor: .elevation)
+                        StatsWeekly(text: "Elevation Gain", detail: elevationString(for: statsManager.weekStats.elevation), detailColor: .elevation)
                         Divider()
                         StatsWeekly(text: "Calories", detail: caloriesString(for: statsManager.weekStats.energyBurned), detailColor: .calories)
                     }

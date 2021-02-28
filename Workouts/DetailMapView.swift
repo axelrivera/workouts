@@ -21,21 +21,18 @@ struct DetailMapView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
+            VStack {
                 DetailMap(points: $detailManager.points, mapType: $selectedMapType)
                     .ignoresSafeArea()
                 
-                VStack {
-                    Picker(selection: $selectedMapTitle, label: Text("Workout Map")) {
-                        ForEach(0 ..< mapTypes.count) { index in
-                            Text(mapTitles[index])
-                        }
+                Picker(selection: $selectedMapTitle, label: Text("Workout Map")) {
+                    ForEach(0 ..< mapTypes.count) { index in
+                        Text(mapTitles[index])
                     }
-                    .onChange(of: selectedMapTitle) { selectedMapType = mapTypes[$0] }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding()
-                    Spacer()
                 }
+                .onChange(of: selectedMapTitle) { selectedMapType = mapTypes[$0] }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
             }
             .navigationBarTitle("Map")
             .navigationBarTitleDisplayMode(.inline)
@@ -45,6 +42,10 @@ struct DetailMapView: View {
                         Text("Done")
                     }
                 }
+                
+                ToolbarItem(placement: .bottomBar) {
+                    
+                }
             }
         }
     }
@@ -52,6 +53,6 @@ struct DetailMapView: View {
 
 struct DetailMapView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailMapView(workout: Workout.sample, detailManager: DetailManager())
+        DetailMapView(workout: Workout.sample, detailManager: DetailManager(workoutID: UUID()))
     }
 }

@@ -24,9 +24,13 @@ struct WorkoutsView: View {
                         NavigationLink(destination: DetailView(workout: workout)) {
                             VStack(alignment: .leading, spacing: 2.0) {
                                 Text(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
-                                Text(formattedDistanceString(for: workout.distance))
-                                    .font(.title)
-                                    .foregroundColor(.accentColor)
+                                
+                                if let distance = workout.distance {
+                                    Text(formattedDistanceString(for: distance))
+                                        .font(.title)
+                                        .foregroundColor(.distance)
+                                }
+                                
                                 HStack {
                                     Text(workout.source)
                                         .foregroundColor(.secondary)
@@ -49,13 +53,6 @@ struct WorkoutsView: View {
             }
             .navigationTitle("Workouts")
             .toolbar {
-                // TODO: Implement workout filters
-//                ToolbarItem(placement: .navigationBarLeading) {
-//                    Button(action: {}) {
-//                        Text("All Workouts")
-//                    }
-//                }
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { activeSheet = .add }) {
                         Image(systemName: "plus")
@@ -84,5 +81,6 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutsView()
             .environmentObject(workoutManager)
+            .colorScheme(.dark)
     }
 }
