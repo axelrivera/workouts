@@ -43,19 +43,26 @@ extension Date {
     
     var workoutWeekStart: Date {
         let calendar = Calendar(identifier: .gregorian)
-        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
-
+        let components = workoutDateComponents(for: calendar)
         let sunday = calendar.date(from: components)!
         return calendar.date(byAdding: .day, value: 1, to: sunday)! // Workout weeks start on monday
     }
 
     var workoutWeekEnd: Date {
         let calendar = Calendar(identifier: .gregorian)
-        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
-        
+        let components = workoutDateComponents(for: calendar)
         let sunday = calendar.date(from: components)!
         let nextSunday = calendar.date(byAdding: .day, value: 7, to: sunday)!
         return nextSunday.endOfDay
+    }
+    
+    private func workoutDateComponents(for calendar: Calendar) -> DateComponents {
+        let weekDay = calendar.component(.weekday, from: self)
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        if let weekOfyear = components.weekOfYear, weekDay == 1 {
+            components.weekOfYear = weekOfyear - 1 // Start last week if sunday
+        }
+        return components
     }
     
     var startOfMonth: Date {
