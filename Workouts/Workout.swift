@@ -86,13 +86,20 @@ extension Workout {
         endDate.timeIntervalSince(startDate)
     }
     
+    var sourceAndDeviceString: String {
+        var name = self.source
+        if let device = self.device {
+            name.append(String(format: " (%@)", device))
+        }
+        return name
+    }
+    
 }
 
 // MARK: Optional Checks
 
 extension Workout {
     
-
     var isAvgSpeedPresent: Bool {
         avgSpeed != nil
     }

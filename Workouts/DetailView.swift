@@ -84,19 +84,19 @@ struct DetailView: View {
             HStack {
                 Text("Source")
                 Spacer()
-                Text("Workouts (iPhone)")
+                Text(workout.sourceAndDeviceString)
                     .foregroundColor(.secondary)
             }
         }
         .navigationTitle("Ride")
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
-        .sheet(item: $activeSheet) { (item) in
+        .fullScreenCover(item: $activeSheet) { (item) in
             switch item {
             case .map:
                 DetailMapView(workout: workout, detailManager: detailManager)
             case .analysis:
-                Text("WorkoutAnalysis")
+                DetailAnalysisView()
             }
         }
     }
