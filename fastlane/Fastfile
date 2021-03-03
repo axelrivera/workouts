@@ -33,6 +33,6 @@ platform :ios do
   end
 
   after_all do |lane|
-    notify "Fastlane finished '#{lane}' successfully" # Mac OS X Notification
+    notification(subtitle: "Finished Building", message: "Fastlane finished '#{lane}' successfully")
   end
 end
