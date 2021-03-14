@@ -60,7 +60,7 @@ struct WorkoutDataStore {
         return NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
     }
     
-    static func fetchRoute(for workout: HKWorkout, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
+    static func fetchRoute(for workout: HKWorkout, completionHandler: @escaping (Result<[CLLocation], Error>) -> Void) {
         let predicate = HKQuery.predicateForObjects(from: workout)
         let query = HKAnchoredObjectQuery(
             type: HKSeriesType.workoutRoute(),
@@ -79,14 +79,14 @@ struct WorkoutDataStore {
                 return
             }
                         
-            var coordinates = [CLLocationCoordinate2D]()
+            var locations = [CLLocation]()
             samples.forEach { route in
-                fetchLocation(for: route) { (locations) in
-                    coordinates.append(contentsOf: locations.map({ $0.coordinate }))
+                fetchLocation(for: route) { (newLocations) in
+                    locations.append(contentsOf: newLocations)
                 } completionHandler: { result in
                     switch result {
                     case .success:
-                        completionHandler(.success(coordinates))
+                        completionHandler(.success(locations))
                     case .failure(let error):
                         completionHandler(.failure(error))
                     }
@@ -101,7 +101,7 @@ struct WorkoutDataStore {
         healthStore.execute(query)
     }
     
-    static func fetchRoute(for id: UUID, completionHandler: @escaping (Result<[CLLocationCoordinate2D], Error>) -> Void) {
+    static func fetchRoute(for id: UUID, completionHandler: @escaping (Result<[CLLocation], Error>) -> Void) {
         fetchWorkout(for: id) { (workout) in
             guard let workout = workout else {
                 completionHandler(.failure(DataError.failure))
@@ -133,19 +133,19 @@ struct WorkoutDataStore {
 
 extension WorkoutDataStore {
     
-    typealias HeartRateSample = (avg: Double?, max: Double?)
+    typealias HeartRateStatsValue = (avg: Double?, max: Double?)
     
-    static func fetchHeartRateSample(for workout: UUID, completionHandler: @escaping (Result<HeartRateSample, Error>) -> Void) {
+    static func fetchHeartRateStatsValue(for workout: UUID, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
         fetchWorkout(for: workout) { (workout) in
             guard let workout = workout else {
                 completionHandler(.failure(DataError.failure))
                 return
             }
-            fetchHeartRateSample(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
+            fetchHeartRateStatsValue(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
         }
     }
     
-    static func fetchHeartRateSample(start: Date, end: Date, completionHandler: @escaping (Result<HeartRateSample, Error>) -> Void) {
+    static func fetchHeartRateStatsValue(start: Date, end: Date, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
         
         let query = HKStatisticsQuery(
@@ -161,6 +161,76 @@ extension WorkoutDataStore {
             let max = statistics.maximumQuantity()?.doubleValue(for: HKUnit.bpm())
             
             completionHandler(.success((avg, max)))
+        }
+        healthStore.execute(query)
+    }
+    
+    static func fetchHeartRateSamples(for workout: UUID, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
+        fetchWorkout(for: workout) { workout in
+            guard let workout = workout else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+            fetchHeartRateSamples(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
+        }
+    }
+    
+    static func fetchHeartRateSamples(start: Date, end: Date, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        
+        var interval = DateComponents()
+        interval.minute = 1
+        
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
+        let anchorDate = calendar.date(from: dateComponents)!
+        
+        let query = HKStatisticsCollectionQuery(
+            quantityType: .heartRate(),
+            quantitySamplePredicate: predicate,
+            options: [.discreteMax],
+            anchorDate: anchorDate,
+            intervalComponents: interval
+        )
+        
+        query.initialResultsHandler = { (query, results, error) in
+            guard let results = results else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+            
+            let values: [ChartValue] = results.statistics().compactMap { (statistics) in
+                guard let quantity = statistics.maximumQuantity() else { return nil }
+                return ChartValue(date: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+            }
+            completionHandler(.success(values))
+        }
+        healthStore.execute(query)
+    }
+    
+    static func fetchCyclingCadenceSamples(start: Date, end: Date, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
+        let datePredicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        let cadencePredicate = HKQuery.predicateForObjects(withMetadataKey: MetadataKeySampleCadence)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, cadencePredicate])
+        
+        let dateSort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        
+        let query = HKSampleQuery(
+            sampleType: HKQuantityType.distanceCycling(),
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: [dateSort]) { (query, samples, error) in
+            guard let samples = samples as? [HKQuantitySample] else {
+                completionHandler(.failure(DataError.failure))
+                return
+            }
+            
+            let cadenceSamples: [ChartValue] = samples.compactMap { sample in
+                guard let cadence = sample.metadata?[MetadataKeySampleCadence] as? Double else { return nil }
+                return ChartValue(date: sample.startDate, value: cadence)
+            }
+            completionHandler(.success(cadenceSamples))
+            
         }
         healthStore.execute(query)
     }

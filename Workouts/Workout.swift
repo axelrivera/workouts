@@ -67,6 +67,16 @@ class Workout: ObservableObject {
         workout.endDate = Date()
         workout.distance = 20000.0
         workout.energyBurned = 500.0
+        
+        workout.avgSpeed = 6.7056
+        workout.maxSpeed = 10.2919
+        
+        workout.avgCyclingCadence = 82.0
+        workout.maxCyclingCadence = 105.0
+        
+        workout.elevationAscended = 500.0
+        workout.elevationDescended = 200.0
+        
         workout.source = "Apple Watch"
         return workout
     }
@@ -99,6 +109,11 @@ extension Workout {
 // MARK: Optional Checks
 
 extension Workout {
+    
+    var isCadencePresent: Bool {
+        guard activityType == .cycling else { return false }
+        return avgCyclingCadence != nil || maxCyclingCadence != nil
+    }
     
     var isAvgSpeedPresent: Bool {
         avgSpeed != nil

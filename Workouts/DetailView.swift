@@ -54,9 +54,11 @@ struct DetailView: View {
                 .buttonStyle(PlainButtonStyle())
                 
                 if let locationName = detailManager.locationName {
-                    HStack(spacing: 5.0) {
-                        Image(systemName: "location.fill")
+                    HStack {
+                        Image(systemName: "mappin")
                             .imageScale(.small)
+                        Text("Start")
+                        Spacer()
                         Text(locationName)
                     }
                 }
@@ -96,7 +98,7 @@ struct DetailView: View {
             case .map:
                 DetailMapView(workout: workout, detailManager: detailManager)
             case .analysis:
-                DetailAnalysisView()
+                DetailAnalysisView(workout: workout, detailManager: detailManager)
             }
         }
     }
