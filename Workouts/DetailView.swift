@@ -57,7 +57,7 @@ struct DetailView: View {
                     HStack {
                         Image(systemName: "mappin")
                             .imageScale(.small)
-                        Text("Start")
+                        Text("Location")
                         Spacer()
                         Text(locationName)
                     }
