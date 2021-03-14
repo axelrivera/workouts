@@ -28,30 +28,25 @@ struct ImportView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                VStack {
-                    Form {
-                        if importManager.state == .processing {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                Spacer()
+                Form {
+                    if importManager.state == .processing {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                            Spacer()
+                        }
+                        .id(UUID())
+                    } else {
+                        ForEach(importManager.workouts) { workout in
+                            ImportRow(workout: workout) {
+                                importManager.processWorkout(workout)
                             }
-                            .id(UUID())
-                        } else {
-                            ForEach(importManager.workouts) { workout in
-                                ImportRow(workout: workout)
-                            }
-                            .onDelete(perform: importManager.deleteWorkout)
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
-                    
-                    RoundButton(text: "Import", action: processImports)
-                        .padding()
-                        .disabled(withAnimation { importManager.isImportDisabled })
-                        .transition(AnyTransition.opacity)
                 }
+                .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
                 
                 if importManager.state.showEmptyView {
                     Color.systemBackground
@@ -59,7 +54,8 @@ struct ImportView: View {
                     ImportEmptyView(importState: importManager.state, addAction: { activeSheet = .document })
                 }
             }
-            .navigationBarTitle("Import Workouts")
+            .navigationTitle("Import Workouts")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(leading: dismissButton(), trailing: addButton())
             .sheet(item: $activeSheet) { item in
                 switch item {
@@ -88,12 +84,6 @@ struct ImportView: View {
 }
 
 private extension ImportView {
-    
-    func processImports() {
-        importManager.importWorkouts {
-            Log.debug("finished importing workouts")
-        }
-    }
     
     func addButton() -> some View {
         Button(action: { activeSheet = .document }) {
@@ -131,7 +121,7 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .empty
+        manager.state = .ok
         manager.loadSampleWorkouts()
         return manager
     }()

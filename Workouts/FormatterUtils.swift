@@ -29,13 +29,28 @@ func formattedRelativeDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     if Calendar.current.isDateInToday(date) {
         return DateFormatter.time.string(from: date)
-    } else if Calendar.current.isDateInYesterday(date) {
-        return "Yesterday"
     } else if date.isWithinNumberOfDays(6) {
         return DateFormatter.relative.string(from: date)
     } else {
         return DateFormatter.medium.string(from: date)
     }
+}
+
+func formattedImportRelativeDateString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    
+    let timeStr = DateFormatter.time.string(from: date)
+    let dateStr: String
+    
+    if Calendar.current.isDateInToday(date) {
+        dateStr = "Today"
+    } else if date.isWithinNumberOfDays(6) {
+        dateStr = DateFormatter.relative.string(from: date)
+    } else {
+        dateStr = DateFormatter.medium.string(from: date)
+    }
+    
+    return String(format: "%@ @ %@", dateStr, timeStr)
 }
 
 func formattedTimeString(for date: Date?) -> String {

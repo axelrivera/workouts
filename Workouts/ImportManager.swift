@@ -153,29 +153,23 @@ extension ImportManager {
         }
     }
     
-    func importWorkouts(completionHandler: @escaping () -> Void) {
+    func processWorkout(_ workout: WorkoutImport) {
+        guard workout.status == .new else { return }
+        
         isProcessingImports = true
         
-        let newWorkouts = self.newWorkouts
-        for workout in newWorkouts {
-            let operation = ImportOperation(workout: workout)
-            operation.completionBlock = {
-                DispatchQueue.main.async {
-                    self.isProcessingImports = !self.importQueue.operations.isEmpty
-                    guard self.isProcessingImports else {
-                        completionHandler()
-                        return
-                    }
-                }
+        workout.status = .processing
+        let operation = ImportOperation(workout: workout)
+        operation.completionBlock = {
+            DispatchQueue.main.async {
+                self.isProcessingImports = !self.importQueue.operations.isEmpty
             }
-            importQueue.addOperation(operation)
         }
+        importQueue.addOperation(operation)
     }
     
     func loadSampleWorkouts() {
-        DispatchQueue.main.async {
-            self.workouts = Self.sampleWorkouts()
-        }
+        self.workouts = Self.sampleWorkouts()
     }
     
 }
@@ -185,9 +179,12 @@ extension ImportManager {
 extension ImportManager {
     
     static func sampleWorkouts() -> [WorkoutImport] {
-        [
-            workoutWithStatus(.new, sport: .cycling),
-            workoutWithStatus(.new, sport: .cycling, indoor: true),
+        let today = Date()
+        let yesterday = today.dayBefore
+        
+        return [
+            workoutWithStatus(.new, sport: .cycling, startDate: today),
+            workoutWithStatus(.new, sport: .cycling, startDate: yesterday, indoor: true),
             workoutWithStatus(.new, sport: .cycling),
             workoutWithStatus(.notSupported, sport: .running),
             workoutWithStatus(.notSupported, sport: .walking),
@@ -200,11 +197,12 @@ extension ImportManager {
         workoutWithStatus(.new, sport: .cycling, indoor: false)
     }
     
-    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, indoor: Bool = false) -> WorkoutImport {
+    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, startDate: Date? = nil, indoor: Bool = false) -> WorkoutImport {
+        let startDate = startDate ?? Date.dateFor(month: 1, day: 1, year: 2021)!
         let workout = WorkoutImport(status: status, sport: sport)
         workout.indoor = indoor
-        workout.start = .init(valueType: .date, value: Date().timeIntervalSince1970)
-        workout.totalDistance = .init(valueType: .distance, value: 16093.4)
+        workout.start = .init(valueType: .date, value: startDate.timeIntervalSince1970)
+        workout.totalDistance = .init(valueType: .distance, value: 32000.0)
         return workout
     }
     
