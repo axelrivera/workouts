@@ -25,14 +25,16 @@ class DetailManager: ObservableObject {
     @Published var maxHeartRate: Double?
     
     @Published var movingTime: Double = 0
+    @Published var bestPace: Double = 0
     
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
     
-    @Published var heartRateValues = [ChartValue]()
-    @Published var speedValues = [ChartValue]()
-    @Published var cyclingCadenceValues = [ChartValue]()
-    @Published var altitudeValues = [ChartValue]()
+    @Published var heartRateValues = [TimeAxisValue]()
+    @Published var speedValues = [TimeAxisValue]()
+    @Published var cyclingCadenceValues = [TimeAxisValue]()
+    @Published var paceValues = [TimeAxisValue]()
+    @Published var altitudeValues = [TimeAxisValue]()
     
     var isFetchingLocation = false
     var workoutID: UUID
@@ -47,11 +49,6 @@ class DetailManager: ObservableObject {
 
 extension DetailManager {
     
-    func workoutInterval() -> (start: Date, end: Date)? {
-        guard let workout = workout else { return nil }
-        return (workout.startDate, workout.endDate)
-    }
-    
     func fetchWorkout(completionHandler: @escaping (() -> Void)) {
         WorkoutDataStore.fetchWorkout(for: workoutID) { (workout) in
             self.workout = workout
@@ -64,6 +61,7 @@ extension DetailManager {
             fetchHeartRate()
             fetchRoute()
             fetchHeartRateSamples()
+            fetchPaceSamples()
             fetchCyclingCadenceSamples()
         }
         
@@ -81,9 +79,9 @@ extension DetailManager {
     }
     
     func fetchHeartRate() {
-        guard let (start, end) = workoutInterval() else { return }
+        guard let workout = workout else { return }
         
-        WorkoutDataStore.fetchHeartRateStatsValue(start: start, end: end) { result in
+        WorkoutDataStore.fetchHeartRateStatsValue(workout: workout) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let sample):
@@ -164,18 +162,37 @@ extension DetailManager {
 extension DetailManager {
     
     func fetchHeartRateSamples() {
-        guard let (start, end) = workoutInterval() else { return }
+        guard let workout = workout else { return }
         
-        WorkoutDataStore.fetchHeartRateSamples(start: start, end: end) { result in
-            switch result {
-            case .success(let values):
-                DispatchQueue.main.async {
-                    self.heartRateValues = values.sorted(by: { (lhs, rhs) -> Bool in
-                        lhs.date < rhs.date
-                    })
-                }
-            case .failure(let error):
-                Log.debug("fetching heart rate samples failed: \(error)")
+        WorkoutDataStore.fetchHeartRateSamples(workout: workout) { result in
+            guard let samples = try? result.get(), !samples.isEmpty else { return }
+            
+            let startDate = samples[0].timestamp
+            let values = samples.map { quantity in
+                TimeAxisValue(duration: quantity.timestamp.timeIntervalSince(startDate), value: quantity.value)
+            }
+            
+            DispatchQueue.main.async {
+                self.heartRateValues = values
+            }
+        }
+    }
+    
+    func fetchPaceSamples() {
+        guard let workout = workout, Workout.paceActivities.contains(workout.workoutActivityType) else { return }
+        
+        WorkoutDataStore.fetchRunningWalkingPaceSamples(workout: workout) { result in
+            guard let samples = try? result.get(), !samples.isEmpty else { return }
+            
+            let bestPace = samples.map({ $0.value }).min() ?? 0
+            let startDate = samples[0].timestamp
+            let values = samples.map { quantity in
+                TimeAxisValue(duration: quantity.timestamp.timeIntervalSince(startDate), value: quantity.value)
+            }
+            
+            DispatchQueue.main.async {
+                self.paceValues = values
+                self.bestPace = bestPace
             }
         }
     }
@@ -191,26 +208,31 @@ extension DetailManager {
         if locations.isEmpty { return }
                 
         DispatchQueue.global(qos: .userInteractive).async {
-            let altitudes = self.locations.map { $0.altitude }
-            
-            var speedSamples = [ChartValue]()
-            var altitudeSamples = [ChartValue]()
-            let minElevation = altitudes.min()
-            let maxElevation = altitudes.max()
-            
-            var dateComponents = DateComponents()
-            dateComponents.minute = 1
+            var speedSamples = [TimeAxisValue]()
+            var altitudeSamples = [TimeAxisValue]()
             
             let grouped = self.locations.slicedByMinute(for: \.timestamp)
-            for date in grouped.keys.sorted() {
+            var sortedDates = grouped.keys.sorted()
+            if sortedDates.count > 2 {
+                sortedDates = sortedDates.dropFirst().dropLast()
+            }
+            let startDate = sortedDates[0]
+            
+            for date in sortedDates {
+                let sampleDuration = date.timeIntervalSince(startDate)
+                
                 if let samples = grouped[date]?.map({ Double($0.speed) }), let max = samples.max() {
-                    speedSamples.append(ChartValue(date: date, value: nativeSpeedToLocalizedUnit(for: max)))
+                    speedSamples.append(TimeAxisValue(duration: sampleDuration, value: nativeSpeedToLocalizedUnit(for: max)))
                 }
                 
                 if let samples = grouped[date]?.map({ Double($0.altitude) }), let max = samples.max() {
-                    altitudeSamples.append(ChartValue(date: date, value: nativeAltitudeToLocalizedUnit(for: max)))
+                    altitudeSamples.append(TimeAxisValue(duration: sampleDuration, value: nativeAltitudeToLocalizedUnit(for: max)))
                 }
             }
+            
+            let altitudes = self.locations.map { $0.altitude }
+            let minElevation = altitudes.min()
+            let maxElevation = altitudes.max()
             
             DispatchQueue.main.async {
                 self.speedValues = speedSamples
@@ -234,24 +256,26 @@ extension DetailManager {
     }
     
     func fetchCyclingCadenceSamples() {
-        guard let (start, end) = workoutInterval() else { return }
+        guard let workout = workout else { return }
         
-        WorkoutDataStore.fetchCyclingCadenceSamples(start: start, end: end) { result in
-            guard let values = try? result.get() else { return }
-            self.updateCyclingCadenceSamples(values: values)
+        WorkoutDataStore.fetchCyclingCadenceSamples(workout: workout) { result in
+            guard let samples = try? result.get(), !samples.isEmpty else { return }
+            self.updateCyclingCadenceSamples(samples)
         }
     }
     
-    private func updateCyclingCadenceSamples(values: [ChartValue]) {
-        var cadenceSamples = [ChartValue]()
+    private func updateCyclingCadenceSamples(_ samples: [Quantity]) {
+        var cadenceSamples = [TimeAxisValue]()
+                
+        let grouped = samples.slicedByMinute(for: \.timestamp)
+        let sortedDates = grouped.keys.sorted()
+        let startDate = sortedDates[0]
         
-        var dateComponents = DateComponents()
-        dateComponents.minute = 1
-        
-        let grouped = values.slicedByMinute(for: \.date)
-        for date in grouped.keys.sorted() {
-            if let samples = grouped[date]?.map({ Double($0.value) }), let max = samples.max() {
-                cadenceSamples.append(ChartValue(date: date, value: max))
+        for date in sortedDates {
+            let sampleDuration = date.timeIntervalSince(startDate)
+            
+            if let slice = grouped[date]?.map({ Double($0.value) }), let max = slice.max() {
+                cadenceSamples.append(TimeAxisValue(duration: sampleDuration, value: max))
             }
         }
         

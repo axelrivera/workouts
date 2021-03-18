@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 import FitFileParser
+import HealthKit
 
 class WorkoutImport: ObservableObject, Identifiable {
     enum Status {
@@ -147,6 +148,38 @@ extension WorkoutImport {
 // MARK: - Helper Methods
 
 extension WorkoutImport {
+    
+    var activityType: HKWorkoutActivityType {
+        switch sport {
+        case .cycling:
+            return .cycling
+        case .running:
+            return .running
+        case .walking:
+            return .walking
+        default:
+            return .other
+        }
+    }
+    
+    var locationType: HKWorkoutSessionLocationType {
+        indoor ? .indoor : .outdoor
+    }
+    
+    var lapLength: HKQuantity? {
+        var distance: Double?
+        switch sport {
+        case .running, .walking:
+            distance = 1.0
+        case .cycling:
+            distance = 5.0
+        default:
+            break
+        }
+        
+        guard let value = distance else { return nil }
+        return HKQuantity(unit: .mile(), doubleValue: value)
+    }
     
     private static let indoorSubsports = [
         "treadmill",

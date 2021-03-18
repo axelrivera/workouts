@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct DetailAnalysisView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -16,11 +17,6 @@ struct DetailAnalysisView: View {
     var avgSpeed: Double? {
         guard let avgSpeed = workout.avgSpeed else { return nil }
         return nativeSpeedToLocalizedUnit(for: avgSpeed)
-    }
-    
-    var avgCadence: Double? {
-        guard let avgCadence = workout.avgCyclingCadence else { return nil }
-        return avgCadence
     }
     
     var workoutTitle: String {
@@ -43,11 +39,11 @@ struct DetailAnalysisView: View {
                     
                     rowForText(
                         "Total Time",
-                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime, includeSeconds: true)
+                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime)
                     )
                     rowForText(
                         "Moving Time",
-                        detail: formattedHoursMinutesDurationString(for: detailManager.movingTime, includeSeconds: true)
+                        detail: formattedHoursMinutesDurationString(for: detailManager.movingTime)
                     )
                 }
                 
@@ -61,18 +57,31 @@ struct DetailAnalysisView: View {
                     )
                 }
                 
+                if workout.isPacePresent {
+                    Section {
+                        chart(
+                            for: "Pace",
+                            supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+                            supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+                            values: detailManager.paceValues, avgValue: workout.avgPace,
+                            accentColor: .cadence,
+                            yAxisFormatter: PaceValueFormatter()
+                        )
+                    }
+                }
+
                 if workout.isCadencePresent {
                     Section {
                         chart(
                             for: "Cadence",
                             supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
                             supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
-                            values: detailManager.cyclingCadenceValues, avgValue: avgCadence,
+                            values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
                             accentColor: .cadence
                         )
                     }
                 }
-                
+
                 Section {
                     chart(
                         for: "Elevation",
@@ -81,7 +90,7 @@ struct DetailAnalysisView: View {
                         values: detailManager.altitudeValues, avgValue: nil,
                         accentColor: .elevation
                     )
-                    
+
                     rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended))
                     rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended))
                 }
@@ -102,7 +111,7 @@ struct DetailAnalysisView: View {
 
 extension DetailAnalysisView {
     
-    func chart(for title: String, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartValue], avgValue: Double?, accentColor: Color) -> some View {
+    func chart(for title: String, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [TimeAxisValue], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
         VStack(alignment: .leading) {
             Text(title)
                 .font(.title3)
@@ -130,12 +139,12 @@ extension DetailAnalysisView {
                 .frame(maxWidth: .infinity, alignment: .center)
             }
             
-            lineChart(values: values, avg: avgValue, color: accentColor)
+            lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
         }
     }
 
-    func lineChart(values: [ChartValue], avg: Double?, color: Color) -> some View {
-        LineChart(values: values, avgValue: avg, lineColor: color)
+    func lineChart(values: [TimeAxisValue], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+        LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
             .frame(maxWidth: .infinity, minHeight: 200.0)
     }
     
@@ -155,10 +164,10 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     
     static let detailManager: DetailManager = {
         let manager = DetailManager(workoutID: workout.id)
-        manager.speedValues = ChartValue.speedSamples
-        manager.heartRateValues = ChartValue.heartRateSamples
-        manager.cyclingCadenceValues = ChartValue.cyclingCadenceSamples
-        manager.altitudeValues = ChartValue.cyclingCadenceSamples
+//        manager.speedValues = Time.speedSamples
+//        manager.heartRateValues = DetailManager.heartRateSamples
+//        manager.cyclingCadenceValues = DetailManager.cyclingCadenceSamples
+//        manager.altitudeValues = DetailManager.cyclingCadenceSamples
         return manager
     }()
     

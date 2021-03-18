@@ -10,9 +10,10 @@ import Charts
 
 struct LineChart: UIViewRepresentable {
     
-    var values = [ChartValue]()
+    var values = [TimeAxisValue]()
     var avgValue: Double?
     var lineColor = Color.red
+    var yAxisFormatter: AxisValueFormatter? = nil
 
     func makeUIView(context: Context) -> LineChartView {
         let chartView = LineChartView()
@@ -30,10 +31,10 @@ struct LineChart: UIViewRepresentable {
         xAxis.labelPosition = .bottom
         xAxis.labelTextColor = .label
         xAxis.labelCount = 4
-        xAxis.centerAxisLabelsEnabled = true
+        xAxis.centerAxisLabelsEnabled = false
         xAxis.drawAxisLineEnabled = false
         xAxis.drawGridLinesEnabled = true
-        xAxis.centerAxisLabelsEnabled = true
+        xAxis.valueFormatter = DateValueFormatter()
         
         let leftAxis = chartView.leftAxis
         leftAxis.labelTextColor = .label
@@ -42,27 +43,25 @@ struct LineChart: UIViewRepresentable {
         leftAxis.gridLineDashLengths = [5, 5]
         leftAxis.drawLimitLinesBehindDataEnabled = true
         
+        if let valueFormatter = yAxisFormatter {
+            leftAxis.valueFormatter = valueFormatter
+        }
+        
         chartView.rightAxis.enabled = false
     
-        
         return chartView
     }
 
     func updateUIView(_ view: LineChartView, context: Context) {
-        let xAxis = view.xAxis
-        xAxis.valueFormatter = DateValueFormatter()
-        
         var dataSets = [LineChartDataSet]()
         
         var dataEntries = [ChartDataEntry]()
         var avgEntries = [ChartDataEntry]()
         
-        for i in 0 ..< values.count {
-            let value = values[i]
-            dataEntries.append(ChartDataEntry(x: Double(i), y: value.value))
-            
+        values.forEach { value in
+            dataEntries.append(ChartDataEntry(x: value.duration, y: value.value))
             if let avgValue = avgValue {
-                avgEntries.append(ChartDataEntry(x: Double(i), y: avgValue))
+                avgEntries.append(ChartDataEntry(x: value.duration, y: avgValue))
             }
         }
         
@@ -97,7 +96,7 @@ struct LineChart: UIViewRepresentable {
 struct LineChart_Previews: PreviewProvider {
     
     static var previews: some View {
-        LineChart(values: ChartValue.heartRateSamples, avgValue: 140.0)
+        LineChart(values: TimeAxisValue.heartRateSamples, avgValue: 140.0)
             .frame(maxWidth: .infinity, maxHeight: 200.0)
             .colorScheme(.dark)
     }

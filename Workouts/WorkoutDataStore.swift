@@ -14,6 +14,7 @@ struct WorkoutDataStore {
         case missingData
         case missingValue
         case failure
+        case sportNotSupported
         case system(Error)
     }
     
@@ -135,48 +136,30 @@ extension WorkoutDataStore {
     
     typealias HeartRateStatsValue = (avg: Double?, max: Double?)
     
-    static func fetchHeartRateStatsValue(for workout: UUID, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
-        fetchWorkout(for: workout) { (workout) in
-            guard let workout = workout else {
-                completionHandler(.failure(DataError.failure))
-                return
-            }
-            fetchHeartRateStatsValue(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
-        }
-    }
-    
-    static func fetchHeartRateStatsValue(start: Date, end: Date, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+    static func fetchHeartRateStatsValue(workout: HKWorkout, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
+        let source = workout.sourceRevision.source
         
         let query = HKStatisticsQuery(
             quantityType: .heartRate(),
             quantitySamplePredicate: predicate,
-            options: [.discreteAverage, .discreteMax]) { (query, statistics, error) in
+            options: [.discreteAverage, .discreteMax, .separateBySource]) { (query, statistics, error) in
             guard let statistics = statistics else {
                 completionHandler(.failure(error ?? DataError.failure))
                 return
             }
             
-            let avg = statistics.averageQuantity()?.doubleValue(for: HKUnit.bpm())
-            let max = statistics.maximumQuantity()?.doubleValue(for: HKUnit.bpm())
+            let avg = statistics.averageQuantity(for: source)?.doubleValue(for: HKUnit.bpm())
+            let max = statistics.maximumQuantity(for: source)?.doubleValue(for: HKUnit.bpm())
             
             completionHandler(.success((avg, max)))
         }
         healthStore.execute(query)
     }
     
-    static func fetchHeartRateSamples(for workout: UUID, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
-        fetchWorkout(for: workout) { workout in
-            guard let workout = workout else {
-                completionHandler(.failure(DataError.failure))
-                return
-            }
-            fetchHeartRateSamples(start: workout.startDate, end: workout.endDate, completionHandler: completionHandler)
-        }
-    }
-    
-    static func fetchHeartRateSamples(start: Date, end: Date, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+    static func fetchHeartRateSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
+        let source = workout.sourceRevision.source
         
         var interval = DateComponents()
         interval.minute = 1
@@ -188,28 +171,76 @@ extension WorkoutDataStore {
         let query = HKStatisticsCollectionQuery(
             quantityType: .heartRate(),
             quantitySamplePredicate: predicate,
-            options: [.discreteMax],
+            options: [.discreteMax, .separateBySource],
             anchorDate: anchorDate,
             intervalComponents: interval
         )
         
         query.initialResultsHandler = { (query, results, error) in
             guard let results = results else {
-                completionHandler(.failure(DataError.failure))
+                completionHandler(.failure(error ?? DataError.failure))
                 return
             }
             
-            let values: [ChartValue] = results.statistics().compactMap { (statistics) in
-                guard let quantity = statistics.maximumQuantity() else { return nil }
-                return ChartValue(date: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+            var sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
+            if sortedStatistics.count > 2 {
+                sortedStatistics = sortedStatistics.dropFirst().dropLast()
+            }
+            
+            let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
+                guard let quantity = statistics.maximumQuantity(for: source) else { return nil }
+                return Quantity(quantityType: .heartRate, timestamp: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+            }
+            completionHandler(.success(values))
+        }
+        healthStore.execute(query)
+    }
+            
+    static func fetchRunningWalkingPaceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
+        let source = workout.sourceRevision.source
+        
+        var interval = DateComponents()
+        interval.minute = 1
+        
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
+        let anchorDate = calendar.date(from: dateComponents)!
+        
+        let query = HKStatisticsCollectionQuery(
+            quantityType: .distanceWalkingRunning(),
+            quantitySamplePredicate: predicate,
+            options: [.cumulativeSum, .separateBySource],
+            anchorDate: anchorDate,
+            intervalComponents: interval
+        )
+        
+        query.initialResultsHandler = { (query, results, error) in
+            guard let results = results else {
+                completionHandler(.failure(error ?? DataError.failure))
+                return
+            }
+            
+            var sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
+            if sortedStatistics.count > 2 {
+                sortedStatistics = sortedStatistics.dropFirst().dropLast()
+            }
+            
+            let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
+                guard let quantity = statistics.sumQuantity(for: source) else { return nil }
+                let distance = quantity.doubleValue(for: .meter())
+                let duration = statistics.endDate.timeIntervalSince(statistics.startDate)
+                let pace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
+                                
+                return Quantity(quantityType: .pace, timestamp: statistics.startDate, value: pace)
             }
             completionHandler(.success(values))
         }
         healthStore.execute(query)
     }
     
-    static func fetchCyclingCadenceSamples(start: Date, end: Date, completionHandler: @escaping (Result<[ChartValue], Error>) -> Void) {
-        let datePredicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+    static func fetchCyclingCadenceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+        let datePredicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let cadencePredicate = HKQuery.predicateForObjects(withMetadataKey: MetadataKeySampleCadence)
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, cadencePredicate])
         
@@ -225,9 +256,13 @@ extension WorkoutDataStore {
                 return
             }
             
-            let cadenceSamples: [ChartValue] = samples.compactMap { sample in
+            var cleanSamples = samples
+            if cleanSamples.count > 2 {
+                cleanSamples = cleanSamples.dropFirst().dropLast()
+            }
+            let cadenceSamples: [Quantity] = cleanSamples.compactMap { sample in
                 guard let cadence = sample.metadata?[MetadataKeySampleCadence] as? Double else { return nil }
-                return ChartValue(date: sample.startDate, value: cadence)
+                return Quantity(quantityType: .cadence, timestamp: sample.startDate, value: cadence)
             }
             completionHandler(.success(cadenceSamples))
             
@@ -247,11 +282,18 @@ extension WorkoutDataStore {
             fatalError("missing dates")
         }
         
-        // TODO: Add Support for Activity Type
+        guard workoutImport.sport.isSupported else {
+            completionHandler(.failure(.sportNotSupported))
+            return
+        }
+        
         let configuration = HKWorkoutConfiguration()
-        configuration.activityType = .cycling
-        configuration.locationType = .outdoor
-        configuration.lapLength = HKQuantity(unit: .mile(), doubleValue: 5.0)
+        configuration.activityType = workoutImport.activityType
+        configuration.locationType = workoutImport.locationType
+        
+        if let lapLength = workoutImport.lapLength {
+            configuration.lapLength = lapLength
+        }
         
         let builder = HKWorkoutBuilder(healthStore: healthStore, configuration: configuration, device: .local())
         let routeBuilder = HKWorkoutRouteBuilder(healthStore: healthStore, device: .local())
@@ -267,22 +309,12 @@ extension WorkoutDataStore {
         let samples = self.samples(for: workoutImport.records, sport: workoutImport.sport, indoor: workoutImport.indoor)
         builder.add(samples) { (success, error) in
             guard success else {
-                Log.debug("samples failed: \(error?.localizedDescription ?? "n/a")")
                 completionHandler(.failure(dataError(.failure, system: error)))
                 return
             }
-            
-            // TODO: Implement Events
-//            let events = self.events(for: workoutImport)
-//            builder.addWorkoutEvents(events) { (success, error) in
-//                if let error = error {
-//                    Log.debug("adding workout events failed: \(error.localizedDescription)")
-//                }
-//            }
                         
             builder.endCollection(withEnd: end) { (success, error) in
                 guard success else {
-                    Log.debug("end collection failed: \(error?.localizedDescription ?? "n/a")")
                     completionHandler(.failure(dataError(.failure, system: error)))
                     return
                 }
@@ -294,25 +326,20 @@ extension WorkoutDataStore {
                 }
                 
                 let locations = workoutImport.locations
-                Log.debug("adding \(locations.count)")
-                
                 routeBuilder.insertRouteData(locations) { (success, error) in
                     if let error = error {
-                        Log.debug("adding route data failed: \(error.localizedDescription)")
                         completionHandler(.failure(dataError(.failure, system: error)))
                         return
                     }
                     
                     builder.finishWorkout { (workout, error) in
                         guard let workout = workout else {
-                            Log.debug("finish workout failed: \(error?.localizedDescription ?? "n/a"))")
                             completionHandler(.failure(dataError(.failure, system: error)))
                             return
                         }
                         
                         routeBuilder.finishRoute(with: workout, metadata: nil) { (route, error) in
                             if let error = error {
-                                Log.debug("finish route failed: \(error.localizedDescription)")
                                 completionHandler(.failure(DataError.system(error)))
                                 return
                             }
@@ -327,8 +354,7 @@ extension WorkoutDataStore {
     private static func samples(for records: [WorkoutImport.Record], sport: Sport, indoor: Bool) ->  [HKSample] {
         var samples = [HKSample]()
         
-        var prevRecord: WorkoutImport.Record?
-        for record in records {
+        for (prevRecord, record) in zip(records, records.dropFirst()) {
             if let sample = distanceSampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
                 samples.append(sample)
             }
@@ -340,14 +366,12 @@ extension WorkoutDataStore {
             if let sample = heartRateSampleFor(record: record) {
                 samples.append(sample)
             }
-            
-            prevRecord = record
         }
         
         return samples
     }
     
-    private static func distanceSampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record?, sport: Sport, indoor: Bool) -> HKSample? {
+    private static func distanceSampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record, sport: Sport, indoor: Bool) -> HKSample? {
         if indoor { return nil }
         guard sport.hasDistanceSamples else { return nil }
         
@@ -365,7 +389,7 @@ extension WorkoutDataStore {
         
         guard let timestamp = record.timestamp.dateValue else { return nil }
         guard let endDistance = record.distance.distanceValue else { return nil }
-        let startDistance = prevRecord?.distance.distanceValue
+        let startDistance = prevRecord.distance.distanceValue
         
         var distance: Double
         if let startDistance = startDistance {
@@ -375,7 +399,7 @@ extension WorkoutDataStore {
         }
         
         var metadata = [String: Any]()
-        if let cadence = record.totalCadence.cadenceValue {
+        if let cadence = record.totalCadence.cadenceValue, sport == .cycling {
             metadata[MetadataKeySampleCadence] = cadence
         }
 
@@ -393,22 +417,20 @@ extension WorkoutDataStore {
         return sample
     }
     
-    private static func energySampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record?, sport: Sport, indoor: Bool) -> HKSample? {
-        guard let prevSpeed = prevRecord?.speed.speedValue, prevSpeed > 0 else { return nil }
+    private static func energySampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record, sport: Sport, indoor: Bool) -> HKSample? {
+        guard let prevSpeed = prevRecord.speed.speedValue, prevSpeed > 0 else { return nil }
         guard let speed = record.speed.speedValue, speed > 0 else { return nil }
         guard let timestamp = record.timestamp.dateValue else { return nil }
         
         let end = timestamp
-        let start = prevRecord?.timestamp.dateValue ?? end
+        let start = prevRecord.timestamp.dateValue ?? end
         let durationInSeconds = end.timeIntervalSince1970 - start.timeIntervalSince1970
         let duration = durationInSeconds / 60.0 // minutes
                 
         let metValue = metValueFor(sport: sport, indoor: indoor, speed: speed)
         let weight = AppSettings.weight ?? Constants.defaultWeight
         let energyBurned = calculateCaloriesFor(duration: duration, metValue: metValue, weight: weight)
-        
-        Log.debug("sample calories: \(energyBurned), met: \(metValue), speed: \(speed)")
-        
+                
         let sample = HKCumulativeQuantitySample(
             type: .activeEnergyBurned(),
             quantity: HKQuantity(unit: .kilocalorie(), doubleValue: energyBurned),
@@ -430,11 +452,6 @@ extension WorkoutDataStore {
         return sample
     }
     
-//    private static func events(for workoutImport: WorkoutImport) -> [HKWorkoutEvent] {
-//        var events = [HKWorkoutEvent]()
-//        return events
-//    }
-    
     private static func metadata(for file: WorkoutImport) -> [String: Any] {
         var dictionary = [String: Any]()
         dictionary[HKMetadataKeyIndoorWorkout] = file.indoor
@@ -444,12 +461,11 @@ extension WorkoutDataStore {
         dictionary[HKMetadataKeyElevationAscended] = file.totalAscentQuantity
         dictionary[HKMetadataKeyElevationDescended] = file.totalDescentQuantity
         dictionary[HKMetadataKeyAverageMETs] = file.avgMETQuantity
-        dictionary[MetadataKeyAvgCyclingCadence] = file.totalAvgCadenceValue
-        dictionary[MetadataKeyMaxCyclingCadence] = file.totalMaxCadenceValue
         
-        // TODO: Pending Metadata
-        // Humidity
-        // Elevation Ascended
+        if file.sport == .cycling {
+            dictionary[MetadataKeyAvgCyclingCadence] = file.totalAvgCadenceValue
+            dictionary[MetadataKeyMaxCyclingCadence] = file.totalMaxCadenceValue
+        }
         
         return dictionary.compactMapValues({ $0 })
     }

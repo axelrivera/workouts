@@ -14,14 +14,14 @@ func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
 
-func formattedHoursMinutesDurationString(for duration: Double?, includeSeconds: Bool = false) -> String {
+func formattedHoursMinutesDurationString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
-    if includeSeconds {
-        let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
-        return String(format: "%dh:%2dm:%2ds", h, m, s)
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        return String(format: "%d:%02d:%02d", h, m, s)
     } else {
-        let (h, m) = secondsToHoursMinutes(seconds: seconds)
-        return String(format: "%dh:%02dm", h, m)
+        return String(format: "%02d:%02d", m, s)
     }
 }
 
@@ -97,6 +97,18 @@ func formattedDistanceString(for meters: Double?) -> String {
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
     let measurement = Measurement<UnitSpeed>(value: metersPerSecond ?? 0, unit: .metersPerSecond)
     return MeasurementFormatter.speed.string(from: measurement)
+}
+
+func formattedRunningWalkingPaceString(for duration: Double?) -> String {
+    let pace = formattedPaceString(for: duration)
+    let unit = runningWalkingDistanceTargetUnit().symbol
+    return String(format: "%@ /%@", pace, unit)
+}
+
+func formattedPaceString(for duration: Double?) -> String {
+    guard let duration = duration else { return "n/a" }
+    let (m, s) = secondsToMinutesSeconds(seconds: Int(duration))
+    return String(format: "%d:%02d", m, s)
 }
 
 // MARK: - Heart Rate

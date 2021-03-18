@@ -10,12 +10,15 @@ import Charts
 
 class DateValueFormatter: NSObject, AxisValueFormatter {
     
-    override init() {
-        super.init()
+    public func stringForValue(_ value: Double, axis: AxisBase?) -> String {
+        formattedHoursMinutesDurationString(for: value)
+    }
+}
+
+class PaceValueFormatter: NSObject, AxisValueFormatter {
+    
+    func stringForValue(_ value: Double, axis: AxisBase?) -> String {
+        formattedPaceString(for: value)
     }
     
-    public func stringForValue(_ value: Double, axis: AxisBase?) -> String {
-        let interval = value * 60.0
-        return formattedHoursMinutesDurationString(for: interval)
-    }
 }

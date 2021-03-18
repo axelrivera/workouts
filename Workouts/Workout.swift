@@ -32,6 +32,8 @@ class Workout: ObservableObject {
     var elevationAscended: Double?
     var elevationDescended: Double?
     
+    static let paceActivities: [HKWorkoutActivityType] = [.walking, .running]
+    
     init() {
         // initialize empty object
     }
@@ -104,6 +106,15 @@ extension Workout {
         return name
     }
     
+    var avgCadence: Double? {
+        guard let avgCadence = avgCyclingCadence else { return nil }
+        return avgCadence
+    }
+    
+    var avgPace: Double? {
+        guard let distance = distance else { return nil }
+        return calculateRunningWalkingPace(distanceInMeters: distance, duration: elapsedTime)
+    }
 }
 
 // MARK: Optional Checks
@@ -113,6 +124,10 @@ extension Workout {
     var isCadencePresent: Bool {
         guard activityType == .cycling else { return false }
         return avgCyclingCadence != nil || maxCyclingCadence != nil
+    }
+    
+    var isPacePresent: Bool {
+        Self.paceActivities.contains(activityType)
     }
     
     var isAvgSpeedPresent: Bool {

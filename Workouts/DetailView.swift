@@ -138,8 +138,13 @@ extension DetailView {
         item = GridItem(text: "Time", detail: formattedHoursMinutesDurationString(for: workout.elapsedTime), detailColor: .time)
         items.append(item)
         
+        if workout.isPacePresent {
+            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .time)
+            items.append(item)
+        }
+        
         if let heartRate = heartRate {
-            item = GridItem(text: "Avg. Heart Rate", detail: formattedHeartRateString(for: heartRate), detailColor: .calories)
+            item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: heartRate), detailColor: .calories)
             items.append(item)
         }
         
@@ -149,12 +154,12 @@ extension DetailView {
         }
         
         if let speed = workout.avgSpeed {
-            item = GridItem(text: "Avg. Speed", detail: formattedSpeedString(for: speed), detailColor: .speed)
+            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: speed), detailColor: .speed)
             items.append(item)
         }
         
         if let cadence = workout.avgCyclingCadence {
-            item = GridItem(text: "Avg. Cadence", detail: formattedCyclingCadenceString(for: cadence), detailColor: .cadence)
+            item = GridItem(text: "Avg Cadence", detail: formattedCyclingCadenceString(for: cadence), detailColor: .cadence)
             items.append(item)
         }
         
