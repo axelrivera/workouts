@@ -15,8 +15,15 @@ struct DetailAnalysisView: View {
     @ObservedObject var detailManager: DetailManager
     
     var avgSpeed: Double? {
-        guard let avgSpeed = workout.avgSpeed else { return nil }
-        return nativeSpeedToLocalizedUnit(for: avgSpeed)
+        if let avgSpeed = workout.avgSpeed { return avgSpeed }
+        let speed = detailManager.avgSpeed
+        return speed > 0 ? speed : nil
+    }
+    
+    var maxSpeed: Double? {
+        if let maxSpeed = workout.maxSpeed { return maxSpeed }
+        let speed = detailManager.maxSpeed
+        return speed > 0 ? speed : nil
     }
     
     var workoutTitle: String {
@@ -31,20 +38,30 @@ struct DetailAnalysisView: View {
                 Section {
                     chart(
                         for: "Speed",
-                        supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
-                        supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
+                        supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
+                        supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
                         values: detailManager.speedValues, avgValue: avgSpeed,
                         accentColor: .speed
                     )
                     
                     rowForText(
                         "Total Time",
-                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime)
+                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
+                        detailColor: .time
                     )
                     rowForText(
                         "Moving Time",
-                        detail: formattedHoursMinutesDurationString(for: detailManager.movingTime)
+                        detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
+                        detailColor: .time
                     )
+                    
+                    if detailManager.avgMovingSpeed > 0 {
+                        rowForText(
+                            "Avg Moving Speed",
+                            detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
+                            detailColor: .speed
+                        )
+                    }
                 }
                 
                 Section {
@@ -91,11 +108,11 @@ struct DetailAnalysisView: View {
                         accentColor: .elevation
                     )
 
-                    rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended))
-                    rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended))
+                    rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
+                    rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
                 }
             }
-            .listStyle(InsetGroupedListStyle())
+            .listStyle(GroupedListStyle())
             .navigationTitle(workoutTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -116,30 +133,38 @@ extension DetailAnalysisView {
             Text(title)
                 .font(.title3)
                 .padding([.top, .bottom], 8.0)
-                                    
-            HStack {
-                VStack(spacing: 5.0) {
-                    Text(supportLabel1)
-                        .font(.callout)
-                        .foregroundColor(.secondary)
-                    Text(supportValue1)
-                        .foregroundColor(accentColor)
-                        .font(.title2)
+            
+            if supportValue1.isPresent || supportValue2.isPresent {
+                HStack {
+                    if supportValue1.isPresent {
+                        VStack(spacing: 5.0) {
+                            Text(supportLabel1)
+                                .font(.callout)
+                                .foregroundColor(.secondary)
+                            Text(supportValue1)
+                                .foregroundColor(accentColor)
+                                .font(.title2)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    
+                    if supportValue2.isPresent {
+                        VStack(spacing: 5.0) {
+                            Text(supportLabel2)
+                                .font(.callout)
+                                .foregroundColor(.secondary)
+                            Text(supportValue2)
+                                .font(.title2)
+                                .foregroundColor(accentColor)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-                
-                VStack(spacing: 5.0) {
-                    Text(supportLabel2)
-                        .font(.callout)
-                        .foregroundColor(.secondary)
-                    Text(supportValue2)
-                        .font(.title2)
-                        .foregroundColor(accentColor)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
             }
             
-            lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
+            if values.isPresent {
+                lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
+            }
         }
     }
 
@@ -148,12 +173,12 @@ extension DetailAnalysisView {
             .frame(maxWidth: .infinity, minHeight: 200.0)
     }
     
-    func rowForText(_ text: String, detail: String) -> some View {
+    func rowForText(_ text: String, detail: String, detailColor: Color = .secondary) -> some View {
         HStack {
             Text(text)
             Spacer()
             Text(detail)
-                .foregroundColor(.secondary)
+                .foregroundColor(detailColor)
         }
     }
 
@@ -164,10 +189,10 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     
     static let detailManager: DetailManager = {
         let manager = DetailManager(workoutID: workout.id)
-//        manager.speedValues = Time.speedSamples
-//        manager.heartRateValues = DetailManager.heartRateSamples
-//        manager.cyclingCadenceValues = DetailManager.cyclingCadenceSamples
-//        manager.altitudeValues = DetailManager.cyclingCadenceSamples
+        manager.speedValues = TimeAxisValue.speedSamples
+        manager.heartRateValues = TimeAxisValue.heartRateSamples
+        manager.cyclingCadenceValues = TimeAxisValue.cyclingCadenceSamples
+        manager.altitudeValues = TimeAxisValue.cyclingCadenceSamples
         return manager
     }()
     

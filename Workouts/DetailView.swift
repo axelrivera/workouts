@@ -64,12 +64,14 @@ struct DetailView: View {
                 }
             }
             
-            Group {
-                RoundButton(text: "Workout Analysis") {
-                    activeSheet = .analysis
+            if detailManager.showAnalysis {
+                Group {
+                    RoundButton(text: "Workout Analysis") {
+                        activeSheet = .analysis
+                    }
                 }
+                .buttonStyle(PlainButtonStyle())
             }
-            .buttonStyle(PlainButtonStyle())
             
             ForEach(gridRows(for: workout, heartRate: detailManager.avgHeartRate)) { row in
                 HStack(spacing: 5.0) {
@@ -86,11 +88,20 @@ struct DetailView: View {
             HStack {
                 Text("Source")
                 Spacer()
-                Text(workout.sourceAndDeviceString)
+                Text(workout.source)
                     .foregroundColor(.secondary)
             }
+            
+            if let device = workout.deviceString {
+                HStack {
+                    Text("Device")
+                    Spacer()
+                    Text(device)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
-        .navigationTitle("Ride")
+        .navigationTitle(workout.detailTitle)
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .fullScreenCover(item: $activeSheet) { (item) in
@@ -126,6 +137,17 @@ extension DetailView {
         }
     }
     
+    var avgSpeed: Double? {
+        if let avgSpeed = workout.avgSpeed { return avgSpeed }
+        let speed = detailManager.avgSpeed
+        return speed > 0 ? speed : nil
+    }
+    
+    var totalTime: (String, Double)? {
+        if detailManager.movingTime > 0 { return ("Moving Time", detailManager.movingTime) }
+        return ("Time", workout.elapsedTime)
+    }
+    
     func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
         var items = [GridItem]()
         var item: GridItem
@@ -135,8 +157,10 @@ extension DetailView {
             items.append(item)
         }
         
-        item = GridItem(text: "Time", detail: formattedHoursMinutesDurationString(for: workout.elapsedTime), detailColor: .time)
-        items.append(item)
+        if let (timeLabel, time) = totalTime {
+            item = GridItem(text: timeLabel, detail: formattedHoursMinutesDurationString(for: time), detailColor: .time)
+            items.append(item)
+        }
         
         if let heartRate = heartRate {
             item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: heartRate), detailColor: .calories)
@@ -148,7 +172,7 @@ extension DetailView {
             items.append(item)
         }
         
-        if let speed = workout.avgSpeed {
+        if let speed = avgSpeed {
             item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: speed), detailColor: .speed)
             items.append(item)
         }

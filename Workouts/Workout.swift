@@ -18,6 +18,7 @@ class Workout: ObservableObject {
     var startDate: Date = Date()
     var endDate: Date = Date()
     var source: String = ""
+    var appIdentifier: String?
     var device: String?
     
     var distance: Double?
@@ -59,6 +60,7 @@ class Workout: ObservableObject {
         maxCyclingCadence = object.maxCyclingCadence
         
         source = object.sourceRevision.source.name
+        appIdentifier = object.sourceRevision.source.bundleIdentifier
         device = object.device?.name
     }
     
@@ -94,16 +96,21 @@ extension Workout {
         }
     }
     
-    var elapsedTime: Double {
-        endDate.timeIntervalSince(startDate)
+    var detailTitle: String {
+        switch activityType {
+        case .cycling:
+            return "Ride"
+        case .running:
+            return "Run"
+        case .walking:
+            return "Walk"
+        default:
+            return "Summary"
+        }
     }
     
-    var sourceAndDeviceString: String {
-        var name = self.source
-        if let device = self.device {
-            name.append(String(format: " (%@)", device))
-        }
-        return name
+    var elapsedTime: Double {
+        endDate.timeIntervalSince(startDate)
     }
     
     var avgCadence: Double? {
@@ -115,6 +122,20 @@ extension Workout {
         guard let distance = distance else { return nil }
         return calculateRunningWalkingPace(distanceInMeters: distance, duration: elapsedTime)
     }
+    
+    var sourceAndDeviceString: String {
+        var name = self.source
+        if let device = self.deviceString {
+            name.append(String(format: " (%@)", device))
+        }
+        return name
+    }
+    
+    var deviceString: String? {
+        guard let identifier = appIdentifier else { return nil }
+        return identifier.contains(BWAppleHealthIdentifier) ? device : nil
+    }
+    
 }
 
 // MARK: Optional Checks

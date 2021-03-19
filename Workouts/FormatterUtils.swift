@@ -90,16 +90,19 @@ func formattedTimeRangeString(start: Date?, end: Date?) -> String {
 // MARK: - Distance and Speed
 
 func formattedDistanceString(for meters: Double?) -> String {
-    let measurement = Measurement<UnitLength>(value: meters ?? 0, unit: .meters)
+    guard let meters = meters else { return "" }
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     return MeasurementFormatter.distance.string(from: measurement)
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
-    let measurement = Measurement<UnitSpeed>(value: metersPerSecond ?? 0, unit: .metersPerSecond)
+    guard let speed = metersPerSecond else { return "" }
+    let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
     return MeasurementFormatter.speed.string(from: measurement)
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
+    guard let duration = duration else { return "" }
     let pace = formattedPaceString(for: duration)
     let unit = runningWalkingDistanceTargetUnit().symbol
     return String(format: "%@ /%@", pace, unit)

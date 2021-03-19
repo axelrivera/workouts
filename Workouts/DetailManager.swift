@@ -17,6 +17,8 @@ class DetailManager: ObservableObject {
         }
     }
     
+    @Published var showAnalysis = false
+    
     @Published var points = [CLLocationCoordinate2D]()
     
     @Published var showDetailMap = false
@@ -26,6 +28,10 @@ class DetailManager: ObservableObject {
     
     @Published var movingTime: Double = 0
     @Published var bestPace: Double = 0
+    
+    @Published var avgSpeed: Double = 0
+    @Published var avgMovingSpeed: Double = 0
+    @Published var maxSpeed: Double = 0
     
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
@@ -48,6 +54,25 @@ class DetailManager: ObservableObject {
 }
 
 extension DetailManager {
+    
+    func updateAnalysisVisibility() {
+        if showAnalysis { return }
+        
+        let valuesCheck = [
+            heartRateValues.isPresent,
+            speedValues.isPresent,
+            cyclingCadenceValues.isPresent,
+            paceValues.isPresent,
+            altitudeValues.isPresent
+        ]
+        
+        let showAnalysis = valuesCheck.filter({ $0 == true }).isPresent
+        DispatchQueue.main.async {
+            withAnimation {
+                self.showAnalysis = showAnalysis
+            }
+        }
+    }
     
     func fetchWorkout(completionHandler: @escaping (() -> Void)) {
         WorkoutDataStore.fetchWorkout(for: workoutID) { (workout) in
@@ -74,8 +99,12 @@ extension DetailManager {
         }
     }
     
+    var showSpeedSection: Bool {
+        speedValues.isPresent
+    }
+    
     var showHeartRateSection: Bool {
-        avgHeartRate != nil || maxHeartRate != nil
+        heartRateValues.isPresent || avgHeartRate != nil || maxHeartRate != nil
     }
     
     func fetchHeartRate() {
@@ -90,6 +119,7 @@ extension DetailManager {
                 case .failure(let error):
                     Log.debug("fetching heart rate failed: \(error.localizedDescription)")
                 }
+                self.updateAnalysisVisibility()
             }
         }
     }
@@ -112,6 +142,7 @@ extension DetailManager {
                 case .failure(let error):
                     Log.debug("fetching route failed: \(error.localizedDescription)")
                     self.showDetailMap = false
+                    self.updateAnalysisVisibility()
                 }
             }
         }
@@ -150,7 +181,8 @@ extension DetailManager {
     private func showDetailsMapIfNeeded() {
         DispatchQueue.main.async {
             withAnimation {
-                self.showDetailMap = !self.points.isEmpty
+                self.showDetailMap = self.locations.isPresent
+                self.updateAnalysisVisibility()
             }
         }
     }
@@ -174,6 +206,7 @@ extension DetailManager {
             
             DispatchQueue.main.async {
                 self.heartRateValues = values
+                self.updateAnalysisVisibility()
             }
         }
     }
@@ -193,6 +226,7 @@ extension DetailManager {
             DispatchQueue.main.async {
                 self.paceValues = values
                 self.bestPace = bestPace
+                self.updateAnalysisVisibility()
             }
         }
     }
@@ -230,28 +264,43 @@ extension DetailManager {
                 }
             }
             
+            let maxSpeed = self.locations.map({ $0.speed }).max()
+            
             let altitudes = self.locations.map { $0.altitude }
             let minElevation = altitudes.min()
             let maxElevation = altitudes.max()
             
             DispatchQueue.main.async {
                 self.speedValues = speedSamples
+                self.altitudeValues = altitudeSamples
+                self.maxSpeed = maxSpeed ?? 0
                 self.minElevation = minElevation ?? 0
                 self.maxElevation = maxElevation ?? 0
-                self.altitudeValues = altitudeSamples
+                self.updateAnalysisVisibility()
             }
         }
     }
     
     func updateMovingTime() {
-        var duration = 0.0
+        var movingTime = 0.0
         for (left, right) in zip(locations, locations.dropFirst()) {
             let interval = right.timestamp.timeIntervalSince(left.timestamp)
             guard interval > 0 && left.speed > 0 && right.speed > 0 else { continue }
-            duration += interval
+            movingTime += interval
         }
+        
+        var avgSpeed = 0.0
+        var avgMovingSpeed = 0.0
+        if let distance = workout?.totalDistance?.doubleValue(for: .meter()), let elapsedTime = workout?.duration {
+            avgSpeed = elapsedTime > 0 ? distance / elapsedTime : 0
+            avgMovingSpeed = movingTime > 0 ? distance / movingTime : 0
+        }
+        
         DispatchQueue.main.async {
-            self.movingTime = duration
+            self.movingTime = movingTime
+            self.avgSpeed = avgSpeed
+            self.avgMovingSpeed = avgMovingSpeed
+            self.updateAnalysisVisibility()
         }
     }
     
@@ -281,6 +330,7 @@ extension DetailManager {
         
         DispatchQueue.main.async {
             self.cyclingCadenceValues = cadenceSamples
+            self.updateAnalysisVisibility()
         }
     }
     

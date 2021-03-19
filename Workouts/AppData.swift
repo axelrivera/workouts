@@ -7,6 +7,8 @@
 
 import Foundation
 
+let BWAppleHealthIdentifier = "com.apple.health"
+
 let MetadataKeyAvgCyclingCadence = "BWAvgCyclingCadence"
 let MetadataKeyMaxCyclingCadence = "BWMaxCyclingCadence"
 let MetadataKeyAvgMET = "BWAvgMETValue"

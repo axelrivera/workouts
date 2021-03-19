@@ -20,13 +20,13 @@ extension DetailMap {
         mapView.layoutMargins = UIEdgeInsets(top: 20.0, left: 20.0, bottom: 20.0, right: 20.0)
         mapView.mapType = mapType
         mapView.delegate = context.coordinator
+        updatePoints(for: mapView, context: context)
         
         return mapView
     }
     
     func updateUIView(_ view: MKMapView, context: Context) {
         view.mapType = mapType
-        updatePoints(for: view, context: context)
     }
     
     func updatePoints(for view: MKMapView, context: Context) {
