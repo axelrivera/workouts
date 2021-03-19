@@ -136,8 +136,20 @@ extension ImportManager {
         DispatchQueue.global(qos: .userInitiated).async {
             var workouts = [WorkoutImport]()
             for url in urls {
-                guard let fit = FitFile(file: url) else { continue }
-                guard let workout = WorkoutImport(fit: fit) else { continue }
+                var tmpURL: URL?
+                if url.isZipFile {
+                    tmpURL = unzipFitFile(url: url)
+                } else {
+                    tmpURL = url
+                }
+                
+                guard let fileURL = tmpURL,
+                      let fit = FitFile(file: fileURL),
+                      let workout = WorkoutImport(fit: fit) else {
+                    workouts.append(WorkoutImport(invalidFilename: url.lastPathComponent))
+                    continue
+                }
+                                
                 workouts.append(workout)
             }
             

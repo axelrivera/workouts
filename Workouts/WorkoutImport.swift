@@ -10,9 +10,32 @@ import CoreLocation
 import FitFileParser
 import HealthKit
 
+extension WorkoutImport.Status: Equatable {
+    
+    static func ==(lhs: WorkoutImport.Status, rhs: WorkoutImport.Status) -> Bool {
+        switch (lhs, rhs) {
+        case (.new, .new):
+            return true
+        case (.processing, .processing):
+            return true
+        case (.processed, .processed):
+            return true
+        case (.notSupported, .notSupported):
+            return true
+        case (.failed, .failed):
+            return true
+        case (.invalid(let lname), .invalid(let rname)):
+            return lname == rname
+        default:
+            return false
+        }
+    }
+    
+}
+
 class WorkoutImport: ObservableObject, Identifiable {
     enum Status {
-        case new, processing, processed, notSupported, failed
+        case new, processing, processed, notSupported, failed, invalid(file: String)
     }
     
     let id = UUID()
@@ -53,6 +76,12 @@ class WorkoutImport: ObservableObject, Identifiable {
     init(status: Status, sport: Sport) {
         self.status = status
         self.sport = sport
+    }
+    
+    init(invalidFilename: String) {
+        self.status = .invalid(file: invalidFilename)
+        self.sport = .other
+        start = .init(valueType: .date, value: Date().timeIntervalSince1970)
     }
     
     init?(fit: FitFile) {
@@ -140,7 +169,11 @@ extension WorkoutImport {
 extension WorkoutImport {
     
     var formattedTitle: String {
-        String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
+        if case .invalid(let file) = status {
+            return file
+        } else {
+            return String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
+        }
     }
     
 }

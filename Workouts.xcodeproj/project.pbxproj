@@ -111,6 +111,11 @@
 		168EE47C25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */; };
 		168EE48426019A3400D4788D /* TimeAxisValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE48326019A3400D4788D /* TimeAxisValue.swift */; };
 		168EE48526019A3400D4788D /* TimeAxisValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE48326019A3400D4788D /* TimeAxisValue.swift */; };
+		1696420C260419ED00E68A45 /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 1696420B260419ED00E68A45 /* FitFileParser */; };
+		1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421126041A1F00E68A45 /* ZIPFoundation */; };
+		1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421626041A2F00E68A45 /* ZIPFoundation */; };
+		1696424326041B3B00E68A45 /* ZipUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1696424226041B3B00E68A45 /* ZipUtils.swift */; };
+		1696424426041B3B00E68A45 /* ZipUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1696424226041B3B00E68A45 /* ZipUtils.swift */; };
 		1697607B25CB7BCC00CAF544 /* DetailMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697607A25CB7BCC00CAF544 /* DetailMap.swift */; };
 		1697608125CB7EFD00CAF544 /* DetailMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697608025CB7EFD00CAF544 /* DetailMapView.swift */; };
 		16A065E825C3679D00019096 /* WorkoutMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A065E725C3679D00019096 /* WorkoutMap.swift */; };
@@ -168,7 +173,6 @@
 		16E8323E25D4C0F100382545 /* ProfileDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8323D25D4C0F100382545 /* ProfileDataStore.swift */; };
 		16FB84BF25F699D400CF22ED /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16FB84BE25F699D400CF22ED /* Charts */; };
 		16FB84C425F699EB00CF22ED /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16FB84C325F699EB00CF22ED /* Charts */; };
-		16FB84CD25F8095600CF22ED /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 16FB84CC25F8095600CF22ED /* FitFileParser */; };
 		16FB84D725F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84D825F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84E825F8321F00CF22ED /* Charts+Additions.swift */; };
@@ -233,6 +237,7 @@
 		1678146825E001810012531D /* HKSampleQuery+Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HKSampleQuery+Publisher.swift"; sourceTree = "<group>"; };
 		168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunWalkUtils.swift; sourceTree = "<group>"; };
 		168EE48326019A3400D4788D /* TimeAxisValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeAxisValue.swift; sourceTree = "<group>"; };
+		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
 		1697607A25CB7BCC00CAF544 /* DetailMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMap.swift; sourceTree = "<group>"; };
 		1697608025CB7EFD00CAF544 /* DetailMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMapView.swift; sourceTree = "<group>"; };
 		16A065E725C3679D00019096 /* WorkoutMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMap.swift; sourceTree = "<group>"; };
@@ -280,6 +285,7 @@
 				160BB09A25DD61700059E493 /* HealthKit.framework in Frameworks */,
 				16FB84C425F699EB00CF22ED /* Charts in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
+				1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,9 +293,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16FB84CD25F8095600CF22ED /* FitFileParser in Frameworks */,
+				1696420C260419ED00E68A45 /* FitFileParser in Frameworks */,
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
 				16FB84BF25F699D400CF22ED /* Charts in Frameworks */,
+				1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,6 +428,7 @@
 				16FB84EE25F99C5400CF22ED /* Array+Slice.swift */,
 				16FB84F425F9A50D00CF22ED /* MeasurementConversions.swift */,
 				168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */,
+				1696424226041B3B00E68A45 /* ZipUtils.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -576,6 +584,7 @@
 			packageProductDependencies = (
 				160BB06225DD61700059E493 /* FitFileParser */,
 				16FB84C325F699EB00CF22ED /* Charts */,
+				1696421626041A2F00E68A45 /* ZIPFoundation */,
 			);
 			productName = Workouts;
 			productReference = 160BB0A225DD61700059E493 /* Workouts Dev.app */;
@@ -596,7 +605,8 @@
 			name = Workouts;
 			packageProductDependencies = (
 				16FB84BE25F699D400CF22ED /* Charts */,
-				16FB84CC25F8095600CF22ED /* FitFileParser */,
+				1696420B260419ED00E68A45 /* FitFileParser */,
+				1696421126041A1F00E68A45 /* ZIPFoundation */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Workouts.app */;
@@ -650,7 +660,8 @@
 			mainGroup = 161FDB5925B34D4B00929433;
 			packageReferences = (
 				16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */,
-				16FB84CB25F8095600CF22ED /* XCRemoteSwiftPackageReference "FitFileParser" */,
+				1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */,
+				1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = 161FDB6325B34D4B00929433 /* Products */;
 			projectDirPath = "";
@@ -722,6 +733,7 @@
 				160BB07625DD61700059E493 /* WorkoutsView.swift in Sources */,
 				160BB07725DD61700059E493 /* TimePicker.swift in Sources */,
 				160BB07825DD61700059E493 /* MKCoordinateRegion+Additions.swift in Sources */,
+				1696424426041B3B00E68A45 /* ZipUtils.swift in Sources */,
 				160BB07925DD61700059E493 /* GarminUtils.swift in Sources */,
 				16FB84F625F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				160BB07A25DD61700059E493 /* WriteUnauthorizedView.swift in Sources */,
@@ -797,6 +809,7 @@
 				1645B92C25B350BB00B04478 /* WorkoutsView.swift in Sources */,
 				1645B94925B3669E00B04478 /* TimePicker.swift in Sources */,
 				16A065EC25C3715300019096 /* MKCoordinateRegion+Additions.swift in Sources */,
+				1696424326041B3B00E68A45 /* ZipUtils.swift in Sources */,
 				16755EE225BBAD93002E73BA /* GarminUtils.swift in Sources */,
 				16FB84F525F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16AB3DAD25D097480082A610 /* WriteUnauthorizedView.swift in Sources */,
@@ -1208,20 +1221,28 @@
 				minimumVersion = 1.4.0;
 			};
 		};
+		1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/roznet/FitFileParser.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.3;
+			};
+		};
+		1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.12;
+			};
+		};
 		16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/danielgindi/Charts.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 4.0.1;
-			};
-		};
-		16FB84CB25F8095600CF22ED /* XCRemoteSwiftPackageReference "FitFileParser" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://axelrivera@github.com/roznet/FitFileParser.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.4.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -1232,6 +1253,21 @@
 			package = 160BB06325DD61700059E493 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
 		};
+		1696420B260419ED00E68A45 /* FitFileParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */;
+			productName = FitFileParser;
+		};
+		1696421126041A1F00E68A45 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+		1696421626041A2F00E68A45 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		16FB84BE25F699D400CF22ED /* Charts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */;
@@ -1241,11 +1277,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */;
 			productName = Charts;
-		};
-		16FB84CC25F8095600CF22ED /* FitFileParser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16FB84CB25F8095600CF22ED /* XCRemoteSwiftPackageReference "FitFileParser" */;
-			productName = FitFileParser;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

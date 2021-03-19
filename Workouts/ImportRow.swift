@@ -16,9 +16,13 @@ struct ImportRow: View {
         HStack(spacing: 10.0) {
             VStack(alignment: .leading) {
                 Text(workout.formattedTitle)
-                Text(formattedDistanceString(for: workout.totalDistance.distanceValue))
-                    .font(.title)
-                    .foregroundColor(.distance)
+                
+                if let distance = workout.totalDistance.distanceValue {
+                    Text(formattedDistanceString(for: distance))
+                        .font(.title)
+                        .foregroundColor(.distance)
+                }
+                
                 Text(formattedImportRelativeDateString(for: workout.startDate))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -43,6 +47,10 @@ struct ImportRow: View {
                     .foregroundColor(.red)
             case .failed:
                 Text("Import Failed")
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            case .invalid:
+                Text("Invalid")
                     .font(.subheadline)
                     .foregroundColor(.red)
             }

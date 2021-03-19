@@ -60,7 +60,7 @@ struct ImportView: View {
             .sheet(item: $activeSheet) { item in
                 switch item {
                 case .document:
-                    DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
+                    DocumentPicker(forOpeningContentTypes: [.fitDocument, .zip]) { urls in
                         importManager.state = .processing
                         importManager.processDocuments(at: urls) {
                             importManager.state = urls.isEmpty ? .empty : .ok
