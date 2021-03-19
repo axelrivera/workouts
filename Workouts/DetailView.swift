@@ -44,60 +44,62 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], 5.0)
             
-            if detailManager.showDetailMap {
-                Button(action: { activeSheet = .map }) {
-                    WorkoutMap(points: $detailManager.points)
-                        .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                        .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
-                        .cornerRadius(12.0)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                if let locationName = detailManager.locationName {
-                    HStack {
-                        Image(systemName: "mappin")
-                            .imageScale(.small)
-                        Text("Location")
-                        Spacer()
-                        Text(locationName)
+            if detailManager.updateUI {
+                if detailManager.showDetailMap {
+                    Button(action: { activeSheet = .map }) {
+                        WorkoutMap(points: $detailManager.points)
+                            .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+                            .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
+                            .cornerRadius(12.0)
                     }
-                }
-            }
-            
-            if detailManager.showAnalysis {
-                Group {
-                    RoundButton(text: "Workout Analysis") {
-                        activeSheet = .analysis
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-            
-            ForEach(gridRows(for: workout, heartRate: detailManager.avgHeartRate)) { row in
-                HStack(spacing: 5.0) {
-                    if let left = row.left {
-                        DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
-                    }
+                    .buttonStyle(PlainButtonStyle())
                     
-                    if let right = row.right {
-                        DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
+                    if let locationName = detailManager.locationName {
+                        HStack {
+                            Image(systemName: "mappin")
+                                .imageScale(.small)
+                            Text("Location")
+                            Spacer()
+                            Text(locationName)
+                        }
                     }
                 }
-            }
-            
-            HStack {
-                Text("Source")
-                Spacer()
-                Text(workout.source)
-                    .foregroundColor(.secondary)
-            }
-            
-            if let device = workout.deviceString {
+                
+                if detailManager.showAnalysis {
+                    Group {
+                        RoundButton(text: "Workout Analysis") {
+                            activeSheet = .analysis
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                ForEach(gridRows(for: workout, heartRate: detailManager.avgHeartRate)) { row in
+                    HStack(spacing: 5.0) {
+                        if let left = row.left {
+                            DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
+                        }
+                        
+                        if let right = row.right {
+                            DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
+                        }
+                    }
+                }
+                
                 HStack {
-                    Text("Device")
+                    Text("Source")
                     Spacer()
-                    Text(device)
+                    Text(workout.source)
                         .foregroundColor(.secondary)
+                }
+                
+                if let device = workout.deviceString {
+                    HStack {
+                        Text("Device")
+                        Spacer()
+                        Text(device)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }

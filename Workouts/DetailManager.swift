@@ -17,6 +17,23 @@ class DetailManager: ObservableObject {
         }
     }
     
+    private lazy var processQueue: OperationQueue = {
+       let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        return queue
+    }()
+    
+    var isProcessing: Bool {
+        processQueue.operations.isPresent
+    }
+    
+    private var routeOperation: RouteOperation?
+    private var paceOperation: PaceOperation?
+    private var heartRateStatsOperation: HeartRateStatsOperation?
+    private var heartRateOperation: HeartRateOperation?
+    private var cadenceOperation: CyclingCadenceOperation?
+    
+    @Published var updateUI = false
     @Published var showAnalysis = false
     
     @Published var points = [CLLocationCoordinate2D]()
@@ -55,8 +72,95 @@ class DetailManager: ObservableObject {
 
 extension DetailManager {
     
-    func updateAnalysisVisibility() {
-        if showAnalysis { return }
+    func fetchData() {
+        if let workout = workout {
+            addOperations(workout: workout)
+        } else {
+            WorkoutDataStore.fetchWorkout(for: workoutID) { [weak self] (workout) in
+                guard let self = self else { return }
+                guard let workout = workout else { return }
+                self.addOperations(workout: workout)
+            }
+        }
+    }
+    
+    func addOperations(workout: HKWorkout) {
+        if isProcessing { return }
+        
+        let completionOperation = BlockOperation { [weak self] in
+            Log.debug("completed operations")
+            guard let self = self else { return }
+            self.updateValues()
+        }
+        
+        let routeOperation = RouteOperation(workout: workout)
+        completionOperation.addDependency(routeOperation)
+        
+        var paceOperation: PaceOperation?
+        if Workout.paceActivities.contains(workout.workoutActivityType) {
+            paceOperation = PaceOperation(workout: workout)
+            completionOperation.addDependency(paceOperation!)
+        }
+        
+        let heartRateStatsOperation = HeartRateStatsOperation(workout: workout)
+        completionOperation.addDependency(heartRateStatsOperation)
+        
+        let heartRateOperation = HeartRateOperation(workout: workout)
+        completionOperation.addDependency(heartRateOperation)
+        
+        var cadenceOperation: CyclingCadenceOperation?
+        if workout.workoutActivityType == .cycling {
+            cadenceOperation = CyclingCadenceOperation(workout: workout)
+            completionOperation.addDependency(cadenceOperation!)
+        }
+        
+        let operations: [Operation?] = [
+            routeOperation,
+            paceOperation,
+            heartRateStatsOperation,
+            heartRateOperation,
+            cadenceOperation,
+            completionOperation
+        ]
+        
+        Log.debug("adding operations")
+        
+        operations.compactMap({ $0 }).forEach { operation in
+            processQueue.addOperation(operation)
+        }
+        
+        self.routeOperation = routeOperation
+        self.paceOperation = paceOperation
+        self.heartRateStatsOperation = heartRateStatsOperation
+        self.heartRateOperation = heartRateOperation
+        self.cadenceOperation = cadenceOperation
+    }
+    
+    func updateValues() {
+        guard let routeOperation = routeOperation,
+              let heartRateStatsOperation = heartRateStatsOperation,
+              let heartRateOperation = heartRateOperation else { return }
+        
+        let locations = routeOperation.locations
+        let locationName = routeOperation.locationName
+        let movingTime = routeOperation.movingTime
+        let speedValues = routeOperation.speedValues
+        let altitudeValues = routeOperation.altitudeValues
+        let avgSpeed = routeOperation.avgSpeed
+        let avgMovingSpeed = routeOperation.avgMovingSpeed
+        let maxSpeed = routeOperation.maxSpeed
+        let minElevation = routeOperation.minElevation
+        let maxElevation = routeOperation.maxElevation
+        
+        let avgHeartRate = heartRateStatsOperation.avgHeartRate
+        let maxHeartRate = heartRateStatsOperation.maxHeartRate
+        
+        let heartRateValues = heartRateOperation.heartRateValues
+        
+        let paceValues = paceOperation?.paceValues ?? [TimeAxisValue]()
+        let bestPace = paceOperation?.bestPace ?? 0
+        
+        let cyclingCadenceValues = cadenceOperation?.cadenceValues ?? [TimeAxisValue]()
         
         let valuesCheck = [
             heartRateValues.isPresent,
@@ -67,36 +171,43 @@ extension DetailManager {
         ]
         
         let showAnalysis = valuesCheck.filter({ $0 == true }).isPresent
+        let showDetailMap = locations.isPresent
+        
+        Log.debug("update values in UI")
+        
+        resetQueues()
         DispatchQueue.main.async {
             withAnimation {
+                self.locations = locations
+                self.locationName = locationName
+                self.movingTime = movingTime
+                self.speedValues = speedValues
+                self.altitudeValues = altitudeValues
+                self.avgSpeed = avgSpeed
+                self.avgMovingSpeed = avgMovingSpeed
+                self.maxSpeed = maxSpeed
+                self.minElevation = minElevation
+                self.maxElevation = maxElevation
+                self.avgHeartRate = avgHeartRate
+                self.maxHeartRate = maxHeartRate
+                self.heartRateValues = heartRateValues
+                self.paceValues = paceValues
+                self.bestPace = bestPace
+                self.cyclingCadenceValues = cyclingCadenceValues
                 self.showAnalysis = showAnalysis
+                self.showDetailMap = showDetailMap
+                self.updateUI = true
             }
         }
     }
     
-    func fetchWorkout(completionHandler: @escaping (() -> Void)) {
-        WorkoutDataStore.fetchWorkout(for: workoutID) { (workout) in
-            self.workout = workout
-            completionHandler()
-        }
-    }
-    
-    func fetchData() {
-        func fetchDataDependencies() {
-            fetchHeartRate()
-            fetchRoute()
-            fetchHeartRateSamples()
-            fetchPaceSamples()
-            fetchCyclingCadenceSamples()
-        }
-        
-        if let _ = workout {
-            fetchDataDependencies()
-        } else {
-            fetchWorkout {
-                fetchDataDependencies()
-            }
-        }
+    func resetQueues() {
+        if isProcessing { return }
+        routeOperation = nil
+        paceOperation = nil
+        heartRateStatsOperation = nil
+        heartRateOperation = nil
+        cadenceOperation = nil
     }
     
     var showSpeedSection: Bool {
@@ -105,233 +216,6 @@ extension DetailManager {
     
     var showHeartRateSection: Bool {
         heartRateValues.isPresent || avgHeartRate != nil || maxHeartRate != nil
-    }
-    
-    func fetchHeartRate() {
-        guard let workout = workout else { return }
-        
-        WorkoutDataStore.fetchHeartRateStatsValue(workout: workout) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let sample):
-                    self.avgHeartRate = sample.avg
-                    self.maxHeartRate = sample.max
-                case .failure(let error):
-                    Log.debug("fetching heart rate failed: \(error.localizedDescription)")
-                }
-                self.updateAnalysisVisibility()
-            }
-        }
-    }
-    
-    func fetchRoute() {
-        guard let workout = workout else { return }
-                
-        WorkoutDataStore.fetchRoute(for: workout) { (result) in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let locations):
-                    self.locations = locations
-                    
-                    if let location = locations.first {
-                        self.fetchLocationName(location: location)
-                    }
-                    
-                    self.fetchSpeedSamples()
-                    self.updateMovingTime()
-                case .failure(let error):
-                    Log.debug("fetching route failed: \(error.localizedDescription)")
-                    self.showDetailMap = false
-                    self.updateAnalysisVisibility()
-                }
-            }
-        }
-    }
-    
-    func fetchLocationName(location: CLLocation) {
-        if isFetchingLocation { return }
-        isFetchingLocation = true
-        
-        let geoCoder = CLGeocoder()
-        geoCoder.reverseGeocodeLocation(location) { placemarks, error -> Void in
-            self.isFetchingLocation = false
-            self.updateLocationIfNeeded(placemark: placemarks?.first)
-        }
-    }
-    
-    private func updateLocationIfNeeded(placemark: CLPlacemark?) {
-        if let placemark = placemark {
-            var strings = [String]()
-            if let city = placemark.locality {
-                strings.append(city)
-            }
-            
-            if let state = placemark.administrativeArea {
-                strings .append(state)
-            }
-            
-            if !strings.isEmpty {
-                self.locationName = strings.joined(separator: ", ")
-            }
-        }
-        
-        showDetailsMapIfNeeded()
-    }
-    
-    private func showDetailsMapIfNeeded() {
-        DispatchQueue.main.async {
-            withAnimation {
-                self.showDetailMap = self.locations.isPresent
-                self.updateAnalysisVisibility()
-            }
-        }
-    }
-    
-}
-
-// MARK: - Heart Rate Samples
-
-extension DetailManager {
-    
-    func fetchHeartRateSamples() {
-        guard let workout = workout else { return }
-        
-        WorkoutDataStore.fetchHeartRateSamples(workout: workout) { result in
-            guard let samples = try? result.get(), !samples.isEmpty else { return }
-            
-            let startDate = samples[0].timestamp
-            let values = samples.map { quantity in
-                TimeAxisValue(duration: quantity.timestamp.timeIntervalSince(startDate), value: quantity.value)
-            }
-            
-            DispatchQueue.main.async {
-                self.heartRateValues = values
-                self.updateAnalysisVisibility()
-            }
-        }
-    }
-    
-    func fetchPaceSamples() {
-        guard let workout = workout, Workout.paceActivities.contains(workout.workoutActivityType) else { return }
-        
-        WorkoutDataStore.fetchRunningWalkingPaceSamples(workout: workout) { result in
-            guard let samples = try? result.get(), !samples.isEmpty else { return }
-            
-            let bestPace = samples.map({ $0.value }).min() ?? 0
-            let startDate = samples[0].timestamp
-            let values = samples.map { quantity in
-                TimeAxisValue(duration: quantity.timestamp.timeIntervalSince(startDate), value: quantity.value)
-            }
-            
-            DispatchQueue.main.async {
-                self.paceValues = values
-                self.bestPace = bestPace
-                self.updateAnalysisVisibility()
-            }
-        }
-    }
-    
-}
-
-// MARK: - Speed & Altitude Samples
-
-extension DetailManager {
-    
-    func fetchSpeedSamples() {
-        guard let duration = workout?.duration, duration > 0 else { return }
-        if locations.isEmpty { return }
-                
-        DispatchQueue.global(qos: .userInteractive).async {
-            var speedSamples = [TimeAxisValue]()
-            var altitudeSamples = [TimeAxisValue]()
-            
-            let grouped = self.locations.slicedByMinute(for: \.timestamp)
-            var sortedDates = grouped.keys.sorted()
-            if sortedDates.count > 2 {
-                sortedDates = sortedDates.dropFirst().dropLast()
-            }
-            let startDate = sortedDates[0]
-            
-            for date in sortedDates {
-                let sampleDuration = date.timeIntervalSince(startDate)
-                
-                if let samples = grouped[date]?.map({ Double($0.speed) }), let max = samples.max() {
-                    speedSamples.append(TimeAxisValue(duration: sampleDuration, value: nativeSpeedToLocalizedUnit(for: max)))
-                }
-                
-                if let samples = grouped[date]?.map({ Double($0.altitude) }), let max = samples.max() {
-                    altitudeSamples.append(TimeAxisValue(duration: sampleDuration, value: nativeAltitudeToLocalizedUnit(for: max)))
-                }
-            }
-            
-            let maxSpeed = self.locations.map({ $0.speed }).max()
-            
-            let altitudes = self.locations.map { $0.altitude }
-            let minElevation = altitudes.min()
-            let maxElevation = altitudes.max()
-            
-            DispatchQueue.main.async {
-                self.speedValues = speedSamples
-                self.altitudeValues = altitudeSamples
-                self.maxSpeed = maxSpeed ?? 0
-                self.minElevation = minElevation ?? 0
-                self.maxElevation = maxElevation ?? 0
-                self.updateAnalysisVisibility()
-            }
-        }
-    }
-    
-    func updateMovingTime() {
-        var movingTime = 0.0
-        for (left, right) in zip(locations, locations.dropFirst()) {
-            let interval = right.timestamp.timeIntervalSince(left.timestamp)
-            guard interval > 0 && left.speed > 0 && right.speed > 0 else { continue }
-            movingTime += interval
-        }
-        
-        var avgSpeed = 0.0
-        var avgMovingSpeed = 0.0
-        if let distance = workout?.totalDistance?.doubleValue(for: .meter()), let elapsedTime = workout?.duration {
-            avgSpeed = elapsedTime > 0 ? distance / elapsedTime : 0
-            avgMovingSpeed = movingTime > 0 ? distance / movingTime : 0
-        }
-        
-        DispatchQueue.main.async {
-            self.movingTime = movingTime
-            self.avgSpeed = avgSpeed
-            self.avgMovingSpeed = avgMovingSpeed
-            self.updateAnalysisVisibility()
-        }
-    }
-    
-    func fetchCyclingCadenceSamples() {
-        guard let workout = workout else { return }
-        
-        WorkoutDataStore.fetchCyclingCadenceSamples(workout: workout) { result in
-            guard let samples = try? result.get(), !samples.isEmpty else { return }
-            self.updateCyclingCadenceSamples(samples)
-        }
-    }
-    
-    private func updateCyclingCadenceSamples(_ samples: [Quantity]) {
-        var cadenceSamples = [TimeAxisValue]()
-                
-        let grouped = samples.slicedByMinute(for: \.timestamp)
-        let sortedDates = grouped.keys.sorted()
-        let startDate = sortedDates[0]
-        
-        for date in sortedDates {
-            let sampleDuration = date.timeIntervalSince(startDate)
-            
-            if let slice = grouped[date]?.map({ Double($0.value) }), let max = slice.max() {
-                cadenceSamples.append(TimeAxisValue(duration: sampleDuration, value: max))
-            }
-        }
-        
-        DispatchQueue.main.async {
-            self.cyclingCadenceValues = cadenceSamples
-            self.updateAnalysisVisibility()
-        }
     }
     
 }

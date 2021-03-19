@@ -32,6 +32,14 @@ struct DetailAnalysisView: View {
         return String(format: "%@ %@", distanceStr, titleStr)
     }
     
+    var isElevationPresent: Bool {
+        detailManager.altitudeValues.isPresent || workout.elevationAscended != nil || workout.elevationDescended != nil
+    }
+    
+    var isHeartRatePresent: Bool {
+        detailManager.showHeartRateSection
+    }
+    
     var body: some View {
         NavigationView {
             List {
@@ -44,17 +52,6 @@ struct DetailAnalysisView: View {
                         accentColor: .speed
                     )
                     
-                    rowForText(
-                        "Total Time",
-                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
-                        detailColor: .time
-                    )
-                    rowForText(
-                        "Moving Time",
-                        detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
-                        detailColor: .time
-                    )
-                    
                     if detailManager.avgMovingSpeed > 0 {
                         rowForText(
                             "Avg Moving Speed",
@@ -62,16 +59,32 @@ struct DetailAnalysisView: View {
                             detailColor: .speed
                         )
                     }
+                    
+                    if detailManager.movingTime > 0 {
+                        rowForText(
+                            "Moving Time",
+                            detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
+                            detailColor: .time
+                        )
+                    }
+                    
+                    rowForText(
+                        "Total Time",
+                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
+                        detailColor: .time
+                    )
                 }
                 
-                Section {
-                    chart(
-                        for: "Heart Rate",
-                        supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
-                        supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
-                        values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
-                        accentColor: .calories
-                    )
+                if isHeartRatePresent {
+                    Section {
+                        chart(
+                            for: "Heart Rate",
+                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
+                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
+                            values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
+                            accentColor: .calories
+                        )
+                    }
                 }
                 
                 if workout.isPacePresent {
@@ -99,17 +112,24 @@ struct DetailAnalysisView: View {
                     }
                 }
 
-                Section {
-                    chart(
-                        for: "Elevation",
-                        supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
-                        supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
-                        values: detailManager.altitudeValues, avgValue: nil,
-                        accentColor: .elevation
-                    )
-
-                    rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
-                    rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
+                if isElevationPresent {
+                    Section {
+                        chart(
+                            for: "Elevation",
+                            supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
+                            supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
+                            values: detailManager.altitudeValues, avgValue: nil,
+                            accentColor: .elevation
+                        )
+                        
+                        if let elevation = workout.elevationAscended {
+                            rowForText("Elevation Gain", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+                        }
+                        
+                        if let elevation = workout.elevationDescended {
+                            rowForText("Elevation Loss", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+                        }
+                    }
                 }
             }
             .listStyle(GroupedListStyle())
@@ -162,8 +182,11 @@ extension DetailAnalysisView {
                 }
             }
             
-            if values.isPresent {
+            if values.count > 5 {
                 lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
+            } else {
+                Spacer()
+                    .frame(maxWidth: .infinity, maxHeight: 10.0)
             }
         }
     }
