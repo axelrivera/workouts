@@ -12,7 +12,7 @@ final class HealthData {
     enum DataError: Error {
         case dataNotAvailable
         case failed
-        case unauthorized
+        case permissionDenied
         case unknown(Error)
     }
     
@@ -27,11 +27,11 @@ extension HealthData.DataError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .dataNotAvailable:
-            return "Data not available"
+            return "Data Not Available"
         case .failed:
-            return "Reques failed"
-        case .unauthorized:
-            return "Unauthorized"
+            return "Reques Failed"
+        case .permissionDenied:
+            return "Permission Denied"
         case .unknown(let error):
             return error.localizedDescription
         }
@@ -44,7 +44,7 @@ extension HealthData.DataError: LocalizedError {
 
 extension HealthData {
     
-    class func readPermissions() -> Set<HKObjectType> {
+    class func readObjectTypes() -> Set<HKObjectType> {
         [
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
@@ -56,7 +56,7 @@ extension HealthData {
         ]
     }
     
-    class func writePermissions() -> Set<HKSampleType> {
+    class func writeSampleTypes() -> Set<HKSampleType> {
         [
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
@@ -67,15 +67,51 @@ extension HealthData {
         ]
     }
     
+    class func filteredWriteSampleTypes() throws -> Set<HKSampleType> {
+        let objects = writeSampleTypes()
+        var statuses = [HKSampleType: HKAuthorizationStatus]()
+        
+        objects.forEach { statuses[$0] = healthStore.authorizationStatus(for: $0) }
+        
+        Log.debug("statuses for sample types: \(statuses)")
+        
+        let denied = statuses.compactMap { (object, status) -> HKSampleType? in
+            switch status {
+            case .notDetermined:
+                Log.debug("\(object.identifier): not determined")
+            case .sharingAuthorized:
+                Log.debug("\(object.identifier): authorized")
+            case .sharingDenied:
+                Log.debug("\(object.identifier): denied")
+            default:
+                break
+            }
+            
+            guard status == .sharingDenied else { return nil }
+            return object
+        }
+        
+        if denied.isPresent {
+            throw DataError.permissionDenied
+        }
+        
+        let notDetermined = statuses.compactMap { (object, status) -> HKSampleType? in
+            guard status == .notDetermined else { return nil }
+            return object
+        }
+        
+        return Set(notDetermined)
+    }
+    
     // MARK: - Request Status
     
     class func requestStatusForReading(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestStatus(read: readPermissions(), completionHandler: completionHandler)
+        requestStatus(read: readObjectTypes(), completionHandler: completionHandler)
     }
     
-//    class func requestStatusForWriting(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-//        requestStatus(read: readPermissions(), write: writePermissions(), completionHandler: completionHandler)
-//    }
+    class func requestStatusForWriting(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestStatus(read: [], write: writeSampleTypes(), completionHandler: completionHandler)
+    }
     
     class func requestStatus(read: Set<HKObjectType> = [], write: Set<HKSampleType> = [], completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
@@ -83,11 +119,9 @@ extension HealthData {
             return
         }
         
-        Log.debug("requesting permissions for reading")
         healthStore.getRequestStatusForAuthorization(toShare: write, read: read) { (status, error) in
-            Log.debug("got status: \(status.rawValue)")
             if let error = error {
-                Log.debug("error: \(error.localizedDescription)")
+                Log.debug("request health authorization status error: \(error.localizedDescription)")
             }
             
             if status == .unknown {
@@ -99,70 +133,35 @@ extension HealthData {
         }
     }
     
-    class func validateWritingStatus() -> HKAuthorizationStatus {
-        let permissions = writePermissions()
-        
-        var notDeterminedResults = [Bool]()
-        var deniedResults = [Bool]()
-        var authorizedResults = [Bool]()
-        
-        for object in permissions {
-            let status = healthStore.authorizationStatus(for: object)
-            switch status {
-            case .notDetermined:
-                notDeterminedResults.append(true)
-            case .sharingDenied:
-                deniedResults.append(true)
-            case .sharingAuthorized:
-                authorizedResults.append(true)
-            default:
-                break
-            }
-        }
-        
-        var resultStatus: HKAuthorizationStatus
-        if !notDeterminedResults.isEmpty {
-            resultStatus = .notDetermined
-        } else if !deniedResults.isEmpty {
-            resultStatus = .sharingDenied
-        } else {
-            resultStatus = .sharingAuthorized
-        }
-        return resultStatus
-    }
-    
     // MARK: - Authorization
     
-    class func requestReadingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestHealthAuthorization(read: readPermissions(), write: nil, completionHandler: completionHandler)
+    class func requestReadingAuthorization(for permissions: Set<HKObjectType>, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestHealthAuthorization(read: permissions, write: nil, completionHandler: completionHandler)
     }
     
-    class func requestWritingAuthorization(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestHealthAuthorization(read: readPermissions(), write: writePermissions(), completionHandler: completionHandler)
-    }
+//    class func requestWritingAuthorization(for permissions: Set<HKSampleType>, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+//        requestHealthAuthorization(read: nil, write: permissions, completionHandler: completionHandler)
+//    }
     
-    private class func requestHealthAuthorization(read: Set<HKObjectType>?, write: Set<HKSampleType>?, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+    class func requestHealthAuthorization(read: Set<HKObjectType>?, write: Set<HKSampleType>?, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
             completionHandler(.failure(DataError.dataNotAvailable))
             return
         }
         
-        Log.debug("request authorization")
-                
+        Log.debug("request health authorization")
         healthStore.requestAuthorization(
             toShare: write,
             read: read
         ) { (success, error) in
-            Log.debug("success: \(success)")
-            if let error = error {
-                Log.debug("error: \(error.localizedDescription)")
-            }
-            
             guard success else {
-                completionHandler(.failure(error ?? DataError.failed))
+                let resultError = error ?? DataError.failed
+                Log.debug("authorization error: \(resultError.localizedDescription)")
+                completionHandler(.failure(resultError))
                 return
             }
             
+            Log.debug("health authorization succeeded")
             completionHandler(.success(true))
         }
     }

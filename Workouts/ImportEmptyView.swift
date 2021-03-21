@@ -17,7 +17,7 @@ struct ImportEmptyView: View {
             case .empty:
                 NoFilesView(addAction: addAction)
             case .notAuthorized:
-                WriteUnauthorizedView()
+                WriteDeniedView()
             case .notAvailable:
                 NotAvailableView()
             default:

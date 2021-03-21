@@ -114,7 +114,7 @@ struct WorkoutDataStore {
     }
     
     private static func fetchLocation(for route: HKWorkoutRoute, updateHandler: @escaping ([CLLocation]) -> Void, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        let store = HKHealthStore()
+        let store = HealthData.healthStore
         
         let query = HKWorkoutRouteQuery(route: route) { (query, locations, done, error) in
             let locations = locations ?? [CLLocation]()

@@ -42,33 +42,54 @@ class ImportManager: ObservableObject {
 
 extension ImportManager {
     
-    func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestWritingAuthorization { result in
+    func success(with completionHandler: @escaping (_ success: Bool) -> Void) {
+        // Double check permissions on succeed
+        // sample types must be an empty string for success
+        // if response is nil or an array with values it means the user did not accept some of the permissions
+        
+        if let sampleTypes = try? HealthData.filteredWriteSampleTypes(), sampleTypes.isEmpty {
+            updateState(workouts.isEmpty ? .empty : .ok)
+            completionHandler(true)
+        } else {
+            self.fail(with: HealthData.DataError.permissionDenied, completionHandler: completionHandler)
+        }
+    }
+    
+    func fail(with error: Error, completionHandler: @escaping (_ success: Bool) -> Void) {
+        switch error {
+        case HealthData.DataError.dataNotAvailable:
+            self.updateState(.notAvailable)
+        case HealthData.DataError.permissionDenied:
+            self.updateState(.notAuthorized)
+        default:
+            self.updateState(.notAvailable)
+        }
+        completionHandler(false)
+    }
+    
+    func requestAuthorizationStatus(completionHandler: @escaping (_ success: Bool) -> Void) {
+        HealthData.requestStatus(write: HealthData.writeSampleTypes()) { result in
             switch result {
-            case .success:
-                let validationStatus = HealthData.validateWritingStatus()
-                self.updateState(with: validationStatus)
-                completionHandler(true)
-            case .failure(let error):
-                if case HealthData.DataError.dataNotAvailable = error {
-                    self.updateState(.notAvailable)
+            case .success(let shouldRequest):
+                if shouldRequest {
+                    self.requestWritingAuthorization(completionHandler: completionHandler)
+                    return
                 }
-                completionHandler(false)
+                
+                self.success(with: completionHandler)
+            case .failure(let error):
+                self.fail(with: error, completionHandler: completionHandler)
             }
         }
     }
     
-    func updateState(with status: HKAuthorizationStatus) {
-        DispatchQueue.main.async {
-            switch status {
-            case .sharingAuthorized:
-                withAnimation {
-                    self.state = self.workouts.isEmpty ? .empty : .ok
-                }
-            default:
-                withAnimation {
-                    self.state = .notAuthorized
-                }
+    func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
+        HealthData.requestHealthAuthorization(read: HealthData.readObjectTypes(), write: HealthData.writeSampleTypes()) { result in
+            switch result {
+            case .success:
+                self.success(with: completionHandler)
+            case .failure(let error):
+                self.fail(with: error, completionHandler: completionHandler)
             }
         }
     }
@@ -86,14 +107,6 @@ extension ImportManager {
 // MARK: - Selection Logic
 
 extension ImportManager {
-    func deleteWorkout(at offsets: IndexSet) {
-        DispatchQueue.main.async {
-            self.workouts.remove(atOffsets: offsets)
-            withAnimation {
-                self.state = self.workouts.isEmpty ? .empty : .ok
-            }
-        }
-    }
         
     var isImportDisabled: Bool {
         return newWorkouts.isEmpty || isProcessingImports || !state.isWhitelisted

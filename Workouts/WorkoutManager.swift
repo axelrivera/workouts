@@ -12,10 +12,10 @@ import FitFileParser
 import MapKit
 
 class WorkoutManager: ObservableObject {
-    let healthStore = HKHealthStore()
+    let healthStore = HealthData.healthStore
     
     enum State {
-        case ok, empty, notAvailable
+        case ok, empty, notAvailable, permissionDenied
     }
     
     @Published var workouts = [Workout]()
@@ -27,9 +27,12 @@ class WorkoutManager: ObservableObject {
     var lastWorkoutAnchor: HKQueryAnchor?
         
     func fetchRequestStatusForReading() {
+        Log.debug("request status for reading")
+        
         HealthData.requestStatusForReading { (result) in
             switch result {
             case .success(let shouldRequest):
+                Log.debug("success")
                 if !shouldRequest {
                     self.fetchWorkouts()
                 }
@@ -38,6 +41,7 @@ class WorkoutManager: ObservableObject {
                     self.shouldRequestReadingAuthorization = shouldRequest
                 }
             case .failure(let error):
+                Log.debug("read request failed: \(error)")
                 if case HealthData.DataError.dataNotAvailable = error {
                     self.updateState(.notAvailable)
                 }
@@ -58,20 +62,31 @@ class WorkoutManager: ObservableObject {
     }
     
     func requestReadingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestReadingAuthorization { result in
+        func success() {
+            updateState(.ok)
+            updateShouldRequestReadingAuthorization(false)
+            fetchWorkouts()
+            completionHandler(true)
+        }
+        
+        func failed(error: Error) {
+            Log.debug("request reading permissions failed: \(error)")
+            
+            if case HealthData.DataError.permissionDenied = error {
+                updateState(.permissionDenied)
+            } else {
+                updateState(.notAvailable)
+            }
+            completionHandler(false)
+        }
+        
+        HealthData.requestReadingAuthorization(for: HealthData.readObjectTypes()) { result in
             switch result {
             case .success:
                 Log.debug("fetch data succeeded")
-                self.updateState(.ok)
-                self.updateShouldRequestReadingAuthorization(false)
-                self.fetchWorkouts()
-                completionHandler(true)
+                success()
             case .failure(let error):
-                Log.debug("fetch data failed: \(error.localizedDescription)")
-                if case HealthData.DataError.dataNotAvailable = error {
-                    self.updateState(.notAvailable)
-                }
-                completionHandler(false)
+                failed(error: error)
             }
         }
     }
