@@ -162,7 +162,7 @@ extension WorkoutDataStore {
         let source = workout.sourceRevision.source
         
         var interval = DateComponents()
-        interval.minute = 1
+        interval.second = Constants.defaultChartSampleInSeconds
         
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
@@ -201,7 +201,7 @@ extension WorkoutDataStore {
         let source = workout.sourceRevision.source
         
         var interval = DateComponents()
-        interval.minute = 1
+        interval.second = Constants.defaultChartSampleInSeconds
         
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())

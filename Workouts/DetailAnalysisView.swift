@@ -20,6 +20,11 @@ struct DetailAnalysisView: View {
         return speed > 0 ? speed : nil
     }
     
+    var localizedAvgSpeed: Double? {
+        guard let avgSpeed = avgSpeed else { return nil }
+        return nativeSpeedToLocalizedUnit(for: avgSpeed)
+    }
+    
     var maxSpeed: Double? {
         if let maxSpeed = workout.maxSpeed { return maxSpeed }
         let speed = detailManager.maxSpeed
@@ -48,7 +53,7 @@ struct DetailAnalysisView: View {
                         for: "Speed",
                         supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
                         supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
-                        values: detailManager.speedValues, avgValue: avgSpeed,
+                        values: detailManager.speedValues, avgValue: localizedAvgSpeed,
                         accentColor: .speed
                     )
                     
@@ -75,18 +80,6 @@ struct DetailAnalysisView: View {
                     )
                 }
                 
-                if isHeartRatePresent {
-                    Section {
-                        chart(
-                            for: "Heart Rate",
-                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
-                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
-                            values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
-                            accentColor: .calories
-                        )
-                    }
-                }
-                
                 if workout.isPacePresent {
                     Section {
                         chart(
@@ -96,6 +89,18 @@ struct DetailAnalysisView: View {
                             values: detailManager.paceValues, avgValue: workout.avgPace,
                             accentColor: .cadence,
                             yAxisFormatter: PaceValueFormatter()
+                        )
+                    }
+                }
+                
+                if isHeartRatePresent {
+                    Section {
+                        chart(
+                            for: "Heart Rate",
+                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
+                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
+                            values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
+                            accentColor: .calories
                         )
                     }
                 }

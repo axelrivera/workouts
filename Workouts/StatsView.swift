@@ -56,6 +56,8 @@ struct StatsView: View {
                     if statsManager.sport == .cycling {
                         StatsRow(text: "Longest Ride", detail: distanceString(for: statsManager.allStats.longestDistance), detailColor: .distance)
                         StatsRow(text: "Highest Climb", detail: elevationString(for: statsManager.allStats.highestElevation), detailColor: .elevation)
+                    } else if statsManager.sport == .running {
+                        StatsRow(text: "Longest Run", detail: distanceString(for: statsManager.allStats.longestDistance), detailColor: .distance)
                     }
                 }
             }

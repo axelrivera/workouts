@@ -32,7 +32,7 @@ class CyclingCadenceOperation: SyncOperation {
     private func updateCyclingCadenceSamples(_ samples: [Quantity]) {
         var cadenceValues = [TimeAxisValue]()
                 
-        let grouped = samples.slicedByMinute(for: \.timestamp)
+        let grouped = samples.slicedInSeconds(Constants.defaultChartSampleInSeconds, key: \.timestamp)
         let sortedDates = grouped.keys.sorted()
         let startDate = sortedDates[0]
         

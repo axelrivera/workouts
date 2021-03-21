@@ -62,7 +62,7 @@ class RouteOperation: SyncOperation {
         var speedValues = [TimeAxisValue]()
         var altitudeValues = [TimeAxisValue]()
         
-        let grouped = self.locations.slicedByMinute(for: \.timestamp)
+        let grouped = self.locations.slicedInSeconds(Constants.defaultChartSampleInSeconds, key: \.timestamp)
         var sortedDates = grouped.keys.sorted()
         if sortedDates.count > 2 {
             sortedDates = sortedDates.dropFirst().dropLast()

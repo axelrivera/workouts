@@ -10,13 +10,13 @@ import Foundation
 extension Array {
     
     
-    func slicedByMinute(for key: KeyPath<Element, Date>) -> [Date: [Element]] {
+    func slicedInSeconds(_ seconds: Int, key: KeyPath<Element, Date>) -> [Date: [Element]] {
         var dictionary: [Date: [Element]] = [:]
         guard let first = self.first else { return dictionary }
         
-        let secondsInMinute = 60.0
+        let secondsInterval = Double(seconds)
         let start = first[keyPath: key].timeIntervalSince1970
-        var nextInterval = start + secondsInMinute
+        var nextInterval = start + secondsInterval
         
         var group = [Element]()
         
@@ -29,7 +29,7 @@ extension Array {
                 dictionary[Date(timeIntervalSince1970: nextInterval)] = group
                 group = [Element]()
                 group.append(element)
-                nextInterval = nextInterval + secondsInMinute
+                nextInterval = nextInterval + secondsInterval
             }
         }
         return dictionary

@@ -19,6 +19,7 @@ let MetadataKeySampleCadence = "BWCadence"
 let MetadataKeySampleTemperature = "BWTemperature"
 
 struct Constants {
+    static let defaultChartSampleInSeconds = 10
     static let defaultWeight: Double = 72.5748 // Use default weight of 160 lbs (72.5748 Kg)
 }
 
