@@ -338,6 +338,9 @@ extension WorkoutDataStore {
                             return
                         }
                         
+                        // save a compressed FIT file to use in future once the workout is saved
+                        self.saveWorkoutImportFile(workoutImport)
+                        
                         routeBuilder.finishRoute(with: workout, metadata: nil) { (route, error) in
                             if let error = error {
                                 completionHandler(.failure(DataError.system(error)))
@@ -454,6 +457,7 @@ extension WorkoutDataStore {
     
     private static func metadata(for file: WorkoutImport) -> [String: Any] {
         var dictionary = [String: Any]()
+        dictionary[HKMetadataKeyExternalUUID] = file.uuidString
         dictionary[HKMetadataKeyIndoorWorkout] = file.indoor
         dictionary[HKMetadataKeyWeatherTemperature] = file.avgTemperatureQuantity
         dictionary[HKMetadataKeyAverageSpeed] = file.avgSpeedQuantity
@@ -468,6 +472,33 @@ extension WorkoutDataStore {
         }
         
         return dictionary.compactMapValues({ $0 })
+    }
+    
+    private static var workoutsDirectory: URL {
+        FileUtils.workoutImportDirectory
+    }
+    
+    private static func saveWorkoutImportFile(_ file: WorkoutImport) {
+        guard let fileURL = file.fileURL else { return }
+        
+        let fileName = String(format: "%@.zip", file.uuidString)
+        let destinationURL = workoutsDirectory.appendingPathComponent(fileName)
+        
+        let fileManager = FileManager.default
+        do {
+            try createWorkoutsDirectory() // try to create directory if it doesn't exist
+            try fileManager.zipItem(at: fileURL, to: destinationURL)
+        } catch {
+            Log.debug("failed to write workout file \(destinationURL.path), error: \(error.localizedDescription)")
+        }
+    }
+    
+    private static func createWorkoutsDirectory() throws {
+        try FileManager.default.createDirectory(
+            at: workoutsDirectory,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
     }
     
 }

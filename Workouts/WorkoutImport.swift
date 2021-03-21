@@ -40,6 +40,10 @@ class WorkoutImport: ObservableObject, Identifiable {
     
     let id = UUID()
     
+    var uuidString: String {
+        id.uuidString
+    }
+    
     @Published var status: Status
     
     var sport: Sport
@@ -73,6 +77,8 @@ class WorkoutImport: ObservableObject, Identifiable {
     var records = [Record]()
     var events = [Event]()
     
+    var fileURL: URL?
+    
     init(status: Status, sport: Sport) {
         self.status = status
         self.sport = sport
@@ -84,10 +90,12 @@ class WorkoutImport: ObservableObject, Identifiable {
         start = .init(valueType: .date, value: Date().timeIntervalSince1970)
     }
     
-    init?(fit: FitFile) {
+    init?(fileURL: URL) {
+        guard let fit = FitFile(file: fileURL) else { return nil }
         guard let sport = fit.messages(forMessageType: .sport).first else { return nil }
         guard let session = fit.messages(forMessageType: .session).first else { return nil }
         
+        self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
         status = self.sport.isSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")

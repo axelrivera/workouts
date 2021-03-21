@@ -37,7 +37,6 @@ extension HealthData.DataError: LocalizedError {
         }
     }
     
-    
 }
 
 // MARK: - Permission

@@ -157,8 +157,7 @@ extension ImportManager {
                 }
                 
                 guard let fileURL = tmpURL,
-                      let fit = FitFile(file: fileURL),
-                      let workout = WorkoutImport(fit: fit) else {
+                      let workout = WorkoutImport(fileURL: fileURL) else {
                     workouts.append(WorkoutImport(invalidFilename: url.lastPathComponent))
                     continue
                 }

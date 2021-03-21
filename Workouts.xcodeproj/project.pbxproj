@@ -121,6 +121,8 @@
 		167D2E8B26054EF900A4A299 /* HeartRateOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E8926054EF900A4A299 /* HeartRateOperation.swift */; };
 		167D2E902605501E00A4A299 /* PaceOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E8F2605501E00A4A299 /* PaceOperation.swift */; };
 		167D2E912605501E00A4A299 /* PaceOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E8F2605501E00A4A299 /* PaceOperation.swift */; };
+		167D2E9F2607E91500A4A299 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E9E2607E91500A4A299 /* FileUtils.swift */; };
+		167D2EA02607E91500A4A299 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E9E2607E91500A4A299 /* FileUtils.swift */; };
 		168EE47B25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */; };
 		168EE47C25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */; };
 		168EE48426019A3400D4788D /* TimeAxisValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE48326019A3400D4788D /* TimeAxisValue.swift */; };
@@ -256,6 +258,7 @@
 		167D2E8026054E7400A4A299 /* CyclingCadenceOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclingCadenceOperation.swift; sourceTree = "<group>"; };
 		167D2E8926054EF900A4A299 /* HeartRateOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateOperation.swift; sourceTree = "<group>"; };
 		167D2E8F2605501E00A4A299 /* PaceOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceOperation.swift; sourceTree = "<group>"; };
+		167D2E9E2607E91500A4A299 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunWalkUtils.swift; sourceTree = "<group>"; };
 		168EE48326019A3400D4788D /* TimeAxisValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeAxisValue.swift; sourceTree = "<group>"; };
 		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
@@ -451,6 +454,7 @@
 				168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */,
 				1696424226041B3B00E68A45 /* ZipUtils.swift */,
 				167D2E612604E0BA00A4A299 /* String+Additions.swift */,
+				167D2E9E2607E91500A4A299 /* FileUtils.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -791,6 +795,7 @@
 				160BB08325DD61700059E493 /* OnboardingView.swift in Sources */,
 				160BB08425DD61700059E493 /* ImportManager.swift in Sources */,
 				163A5F3D25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */,
+				167D2EA02607E91500A4A299 /* FileUtils.swift in Sources */,
 				160BB08525DD61700059E493 /* WorkoutManager.swift in Sources */,
 				16A2F54F25EDD52B0010F01D /* DetailAnalysisView.swift in Sources */,
 				160BB08625DD61700059E493 /* WorkoutImport.swift in Sources */,
@@ -874,6 +879,7 @@
 				16682B6F25CFF54F00FC9317 /* OnboardingView.swift in Sources */,
 				16A0662F25C7209F00019096 /* ImportManager.swift in Sources */,
 				163A5F3C25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */,
+				167D2E9F2607E91500A4A299 /* FileUtils.swift in Sources */,
 				1645B92125B350BB00B04478 /* WorkoutManager.swift in Sources */,
 				16A2F54E25EDD52B0010F01D /* DetailAnalysisView.swift in Sources */,
 				16AD0F9A25B5DA2C0092FA91 /* WorkoutImport.swift in Sources */,
