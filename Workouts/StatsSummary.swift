@@ -37,6 +37,18 @@ struct StatsSummary {
     var longestDistance: Double
     var highestElevation: Double
     
+    static let countFormatter: NumberFormatter = {
+       let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+    
+    var formattedCount: String {
+        Self.countFormatter.string(from: count as NSNumber) ?? ""
+    }
+    
     init(sport: Sport, timeframe: Timeframe) {
         self.sport = sport
         self.timeframe = timeframe

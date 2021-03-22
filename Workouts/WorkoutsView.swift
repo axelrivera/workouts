@@ -29,6 +29,10 @@ struct WorkoutsView: View {
                                     Text(formattedDistanceString(for: distance))
                                         .font(.title)
                                         .foregroundColor(.distance)
+                                } else {
+                                    Text(formattedHoursMinutesDurationString(for: workout.elapsedTime))
+                                        .font(.title)
+                                        .foregroundColor(.time)
                                 }
                                 
                                 HStack {

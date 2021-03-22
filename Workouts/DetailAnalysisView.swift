@@ -45,25 +45,19 @@ struct DetailAnalysisView: View {
         detailManager.showHeartRateSection
     }
     
+    var isSpeedPresent: Bool {
+        detailManager.speedValues.isPresent
+    }
+    
     var body: some View {
         NavigationView {
             List {
                 Section {
-                    chart(
-                        for: "Speed",
-                        supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
-                        supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
-                        values: detailManager.speedValues, avgValue: localizedAvgSpeed,
-                        accentColor: .speed
+                    rowForText(
+                        "Total Time",
+                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
+                        detailColor: .time
                     )
-                    
-                    if detailManager.avgMovingSpeed > 0 {
-                        rowForText(
-                            "Avg Moving Speed",
-                            detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
-                            detailColor: .speed
-                        )
-                    }
                     
                     if detailManager.movingTime > 0 {
                         rowForText(
@@ -72,12 +66,26 @@ struct DetailAnalysisView: View {
                             detailColor: .time
                         )
                     }
-                    
-                    rowForText(
-                        "Total Time",
-                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
-                        detailColor: .time
-                    )
+                }
+                
+                if isSpeedPresent {
+                    Section {
+                        chart(
+                            for: "Speed",
+                            supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
+                            supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
+                            values: detailManager.speedValues, avgValue: localizedAvgSpeed,
+                            accentColor: .speed
+                        )
+                        
+                        if detailManager.avgMovingSpeed > 0 {
+                            rowForText(
+                                "Avg Moving Speed",
+                                detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
+                                detailColor: .speed
+                            )
+                        }
+                    }
                 }
                 
                 if workout.isPacePresent {

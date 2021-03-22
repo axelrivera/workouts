@@ -16,8 +16,13 @@ struct StatsView: View {
         NavigationView {
             List {
                 VStack(alignment: .leading, spacing: 10.0) {
-                    Text(formattedMonthDayRangeString(start: statsManager.weekStart, end: statsManager.weekEnd))
-                        .font(.title2)
+                    HStack(alignment: .lastTextBaseline) {
+                        Text(formattedMonthDayRangeString(start: statsManager.weekStart, end: statsManager.weekEnd))
+                            .font(.title2)
+                        Spacer()
+                        Text(String(format: "%@ %@", statsManager.weekStats.formattedCount, statsManager.sport == .cycling ? "Rides" : "Runs"))
+                            .foregroundColor(.secondary)
+                    }
                     
                     HStack(spacing: 10.0) {
                         StatsWeekly(text: "Distance", detail: distanceString(for: statsManager.weekStats.distance), detailColor: .distance)
@@ -35,7 +40,7 @@ struct StatsView: View {
                 }
                 
                 Section(header: Text(formattedMonthYearString(for: statsManager.monthStart))) {
-                    StatsRow(text: sportTitle, detail: "\(statsManager.monthStats.count)")
+                    StatsRow(text: sportTitle, detail: statsManager.monthStats.formattedCount)
                     StatsRow(text: "Distance", detail: distanceString(for: statsManager.monthStats.distance), detailColor: .distance)
                     StatsRow(text: "Time", detail: timeString(for: statsManager.monthStats.duration), detailColor: .time)
                     StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.monthStats.elevation), detailColor: .elevation)
@@ -43,14 +48,14 @@ struct StatsView: View {
                 }
                 
                 Section(header: Text("Year to Date")) {
-                    StatsRow(text: sportTitle, detail: "\(statsManager.yearStats.count)")
+                    StatsRow(text: sportTitle, detail: statsManager.yearStats.formattedCount)
                     StatsRow(text: "Distance", detail: distanceString(for: statsManager.yearStats.distance), detailColor: .distance)
                     StatsRow(text: "Time", detail: timeString(for: statsManager.yearStats.duration), detailColor: .time)
                     StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.yearStats.elevation), detailColor: .elevation)
                 }
                 
                 Section(header: Text("All Time")) {
-                    StatsRow(text: sportTitle, detail: "\(statsManager.allStats.count)")
+                    StatsRow(text: sportTitle, detail: statsManager.allStats.formattedCount)
                     StatsRow(text: "Distance", detail: distanceString(for: statsManager.allStats.distance), detailColor: .distance)
                     
                     if statsManager.sport == .cycling {
