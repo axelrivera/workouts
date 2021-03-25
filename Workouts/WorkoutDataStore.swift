@@ -431,8 +431,7 @@ extension WorkoutDataStore {
         let duration = durationInSeconds / 60.0 // minutes
                 
         let metValue = metValueFor(sport: sport, indoor: indoor, speed: speed)
-        let weight = AppSettings.weight ?? Constants.defaultWeight
-        let energyBurned = calculateCaloriesFor(duration: duration, metValue: metValue, weight: weight)
+        let energyBurned = calculateCaloriesFor(duration: duration, metValue: metValue, weight: AppSettings.weight)
                 
         let sample = HKCumulativeQuantitySample(
             type: .activeEnergyBurned(),

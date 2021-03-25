@@ -8,63 +8,76 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @EnvironmentObject var workoutManager: WorkoutManager
+    enum ActiveSheet: Identifiable {
+        case pro, feedback
+        var id: Int { hashValue }
+    }
     
-    @State var weight: Double? = AppSettings.weight
-    @State var showingWeightAlert = false
-            
+    @EnvironmentObject var workoutManager: WorkoutManager
+    @State private var weight: Double = AppSettings.weight
+    @State private var activeSheet: ActiveSheet?
+    
     var body: some View {
         NavigationView {
             Form {
-                VStack {
-                    HStack {
-                        Text("Weight")
-                        Spacer()
-                        Text(formattedWeightString(for: weight))
+                Section(footer: Text("Purchasing helps support Better Workouts")) {
+                    Button(action: { activeSheet = .pro }, label: {
+                        HStack {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                            Text("Unlock all Better Workout Features")
+                                .foregroundColor(.primary)
+                        }
+                    })
+                }
+                
+                Section(header: Text("Application Settings")) {
+                    NavigationLink(destination: WeightInputView(weight: $weight)) {
+                        HStack {
+                            Text("Weight")
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(formattedWeightString(for: weight))
+                                .foregroundColor(.primary)
+                        }
                     }
-                    
-                    Divider()
-                    
-                    Text("Your weight is used to calculate the total amount of calories when importing a workout.")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
                 }
-                Button(action: updateWeight) {
-                    Text("Get Weight from Health App")
+                
+                Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
+                    NavigationLink("Import Workout Tutorial", destination: Text("Import Tutorial"))
+                    NavigationLink("Frequently Asked Questions", destination: Text("FAQ"))
+                    Button("Send Feedback", action: {})
                 }
-                .alert(isPresented: $showingWeightAlert) {
-                    Alert(
-                        title: Text("Health Error"),
-                        message: Text("Unable to fetch weight from Health App. Make sure Workouts has permission to access your weight in the Health app."),
-                        dismissButton: .default(Text("Ok"))
-                    )
+                
+                Section(header: Text("Better Workouts")) {
+                    Button("Review on the App Store", action: {})
+                    NavigationLink("Privacy Policy", destination: Text("Privacy Policy"))
+                    HStack {
+                        Text("Version")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("1.0 (13)")
+                    }
                 }
+                
             }
             .navigationBarTitle("Settings")
-        }
-    }
-}
-
-// MARK: - Methods
-
-extension SettingsView {
-    
-    func updateWeight() {
-        ProfileDataStore.fetchWeightInKilograms { value in
-            if let weight = value {
-                AppSettings.weight = weight
-                self.weight = weight
-            } else {
-               showingWeightAlert = true
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .pro:
+                    ProView()
+                default:
+                    EmptyView()
+                }
             }
         }
     }
-    
 }
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView()
             .environmentObject(WorkoutManager())
+            .colorScheme(.dark)
     }
 }

@@ -20,7 +20,7 @@ let MetadataKeySampleTemperature = "BWTemperature"
 
 struct Constants {
     static let defaultChartSampleInSeconds = 10
-    static let defaultWeight: Double = 72.5748 // Use default weight of 160 lbs (72.5748 Kg)
+    static let defaultWeight: Double = 81.6466 // Use default weight of 180 lbs (81.6466 Kg)
 }
 
 extension Notification.Name {

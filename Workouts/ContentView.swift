@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: Int {
-        case workouts, stats, more
+        case workouts, stats, settings
     }
     
     @EnvironmentObject var workoutManager: WorkoutManager
@@ -33,8 +33,8 @@ struct ContentView: View {
                     .tag(Tabs.stats)
                 
                 SettingsView()
-                    .tabItem { Label("More", systemImage: selected == .more ? "ellipsis.circle.fill" : "ellipsis.circle") }
-                    .tag(Tabs.more)
+                    .tabItem { Label("Settings", systemImage: selected == .settings ? "gearshape.fill" : "gearshape") }
+                    .tag(Tabs.settings)
             }
             
             if workoutManager.shouldRequestReadingAuthorization  {

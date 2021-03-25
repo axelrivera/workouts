@@ -99,11 +99,6 @@ class WorkoutManager: ObservableObject {
             validateWorkoutStatusForReading()
             return
         }
-        
-        ProfileDataStore.fetchWeightInKilograms { (weight) in
-            guard let weight = weight else { return }
-            AppSettings.weight = weight
-        }
                 
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),

@@ -143,6 +143,12 @@ func formattedWeightString(for weight: Double?) -> String {
     return MeasurementFormatter.mass.string(from: measurement)
 }
 
+func formattedLocalizedWeightString(for weight: Double?) -> String {
+    guard let weight = weight else { return "n/a" }
+    let kilograms = localizedWeightUnitToKilograms(for: weight)
+    return formattedWeightString(for: kilograms)
+}
+
 // MARK: - Elevation
 
 func formattedElevationString(for elevation: Double?) -> String {

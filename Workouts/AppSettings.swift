@@ -20,7 +20,7 @@ struct Settings<T> {
 
     var wrappedValue: T {
         get { UserDefaults.standard.object(forKey: key) as? T ?? defaultValue }
-        set { UserDefaults.standard.set(newValue, forKey: key) }
+        set { UserDefaults.standard.set(newValue, forKey: key); UserDefaults.standard.synchronize() }
     }
 }
 
@@ -28,7 +28,6 @@ struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
-        
     }
 
     static func synchronize() {
@@ -42,10 +41,9 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
-    
-    
-    @Settings(Keys.weightInKilograms, defaultValue: nil)
-    static var weight: Double?
+        
+    @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
+    static var weight: Double
     
     static var defaultStatsFilter: Sport {
         get {
