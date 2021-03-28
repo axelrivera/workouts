@@ -58,7 +58,7 @@ struct ProView: View {
                 
                 Spacer()
                 
-                Text("Purchasing supports with development of future updates.")
+                Text("Purchasing supports development of future updates.")
                     .font(.headline)
                     .multilineTextAlignment(.center)
                 
