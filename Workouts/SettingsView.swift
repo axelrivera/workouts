@@ -78,7 +78,7 @@ struct SettingsView: View {
                         Text("Version")
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("1.0 (13)")
+                        Text(systemVersionAndBuildString())
                     }
                 }
                 
