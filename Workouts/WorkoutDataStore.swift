@@ -306,7 +306,11 @@ extension WorkoutDataStore {
             }
         }
         
-        let samples = self.samples(for: workoutImport.records, sport: workoutImport.sport, indoor: workoutImport.indoor)
+        var samples = self.samples(for: workoutImport.records, sport: workoutImport.sport, indoor: workoutImport.indoor)
+        if let energySample = energySample(for: workoutImport) {
+            samples.append(energySample)
+        }
+        
         builder.add(samples) { (success, error) in
             guard success else {
                 completionHandler(.failure(dataError(.failure, system: error)))
@@ -359,10 +363,6 @@ extension WorkoutDataStore {
         
         for (prevRecord, record) in zip(records, records.dropFirst()) {
             if let sample = distanceSampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
-                samples.append(sample)
-            }
-            
-            if let sample = energySampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
                 samples.append(sample)
             }
             
@@ -420,26 +420,16 @@ extension WorkoutDataStore {
         return sample
     }
     
-    private static func energySampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record, sport: Sport, indoor: Bool) -> HKSample? {
-        guard let prevSpeed = prevRecord.speed.speedValue, prevSpeed > 0 else { return nil }
-        guard let speed = record.speed.speedValue, speed > 0 else { return nil }
-        guard let timestamp = record.timestamp.dateValue else { return nil }
+    private static func energySample(for file: WorkoutImport) -> HKSample? {
+        guard let start = file.startDate, let end = file.endDate else { return nil }
+        guard let energyBurned = file.totalEnergyBurned.caloriesValue else { return nil }
         
-        let end = timestamp
-        let start = prevRecord.timestamp.dateValue ?? end
-        let durationInSeconds = end.timeIntervalSince1970 - start.timeIntervalSince1970
-        let duration = durationInSeconds / 60.0 // minutes
-                
-        let metValue = metValueFor(sport: sport, indoor: indoor, speed: speed)
-        let energyBurned = calculateCaloriesFor(duration: duration, metValue: metValue, weight: AppSettings.weight)
-                
-        let sample = HKCumulativeQuantitySample(
+        return HKCumulativeQuantitySample(
             type: .activeEnergyBurned(),
             quantity: HKQuantity(unit: .kilocalorie(), doubleValue: energyBurned),
-            start: timestamp,
-            end: timestamp
+            start: start,
+            end: end
         )
-        return sample
     }
     
     private static func heartRateSampleFor(record: WorkoutImport.Record) -> HKSample? {
