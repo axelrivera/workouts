@@ -20,7 +20,7 @@ struct RoundButton: View {
                 .padding()
                 .foregroundColor(foregroundColor)
                 .background(backgroundColor)
-                .cornerRadius(12)
+                .cornerRadius(Constants.cornerRadius)
         }
     }
 }

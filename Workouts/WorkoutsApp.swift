@@ -17,11 +17,13 @@ import SwiftUI
 @main
 struct WorkoutsApp: App {
     let workoutManager = WorkoutManager()
+    let purchaseManager = IAPManager()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(workoutManager)
+                .environmentObject(purchaseManager)
         }
     }
 }

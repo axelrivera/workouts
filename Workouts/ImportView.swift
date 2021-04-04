@@ -19,6 +19,7 @@ struct ImportView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var importManager: ImportManager = ImportManager()
     @State var isProcessingDocuments = false
     
@@ -47,11 +48,20 @@ struct ImportView: View {
                     }
                 }
                 .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
+                .zIndex(1.0)
                 
                 if importManager.state.showEmptyView {
                     Color.systemBackground
                         .ignoresSafeArea()
+                        .zIndex(2.0)
                     ImportEmptyView(importState: importManager.state, addAction: { activeSheet = .document })
+                        .zIndex(3.0)
+                }
+                
+                if !purchaseManager.isActive {
+                    PaywallView(purchaseManager: purchaseManager)
+                        .zIndex(4.0)
+                        .transition(.opacity)
                 }
             }
             .navigationTitle("Import Workouts")
@@ -121,12 +131,19 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .ok
+        manager.state = .empty
         manager.loadSampleWorkouts()
+        return manager
+    }()
+    
+    static let purchaseManager: IAPManager = {
+        let manager = IAPManager()
+        manager.isActive = true
         return manager
     }()
     
     static var previews: some View {
         ImportView(importManager: importManager)
+            .environmentObject(purchaseManager)
     }
 }

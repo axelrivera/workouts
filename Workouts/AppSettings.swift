@@ -28,6 +28,7 @@ struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
+        static let mockPurchaseActive = "arn_mock_purchase_active"
     }
 
     static func synchronize() {
@@ -45,6 +46,11 @@ struct AppSettings {
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
     
+    #if DEVELOPMENT_BUILD
+    @Settings(Keys.mockPurchaseActive, defaultValue: false)
+    static var mockPurchaseActive: Bool
+    #endif
+    
     static var defaultStatsFilter: Sport {
         get {
             let string = objectForKey(Keys.defaultStatsFilter) as? String ?? ""
@@ -54,4 +60,5 @@ struct AppSettings {
             setValue(newValue.rawValue, for: Keys.defaultStatsFilter)
         }
     }
+    
 }

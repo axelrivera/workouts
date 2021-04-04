@@ -50,7 +50,7 @@ struct DetailView: View {
                         WorkoutMap(points: $detailManager.points)
                             .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
                             .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
-                            .cornerRadius(12.0)
+                            .cornerRadius(Constants.cornerRadius)
                     }
                     .buttonStyle(PlainButtonStyle())
                     

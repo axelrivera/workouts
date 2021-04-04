@@ -13,6 +13,7 @@ struct ContentView: View {
     }
     
     @EnvironmentObject var workoutManager: WorkoutManager
+    @EnvironmentObject var purchaseManager: IAPManager
     @State private var selected = Tabs.workouts
     
     var body: some View {
@@ -67,5 +68,6 @@ struct ContentView_Previews: PreviewProvider {
                 workoutManager.shouldRequestReadingAuthorization = false
             })
             .environmentObject(workoutManager)
+            .environmentObject(IAPManager())
     }
 }

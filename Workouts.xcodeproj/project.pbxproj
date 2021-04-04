@@ -92,6 +92,8 @@
 		1645B94325B35F6E00B04478 /* TextRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94225B35F6E00B04478 /* TextRow.swift */; };
 		1645B94625B3612700B04478 /* RowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94525B3612700B04478 /* RowItem.swift */; };
 		1645B94925B3669E00B04478 /* TimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94825B3669E00B04478 /* TimePicker.swift */; };
+		165D646E2617AF170015744C /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D646D2617AF170015744C /* UpgradeView.swift */; };
+		165D646F2617AF170015744C /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D646D2617AF170015744C /* UpgradeView.swift */; };
 		165F154125C82B9600A2CE59 /* ImportRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154025C82B9600A2CE59 /* ImportRow.swift */; };
 		165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154425C853E900A2CE59 /* ImportOperation.swift */; };
 		16682B6125CF15F300FC9317 /* WorkoutEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */; };
@@ -125,8 +127,14 @@
 		167D2EA02607E91500A4A299 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E9E2607E91500A4A299 /* FileUtils.swift */; };
 		167D2EA82608E1C100A4A299 /* WeightInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EA72608E1C100A4A299 /* WeightInputView.swift */; };
 		167D2EA92608E1C100A4A299 /* WeightInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EA72608E1C100A4A299 /* WeightInputView.swift */; };
-		167D2ED8260C103000A4A299 /* ProView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* ProView.swift */; };
-		167D2ED9260C103000A4A299 /* ProView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* ProView.swift */; };
+		167D2ED8260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
+		167D2ED9260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
+		167D2EE226110D7300A4A299 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = 167D2EE126110D7300A4A299 /* Purchases */; };
+		167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 167D2EE626110DB300A4A299 /* StoreKit.framework */; };
+		167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 167D2EE626110DB300A4A299 /* StoreKit.framework */; };
+		167D2EEA2611103200A4A299 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = 167D2EE92611103200A4A299 /* Purchases */; };
+		167D2EEC2611104800A4A299 /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EEB2611104800A4A299 /* IAPManager.swift */; };
+		167D2EED2611104800A4A299 /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EEB2611104800A4A299 /* IAPManager.swift */; };
 		168EE47B25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */; };
 		168EE47C25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */; };
 		168EE48426019A3400D4788D /* TimeAxisValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 168EE48326019A3400D4788D /* TimeAxisValue.swift */; };
@@ -245,6 +253,7 @@
 		1645B94225B35F6E00B04478 /* TextRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRow.swift; sourceTree = "<group>"; };
 		1645B94525B3612700B04478 /* RowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowItem.swift; sourceTree = "<group>"; };
 		1645B94825B3669E00B04478 /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
+		165D646D2617AF170015744C /* UpgradeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeView.swift; sourceTree = "<group>"; };
 		165F154025C82B9600A2CE59 /* ImportRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRow.swift; sourceTree = "<group>"; };
 		165F154425C853E900A2CE59 /* ImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOperation.swift; sourceTree = "<group>"; };
 		16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEmptyView.swift; sourceTree = "<group>"; };
@@ -264,7 +273,9 @@
 		167D2E8F2605501E00A4A299 /* PaceOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceOperation.swift; sourceTree = "<group>"; };
 		167D2E9E2607E91500A4A299 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		167D2EA72608E1C100A4A299 /* WeightInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightInputView.swift; sourceTree = "<group>"; };
-		167D2ED7260C103000A4A299 /* ProView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProView.swift; sourceTree = "<group>"; };
+		167D2ED7260C103000A4A299 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		167D2EE626110DB300A4A299 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		167D2EEB2611104800A4A299 /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
 		168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunWalkUtils.swift; sourceTree = "<group>"; };
 		168EE48326019A3400D4788D /* TimeAxisValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeAxisValue.swift; sourceTree = "<group>"; };
 		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
@@ -314,8 +325,10 @@
 			files = (
 				160BB09A25DD61700059E493 /* HealthKit.framework in Frameworks */,
 				16FB84C425F699EB00CF22ED /* Charts in Frameworks */,
+				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
 				1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */,
+				167D2EEA2611103200A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,7 +339,9 @@
 				1696420C260419ED00E68A45 /* FitFileParser in Frameworks */,
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
 				16FB84BF25F699D400CF22ED /* Charts in Frameworks */,
+				167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */,
 				1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */,
+				167D2EE226110D7300A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +421,7 @@
 		161FDB7625B34DF000929433 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				167D2EE626110DB300A4A299 /* StoreKit.framework */,
 				161FDB7725B34DF000929433 /* HealthKit.framework */,
 			);
 			name = Frameworks;
@@ -500,7 +516,8 @@
 			children = (
 				1645B91925B350BB00B04478 /* SettingsView.swift */,
 				167D2EA72608E1C100A4A299 /* WeightInputView.swift */,
-				167D2ED7260C103000A4A299 /* ProView.swift */,
+				165D646D2617AF170015744C /* UpgradeView.swift */,
+				167D2ED7260C103000A4A299 /* PaywallView.swift */,
 			);
 			name = Settings;
 			sourceTree = "<group>";
@@ -530,6 +547,7 @@
 				1645B93825B353DD00B04478 /* WorkoutDataStore.swift */,
 				16E8323D25D4C0F100382545 /* ProfileDataStore.swift */,
 				160BB0CE25DDF1EE0059E493 /* StatsProvider.swift */,
+				167D2EEB2611104800A4A299 /* IAPManager.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -633,6 +651,7 @@
 				160BB06225DD61700059E493 /* FitFileParser */,
 				16FB84C325F699EB00CF22ED /* Charts */,
 				1696421626041A2F00E68A45 /* ZIPFoundation */,
+				167D2EE92611103200A4A299 /* Purchases */,
 			);
 			productName = Workouts;
 			productReference = 160BB0A225DD61700059E493 /* Workouts Dev.app */;
@@ -655,6 +674,7 @@
 				16FB84BE25F699D400CF22ED /* Charts */,
 				1696420B260419ED00E68A45 /* FitFileParser */,
 				1696421126041A1F00E68A45 /* ZIPFoundation */,
+				167D2EE126110D7300A4A299 /* Purchases */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Workouts.app */;
@@ -710,6 +730,7 @@
 				16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */,
 				1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */,
 				1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			productRefGroup = 161FDB6325B34D4B00929433 /* Products */;
 			projectDirPath = "";
@@ -772,6 +793,8 @@
 				167D2EA92608E1C100A4A299 /* WeightInputView.swift in Sources */,
 				160BB06E25DD61700059E493 /* UTType+Additions.swift in Sources */,
 				160BB06F25DD61700059E493 /* HealthKit+Additions.swift in Sources */,
+				165D646F2617AF170015744C /* UpgradeView.swift in Sources */,
+				167D2EED2611104800A4A299 /* IAPManager.swift in Sources */,
 				160BB07025DD61700059E493 /* DetailView.swift in Sources */,
 				160BB07125DD61700059E493 /* TimeHelper.swift in Sources */,
 				1678145A25DF4B120012531D /* StatsManager.swift in Sources */,
@@ -792,7 +815,7 @@
 				160BB07B25DD61700059E493 /* WorkoutsApp.swift in Sources */,
 				160BB07C25DD61700059E493 /* Sport.swift in Sources */,
 				160BB07D25DD61700059E493 /* Color+Additions.swift in Sources */,
-				167D2ED9260C103000A4A299 /* ProView.swift in Sources */,
+				167D2ED9260C103000A4A299 /* PaywallView.swift in Sources */,
 				160BB07E25DD61700059E493 /* NoFilesView.swift in Sources */,
 				160BB07F25DD61700059E493 /* RoundButton.swift in Sources */,
 				16FB84EA25F8321F00CF22ED /* Charts+Additions.swift in Sources */,
@@ -858,6 +881,8 @@
 				167D2EA82608E1C100A4A299 /* WeightInputView.swift in Sources */,
 				1645B92225B350BB00B04478 /* UTType+Additions.swift in Sources */,
 				1645B93F25B3546B00B04478 /* HealthKit+Additions.swift in Sources */,
+				165D646E2617AF170015744C /* UpgradeView.swift in Sources */,
+				167D2EEC2611104800A4A299 /* IAPManager.swift in Sources */,
 				1645B92A25B350BB00B04478 /* DetailView.swift in Sources */,
 				1645B92425B350BB00B04478 /* TimeHelper.swift in Sources */,
 				1678145925DF4B120012531D /* StatsManager.swift in Sources */,
@@ -878,7 +903,7 @@
 				161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */,
 				16E8323925D4B06200382545 /* Sport.swift in Sources */,
 				1645B92625B350BB00B04478 /* Color+Additions.swift in Sources */,
-				167D2ED8260C103000A4A299 /* ProView.swift in Sources */,
+				167D2ED8260C103000A4A299 /* PaywallView.swift in Sources */,
 				16AB3DB325D0996C0082A610 /* NoFilesView.swift in Sources */,
 				16682B6525CF3E1900FC9317 /* RoundButton.swift in Sources */,
 				16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */,
@@ -983,7 +1008,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "-D DEV";
+				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1011,7 +1036,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "-D DEV";
+				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1159,7 +1184,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "-D PRODUCTION -D PRODUCTION_DEBUG";
+				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD -D PRODUCTION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1187,7 +1212,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "-D PRODUCTION";
+				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "me.axelrivera.Workouts Release";
@@ -1289,6 +1314,14 @@
 				minimumVersion = 1.4.0;
 			};
 		};
+		167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.10.7;
+			};
+		};
 		1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/roznet/FitFileParser.git";
@@ -1320,6 +1353,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 160BB06325DD61700059E493 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
+		};
+		167D2EE126110D7300A4A299 /* Purchases */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = Purchases;
+		};
+		167D2EE92611103200A4A299 /* Purchases */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = Purchases;
 		};
 		1696420B260419ED00E68A45 /* FitFileParser */ = {
 			isa = XCSwiftPackageProductDependency;

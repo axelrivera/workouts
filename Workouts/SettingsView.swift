@@ -9,26 +9,48 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
-        case pro, feedback
+        case paywall, feedback
         var id: Int { hashValue }
     }
     
     @EnvironmentObject var workoutManager: WorkoutManager
+    @EnvironmentObject var purchaseManager: IAPManager
     @State private var weight: Double = AppSettings.weight
     @State private var activeSheet: ActiveSheet?
     
     var body: some View {
         NavigationView {
             Form {
-                Section(footer: Text("Purchasing helps support Better Workouts")) {
-                    Button(action: { activeSheet = .pro }, label: {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                            Text("Unlock all Better Workout Features")
-                                .foregroundColor(.primary)
+                if purchaseManager.isActive {
+                    Section {
+                        HStack(spacing: 10.0) {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.red)
+                                .font(.title)
+                            VStack(alignment: .leading, spacing: 2.0) {
+                                Text("Better Workout Pro")
+                                Text("Thank your for your support!")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                    })
+                        #if DEVELOPMENT_BUILD
+                        Button("Reset Mock Purchase", action: purchaseManager.resetMockPurchase)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        #endif
+                    }
+                } else {
+                    Section(footer: Text("Purchasing helps support Better Workouts.")) {
+                        Button(action: { activeSheet = .paywall }, label: {
+                            HStack {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.orange)
+                                Text("Unlock all Better Workout Features")
+                                    .foregroundColor(.primary)
+                            }
+                        })
+                    }
                 }
                 
                 Section(header: Text("Application Settings")) {
@@ -64,8 +86,8 @@ struct SettingsView: View {
             .navigationBarTitle("Settings")
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
-                case .pro:
-                    ProView()
+                case .paywall:
+                    UpgradeView()
                 default:
                     EmptyView()
                 }
@@ -75,9 +97,16 @@ struct SettingsView: View {
 }
 
 struct SettingsView_Previews: PreviewProvider {
+    static let purchaseManager: IAPManager = {
+        let manager = IAPManager()
+        manager.isActive = true
+        return manager
+    }()
+    
     static var previews: some View {
         SettingsView()
             .environmentObject(WorkoutManager())
+            .environmentObject(purchaseManager)
             .colorScheme(.dark)
     }
 }
