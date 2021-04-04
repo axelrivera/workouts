@@ -53,17 +53,17 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section(header: Text("Application Settings")) {
-                    NavigationLink(destination: WeightInputView(weight: $weight)) {
-                        HStack {
-                            Text("Weight")
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(formattedWeightString(for: weight))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                }
+//                Section(header: Text("Application Settings")) {
+//                    NavigationLink(destination: WeightInputView(weight: $weight)) {
+//                        HStack {
+//                            Text("Weight")
+//                                .foregroundColor(.secondary)
+//                            Spacer()
+//                            Text(formattedWeightString(for: weight))
+//                                .foregroundColor(.primary)
+//                        }
+//                    }
+//                }
                 
                 Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
                     NavigationLink("Import Workout Tutorial", destination: WebContent(title: "Import Tutorial", urlString: URLStrings.tutorial))
