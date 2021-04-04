@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
-        case paywall, feedback
+        case paywall, feedback, faq
         var id: Int { hashValue }
     }
     
@@ -66,14 +66,14 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
-                    NavigationLink("Import Workout Tutorial", destination: Text("Import Tutorial"))
-                    NavigationLink("Frequently Asked Questions", destination: Text("FAQ"))
+                    NavigationLink("Import Workout Tutorial", destination: WebContent(title: "Import Tutorial", urlString: URLStrings.tutorial))
+                    Button("Frequently Asked Questions", action: { activeSheet = .faq })
                     Button("Send Feedback", action: {})
                 }
                 
                 Section(header: Text("Better Workouts")) {
                     Button("Review on the App Store", action: {})
-                    NavigationLink("Privacy Policy", destination: Text("Privacy Policy"))
+                    NavigationLink("Privacy Policy", destination: WebContent(title: "Privacy Policy", urlString: URLStrings.privacy))
                     HStack {
                         Text("Version")
                             .foregroundColor(.secondary)
@@ -88,6 +88,8 @@ struct SettingsView: View {
                 switch sheet {
                 case .paywall:
                     UpgradeView()
+                case .faq:
+                    SafariView(urlString: URLStrings.faq)
                 default:
                     EmptyView()
                 }

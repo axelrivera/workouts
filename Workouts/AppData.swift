@@ -24,6 +24,12 @@ struct Constants {
     static let cornerRadius: CGFloat = 12.0
 }
 
+struct URLStrings {
+    static let faq = "https://mobile.betterworkouts.app"
+    static let tutorial = "https://mobile.betterworkouts.app/tutorial/"
+    static let privacy = "https://mobile.betterworkouts.app/privacy/"
+}
+
 extension Notification.Name {
     static let didRefreshWorkouts = Notification.Name("arn_did_refresh_workouts")
 }

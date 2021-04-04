@@ -94,6 +94,12 @@
 		1645B94925B3669E00B04478 /* TimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94825B3669E00B04478 /* TimePicker.swift */; };
 		165D646E2617AF170015744C /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D646D2617AF170015744C /* UpgradeView.swift */; };
 		165D646F2617AF170015744C /* UpgradeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D646D2617AF170015744C /* UpgradeView.swift */; };
+		165D647A261956630015744C /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D6479261956620015744C /* WebView.swift */; };
+		165D647B261956630015744C /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D6479261956620015744C /* WebView.swift */; };
+		165D6480261957310015744C /* WebContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D647F261957310015744C /* WebContent.swift */; };
+		165D6481261957310015744C /* WebContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D647F261957310015744C /* WebContent.swift */; };
+		165D648626195D140015744C /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D648526195D140015744C /* SafariView.swift */; };
+		165D648726195D140015744C /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D648526195D140015744C /* SafariView.swift */; };
 		165F154125C82B9600A2CE59 /* ImportRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154025C82B9600A2CE59 /* ImportRow.swift */; };
 		165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154425C853E900A2CE59 /* ImportOperation.swift */; };
 		16682B6125CF15F300FC9317 /* WorkoutEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */; };
@@ -254,6 +260,9 @@
 		1645B94525B3612700B04478 /* RowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowItem.swift; sourceTree = "<group>"; };
 		1645B94825B3669E00B04478 /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
 		165D646D2617AF170015744C /* UpgradeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradeView.swift; sourceTree = "<group>"; };
+		165D6479261956620015744C /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		165D647F261957310015744C /* WebContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebContent.swift; sourceTree = "<group>"; };
+		165D648526195D140015744C /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		165F154025C82B9600A2CE59 /* ImportRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRow.swift; sourceTree = "<group>"; };
 		165F154425C853E900A2CE59 /* ImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOperation.swift; sourceTree = "<group>"; };
 		16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEmptyView.swift; sourceTree = "<group>"; };
@@ -536,6 +545,9 @@
 				165F154025C82B9600A2CE59 /* ImportRow.swift */,
 				16682B6425CF3E1900FC9317 /* RoundButton.swift */,
 				16FB84D625F80C1E00CF22ED /* LineChart.swift */,
+				165D6479261956620015744C /* WebView.swift */,
+				165D647F261957310015744C /* WebContent.swift */,
+				165D648526195D140015744C /* SafariView.swift */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -804,6 +816,7 @@
 				167D2E762605466400A4A299 /* HeartRateStatsOperation.swift in Sources */,
 				160BB07525DD61700059E493 /* AppSettings.swift in Sources */,
 				160BB0D625DDFA1E0059E493 /* HKStatisticsQuery+Publisher.swift in Sources */,
+				165D6481261957310015744C /* WebContent.swift in Sources */,
 				160BB07625DD61700059E493 /* WorkoutsView.swift in Sources */,
 				160BB07725DD61700059E493 /* TimePicker.swift in Sources */,
 				160BB07825DD61700059E493 /* MKCoordinateRegion+Additions.swift in Sources */,
@@ -812,6 +825,7 @@
 				16FB84F625F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				160BB07A25DD61700059E493 /* WriteDeniedView.swift in Sources */,
 				16A17D0126039B9700273321 /* Quantity.swift in Sources */,
+				165D647B261956630015744C /* WebView.swift in Sources */,
 				160BB07B25DD61700059E493 /* WorkoutsApp.swift in Sources */,
 				160BB07C25DD61700059E493 /* Sport.swift in Sources */,
 				160BB07D25DD61700059E493 /* Color+Additions.swift in Sources */,
@@ -851,6 +865,7 @@
 				160BB09325DD61700059E493 /* Locale+Additions.swift in Sources */,
 				160BB09425DD61700059E493 /* RowItem.swift in Sources */,
 				167D2E912605501E00A4A299 /* PaceOperation.swift in Sources */,
+				165D648726195D140015744C /* SafariView.swift in Sources */,
 				160BB09525DD61700059E493 /* StatsView.swift in Sources */,
 				160BB09625DD61700059E493 /* EnergyUtils.swift in Sources */,
 				167D2E8226054E7400A4A299 /* CyclingCadenceOperation.swift in Sources */,
@@ -892,6 +907,7 @@
 				167D2E752605466400A4A299 /* HeartRateStatsOperation.swift in Sources */,
 				16E8321D25D2096100382545 /* AppSettings.swift in Sources */,
 				160BB0D525DDFA1E0059E493 /* HKStatisticsQuery+Publisher.swift in Sources */,
+				165D6480261957310015744C /* WebContent.swift in Sources */,
 				1645B92C25B350BB00B04478 /* WorkoutsView.swift in Sources */,
 				1645B94925B3669E00B04478 /* TimePicker.swift in Sources */,
 				16A065EC25C3715300019096 /* MKCoordinateRegion+Additions.swift in Sources */,
@@ -900,6 +916,7 @@
 				16FB84F525F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16AB3DAD25D097480082A610 /* WriteDeniedView.swift in Sources */,
 				16A17D0026039B9700273321 /* Quantity.swift in Sources */,
+				165D647A261956630015744C /* WebView.swift in Sources */,
 				161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */,
 				16E8323925D4B06200382545 /* Sport.swift in Sources */,
 				1645B92625B350BB00B04478 /* Color+Additions.swift in Sources */,
@@ -939,6 +956,7 @@
 				16E8322925D20B4500382545 /* Locale+Additions.swift in Sources */,
 				1645B94625B3612700B04478 /* RowItem.swift in Sources */,
 				167D2E902605501E00A4A299 /* PaceOperation.swift in Sources */,
+				165D648626195D140015744C /* SafariView.swift in Sources */,
 				160BB05325DC2C2C0059E493 /* StatsView.swift in Sources */,
 				16E8323525D4AC1D00382545 /* EnergyUtils.swift in Sources */,
 				167D2E8126054E7400A4A299 /* CyclingCadenceOperation.swift in Sources */,
