@@ -237,7 +237,7 @@
 		160BB0A325DD61700059E493 /* DevInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = DevInfo.plist; sourceTree = "<group>"; };
 		160BB0CE25DDF1EE0059E493 /* StatsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsProvider.swift; sourceTree = "<group>"; };
 		160BB0D425DDFA1E0059E493 /* HKStatisticsQuery+Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HKStatisticsQuery+Publisher.swift"; sourceTree = "<group>"; };
-		161FDB6225B34D4B00929433 /* Workouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Workouts.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		161FDB6225B34D4B00929433 /* Better Workouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Better Workouts.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		161FDB6525B34D4B00929433 /* WorkoutsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsApp.swift; sourceTree = "<group>"; };
 		161FDB6925B34D4E00929433 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		161FDB6C25B34D4E00929433 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -404,7 +404,7 @@
 		161FDB6325B34D4B00929433 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				161FDB6225B34D4B00929433 /* Workouts.app */,
+				161FDB6225B34D4B00929433 /* Better Workouts.app */,
 				16E759E725BB9B60007E6FE6 /* WorkoutsTests.xctest */,
 				160BB0A225DD61700059E493 /* Workouts Dev.app */,
 			);
@@ -697,7 +697,7 @@
 				167D2EE126110D7300A4A299 /* Purchases */,
 			);
 			productName = Workouts;
-			productReference = 161FDB6225B34D4B00929433 /* Workouts.app */;
+			productReference = 161FDB6225B34D4B00929433 /* Better Workouts.app */;
 			productType = "com.apple.product-type.application";
 		};
 		16E759E625BB9B60007E6FE6 /* WorkoutsTests */ = {
@@ -1216,7 +1216,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD -D PRODUCTION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Better Workouts";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1244,7 +1244,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Better Workouts";
 				PROVISIONING_PROFILE_SPECIFIER = "me.axelrivera.Workouts Release";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
