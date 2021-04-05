@@ -20,6 +20,8 @@ struct WorkoutDataStore {
     
     static let healthStore = HealthData.healthStore
     
+    static let availableActivityTypes: [HKWorkoutActivityType] = [.cycling, .running, .walking]
+    
     static func dataError(_ error: DataError, system: Error?) -> DataError {
         if let systemError = system {
             return .system(systemError)
@@ -53,6 +55,10 @@ struct WorkoutDataStore {
         }
         healthStore.execute(query)
         
+    }
+    
+    static func defaultActivitiesPredicate() -> NSPredicate {
+        predicateForActivities(availableActivityTypes)
     }
     
     static func predicateForActivities(_ activities: [HKWorkoutActivityType]) -> NSPredicate {

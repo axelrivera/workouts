@@ -99,10 +99,10 @@ class WorkoutManager: ObservableObject {
             validateWorkoutStatusForReading()
             return
         }
-                
+                        
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
-            predicate: nil,
+            predicate: WorkoutDataStore.defaultActivitiesPredicate(),
             anchor: lastWorkoutAnchor,
             limit: HKObjectQueryNoLimit) { (query, samples, deleted, anchor, error) in
             self.lastWorkoutAnchor = anchor
