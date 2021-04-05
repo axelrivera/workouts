@@ -28,6 +28,11 @@ struct URLStrings {
     static let faq = "https://mobile.betterworkouts.app"
     static let tutorial = "https://mobile.betterworkouts.app/tutorial/"
     static let privacy = "https://mobile.betterworkouts.app/privacy/"
+    static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"
+}
+
+struct Emails {
+    static let support = "feedback@betterworkouts.app"
 }
 
 extension Notification.Name {

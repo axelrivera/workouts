@@ -102,6 +102,8 @@
 		165D648726195D140015744C /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D648526195D140015744C /* SafariView.swift */; };
 		165D6492261962390015744C /* SystemUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D6491261962390015744C /* SystemUtils.swift */; };
 		165D6493261962390015744C /* SystemUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D6491261962390015744C /* SystemUtils.swift */; };
+		165D649B261B51D20015744C /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D649A261B51D20015744C /* MailView.swift */; };
+		165D649C261B51D20015744C /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D649A261B51D20015744C /* MailView.swift */; };
 		165F154125C82B9600A2CE59 /* ImportRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154025C82B9600A2CE59 /* ImportRow.swift */; };
 		165F154525C853E900A2CE59 /* ImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165F154425C853E900A2CE59 /* ImportOperation.swift */; };
 		16682B6125CF15F300FC9317 /* WorkoutEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */; };
@@ -266,6 +268,7 @@
 		165D647F261957310015744C /* WebContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebContent.swift; sourceTree = "<group>"; };
 		165D648526195D140015744C /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		165D6491261962390015744C /* SystemUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemUtils.swift; sourceTree = "<group>"; };
+		165D649A261B51D20015744C /* MailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailView.swift; sourceTree = "<group>"; };
 		165F154025C82B9600A2CE59 /* ImportRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRow.swift; sourceTree = "<group>"; };
 		165F154425C853E900A2CE59 /* ImportOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportOperation.swift; sourceTree = "<group>"; };
 		16682B6025CF15F300FC9317 /* WorkoutEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutEmptyView.swift; sourceTree = "<group>"; };
@@ -552,6 +555,7 @@
 				165D6479261956620015744C /* WebView.swift */,
 				165D647F261957310015744C /* WebContent.swift */,
 				165D648526195D140015744C /* SafariView.swift */,
+				165D649A261B51D20015744C /* MailView.swift */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -856,6 +860,7 @@
 				160BB08925DD61700059E493 /* WorkoutImport+Record.swift in Sources */,
 				160BB08A25DD61700059E493 /* WorkoutImport+Value.swift in Sources */,
 				160BB08B25DD61700059E493 /* HealthData.swift in Sources */,
+				165D649C261B51D20015744C /* MailView.swift in Sources */,
 				160BB08C25DD61700059E493 /* DetailMap.swift in Sources */,
 				160BB08D25DD61700059E493 /* FormatterUtils.swift in Sources */,
 				160BB0D025DDF1EE0059E493 /* StatsProvider.swift in Sources */,
@@ -948,6 +953,7 @@
 				16A065F825C48CB300019096 /* WorkoutImport+Record.swift in Sources */,
 				16A0660425C48D7000019096 /* WorkoutImport+Value.swift in Sources */,
 				1645B92925B350BB00B04478 /* HealthData.swift in Sources */,
+				165D649B261B51D20015744C /* MailView.swift in Sources */,
 				1697607B25CB7BCC00CAF544 /* DetailMap.swift in Sources */,
 				16ACF73525C8D61000CAFDBC /* FormatterUtils.swift in Sources */,
 				160BB0CF25DDF1EE0059E493 /* StatsProvider.swift in Sources */,

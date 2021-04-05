@@ -13,10 +13,18 @@ struct SettingsView: View {
         var id: Int { hashValue }
     }
     
+    enum ActiveAlert: Identifiable {
+        case emailError
+        var id: Int { hashValue }
+    }
+    
+    @Environment(\.openURL) var openURL
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @State private var weight: Double = AppSettings.weight
+    
     @State private var activeSheet: ActiveSheet?
+    @State private var activeAlert: ActiveAlert?
     
     var body: some View {
         NavigationView {
@@ -68,11 +76,11 @@ struct SettingsView: View {
                 Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
                     NavigationLink("Import Workout Tutorial", destination: WebContent(title: "Import Tutorial", urlString: URLStrings.tutorial))
                     Button("Frequently Asked Questions", action: { activeSheet = .faq })
-                    Button("Send Feedback", action: {})
+                    Button("Send Feedback", action: feedbackAction)
                 }
                 
                 Section(header: Text("Better Workouts")) {
-                    Button("Review on the App Store", action: {})
+                    Button("Review on the App Store", action: reviewAction)
                     NavigationLink("Privacy Policy", destination: WebContent(title: "Privacy Policy", urlString: URLStrings.privacy))
                     HStack {
                         Text("Version")
@@ -90,12 +98,56 @@ struct SettingsView: View {
                     UpgradeView()
                 case .faq:
                     SafariView(urlString: URLStrings.faq)
-                default:
-                    EmptyView()
+                case .feedback:
+                    MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .emailError:
+                    let message = String(format: "Unable to send email from this device. If you need support please send us an email to %@", Emails.support)
+                    return Alert(
+                        title:  Text("Email Error"),
+                        message: Text(message),
+                        dismissButton: .default(Text("Ok"))
+                    )
                 }
             }
         }
     }
+}
+
+extension SettingsView {
+    
+    func feedbackAction() {
+        guard MailView.canSendEmail else {
+            activeAlert = .emailError
+            return
+        }
+        
+        activeSheet = .feedback
+    }
+    
+    func feedbackBody() -> String {
+        let device = UIDevice.current
+        let (version, build) = systemVersionAndBuild()
+        let systemName = device.systemName
+        let systemVersion = device.systemVersion
+        let model = device.localizedModel
+
+        let content = """
+        \n\n\n\n
+        Better Workouts Version %@ (%@) - %@ %@ %@
+        """
+
+        return String(format: content, version, build, model, systemName, systemVersion)
+    }
+    
+    func reviewAction() {
+        openURL(URL(string: URLStrings.iTunesReview)!)
+    }
+    
 }
 
 struct SettingsView_Previews: PreviewProvider {
