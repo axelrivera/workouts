@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ImportView: View {
     enum ActiveSheet: Identifiable {
-        case document
+        case document, tutorial
         var id: Int { hashValue }
     }
     
@@ -54,7 +54,11 @@ struct ImportView: View {
                     Color.systemBackground
                         .ignoresSafeArea()
                         .zIndex(2.0)
-                    ImportEmptyView(importState: importManager.state, addAction: { activeSheet = .document })
+                    ImportEmptyView(
+                        importState: importManager.state,
+                        addAction: { activeSheet = .document },
+                        reviewAction: { activeSheet = .tutorial }
+                    )
                         .zIndex(3.0)
                 }
                 
@@ -77,6 +81,8 @@ struct ImportView: View {
                             Log.debug("finish processing documents")
                         }
                     }
+                case .tutorial:
+                    SafariView(urlString: URLStrings.tutorial)
                 }
             }
             .alert(item: $activeAlert) { item in

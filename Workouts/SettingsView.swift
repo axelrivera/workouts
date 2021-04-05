@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
-        case paywall, feedback, faq
+        case paywall, feedback, faq, tutorial
         var id: Int { hashValue }
     }
     
@@ -74,7 +74,7 @@ struct SettingsView: View {
 //                }
                 
                 Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
-                    NavigationLink("Import Workout Tutorial", destination: WebContent(title: "Import Tutorial", urlString: URLStrings.tutorial))
+                    Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
                     Button("Frequently Asked Questions", action: { activeSheet = .faq })
                     Button("Send Feedback", action: feedbackAction)
                 }
@@ -96,6 +96,8 @@ struct SettingsView: View {
                 switch sheet {
                 case .paywall:
                     UpgradeView()
+                case .tutorial:
+                    SafariView(urlString: URLStrings.tutorial)
                 case .faq:
                     SafariView(urlString: URLStrings.faq)
                 case .feedback:

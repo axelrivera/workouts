@@ -9,24 +9,62 @@ import SwiftUI
 
 struct NoFilesView: View {
     var addAction = {}
+    var reviewAction = {}
     
     var body: some View {
-        VStack(alignment: .center, spacing: 20.0) {
-            Image(systemName: "icloud.and.arrow.down")
+        VStack(alignment: .center, spacing: 30.0) {
+            Spacer()
+            
+            Image(systemName: "archivebox")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 100, height: 100, alignment: .center)
+                .foregroundColor(.secondary)
             
-            Button(action: addAction, label: {
-                Text("Add Workout Files")
-            })
-            .foregroundColor(.accentColor)
-            
-            Text("Tap on \"Add Workout Files\" to import one or more workouts from iCloud. FIT files only.")
+            Text("Add Workout Files")
+                .font(.largeTitle)
                 .multilineTextAlignment(.center)
-                .padding([.leading, .trailing])
+                .foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 15.0) {
+                HStack(spacing: 10.0) {
+                    Image(systemName: "1.circle")
+                        .font(.title)
+                        .foregroundColor(.green)
+                    Group {
+                        Text("Save your FIT file to the ") + Text("Files App").bold() + Text(" on this device.")
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                HStack(spacing: 10.0) {
+                    Image(systemName: "2.circle")
+                        .font(.title)
+                        .foregroundColor(.green)
+                    Group {
+                        Text("Tap on ") + Text("Add FIT Files").bold() + Text(" button and select one or more files.")
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                
+                HStack(spacing: 10.0) {
+                    Image(systemName: "3.circle")
+                        .font(.title)
+                        .foregroundColor(.green)
+                    Group {
+                        Text("Review the workout and tap on the ") + Text("Import").bold() + Text(" button for each file.")
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .center, spacing: 20.0) {
+                RoundButton(text: "Add FIT Files", action: addAction)
+                Button("Review Tutorial", action: reviewAction)
+            }
         }
-        .foregroundColor(.secondary)
+        .padding()
     }
 }
 
