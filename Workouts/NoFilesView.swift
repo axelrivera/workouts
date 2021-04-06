@@ -32,7 +32,9 @@ struct NoFilesView: View {
                         .font(.title)
                         .foregroundColor(.green)
                     Group {
-                        Text("Save your FIT file to the ") + Text("Files App").bold() + Text(" on this device.")
+                        Text("Save your FIT file to the ") +
+                        Text("Files App").foregroundColor(.yellow).bold() +
+                        Text(" on this device.")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }
@@ -41,7 +43,9 @@ struct NoFilesView: View {
                         .font(.title)
                         .foregroundColor(.green)
                     Group {
-                        Text("Tap on ") + Text("Add FIT Files").bold() + Text(" button and select one or more files.")
+                        Text("Tap on ") +
+                        Text("Add FIT Files").foregroundColor(.yellow).bold() +
+                        Text(" button and select one or more files.")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }
@@ -51,7 +55,9 @@ struct NoFilesView: View {
                         .font(.title)
                         .foregroundColor(.green)
                     Group {
-                        Text("Review the workout and tap on the ") + Text("Import").bold() + Text(" button for each file.")
+                        Text("Review the workout and tap on the ") +
+                        Text("Import").foregroundColor(.yellow).bold() +
+                        Text(" button for each file.")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }
@@ -71,5 +77,7 @@ struct NoFilesView: View {
 struct NoFilesView_Previews: PreviewProvider {
     static var previews: some View {
         NoFilesView()
+            .background(Color.systemBackground)
+            .colorScheme(.dark)
     }
 }
