@@ -67,8 +67,9 @@ class RouteOperation: SyncOperation {
         if sortedDates.count > 2 {
             sortedDates = sortedDates.dropFirst().dropLast()
         }
-        let startDate = sortedDates[0]
         
+        guard let startDate = sortedDates.first else { return }
+                
         for date in sortedDates {
             let sampleDuration = date.timeIntervalSince(startDate)
             
