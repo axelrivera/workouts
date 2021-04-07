@@ -11,7 +11,7 @@ import SwiftUI
 // Can be commented if needed
 
 #if PRODUCTION_DEBUG
-//#error("preventing debug version from overriding production release")
+#error("preventing debug version from overriding production release")
 #endif
 
 @main

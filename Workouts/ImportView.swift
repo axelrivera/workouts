@@ -47,7 +47,7 @@ struct ImportView: View {
                         }
                     }
                 }
-                .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
+                .onAppear { requestWritingAuthorizationIfNeeded() }
                 .zIndex(1.0)
                 
                 if importManager.state.showEmptyView {
@@ -56,7 +56,7 @@ struct ImportView: View {
                         .zIndex(2.0)
                     ImportEmptyView(
                         importState: importManager.state,
-                        addAction: { activeSheet = .document },
+                        addAction: addAction,
                         reviewAction: { activeSheet = .tutorial }
                     )
                         .zIndex(3.0)
@@ -102,10 +102,27 @@ struct ImportView: View {
 private extension ImportView {
     
     func addButton() -> some View {
-        Button(action: { activeSheet = .document }) {
+        Button(action: addAction) {
             Image(systemName: "plus")
         }
         .disabled(withAnimation { importManager.isAddImportDisabled })
+    }
+    
+    func addAction() {
+        importManager.requestWritingAuthorization { success in
+            DispatchQueue.main.async {
+                if success {
+                    activeSheet = .document
+                } else {
+                    importManager.state = .notAuthorized
+                }
+            }
+        }
+    }
+    
+    func requestWritingAuthorizationIfNeeded() {
+        guard purchaseManager.isActive else { return }
+        importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") }
     }
     
     func dismissButton() -> some View {

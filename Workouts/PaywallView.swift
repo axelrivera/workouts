@@ -31,17 +31,12 @@ struct PaywallView: View {
                 .ignoresSafeArea()
             
             VStack(alignment: .center, spacing: 10.0) {
+                Spacer()
+                
                 VStack(alignment: .center, spacing: 10.0) {
-                    Image(systemName: "star.fill")
-                        .resizable()
-                        .frame(minWidth: 30, idealWidth: 100, maxWidth: 150, minHeight: 30, idealHeight: 100, maxHeight: 150, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                        .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.orange)
-                        .padding(.bottom, 10.0)
-                    
                     Text("Better Workouts Pro")
                         .font(.title)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.orange)
                                         
                     Text("Upgrade to Better Workouts Pro to support further development and gain access to some great extra features:")
                         .font(.callout)
@@ -77,7 +72,7 @@ struct PaywallView: View {
                                             
                 Spacer()
                 
-                VStack(spacing: 15.0) {
+                VStack(spacing: 10.0) {
                     Text("All features for a one time payment.")
                         .font(.headline)
                         .foregroundColor(.orange)
@@ -107,13 +102,9 @@ struct PaywallView: View {
                                     .progressViewStyle(DefaultProgressViewStyle())
                             } else {
                                 Text("Restore Purchase")
-                                    .foregroundColor(.primary)
                             }
                         }
-                        .frame(minWidth: 0, maxWidth: .infinity)
-                        .padding()
-                        .background(Color.secondarySystemBackground)
-                        .cornerRadius(Constants.cornerRadius)
+                        .padding([.top, .bottom], 10)
                     }.disabled(isProcessing)
                 }
                 .padding([.leading, .trailing])
@@ -159,7 +150,6 @@ extension PaywallView {
 struct PaywallView_Previews: PreviewProvider {
     static let purchaseManager: IAPManager = {
        let manager = IAPManager()
-        manager.isActive = false
         return manager
     }()
     
