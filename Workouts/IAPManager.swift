@@ -85,18 +85,40 @@ extension IAPManager {
         offering?.lifetime
     }
     
+    var packagePrice: Double {
+        #if PRODUCTION_BUILD
+        return package?.product.price.doubleValue ?? 0
+        #elseif DEVELOPMENT_BUILD
+        return 0
+        #else
+        return 0
+        #endif
+    }
+    
     var packagePriceString: String {
         #if PRODUCTION_BUILD
         return package?.localizedPriceString ?? "n/a"
         #elseif DEVELOPMENT_BUILD
-        return "$4.99"
+        return "$0.99"
         #else
         return "FAIL"
         #endif
     }
     
+    var packageSupportString: String {
+        if packagePrice == 0 {
+            return "Free for a limited time!"
+        } else {
+            return "All features for a one time payment."
+        }
+    }
+    
     var packageBuyString: String {
-        String(format: "Upgrade for %@", packagePriceString)
+        if packagePrice == 0 {
+            return "Upgrade FREE"
+        } else {
+            return String(format: "Upgrade for %@", packagePriceString)
+        }
     }
     
     var isCurrentOfferAvailable: Bool {

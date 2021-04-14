@@ -10,7 +10,6 @@ import Charts
 
 struct DetailAnalysisView: View {
     @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var purchaseManager: IAPManager
     
     @ObservedObject var workout: Workout
     @ObservedObject var detailManager: DetailManager
@@ -52,110 +51,101 @@ struct DetailAnalysisView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                List {
-                    Section {
+            List {
+                Section {
+                    rowForText(
+                        "Total Time",
+                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
+                        detailColor: .time
+                    )
+                    
+                    if detailManager.movingTime > 0 {
                         rowForText(
-                            "Total Time",
-                            detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
+                            "Moving Time",
+                            detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
                             detailColor: .time
                         )
+                    }
+                }
+                
+                if isSpeedPresent {
+                    Section {
+                        chart(
+                            for: "Speed",
+                            supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
+                            supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
+                            values: detailManager.speedValues, avgValue: localizedAvgSpeed,
+                            accentColor: .speed
+                        )
                         
-                        if detailManager.movingTime > 0 {
+                        if detailManager.avgMovingSpeed > 0 {
                             rowForText(
-                                "Moving Time",
-                                detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
-                                detailColor: .time
+                                "Avg Moving Speed",
+                                detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
+                                detailColor: .speed
                             )
-                        }
-                    }
-                    
-                    if isSpeedPresent {
-                        Section {
-                            chart(
-                                for: "Speed",
-                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
-                                supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
-                                values: detailManager.speedValues, avgValue: localizedAvgSpeed,
-                                accentColor: .speed
-                            )
-                            
-                            if detailManager.avgMovingSpeed > 0 {
-                                rowForText(
-                                    "Avg Moving Speed",
-                                    detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
-                                    detailColor: .speed
-                                )
-                            }
-                        }
-                    }
-                    
-                    if workout.isPacePresent {
-                        Section {
-                            chart(
-                                for: "Pace",
-                                supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
-                                supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
-                                values: detailManager.paceValues, avgValue: workout.avgPace,
-                                accentColor: .cadence,
-                                yAxisFormatter: PaceValueFormatter()
-                            )
-                        }
-                    }
-                    
-                    if isHeartRatePresent {
-                        Section {
-                            chart(
-                                for: "Heart Rate",
-                                supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
-                                supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
-                                values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
-                                accentColor: .calories
-                            )
-                        }
-                    }
-
-                    if workout.isCadencePresent {
-                        Section {
-                            chart(
-                                for: "Cadence",
-                                supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
-                                supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
-                                values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
-                                accentColor: .cadence
-                            )
-                        }
-                    }
-
-                    if isElevationPresent {
-                        Section {
-                            chart(
-                                for: "Elevation",
-                                supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
-                                supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
-                                values: detailManager.altitudeValues, avgValue: nil,
-                                accentColor: .elevation
-                            )
-                            
-                            if let elevation = workout.elevationAscended {
-                                rowForText("Elevation Gain", detail: formattedElevationString(for: elevation), detailColor: .elevation)
-                            }
-                            
-                            if let elevation = workout.elevationDescended {
-                                rowForText("Elevation Loss", detail: formattedElevationString(for: elevation), detailColor: .elevation)
-                            }
                         }
                     }
                 }
-                .listStyle(GroupedListStyle())
-                .zIndex(1.0)
                 
-                if !purchaseManager.isActive {
-                    PaywallView(purchaseManager: purchaseManager)
-                        .zIndex(2.0)
-                        .transition(.opacity)
+                if workout.isPacePresent {
+                    Section {
+                        chart(
+                            for: "Pace",
+                            supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+                            supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+                            values: detailManager.paceValues, avgValue: workout.avgPace,
+                            accentColor: .cadence,
+                            yAxisFormatter: PaceValueFormatter()
+                        )
+                    }
+                }
+                
+                if isHeartRatePresent {
+                    Section {
+                        chart(
+                            for: "Heart Rate",
+                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
+                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
+                            values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
+                            accentColor: .calories
+                        )
+                    }
+                }
+
+                if workout.isCadencePresent {
+                    Section {
+                        chart(
+                            for: "Cadence",
+                            supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
+                            supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
+                            values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
+                            accentColor: .cadence
+                        )
+                    }
+                }
+
+                if isElevationPresent {
+                    Section {
+                        chart(
+                            for: "Elevation",
+                            supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
+                            supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
+                            values: detailManager.altitudeValues, avgValue: nil,
+                            accentColor: .elevation
+                        )
+                        
+                        if let elevation = workout.elevationAscended {
+                            rowForText("Elevation Gain", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+                        }
+                        
+                        if let elevation = workout.elevationDescended {
+                            rowForText("Elevation Loss", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+                        }
+                    }
                 }
             }
+            .listStyle(GroupedListStyle())
             .navigationTitle(workoutTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -243,16 +233,9 @@ struct DetailAnalysisView_Previews: PreviewProvider {
         return manager
     }()
     
-    static var purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = false
-        return manager
-    }()
-    
     static var previews: some View {
         DetailAnalysisView(workout: workout, detailManager: detailManager)
             .colorScheme(.dark)
-            .environmentObject(purchaseManager)
         
     }
 }

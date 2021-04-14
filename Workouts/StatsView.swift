@@ -14,8 +14,8 @@ struct StatsView: View {
     let availableSports: [Sport] = [.cycling, .running]
     
     var body: some View {
-        NavigationView {
-            ZStack {
+        if purchaseManager.isActive {
+            NavigationView {
                 List {
                     VStack(alignment: .leading, spacing: 10.0) {
                         HStack(alignment: .lastTextBaseline) {
@@ -70,29 +70,27 @@ struct StatsView: View {
                 }
                 .listStyle(InsetGroupedListStyle())
                 .zIndex(1.0)
-                
-                if !purchaseManager.isActive {
-                    PaywallView(purchaseManager: purchaseManager)
-                        .zIndex(2.0)
-                        .transition(.opacity)
-                }
-            }
-            .navigationBarTitle("Statistics")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        ForEach(availableSports) { sport in
-                            Button(action: {
-                                statsManager.sport = sport
-                            }, label: {
-                                Text(sport.title)
-                            })
+                .navigationBarTitle("Statistics")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            ForEach(availableSports) { sport in
+                                Button(action: {
+                                    statsManager.sport = sport
+                                }, label: {
+                                    Text(sport.title)
+                                })
+                            }
+                        } label: {
+                            Text(statsManager.sport.title)
                         }
-                    } label: {
-                        Text(statsManager.sport.title)
-                    }.disabled(!purchaseManager.isActive)
+                    }
                 }
             }
+        } else {
+            PaywallView(purchaseManager: purchaseManager)
+                .zIndex(2.0)
+                .transition(.opacity)
         }
     }
 }
@@ -169,6 +167,7 @@ struct StatsRow: View {
 struct StatsView_Previews: PreviewProvider {
     static var purchaseManager: IAPManager = {
         let manager = IAPManager()
+        manager.isActive = true
         return manager
     }()
     

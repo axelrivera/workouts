@@ -34,9 +34,9 @@ struct SettingsView: View {
                         HStack(spacing: 10.0) {
                             Image(systemName: "heart.fill")
                                 .foregroundColor(.red)
-                                .font(.title)
+                                .font(.title2)
                             VStack(alignment: .leading, spacing: 2.0) {
-                                Text("Better Workout Pro")
+                                Text("Better Workouts Pro")
                                 Text("Thank your for your support!")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
@@ -54,7 +54,7 @@ struct SettingsView: View {
                             HStack {
                                 Image(systemName: "star.fill")
                                     .foregroundColor(.orange)
-                                Text("Unlock all Better Workout Features")
+                                Text("Unlock all Better Workouts Features")
                                     .foregroundColor(.primary)
                             }
                         })

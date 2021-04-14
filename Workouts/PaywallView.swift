@@ -45,7 +45,10 @@ struct PaywallView: View {
                 
                 VStack(spacing: 15.0) {
                     HStack(alignment: .center, spacing: 15.0) {
-                        Image(systemName: "checkmark")
+                        Image(systemName: "square.and.arrow.down")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 28, alignment: .center)
                             .foregroundColor(.green)
                         Text("Manually import FIT files recorded from your cycling computer or smartwatch.")
                             .fixedSize(horizontal: false, vertical: true)
@@ -53,27 +56,34 @@ struct PaywallView: View {
                     }
                     
                     HStack(alignment: .center, spacing: 15.0) {
-                        Image(systemName: "checkmark")
+                        Image(systemName: "chart.bar")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 28, alignment: .center)
                             .foregroundColor(.green)
-                        Text("Visualize your workouts with detailed analysis and charts.")
+                        Text("Get a summary of your cycling and running stats for the current week, month and year.")
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     
                     HStack(alignment: .center, spacing: 15.0) {
-                        Image(systemName: "checkmark")
+                        Image(systemName: "star.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 28, alignment: .center)
                             .foregroundColor(.green)
-                        Text("Get a summary of your stats for the current week, month and year.")
+                        Text("Additional activities and features coming soon!")
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .padding()
+                .padding([.leading, .trailing], 10.0)
+                .padding([.top, .bottom])
                                             
                 Spacer()
                 
                 VStack(spacing: 10.0) {
-                    Text("All features for a one time payment.")
+                    Text(purchaseManager.packageSupportString)
                         .font(.headline)
                         .foregroundColor(.orange)
                     
@@ -92,7 +102,8 @@ struct PaywallView: View {
                         .padding()
                         .background(Color.accentColor)
                         .cornerRadius(Constants.cornerRadius)
-                    }.disabled(isProcessing)
+                    }
+                    .disabled(isProcessing)
                     
                     
                     Button(action: restore) {
@@ -149,7 +160,8 @@ extension PaywallView {
 
 struct PaywallView_Previews: PreviewProvider {
     static let purchaseManager: IAPManager = {
-       let manager = IAPManager()
+        let manager = IAPManager()
+        manager.isActive = false
         return manager
     }()
     
