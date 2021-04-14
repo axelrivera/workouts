@@ -72,7 +72,7 @@ struct PaywallView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 28, alignment: .center)
                             .foregroundColor(.green)
-                        Text("Additional activities and features coming soon!")
+                        Text("Additional activities and PRO features coming soon!")
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }

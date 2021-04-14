@@ -107,7 +107,7 @@ extension IAPManager {
     
     var packageSupportString: String {
         if packagePrice == 0 {
-            return "Free for a limited time!"
+            return "FREE for a limited time!"
         } else {
             return "All features for a one time payment."
         }
