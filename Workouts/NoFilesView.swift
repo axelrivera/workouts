@@ -67,7 +67,7 @@ struct NoFilesView: View {
             
             VStack(alignment: .center, spacing: 20.0) {
                 RoundButton(text: "Add FIT Files", action: addAction)
-                Button("Review Tutorial", action: reviewAction)
+                //Button("Review Tutorial", action: reviewAction)
             }
         }
         .padding()

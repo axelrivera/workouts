@@ -73,9 +73,9 @@ struct SettingsView: View {
 //                    }
 //                }
                 
-                Section(header: Text("Help Center"), footer: Text("Helpful hints to learn how to make the most out of Better Workouts.")) {
-                    Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
-                    Button("Frequently Asked Questions", action: { activeSheet = .faq })
+                Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
+                    //Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
+                    //Button("Frequently Asked Questions", action: { activeSheet = .faq })
                     Button("Send Feedback", action: feedbackAction)
                 }
                 

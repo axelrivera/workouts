@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct StatsView: View {
+    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var statsManager = StatsManager()
     
     let availableSports: [Sport] = [.cycling, .running]
