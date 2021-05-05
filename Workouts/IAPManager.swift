@@ -12,6 +12,8 @@ final class IAPManager: NSObject, ObservableObject {
     enum Constants {
         static let apiKey = "NYucELjRYAuIEelhphHUNKTcZYaCoRSH"
         static let entitlementId = "pro"
+        static let freePrice = 1.99
+        static let freePriceString = "$1.99"
     }
     
     @Published var purchaserInfo: Purchases.PurchaserInfo? {
@@ -89,7 +91,7 @@ extension IAPManager {
         #if PRODUCTION_BUILD
         return package?.product.price.doubleValue ?? 0
         #elseif DEVELOPMENT_BUILD
-        return 0
+        return Constants.freePrice
         #else
         return 0
         #endif
@@ -99,7 +101,7 @@ extension IAPManager {
         #if PRODUCTION_BUILD
         return package?.localizedPriceString ?? "n/a"
         #elseif DEVELOPMENT_BUILD
-        return "$0.99"
+        return Constants.freePriceString
         #else
         return "FAIL"
         #endif

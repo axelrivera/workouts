@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
-        case paywall, feedback, faq, tutorial
+        case paywall, feedback, faq, tutorial, privacy
         var id: Int { hashValue }
     }
     
@@ -81,7 +81,7 @@ struct SettingsView: View {
                 
                 Section(header: Text("Better Workouts")) {
                     Button("Review on the App Store", action: reviewAction)
-                    NavigationLink("Privacy Policy", destination: WebContent(title: "Privacy Policy", urlString: URLStrings.privacy))
+                    Button("Privacy Policy", action: { activeSheet = .privacy })
                     HStack {
                         Text("Version")
                             .foregroundColor(.secondary)
@@ -98,6 +98,8 @@ struct SettingsView: View {
                     UpgradeView()
                 case .tutorial:
                     SafariView(urlString: URLStrings.tutorial)
+                case .privacy:
+                    SafariView(urlString: URLStrings.privacy)
                 case .faq:
                     SafariView(urlString: URLStrings.faq)
                 case .feedback:

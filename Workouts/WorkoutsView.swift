@@ -36,7 +36,7 @@ struct WorkoutsView: View {
                                 }
                                 
                                 HStack {
-                                    Text(workout.source)
+                                    Text(workout.sourceString)
                                         .foregroundColor(.secondary)
                                     Spacer()
                                     Text(formattedRelativeDateString(for: workout.startDate))

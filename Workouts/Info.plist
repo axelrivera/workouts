@@ -42,9 +42,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Review your workout activity.</string>
+	<string>Display your workout activity and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Write new or imported workouts.</string>
+	<string>Save workouts imported from FIT files.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

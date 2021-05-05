@@ -53,18 +53,20 @@ struct DetailAnalysisView: View {
         NavigationView {
             List {
                 Section {
-                    rowForText(
-                        "Total Time",
-                        detail: formattedHoursMinutesDurationString(for: workout.elapsedTime),
-                        detailColor: .time
-                    )
+                    HStack {
+                        Text("Total Time")
+                        Spacer()
+                        Text(formattedHoursMinutesDurationString(for: workout.elapsedTime))
+                            .foregroundColor(.time)
+                    }
                     
                     if detailManager.movingTime > 0 {
-                        rowForText(
-                            "Moving Time",
-                            detail: formattedHoursMinutesDurationString(for: detailManager.movingTime),
-                            detailColor: .time
-                        )
+                        HStack {
+                            Text("Moving Time")
+                            Spacer()
+                            Text(formattedHoursMinutesDurationString(for: detailManager.movingTime))
+                                .foregroundColor(.time)
+                        }
                     }
                 }
                 
@@ -145,7 +147,7 @@ struct DetailAnalysisView: View {
                     }
                 }
             }
-            .listStyle(GroupedListStyle())
+            .listStyle(InsetGroupedListStyle())
             .navigationTitle(workoutTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

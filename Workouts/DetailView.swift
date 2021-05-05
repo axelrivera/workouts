@@ -89,7 +89,7 @@ struct DetailView: View {
                 HStack {
                     Text("Source")
                     Spacer()
-                    Text(workout.source)
+                    Text(workout.sourceString)
                         .foregroundColor(.secondary)
                 }
                 

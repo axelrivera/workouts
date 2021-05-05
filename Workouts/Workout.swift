@@ -64,6 +64,14 @@ class Workout: ObservableObject {
         device = object.device?.name
     }
     
+    var sourceString: String {
+        #if DEVELOPMENT_BUILD
+            return "Workouts"
+        #else
+            return source
+        #endif
+    }
+    
     static var sample: Workout {
         let workout = Workout()
         workout.activityType = .cycling

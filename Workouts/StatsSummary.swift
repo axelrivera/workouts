@@ -16,8 +16,12 @@ struct StatsSummary {
             let date = Date()
             switch self {
             case .week:
+//                let start = Date.dateFor(month: 2, day: 15, year: 2021)
+//                let end = Date.dateFor(month: 2, day: 21, year: 2021)
+//                return (start!, end!)
                 return (date.workoutWeekStart, date.workoutWeekEnd)
             case .month:
+//                return (Date.dateFor(month: 2, day: 1, year: 2021)!, Date.dateFor(month: 2, day: 28, year: 2021)!)
                 return (date.startOfMonth, date.endOfMonth)
             case .year:
                 return (date.startOfYear, date.endOfYear)

@@ -14,17 +14,23 @@ struct OnboardingView: View {
         VStack {
             Spacer()
             
-            VStack(spacing: 10) {
-                Text("Welcome to Workouts")
-                    .font(.largeTitle)
-                    .padding(.bottom, 40.0)
+            VStack(spacing: 0.0) {
+                VStack(spacing: 0.0) {
+                    Text("Welcome to")
+                        .font(.title)
+                    Text("Better Workouts")
+                        .font(.largeTitle)
+                }
+                .padding(.bottom, 50.0)
+                
                 Image(systemName: "heart.fill")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 100, height: 100, alignment: .center)
                     .foregroundColor(.red)
-                Text("Workouts needs your permission to display your workout info from the Apple Health app.")
+                Text("Workouts needs your permission to read your workout data from the Apple Health app.")
                     .multilineTextAlignment(.center)
+                    .padding(.top, 40.0)
             }
             
             Spacer()
