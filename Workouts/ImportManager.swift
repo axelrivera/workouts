@@ -21,7 +21,7 @@ class ImportManager: ObservableObject {
             Self.emptyViewStates.contains(self)
         }
         
-        static let whitelisted: [State] = [.ok, .empty]
+        static let whitelisted: [State] = [.ok]
         static let emptyViewStates: [State] = [.empty, .notAuthorized, notAvailable]
     }
     
@@ -42,33 +42,54 @@ class ImportManager: ObservableObject {
 
 extension ImportManager {
     
-    func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestWritingAuthorization { result in
+    func success(with completionHandler: @escaping (_ success: Bool) -> Void) {
+        // Double check permissions on succeed
+        // sample types must be an empty string for success
+        // if response is nil or an array with values it means the user did not accept some of the permissions
+        
+        if let sampleTypes = try? HealthData.filteredWriteSampleTypes(), sampleTypes.isEmpty {
+            updateState(workouts.isEmpty ? .empty : .ok)
+            completionHandler(true)
+        } else {
+            self.fail(with: HealthData.DataError.permissionDenied, completionHandler: completionHandler)
+        }
+    }
+    
+    func fail(with error: Error, completionHandler: @escaping (_ success: Bool) -> Void) {
+        switch error {
+        case HealthData.DataError.dataNotAvailable:
+            self.updateState(.notAvailable)
+        case HealthData.DataError.permissionDenied:
+            self.updateState(.notAuthorized)
+        default:
+            self.updateState(.notAvailable)
+        }
+        completionHandler(false)
+    }
+    
+    func requestAuthorizationStatus(completionHandler: @escaping (_ success: Bool) -> Void) {
+        HealthData.requestStatus(write: HealthData.writeSampleTypes()) { result in
             switch result {
-            case .success:
-                let validationStatus = HealthData.validateWritingStatus()
-                self.updateState(with: validationStatus)
-                completionHandler(true)
-            case .failure(let error):
-                if case HealthData.DataError.dataNotAvailable = error {
-                    self.updateState(.notAvailable)
+            case .success(let shouldRequest):
+                if shouldRequest {
+                    self.requestWritingAuthorization(completionHandler: completionHandler)
+                    return
                 }
-                completionHandler(false)
+                
+                self.success(with: completionHandler)
+            case .failure(let error):
+                self.fail(with: error, completionHandler: completionHandler)
             }
         }
     }
     
-    func updateState(with status: HKAuthorizationStatus) {
-        DispatchQueue.main.async {
-            switch status {
-            case .sharingAuthorized:
-                withAnimation {
-                    self.state = self.workouts.isEmpty ? .empty : .ok
-                }
-            default:
-                withAnimation {
-                    self.state = .notAuthorized
-                }
+    func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
+        HealthData.requestHealthAuthorization(read: HealthData.readObjectTypes(), write: HealthData.writeSampleTypes()) { result in
+            switch result {
+            case .success:
+                self.success(with: completionHandler)
+            case .failure(let error):
+                self.fail(with: error, completionHandler: completionHandler)
             }
         }
     }
@@ -86,14 +107,6 @@ extension ImportManager {
 // MARK: - Selection Logic
 
 extension ImportManager {
-    func deleteWorkout(at offsets: IndexSet) {
-        DispatchQueue.main.async {
-            self.workouts.remove(atOffsets: offsets)
-            withAnimation {
-                self.state = self.workouts.isEmpty ? .empty : .ok
-            }
-        }
-    }
         
     var isImportDisabled: Bool {
         return newWorkouts.isEmpty || isProcessingImports || !state.isWhitelisted
@@ -136,8 +149,19 @@ extension ImportManager {
         DispatchQueue.global(qos: .userInitiated).async {
             var workouts = [WorkoutImport]()
             for url in urls {
-                guard let fit = FitFile(file: url) else { continue }
-                guard let workout = WorkoutImport(fit: fit) else { continue }
+                var tmpURL: URL?
+                if url.isZipFile {
+                    tmpURL = unzipFitFile(url: url)
+                } else {
+                    tmpURL = url
+                }
+                
+                guard let fileURL = tmpURL,
+                      let workout = WorkoutImport(fileURL: fileURL) else {
+                    workouts.append(WorkoutImport(invalidFilename: url.lastPathComponent))
+                    continue
+                }
+                                
                 workouts.append(workout)
             }
             
@@ -153,29 +177,23 @@ extension ImportManager {
         }
     }
     
-    func importWorkouts(completionHandler: @escaping () -> Void) {
+    func processWorkout(_ workout: WorkoutImport) {
+        guard workout.status == .new else { return }
+        
         isProcessingImports = true
         
-        let newWorkouts = self.newWorkouts
-        for workout in newWorkouts {
-            let operation = ImportOperation(workout: workout)
-            operation.completionBlock = {
-                DispatchQueue.main.async {
-                    self.isProcessingImports = !self.importQueue.operations.isEmpty
-                    guard self.isProcessingImports else {
-                        completionHandler()
-                        return
-                    }
-                }
+        workout.status = .processing
+        let operation = ImportOperation(workout: workout)
+        operation.completionBlock = {
+            DispatchQueue.main.async {
+                self.isProcessingImports = !self.importQueue.operations.isEmpty
             }
-            importQueue.addOperation(operation)
         }
+        importQueue.addOperation(operation)
     }
     
     func loadSampleWorkouts() {
-        DispatchQueue.main.async {
-            self.workouts = Self.sampleWorkouts()
-        }
+        self.workouts = Self.sampleWorkouts()
     }
     
 }
@@ -185,9 +203,12 @@ extension ImportManager {
 extension ImportManager {
     
     static func sampleWorkouts() -> [WorkoutImport] {
-        [
-            workoutWithStatus(.new, sport: .cycling),
-            workoutWithStatus(.new, sport: .cycling, indoor: true),
+        let today = Date()
+        let yesterday = today.dayBefore
+        
+        return [
+            workoutWithStatus(.new, sport: .cycling, startDate: today),
+            workoutWithStatus(.new, sport: .cycling, startDate: yesterday, indoor: true),
             workoutWithStatus(.new, sport: .cycling),
             workoutWithStatus(.notSupported, sport: .running),
             workoutWithStatus(.notSupported, sport: .walking),
@@ -200,11 +221,12 @@ extension ImportManager {
         workoutWithStatus(.new, sport: .cycling, indoor: false)
     }
     
-    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, indoor: Bool = false) -> WorkoutImport {
+    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, startDate: Date? = nil, indoor: Bool = false) -> WorkoutImport {
+        let startDate = startDate ?? Date.dateFor(month: 1, day: 1, year: 2021)!
         let workout = WorkoutImport(status: status, sport: sport)
         workout.indoor = indoor
-        workout.start = .init(valueType: .date, value: Date().timeIntervalSince1970)
-        workout.totalDistance = .init(valueType: .distance, value: 16093.4)
+        workout.start = .init(valueType: .date, value: startDate.timeIntervalSince1970)
+        workout.totalDistance = .init(valueType: .distance, value: 32000.0)
         return workout
     }
     

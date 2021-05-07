@@ -16,3 +16,97 @@ extension Date {
     }
     
 }
+
+extension Date {
+    
+    static func dateFor(month: Int, day: Int, year: Int) -> Date? {
+        var components = DateComponents()
+        components.month = month
+        components.day = day
+        components.year = year
+        
+        return Calendar.current.date(from: components)
+    }
+    
+    var startOfDay: Date {
+        Calendar.current.startOfDay(for: self)
+    }
+    
+    var endOfDay: Date {
+        var components = Calendar.current.dateComponents([.month, .day, .year], from: self)
+        components.hour = 23
+        components.minute = 59
+        components.second = 59
+        
+        return Calendar.current.date(from: components)!
+    }
+    
+    var workoutWeekStart: Date {
+        let calendar = Calendar(identifier: .gregorian)
+        let components = workoutDateComponents(for: calendar)
+        let sunday = calendar.date(from: components)!
+        return calendar.date(byAdding: .day, value: 1, to: sunday)! // Workout weeks start on monday
+    }
+
+    var workoutWeekEnd: Date {
+        let calendar = Calendar(identifier: .gregorian)
+        let components = workoutDateComponents(for: calendar)
+        let sunday = calendar.date(from: components)!
+        let nextSunday = calendar.date(byAdding: .day, value: 7, to: sunday)!
+        return nextSunday.endOfDay
+    }
+    
+    private func workoutDateComponents(for calendar: Calendar) -> DateComponents {
+        let weekDay = calendar.component(.weekday, from: self)
+        var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        if let weekOfyear = components.weekOfYear, weekDay == 1 {
+            components.weekOfYear = weekOfyear - 1 // Start last week if sunday
+        }
+        return components
+    }
+    
+    var startOfMonth: Date {
+        let calendar = Calendar(identifier: .gregorian)
+        let components = calendar.dateComponents([.year, .month], from: self)
+        return  calendar.date(from: components)!
+    }
+    
+    var endOfMonth: Date {
+        var components = DateComponents()
+        components.month = 1
+        components.second = -1
+        return Calendar(identifier: .gregorian).date(byAdding: components, to: startOfMonth)!
+    }
+    
+    var startOfYear: Date {
+        let calendar = Calendar(identifier: .gregorian)
+        let year = calendar.component(.year, from: self)
+        return  calendar.date(from: DateComponents(year: year, month: 1, day: 1))!
+    }
+    
+    var endOfYear: Date {
+        var components = DateComponents()
+        components.year = 1
+        components.second = -1
+        return Calendar(identifier: .gregorian).date(byAdding: components, to: startOfYear)!
+    }
+    
+}
+
+extension Date {
+    static var yesterday: Date { Date().dayBefore }
+    static var tomorrow: Date { Date().dayAfter }
+    
+    var dayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    
+    var dayAfter: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    
+    var noon: Date {
+        return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
+    }
+    
+}

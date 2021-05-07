@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Workouts</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -34,13 +36,15 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>28</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Review your workout activity.</string>
+	<string>Display your workout activity and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Write new or imported workouts.</string>
+	<string>Save workouts imported from FIT files.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -14,12 +14,21 @@ func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
 
+func formattedHoursMinutesDurationString(for duration: Double?) -> String {
+    let seconds = Int(duration ?? 0)
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        return String(format: "%d:%02d:%02d", h, m, s)
+    } else {
+        return String(format: "%02d:%02d", m, s)
+    }
+}
+
 func formattedRelativeDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     if Calendar.current.isDateInToday(date) {
-        return "Today"
-    } else if Calendar.current.isDateInYesterday(date) {
-        return "Yesterday"
+        return DateFormatter.time.string(from: date)
     } else if date.isWithinNumberOfDays(6) {
         return DateFormatter.relative.string(from: date)
     } else {
@@ -27,21 +36,82 @@ func formattedRelativeDateString(for date: Date?) -> String {
     }
 }
 
+func formattedImportRelativeDateString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    
+    let timeStr = DateFormatter.time.string(from: date)
+    let dateStr: String
+    
+    if Calendar.current.isDateInToday(date) {
+        dateStr = "Today"
+    } else if date.isWithinNumberOfDays(6) {
+        dateStr = DateFormatter.relative.string(from: date)
+    } else {
+        dateStr = DateFormatter.medium.string(from: date)
+    }
+    
+    return String(format: "%@ @ %@", dateStr, timeStr)
+}
+
 func formattedTimeString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     return DateFormatter.time.string(from: date)
 }
 
+func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
+    guard let start = start else { return "n/a" }
+    
+    var strings = [DateFormatter.monthDay.string(from: start)]
+    if let end = end {
+        strings.append(DateFormatter.monthDay.string(from: end))
+    }
+    return strings.joined(separator: " - ")
+}
+
+func formattedMonthYearString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    return DateFormatter.monthYear.string(from: date)
+}
+
+func formattedFullDateString(for date: Date?) -> String {
+    guard let date = date else { return "n/a" }
+    return DateFormatter.dayShortMonthFormatter.string(from: date)
+}
+
+func formattedTimeRangeString(start: Date?, end: Date?) -> String {
+    guard let start = start else { return "n/a" }
+    var strings = [ DateFormatter.localizedString(from: start, dateStyle: .none, timeStyle: .short) ]
+    if let end = end {
+        strings.append(DateFormatter.localizedString(from: end, dateStyle: .none, timeStyle: .short))
+    }
+    return strings.joined(separator: " - ")
+}
+
 // MARK: - Distance and Speed
 
 func formattedDistanceString(for meters: Double?) -> String {
-    let measurement = Measurement<UnitLength>(value: meters ?? 0, unit: .meters)
+    guard let meters = meters else { return "" }
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     return MeasurementFormatter.distance.string(from: measurement)
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
-    let measurement = Measurement<UnitSpeed>(value: metersPerSecond ?? 0, unit: .metersPerSecond)
+    guard let speed = metersPerSecond else { return "" }
+    let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
     return MeasurementFormatter.speed.string(from: measurement)
+}
+
+func formattedRunningWalkingPaceString(for duration: Double?) -> String {
+    guard let duration = duration else { return "" }
+    let pace = formattedPaceString(for: duration)
+    let unit = runningWalkingDistanceTargetUnit().symbol
+    return String(format: "%@ /%@", pace, unit)
+}
+
+func formattedPaceString(for duration: Double?) -> String {
+    guard let duration = duration else { return "n/a" }
+    let (m, s) = secondsToMinutesSeconds(seconds: Int(duration))
+    return String(format: "%d:%02d", m, s)
 }
 
 // MARK: - Heart Rate
@@ -68,9 +138,24 @@ func formattedCaloriesString(for calories: Double?) -> String {
 // MARK: - Weight
 
 func formattedWeightString(for weight: Double?) -> String {
-    guard let weight = weight else { return "N/A" }
+    guard let weight = weight else { return "n/a" }
     let measurement = Measurement<UnitMass>(value: weight, unit: .kilograms)
     return MeasurementFormatter.mass.string(from: measurement)
+}
+
+func formattedLocalizedWeightString(for weight: Double?) -> String {
+    guard let weight = weight else { return "n/a" }
+    let kilograms = localizedWeightUnitToKilograms(for: weight)
+    return formattedWeightString(for: kilograms)
+}
+
+// MARK: - Elevation
+
+func formattedElevationString(for elevation: Double?) -> String {
+    guard let elevation = elevation else { return "n/a" }
+    let measurement = Measurement<UnitLength>(value: elevation, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .feet)
+    return MeasurementFormatter.elevation.string(from: conversion)
 }
 
 // MARK: - Activities
@@ -100,6 +185,24 @@ func formattedActivityTypeString(for activityType: HKWorkoutActivityType, indoor
 // MARK: - Date Extensions
 
 private extension DateFormatter {
+    
+    static let dayShortMonthFormat: String? = {
+        let template = "EEEEMMMdyyyy"
+        let locale = Locale.current
+        return DateFormatter.dateFormat(fromTemplate: template, options: 0, locale: locale)
+    }()
+    
+    static let dayShortMonthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        
+        if let format = dayShortMonthFormat {
+            formatter.dateFormat = format
+        } else {
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+        }
+        return formatter
+    }()
     
     static let relative: DateFormatter = {
         let formatter = DateFormatter()
@@ -132,6 +235,18 @@ private extension DateFormatter {
         let formatter = DateFormatter()
         formatter.dateStyle = .none
         formatter.timeStyle = .short
+        return formatter
+    }()
+    
+    static let monthDay: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM dd"
+        return formatter
+    }()
+    
+    static let monthYear: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM YYYY"
         return formatter
     }()
 }
@@ -173,6 +288,13 @@ private extension MeasurementFormatter {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distance
         formatter.unitStyle = .medium
+        return formatter
+    }()
+    
+    static let elevation: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.integer
+        formatter.unitOptions = .providedUnit
         return formatter
     }()
     

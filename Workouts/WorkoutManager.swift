@@ -12,10 +12,10 @@ import FitFileParser
 import MapKit
 
 class WorkoutManager: ObservableObject {
-    let healthStore = HKHealthStore()
+    let healthStore = HealthData.healthStore
     
     enum State {
-        case ok, empty, notAvailable
+        case ok, empty, notAvailable, permissionDenied
     }
     
     @Published var workouts = [Workout]()
@@ -25,11 +25,14 @@ class WorkoutManager: ObservableObject {
     
     var workoutQuery: HKAnchoredObjectQuery?
     var lastWorkoutAnchor: HKQueryAnchor?
-    
+        
     func fetchRequestStatusForReading() {
+        Log.debug("request status for reading")
+        
         HealthData.requestStatusForReading { (result) in
             switch result {
             case .success(let shouldRequest):
+                Log.debug("success")
                 if !shouldRequest {
                     self.fetchWorkouts()
                 }
@@ -38,6 +41,7 @@ class WorkoutManager: ObservableObject {
                     self.shouldRequestReadingAuthorization = shouldRequest
                 }
             case .failure(let error):
+                Log.debug("read request failed: \(error)")
                 if case HealthData.DataError.dataNotAvailable = error {
                     self.updateState(.notAvailable)
                 }
@@ -57,41 +61,48 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    
     func requestReadingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestReadingAuthorization { result in
+        func success() {
+            updateState(.ok)
+            updateShouldRequestReadingAuthorization(false)
+            fetchWorkouts()
+            completionHandler(true)
+        }
+        
+        func failed(error: Error) {
+            Log.debug("request reading permissions failed: \(error)")
+            
+            if case HealthData.DataError.permissionDenied = error {
+                updateState(.permissionDenied)
+            } else {
+                updateState(.notAvailable)
+            }
+            completionHandler(false)
+        }
+        
+        HealthData.requestReadingAuthorization(for: HealthData.readObjectTypes()) { result in
             switch result {
             case .success:
                 Log.debug("fetch data succeeded")
-                self.updateState(.ok)
-                self.updateShouldRequestReadingAuthorization(false)
-                self.fetchWorkouts()
-                completionHandler(true)
+                success()
             case .failure(let error):
-                Log.debug("fetch data failed: \(error.localizedDescription)")
-                if case HealthData.DataError.dataNotAvailable = error {
-                    self.updateState(.notAvailable)
-                }
-                completionHandler(false)
+                failed(error: error)
             }
         }
     }
     
     func fetchWorkouts() {
+        Log.debug("fetching workouts")
+        
         if let _ = workoutQuery {
             Log.debug("ignore fetching workouts")
             validateWorkoutStatusForReading()
             return
         }
-        
-        ProfileDataStore.fetchWeightInKilograms { (weight) in
-            guard let weight = weight else { return }
-            AppSettings.weight = weight
-        }
-                
+                        
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
-            predicate: nil,
+            predicate: WorkoutDataStore.defaultActivitiesPredicate(),
             anchor: lastWorkoutAnchor,
             limit: HKObjectQueryNoLimit) { (query, samples, deleted, anchor, error) in
             self.lastWorkoutAnchor = anchor
@@ -114,6 +125,7 @@ class WorkoutManager: ObservableObject {
                 DispatchQueue.main.async {
                     self.workouts.remove(at: index)
                     self.state = self.workouts.isEmpty ? .empty : .ok
+                    self.postRefreshNotification()
                 }
             }
         }
@@ -124,8 +136,13 @@ class WorkoutManager: ObservableObject {
                 self.workouts.append(contentsOf: newWorkouts)
                 self.workouts.sort(by: { $0.startDate.compare($1.startDate) == .orderedDescending })
                 self.state = self.workouts.isEmpty ? .empty : .ok
+                self.postRefreshNotification()
             }
         }
+    }
+    
+    func postRefreshNotification() {
+        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
     }
 }
 

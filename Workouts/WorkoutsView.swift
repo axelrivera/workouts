@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WorkoutsView: View {
     enum ActiveSheet: Identifiable {
-        case add, workoutImport, settings
+        case add
         var id: Int { hashValue }
     }
     
@@ -24,11 +24,19 @@ struct WorkoutsView: View {
                         NavigationLink(destination: DetailView(workout: workout)) {
                             VStack(alignment: .leading, spacing: 2.0) {
                                 Text(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
-                                Text(formattedDistanceString(for: workout.distance))
-                                    .font(.title)
-                                    .foregroundColor(.accentColor)
+                                
+                                if let distance = workout.distance {
+                                    Text(formattedDistanceString(for: distance))
+                                        .font(.title)
+                                        .foregroundColor(.distance)
+                                } else {
+                                    Text(formattedHoursMinutesDurationString(for: workout.elapsedTime))
+                                        .font(.title)
+                                        .foregroundColor(.time)
+                                }
+                                
                                 HStack {
-                                    Text(workout.source)
+                                    Text(workout.sourceString)
                                         .foregroundColor(.secondary)
                                     Spacer()
                                     Text(formattedRelativeDateString(for: workout.startDate))
@@ -49,44 +57,17 @@ struct WorkoutsView: View {
             }
             .navigationTitle("Workouts")
             .toolbar {
-                // TODO: Implement workout filters
-//                ToolbarItem(placement: .navigationBarLeading) {
-//                    Button(action: {}) {
-//                        Text("All Workouts")
-//                    }
-//                }
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        // TODO: Enable Manual Workouts
-//                        Button(action: { activeSheet = .add }) {
-//                            Label("New Workout", systemImage: "plus.circle")
-//                        }
-                        
-                        Button(action: { activeSheet = .workoutImport }) {
-                            Label("Import Workouts", systemImage: "square.and.arrow.down")
-                        }
-                        
-                        Divider()
-                        
-                        Button(action: { activeSheet = .settings }) {
-                            Label("Settings", systemImage: "gearshape")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .imageScale(.large)
+                    Button(action: { activeSheet = .add }) {
+                        Image(systemName: "plus")
                     }
                 }
             }
             .fullScreenCover(item: $activeSheet) { item in
                 switch item {
                 case .add:
-                    AddView()
-                case .workoutImport:
                     ImportView()
                         .environmentObject(ImportManager())
-                case .settings:
-                    SettingsView()
                 }
             }
         }
@@ -96,7 +77,7 @@ struct WorkoutsView: View {
 struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManager()
-        //manager.state = .empty
+        //manager.state = .notAvailable
         manager.workouts = WorkoutManager.sampleWorkouts()
         return manager
     }()
@@ -104,5 +85,6 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutsView()
             .environmentObject(workoutManager)
+            .colorScheme(.dark)
     }
 }

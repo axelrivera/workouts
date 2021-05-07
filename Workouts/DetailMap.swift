@@ -17,17 +17,16 @@ extension DetailMap {
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
+        mapView.layoutMargins = UIEdgeInsets(top: 20.0, left: 20.0, bottom: 20.0, right: 20.0)
         mapView.mapType = mapType
         mapView.delegate = context.coordinator
+        updatePoints(for: mapView, context: context)
         
         return mapView
     }
     
     func updateUIView(_ view: MKMapView, context: Context) {
-        Log.debug("update UI view")
         view.mapType = mapType
-        
-       updatePoints(for: view, context: context)
     }
     
     func updatePoints(for view: MKMapView, context: Context) {
@@ -37,26 +36,34 @@ extension DetailMap {
             view.removeOverlays(view.overlays)
         }
         
+        if !view.annotations.isEmpty {
+            view.removeAnnotations(view.annotations)
+        }
+        
         var zoomRect = MKMapRect.null
         for coordinate in points {
             let mapPoint = MKMapPoint(coordinate)
-            let pointRect = MKMapRect(x: mapPoint.x, y: mapPoint.y, width: 0.1, height: 0.1)
+            let pointRect = MKMapRect(x: mapPoint.x, y: mapPoint.y, width: 1, height: 1)
             zoomRect = zoomRect.union(pointRect)
         }
         
-        view.setVisibleMapRect(view.mapRectThatFits(zoomRect, edgePadding: .init(top: 10, left: 10, bottom: 10, right: 10)), animated: false)
+        let mapFrame = view.mapRectThatFits(zoomRect, edgePadding: .zero)
+        view.setVisibleMapRect(mapFrame, animated: false)
                         
         let line = MKGeodesicPolyline(coordinates: points, count: points.count)
         view.addOverlay(line)
         
+        if let coordinate = points.first {
+            let start = WorkoutAnnotation(annotationType: .start, coordinate: coordinate)
+            start.title = "Start"
+            view.addAnnotation(start)
+        }
         
-//        if points.count == view.overlays.count { return }
-        
-//        for overlay in view.overlays {
-//            if let line = overlay as? MKGeodesicPolyline {
-//                view.removeOverlay(line)
-//            }
-//        }
+        if let coordinate = points.last, points.count > 1 {
+            let end = WorkoutAnnotation(annotationType: .end, coordinate: coordinate)
+            end.title = "End"
+            view.addAnnotation(end)
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -74,9 +81,23 @@ extension DetailMap {
             self.parent = parent
         }
         
-//        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-//            return nil
-//        }
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard let annotation = annotation as? WorkoutAnnotation else { return nil }
+
+            let identifier = "annotation"
+            var annotationView: MKMarkerAnnotationView! = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+
+            if annotationView == nil {
+                annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                annotationView.titleVisibility = .adaptive
+            } else {
+                annotationView.annotation = annotation
+            }
+
+            annotationView.markerTintColor = annotation.color
+
+            return annotationView
+        }
         
         func mapView(_ mapView: MKMapView, didAdd renderers: [MKOverlayRenderer]) {
             
@@ -84,7 +105,7 @@ extension DetailMap {
         
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             let renderer = MKPolylineRenderer(overlay: overlay)
-            renderer.strokeColor = .blue
+            renderer.strokeColor = UIColor(.distance)
             renderer.lineWidth = 5.0
             return renderer
         }

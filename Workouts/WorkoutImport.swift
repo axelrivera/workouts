@@ -8,13 +8,41 @@
 import Foundation
 import CoreLocation
 import FitFileParser
+import HealthKit
+
+extension WorkoutImport.Status: Equatable {
+    
+    static func ==(lhs: WorkoutImport.Status, rhs: WorkoutImport.Status) -> Bool {
+        switch (lhs, rhs) {
+        case (.new, .new):
+            return true
+        case (.processing, .processing):
+            return true
+        case (.processed, .processed):
+            return true
+        case (.notSupported, .notSupported):
+            return true
+        case (.failed, .failed):
+            return true
+        case (.invalid(let lname), .invalid(let rname)):
+            return lname == rname
+        default:
+            return false
+        }
+    }
+    
+}
 
 class WorkoutImport: ObservableObject, Identifiable {
     enum Status {
-        case new, processing, processed, notSupported, failed
+        case new, processing, processed, notSupported, failed, invalid(file: String)
     }
     
     let id = UUID()
+    
+    var uuidString: String {
+        id.uuidString
+    }
     
     @Published var status: Status
     
@@ -49,15 +77,25 @@ class WorkoutImport: ObservableObject, Identifiable {
     var records = [Record]()
     var events = [Event]()
     
+    var fileURL: URL?
+    
     init(status: Status, sport: Sport) {
         self.status = status
         self.sport = sport
     }
     
-    init?(fit: FitFile) {
+    init(invalidFilename: String) {
+        self.status = .invalid(file: invalidFilename)
+        self.sport = .other
+        start = .init(valueType: .date, value: Date().timeIntervalSince1970)
+    }
+    
+    init?(fileURL: URL) {
+        guard let fit = FitFile(file: fileURL) else { return nil }
         guard let sport = fit.messages(forMessageType: .sport).first else { return nil }
         guard let session = fit.messages(forMessageType: .session).first else { return nil }
         
+        self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
         status = self.sport.isSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
@@ -139,7 +177,11 @@ extension WorkoutImport {
 extension WorkoutImport {
     
     var formattedTitle: String {
-        String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.title)
+        if case .invalid(let file) = status {
+            return file
+        } else {
+            return String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
+        }
     }
     
 }
@@ -147,6 +189,38 @@ extension WorkoutImport {
 // MARK: - Helper Methods
 
 extension WorkoutImport {
+    
+    var activityType: HKWorkoutActivityType {
+        switch sport {
+        case .cycling:
+            return .cycling
+        case .running:
+            return .running
+        case .walking:
+            return .walking
+        default:
+            return .other
+        }
+    }
+    
+    var locationType: HKWorkoutSessionLocationType {
+        indoor ? .indoor : .outdoor
+    }
+    
+    var lapLength: HKQuantity? {
+        var distance: Double?
+        switch sport {
+        case .running, .walking:
+            distance = 1.0
+        case .cycling:
+            distance = 5.0
+        default:
+            break
+        }
+        
+        guard let value = distance else { return nil }
+        return HKQuantity(unit: .mile(), doubleValue: value)
+    }
     
     private static let indoorSubsports = [
         "treadmill",

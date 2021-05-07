@@ -10,76 +10,63 @@ import SwiftUI
 struct ImportRow: View {
     @ObservedObject var workout: WorkoutImport
     
+    var importAction = {}
+    
     var body: some View {
         HStack(spacing: 10.0) {
-            if workout.status == .processing {
-                ProgressView()
-            } else {
-                Image(systemName: imageName(for: workout.status))
-                    .foregroundColor(imageColor(for: workout.status))
-            }
-            
             VStack(alignment: .leading) {
-                HStack {
-                    Text(workout.formattedTitle)
-                    
-                    if workout.status == .notSupported {
-                        Spacer()
-                        Text("Not Supported")
-                            .foregroundColor(.red)
-                    } else if workout.status == .failed {
-                        Spacer()
-                        Text("Import Error")
-                            .foregroundColor(.red)
-                    }
-                }
-                HStack {
-                    Text(formattedDistanceString(for: workout.totalDistance.distanceValue))
+                Text(workout.formattedTitle)
+                
+                if let distance = workout.totalDistance.distanceValue {
+                    Text(formattedDistanceString(for: distance))
                         .font(.title)
-                        .foregroundColor(.accentColor)
-                    Spacer()
-                    Text(formattedRelativeDateString(for: workout.startDate))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.distance)
                 }
+                
+                Text(formattedImportRelativeDateString(for: workout.startDate))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
+            Spacer()
             
+            switch workout.status {
+            case .new:
+                Button(action: importAction) {
+                    Text("Import")
+                }
+                .foregroundColor(.accentColor)
+            case .processing:
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+            case .processed:
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+            case .notSupported:
+                Text("Not Supported")
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            case .failed:
+                Text("Import Failed")
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            case .invalid:
+                Text("Invalid")
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            }
         }
     }
-}
-
-extension ImportRow {
-    
-    func imageName(for status: WorkoutImport.Status) -> String {
-        switch status {
-        case .new:
-            return "checkmark.circle"
-        case .processed:
-            return "checkmark.circle.fill"
-        case .failed, .notSupported:
-            return "xmark.circle.fill"
-        default:
-            return ""
-        }
-    }
-    
-    func imageColor(for status: WorkoutImport.Status) -> Color {
-        switch status {
-        case .new:
-            return .accentColor
-        case .processed:
-            return .green
-        case .failed, .notSupported:
-            return .red
-        default:
-            return .primary
-        }
-    }
-    
 }
 
 struct ImportRow_Previews: PreviewProvider {
+    static var workout: WorkoutImport = {
+        let workout = ImportManager.sampleWorkout()
+        workout.status = .new
+        return workout
+    }()
+    
     static var previews: some View {
-        ImportRow(workout: ImportManager.sampleWorkout())
+        ImportRow(workout: workout)
+            .padding()
     }
 }

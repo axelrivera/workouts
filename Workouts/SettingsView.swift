@@ -8,72 +8,163 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var workoutManager: WorkoutManager
+    enum ActiveSheet: Identifiable {
+        case paywall, feedback, faq, tutorial, privacy
+        var id: Int { hashValue }
+    }
     
-    @State var weight: Double? = AppSettings.weight
-    @State var showingWeightAlert = false
-            
+    enum ActiveAlert: Identifiable {
+        case emailError
+        var id: Int { hashValue }
+    }
+    
+    @Environment(\.openURL) var openURL
+    @EnvironmentObject var workoutManager: WorkoutManager
+    @EnvironmentObject var purchaseManager: IAPManager
+    @State private var weight: Double = AppSettings.weight
+    
+    @State private var activeSheet: ActiveSheet?
+    @State private var activeAlert: ActiveAlert?
+    
     var body: some View {
         NavigationView {
             Form {
-                VStack {
-                    HStack {
-                        Text("Weight")
-                        Spacer()
-                        Text(formattedWeightString(for: weight))
+                if purchaseManager.isActive {
+                    Section {
+                        HStack(spacing: 10.0) {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.red)
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 2.0) {
+                                Text("Better Workouts Pro")
+                                Text("Thank your for your support!")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        #if DEVELOPMENT_BUILD
+                        Button("Reset Mock Purchase", action: purchaseManager.resetMockPurchase)
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        #endif
                     }
-                    
-                    Divider()
-                    
-                    Text("Your weight is used to calculate the total amount of calories when importing a workout.")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
+                } else {
+                    Section(footer: Text("Purchasing helps support Better Workouts.")) {
+                        Button(action: { activeSheet = .paywall }, label: {
+                            HStack {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.orange)
+                                Text("Unlock all Better Workouts Features")
+                                    .foregroundColor(.primary)
+                            }
+                        })
+                    }
                 }
-                Button(action: updateWeight) {
-                    Text("Get Weight from Health App")
+                
+//                Section(header: Text("Application Settings")) {
+//                    NavigationLink(destination: WeightInputView(weight: $weight)) {
+//                        HStack {
+//                            Text("Weight")
+//                                .foregroundColor(.secondary)
+//                            Spacer()
+//                            Text(formattedWeightString(for: weight))
+//                                .foregroundColor(.primary)
+//                        }
+//                    }
+//                }
+                
+                Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
+                    //Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
+                    //Button("Frequently Asked Questions", action: { activeSheet = .faq })
+                    Button("Send Feedback", action: feedbackAction)
                 }
-                .alert(isPresented: $showingWeightAlert) {
-                    Alert(
-                        title: Text("Health Error"),
-                        message: Text("Unable to fetch weight from Health App. Make sure Workouts has permission to access your weight in the Health app."),
+                
+                Section(header: Text("Better Workouts")) {
+                    Button("Review on the App Store", action: reviewAction)
+                    Button("Privacy Policy", action: { activeSheet = .privacy })
+                    HStack {
+                        Text("Version")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(systemVersionAndBuildString())
+                    }
+                }
+                
+            }
+            .navigationBarTitle("Settings")
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .paywall:
+                    UpgradeView()
+                case .tutorial:
+                    SafariView(urlString: URLStrings.tutorial)
+                case .privacy:
+                    SafariView(urlString: URLStrings.privacy)
+                case .faq:
+                    SafariView(urlString: URLStrings.faq)
+                case .feedback:
+                    MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .emailError:
+                    let message = String(format: "Unable to send email from this device. If you need support please send us an email to %@", Emails.support)
+                    return Alert(
+                        title:  Text("Email Error"),
+                        message: Text(message),
                         dismissButton: .default(Text("Ok"))
                     )
                 }
             }
-            .navigationBarTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: doneButton())
         }
     }
 }
 
-// MARK: - Methods
-
 extension SettingsView {
     
-    func doneButton() -> some View{
-        Button(action: { presentationMode.wrappedValue.dismiss() }) {
-            Text("Done")
+    func feedbackAction() {
+        guard MailView.canSendEmail else {
+            activeAlert = .emailError
+            return
         }
+        
+        activeSheet = .feedback
     }
     
-    func updateWeight() {
-        ProfileDataStore.fetchWeightInKilograms { value in
-            if let weight = value {
-                AppSettings.weight = weight
-                self.weight = weight
-            } else {
-               showingWeightAlert = true
-            }
-        }
+    func feedbackBody() -> String {
+        let device = UIDevice.current
+        let (version, build) = systemVersionAndBuild()
+        let systemName = device.systemName
+        let systemVersion = device.systemVersion
+        let model = device.localizedModel
+
+        let content = """
+        \n\n\n\n
+        Better Workouts Version %@ (%@) - %@ %@ %@
+        """
+
+        return String(format: content, version, build, model, systemName, systemVersion)
+    }
+    
+    func reviewAction() {
+        openURL(URL(string: URLStrings.iTunesReview)!)
     }
     
 }
 
 struct SettingsView_Previews: PreviewProvider {
+    static let purchaseManager: IAPManager = {
+        let manager = IAPManager()
+        manager.isActive = true
+        return manager
+    }()
+    
     static var previews: some View {
         SettingsView()
             .environmentObject(WorkoutManager())
+            .environmentObject(purchaseManager)
+            .colorScheme(.dark)
     }
 }

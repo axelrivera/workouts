@@ -55,5 +55,25 @@ struct ProfileDataStore {
         healthStore.execute(sampleQuery)
     }
     
+    static func saveWeight(_ weight: Double, for date : Date, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        let quantity = HKQuantity.init(unit: .gramUnit(with: .kilo), doubleValue: weight)
+        let sample = HKQuantitySample(
+            type: .weight(),
+            quantity: quantity,
+            start: date,
+            end: date
+        )
+        
+        healthStore.save(sample) { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    completionHandler(.success(true))
+                } else {
+                    completionHandler(.failure(error ?? DataError.failure))
+                }
+            }
+        }
+    }
+    
 }
 

@@ -74,4 +74,12 @@ extension HKWorkout {
         metadata?[MetadataKeyMaxCyclingCadence] as? Double
     }
     
+    var elevationAscended: HKQuantity? {
+        metadata?[HKMetadataKeyElevationAscended] as? HKQuantity
+    }
+    
+    var elevationDescended: HKQuantity? {
+        metadata?[HKMetadataKeyElevationDescended] as? HKQuantity
+    }
+    
 }

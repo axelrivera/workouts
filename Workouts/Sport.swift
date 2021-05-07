@@ -7,8 +7,9 @@
 
 import Foundation
 
-enum Sport: String {
+enum Sport: String, Identifiable, CaseIterable {
     case cycling, running, walking, other
+    var id: String { rawValue }
     
     init(string: String) {
         self = Sport(rawValue: string) ?? .other
@@ -27,6 +28,10 @@ enum Sport: String {
     }
     
     var title: String {
+        self.rawValue.capitalized
+    }
+    
+    var name: String {
         switch self {
         case .cycling:
             return "Cycle"
@@ -39,7 +44,7 @@ enum Sport: String {
         }
     }
     
-    static let supportedSports: [Sport] = [.cycling]
+    static let supportedSports: [Sport] = [.cycling, .running, .walking]
     static let distanceSports: [Sport] = [.cycling, .walking, .running]
     static let walkingAndRunningSports: [Sport] = [.walking, .running]
 }

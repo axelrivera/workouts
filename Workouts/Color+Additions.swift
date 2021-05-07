@@ -19,4 +19,17 @@ extension Color {
     static let systemBackground = Color(UIColor.systemBackground)
     static let secondarySystemBackground = Color(UIColor.secondarySystemBackground)
     static let tertiarySystemBackground = Color(UIColor.tertiarySystemBackground)
+    static let divider = Color(UIColor.separator)
+}
+
+// MARK: Asset Colors
+
+extension Color {
+    static let distance = Color("DistanceColor")
+    static let time = Color("TimeColor")
+    static let calories = Color("CaloriesColor")
+    static let elevation = Color("ElevationColor")
+    static let speed = Color("SpeedColor")
+    static let cadence = Color("CadenceColor")
+    static let chartBackground = Color("ChartBackgroundColor")
 }

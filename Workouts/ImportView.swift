@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ImportView: View {
     enum ActiveSheet: Identifiable {
-        case document
+        case document, tutorial
         var id: Int { hashValue }
     }
     
@@ -19,6 +19,7 @@ struct ImportView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var importManager: ImportManager = ImportManager()
     @State var isProcessingDocuments = false
     
@@ -28,49 +29,60 @@ struct ImportView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                VStack {
-                    Form {
-                        if importManager.state == .processing {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                                Spacer()
+                Form {
+                    if importManager.state == .processing {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                            Spacer()
+                        }
+                        .id(UUID())
+                    } else {
+                        ForEach(importManager.workouts) { workout in
+                            ImportRow(workout: workout) {
+                                importManager.processWorkout(workout)
                             }
-                            .id(UUID())
-                        } else {
-                            ForEach(importManager.workouts) { workout in
-                                ImportRow(workout: workout)
-                            }
-                            .onDelete(perform: importManager.deleteWorkout)
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .onAppear { importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") } }
-                    
-                    RoundButton(text: "Import", action: processImports)
-                        .padding()
-                        .disabled(withAnimation { importManager.isImportDisabled })
-                        .transition(AnyTransition.opacity)
                 }
+                .onAppear { requestWritingAuthorizationIfNeeded() }
+                .zIndex(1.0)
                 
                 if importManager.state.showEmptyView {
                     Color.systemBackground
                         .ignoresSafeArea()
-                    ImportEmptyView(importState: importManager.state)
+                        .zIndex(2.0)
+                    ImportEmptyView(
+                        importState: importManager.state,
+                        addAction: addAction,
+                        reviewAction: { activeSheet = .tutorial }
+                    )
+                        .zIndex(3.0)
+                }
+                
+                if !purchaseManager.isActive {
+                    PaywallView(purchaseManager: purchaseManager)
+                        .zIndex(4.0)
+                        .transition(.opacity)
                 }
             }
-            .navigationBarTitle("Import Workouts")
+            .navigationTitle("Import Workouts")
+            .navigationBarTitleDisplayMode(.inline)
             .navigationBarItems(leading: dismissButton(), trailing: addButton())
             .sheet(item: $activeSheet) { item in
                 switch item {
                 case .document:
-                    DocumentPicker(forOpeningContentTypes: [.fitDocument]) { urls in
+                    DocumentPicker(forOpeningContentTypes: [.fitDocument, .zip]) { urls in
                         importManager.state = .processing
                         importManager.processDocuments(at: urls) {
                             importManager.state = urls.isEmpty ? .empty : .ok
                             Log.debug("finish processing documents")
                         }
                     }
+                case .tutorial:
+                    SafariView(urlString: URLStrings.tutorial)
                 }
             }
             .alert(item: $activeAlert) { item in
@@ -89,17 +101,28 @@ struct ImportView: View {
 
 private extension ImportView {
     
-    func processImports() {
-        importManager.importWorkouts {
-            Log.debug("finished importing workouts")
-        }
-    }
-    
     func addButton() -> some View {
-        Button(action: { activeSheet = .document }) {
+        Button(action: addAction) {
             Image(systemName: "plus")
         }
         .disabled(withAnimation { importManager.isAddImportDisabled })
+    }
+    
+    func addAction() {
+        importManager.requestWritingAuthorization { success in
+            DispatchQueue.main.async {
+                if success {
+                    activeSheet = .document
+                } else {
+                    importManager.state = .notAuthorized
+                }
+            }
+        }
+    }
+    
+    func requestWritingAuthorizationIfNeeded() {
+        guard purchaseManager.isActive else { return }
+        importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") }
     }
     
     func dismissButton() -> some View {
@@ -131,12 +154,19 @@ private extension ImportView {
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .ok
+        manager.state = .empty
         manager.loadSampleWorkouts()
+        return manager
+    }()
+    
+    static let purchaseManager: IAPManager = {
+        let manager = IAPManager()
+        manager.isActive = true
         return manager
     }()
     
     static var previews: some View {
         ImportView(importManager: importManager)
+            .environmentObject(purchaseManager)
     }
 }

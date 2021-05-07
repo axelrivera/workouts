@@ -69,7 +69,7 @@ struct AddView: View {
                 
                 if Sports.value(for: selectedSport) == .cycle {
                     HStack {
-                        Text("Avg. Speed")
+                        Text("Avg Speed")
                             .padding(.trailing)
                         TextField("MPH", text: $avgSpeed)
                             .multilineTextAlignment(.trailing)
@@ -78,7 +78,7 @@ struct AddView: View {
                 } else {
                     Button(action: { withAnimation(.spring()) { showPacePicker.toggle() } }) {
                         HStack {
-                            Text("Avg. Pace")
+                            Text("Avg Pace")
                             Spacer()
                             Text(formattedTimer(for: Int(paceSeconds)))
                                 .foregroundColor(showPacePicker ? .accentColor : .primary)
@@ -101,7 +101,7 @@ struct AddView: View {
                 }
                 
                 HStack {
-                    Text("Avg. Heart Rate")
+                    Text("Avg Heart Rate")
                         .padding(.trailing)
                     TextField("BPM", text: $heartRate)
                         .multilineTextAlignment(.trailing)

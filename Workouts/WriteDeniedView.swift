@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WriteUnauthorizedView: View {
+struct WriteDeniedView: View {
     var body: some View {
         VStack(spacing: 20.0) {
             Image(systemName: "heart.slash.fill")
@@ -24,6 +24,6 @@ struct WriteUnauthorizedView: View {
 
 struct WriteUnauthorizedView_Previews: PreviewProvider {
     static var previews: some View {
-        WriteUnauthorizedView()
+        WriteDeniedView()
     }
 }

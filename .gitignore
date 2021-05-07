@@ -1,0 +1,7 @@
+# Xcode
+.dSYM.*
+*.ipa
+
+# ruby
+vendor/
+fastlane/report.xml

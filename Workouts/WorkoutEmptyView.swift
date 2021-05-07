@@ -15,7 +15,7 @@ struct WorkoutEmptyView: View {
             switch workoutState {
             case .empty:
                 NoWorkoutsView()
-            case .notAvailable:
+            case .notAvailable, .permissionDenied:
                 NotAvailableView()
             default:
                 EmptyView()
