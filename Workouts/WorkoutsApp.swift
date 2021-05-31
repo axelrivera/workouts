@@ -19,9 +19,19 @@ struct WorkoutsApp: App {
     let workoutManager = WorkoutManager()
     let purchaseManager = IAPManager()
     
+    let storageProvider = StorageProvider()
+    let synchronizer: Synchronizer
+    
+    init() {
+        let context = storageProvider.persistentContainer.newBackgroundContext()
+        context.automaticallyMergesChangesFromParent = true
+        synchronizer = Synchronizer(context: context)
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.managedObjectContext, storageProvider.persistentContainer.viewContext)
                 .environmentObject(workoutManager)
                 .environmentObject(purchaseManager)
         }

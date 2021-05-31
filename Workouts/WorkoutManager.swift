@@ -17,9 +17,7 @@ class WorkoutManager: ObservableObject {
     enum State {
         case ok, empty, notAvailable, permissionDenied
     }
-    
-    @Published var workouts = [Workout]()
-    
+        
     @Published var shouldRequestReadingAuthorization = false
     @Published var state = State.ok
     
@@ -34,7 +32,9 @@ class WorkoutManager: ObservableObject {
             case .success(let shouldRequest):
                 Log.debug("success")
                 if !shouldRequest {
-                    self.fetchWorkouts()
+                    self.postRefreshNotification(isAuthorized: true)
+                } else {
+                    self.postRefreshNotification(isAuthorized: false)
                 }
                 
                 DispatchQueue.main.async {
@@ -65,18 +65,21 @@ class WorkoutManager: ObservableObject {
         func success() {
             updateState(.ok)
             updateShouldRequestReadingAuthorization(false)
-            fetchWorkouts()
+            postRefreshNotification(isAuthorized: true)
             completionHandler(true)
         }
         
         func failed(error: Error) {
             Log.debug("request reading permissions failed: \(error)")
             
+            postRefreshNotification(isAuthorized: false)
+            
             if case HealthData.DataError.permissionDenied = error {
                 updateState(.permissionDenied)
             } else {
                 updateState(.notAvailable)
             }
+            
             completionHandler(false)
         }
         
@@ -91,58 +94,17 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    func fetchWorkouts() {
-        Log.debug("fetching workouts")
+    func postRefreshNotification(isAuthorized: Bool? = nil) {
+        var userInfo: [String: Any]?
         
-        if let _ = workoutQuery {
-            Log.debug("ignore fetching workouts")
-            validateWorkoutStatusForReading()
-            return
-        }
-                        
-        let query = HKAnchoredObjectQuery(
-            type: .workoutType(),
-            predicate: WorkoutDataStore.defaultActivitiesPredicate(),
-            anchor: lastWorkoutAnchor,
-            limit: HKObjectQueryNoLimit) { (query, samples, deleted, anchor, error) in
-            self.lastWorkoutAnchor = anchor
-            self.updateWorkouts(samples: samples, deleted: deleted)
+        if let isAuthorized = isAuthorized {
+            userInfo = [Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized]
         }
         
-        query.updateHandler = { (query, samples, deleted, anchor, error) in
-            self.lastWorkoutAnchor = anchor
-            self.updateWorkouts(samples: samples, deleted: deleted)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
         }
         
-        workoutQuery = query
-        healthStore.execute(query)
-    }
-    
-    func updateWorkouts(samples: [HKSample]?, deleted: [HKDeletedObject]?) {
-        let deletedObjects = deleted ?? [HKDeletedObject]()
-        for object in deletedObjects {
-            if let index = self.workouts.firstIndex(where: { $0.id == object.uuid }) {
-                DispatchQueue.main.async {
-                    self.workouts.remove(at: index)
-                    self.state = self.workouts.isEmpty ? .empty : .ok
-                    self.postRefreshNotification()
-                }
-            }
-        }
-        
-        if let samples = samples as? [HKWorkout] {
-            let newWorkouts = samples.map { Workout(object: $0) }
-            DispatchQueue.main.async {
-                self.workouts.append(contentsOf: newWorkouts)
-                self.workouts.sort(by: { $0.startDate.compare($1.startDate) == .orderedDescending })
-                self.state = self.workouts.isEmpty ? .empty : .ok
-                self.postRefreshNotification()
-            }
-        }
-    }
-    
-    func postRefreshNotification() {
-        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
     }
 }
 
@@ -156,18 +118,10 @@ extension WorkoutManager {
         }
     }
     
-    func validateState() {
-        updateState(workouts.isEmpty ? .empty : .ok)
-    }
-    
     func updateState(_ state: State) {
         DispatchQueue.main.async {
             self.state = state
         }
-    }
-    
-    func availableWorkouts() -> [HKWorkoutActivityType] {
-        [.cycling]
     }
     
 }
@@ -176,8 +130,8 @@ extension WorkoutManager {
 
 extension WorkoutManager {
     
-    static func sampleWorkouts() -> [Workout] {
-        (0 ..< 10).map({ _ -> Workout in Workout.sample })
+    static func sampleWorkouts() -> [BWorkout] {
+        (0 ..< 10).map({ _ -> BWorkout in BWorkout.sample })
     }
     
 }

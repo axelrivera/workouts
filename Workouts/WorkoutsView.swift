@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct WorkoutsView: View {
     enum ActiveSheet: Identifiable {
@@ -16,14 +17,26 @@ struct WorkoutsView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @State var activeSheet: ActiveSheet?
     
+    static var fetchRequest: NSFetchRequest<Workout> = {
+        let request = Workout.sortedFetchRequest
+        request.fetchBatchSize = 20
+        request.returnsObjectsAsFaults = false
+        return request
+    }()
+    
+    @Environment(\.managedObjectContext) private var viewContext
+    
+    @FetchRequest(fetchRequest: Self.fetchRequest, animation: .default)
+    private var workouts: FetchedResults<Workout>
+    
     var body: some View {
         NavigationView {
             ZStack {
                 List {
-                    ForEach(workoutManager.workouts) { workout in
-                        NavigationLink(destination: DetailView(workout: workout)) {
+                    ForEach(workouts) { workout in
+                        NavigationLink(destination: DetailView(workout: workout, context: self.viewContext)) {
                             VStack(alignment: .leading, spacing: 2.0) {
-                                Text(formattedActivityTypeString(for: workout.activityType, indoor: workout.indoor))
+                                Text(formattedActivityTypeString(for: workout.sport, indoor: workout.indoor))
                                 
                                 if let distance = workout.distance {
                                     Text(formattedDistanceString(for: distance))
@@ -36,10 +49,10 @@ struct WorkoutsView: View {
                                 }
                                 
                                 HStack {
-                                    Text(workout.sourceString)
+                                    Text(workout.source)
                                         .foregroundColor(.secondary)
                                     Spacer()
-                                    Text(formattedRelativeDateString(for: workout.startDate))
+                                    Text(formattedRelativeDateString(for: workout.start))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
@@ -78,12 +91,12 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManager()
         //manager.state = .notAvailable
-        manager.workouts = WorkoutManager.sampleWorkouts()
         return manager
     }()
     
     static var previews: some View {
         WorkoutsView()
+            .environment(\.managedObjectContext, StorageProvider.preview.persistentContainer.viewContext)
             .environmentObject(workoutManager)
             .colorScheme(.dark)
     }

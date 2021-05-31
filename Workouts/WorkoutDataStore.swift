@@ -142,6 +142,12 @@ extension WorkoutDataStore {
     
     typealias HeartRateStatsValue = (avg: Double?, max: Double?)
     
+    public static func intervalFor(start: Date, end: Date) -> DateComponents {
+        var interval = DateComponents()
+        interval.second = 1
+        return interval
+    }
+    
     static func fetchHeartRateStatsValue(workout: HKWorkout, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
@@ -167,8 +173,7 @@ extension WorkoutDataStore {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
         
-        var interval = DateComponents()
-        interval.second = Constants.defaultChartSampleInSeconds
+        let interval = intervalFor(start: workout.startDate, end: workout.endDate)
         
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
@@ -188,14 +193,10 @@ extension WorkoutDataStore {
                 return
             }
             
-            var sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
-            if sortedStatistics.count > 2 {
-                sortedStatistics = sortedStatistics.dropFirst().dropLast()
-            }
-            
+            let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
             let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.maximumQuantity(for: source) else { return nil }
-                return Quantity(quantityType: .heartRate, timestamp: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+                return Quantity(timestamp: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
             }
             completionHandler(.success(values))
         }
@@ -206,8 +207,7 @@ extension WorkoutDataStore {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
         
-        var interval = DateComponents()
-        interval.second = Constants.defaultChartSampleInSeconds
+        let interval = intervalFor(start: workout.startDate, end: workout.endDate)
         
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
@@ -227,18 +227,14 @@ extension WorkoutDataStore {
                 return
             }
             
-            var sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
-            if sortedStatistics.count > 2 {
-                sortedStatistics = sortedStatistics.dropFirst().dropLast()
-            }
-            
+            let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
             let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.sumQuantity(for: source) else { return nil }
                 let distance = quantity.doubleValue(for: .meter())
                 let duration = statistics.endDate.timeIntervalSince(statistics.startDate)
                 let pace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
                                 
-                return Quantity(quantityType: .pace, timestamp: statistics.startDate, value: pace)
+                return Quantity(timestamp: statistics.startDate, value: pace)
             }
             completionHandler(.success(values))
         }
@@ -262,13 +258,9 @@ extension WorkoutDataStore {
                 return
             }
             
-            var cleanSamples = samples
-            if cleanSamples.count > 2 {
-                cleanSamples = cleanSamples.dropFirst().dropLast()
-            }
-            let cadenceSamples: [Quantity] = cleanSamples.compactMap { sample in
+            let cadenceSamples: [Quantity] = samples.compactMap { sample in
                 guard let cadence = sample.metadata?[MetadataKeySampleCadence] as? Double else { return nil }
-                return Quantity(quantityType: .cadence, timestamp: sample.startDate, value: cadence)
+                return Quantity(timestamp: sample.startDate, value: cadence)
             }
             completionHandler(.success(cadenceSamples))
             
@@ -332,6 +324,14 @@ extension WorkoutDataStore {
                 builder.addMetadata(metadata(for: workoutImport)) { (success, error) in
                     if let error = error {
                         Log.debug("failed to save metadata: \(error.localizedDescription)")
+                    }
+                }
+                
+                if workoutImport.workoutEvents.isPresent {
+                    builder.addWorkoutEvents(workoutImport.workoutEvents) { success, error in
+                        if let error = error {
+                            Log.debug("failed to save events: \(error.localizedDescription)")
+                        }
                     }
                 }
                 

@@ -10,7 +10,7 @@ import Charts
 
 struct LineChart: UIViewRepresentable {
     
-    var values = [TimeAxisValue]()
+    var values = [ChartInterval]()
     var avgValue: Double?
     var lineColor = Color.red
     var yAxisFormatter: AxisValueFormatter? = nil
@@ -59,9 +59,9 @@ struct LineChart: UIViewRepresentable {
         var avgEntries = [ChartDataEntry]()
         
         values.forEach { value in
-            dataEntries.append(ChartDataEntry(x: value.duration, y: value.value))
+            dataEntries.append(ChartDataEntry(x: value.xValue, y: value.yValue))
             if let avgValue = avgValue {
-                avgEntries.append(ChartDataEntry(x: value.duration, y: avgValue))
+                avgEntries.append(ChartDataEntry(x: value.xValue, y: avgValue))
             }
         }
         
@@ -96,7 +96,7 @@ struct LineChart: UIViewRepresentable {
 struct LineChart_Previews: PreviewProvider {
     
     static var previews: some View {
-        LineChart(values: TimeAxisValue.heartRateSamples, avgValue: 140.0)
+        LineChart(values: [], avgValue: 140.0)
             .frame(maxWidth: .infinity, maxHeight: 200.0)
             .colorScheme(.dark)
     }

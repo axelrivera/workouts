@@ -14,21 +14,8 @@ struct DetailAnalysisView: View {
     @ObservedObject var workout: Workout
     @ObservedObject var detailManager: DetailManager
     
-    var avgSpeed: Double? {
-        if let avgSpeed = workout.avgSpeed { return avgSpeed }
-        let speed = detailManager.avgSpeed
-        return speed > 0 ? speed : nil
-    }
-    
     var localizedAvgSpeed: Double? {
-        guard let avgSpeed = avgSpeed else { return nil }
-        return nativeSpeedToLocalizedUnit(for: avgSpeed)
-    }
-    
-    var maxSpeed: Double? {
-        if let maxSpeed = workout.maxSpeed { return maxSpeed }
-        let speed = detailManager.maxSpeed
-        return speed > 0 ? speed : nil
+        nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
     }
     
     var workoutTitle: String {
@@ -38,11 +25,11 @@ struct DetailAnalysisView: View {
     }
     
     var isElevationPresent: Bool {
-        detailManager.altitudeValues.isPresent || workout.elevationAscended != nil || workout.elevationDescended != nil
+        detailManager.altitudeValues.isPresent
     }
     
     var isHeartRatePresent: Bool {
-        detailManager.showHeartRateSection
+        detailManager.heartRateValues.isPresent
     }
     
     var isSpeedPresent: Bool {
@@ -60,11 +47,11 @@ struct DetailAnalysisView: View {
                             .foregroundColor(.time)
                     }
                     
-                    if detailManager.movingTime > 0 {
+                    if workout.movingTime > 0 {
                         HStack {
                             Text("Moving Time")
                             Spacer()
-                            Text(formattedHoursMinutesDurationString(for: detailManager.movingTime))
+                            Text(formattedHoursMinutesDurationString(for: workout.movingTime))
                                 .foregroundColor(.time)
                         }
                     }
@@ -74,48 +61,48 @@ struct DetailAnalysisView: View {
                     Section {
                         chart(
                             for: "Speed",
-                            supportLabel1: "Average", supportValue1: formattedSpeedString(for: avgSpeed),
-                            supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: maxSpeed),
+                            supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
+                            supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
                             values: detailManager.speedValues, avgValue: localizedAvgSpeed,
                             accentColor: .speed
                         )
                         
-                        if detailManager.avgMovingSpeed > 0 {
-                            rowForText(
-                                "Avg Moving Speed",
-                                detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
-                                detailColor: .speed
-                            )
-                        }
+//                        if detailManager.avgMovingSpeed > 0 {
+//                            rowForText(
+//                                "Avg Moving Speed",
+//                                detail: formattedSpeedString(for: detailManager.avgMovingSpeed),
+//                                detailColor: .speed
+//                            )
+//                        }
                     }
                 }
                 
-                if workout.isPacePresent {
-                    Section {
-                        chart(
-                            for: "Pace",
-                            supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
-                            supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
-                            values: detailManager.paceValues, avgValue: workout.avgPace,
-                            accentColor: .cadence,
-                            yAxisFormatter: PaceValueFormatter()
-                        )
-                    }
-                }
+//                if workout.isPacePresent {
+//                    Section {
+//                        chart(
+//                            for: "Pace",
+//                            supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+//                            supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+//                            values: detailManager.paceValues, avgValue: workout.avgPace,
+//                            accentColor: .cadence,
+//                            yAxisFormatter: PaceValueFormatter()
+//                        )
+//                    }
+//                }
                 
-                if isHeartRatePresent {
+                if workout.avgHeartRate > 0 || workout.maxHeartRate > 0 {
                     Section {
                         chart(
                             for: "Heart Rate",
-                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: detailManager.avgHeartRate),
-                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: detailManager.maxHeartRate),
-                            values: detailManager.heartRateValues, avgValue: detailManager.avgHeartRate,
+                            supportLabel1: "Average", supportValue1: formattedHeartRateString(for: workout.avgHeartRate),
+                            supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: workout.maxHeartRate),
+                            values: detailManager.heartRateValues, avgValue: workout.avgHeartRate,
                             accentColor: .calories
                         )
                     }
                 }
 
-                if workout.isCadencePresent {
+                if workout.avgCyclingCadence > 0 || workout.maxCyclingCadence > 0 {
                     Section {
                         chart(
                             for: "Cadence",
@@ -164,7 +151,7 @@ struct DetailAnalysisView: View {
 
 extension DetailAnalysisView {
     
-    func chart(for title: String, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [TimeAxisValue], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    func chart(for title: String, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
         VStack(alignment: .leading) {
             Text(title)
                 .font(.title3)
@@ -207,7 +194,7 @@ extension DetailAnalysisView {
         }
     }
 
-    func lineChart(values: [TimeAxisValue], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    func lineChart(values: [ChartInterval], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
         LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
             .frame(maxWidth: .infinity, minHeight: 200.0)
     }
@@ -224,14 +211,11 @@ extension DetailAnalysisView {
 }
 
 struct DetailAnalysisView_Previews: PreviewProvider {
-    static let workout = Workout.sample
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = Workout(context: viewContext)
     
     static let detailManager: DetailManager = {
-        let manager = DetailManager(workoutID: workout.id)
-        manager.speedValues = TimeAxisValue.speedSamples
-        manager.heartRateValues = TimeAxisValue.heartRateSamples
-        manager.cyclingCadenceValues = TimeAxisValue.cyclingCadenceSamples
-        manager.altitudeValues = TimeAxisValue.cyclingCadenceSamples
+        let manager = DetailManager(workout: workout, context: viewContext)
         return manager
     }()
     

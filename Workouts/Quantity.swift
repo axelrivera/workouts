@@ -8,11 +8,6 @@
 import Foundation
 
 struct Quantity {
-    enum QuantityType {
-        case heartRate, cadence, pace
-    }
-    
-    let quantityType: QuantityType
     let timestamp: Date
     let value: Double
 }

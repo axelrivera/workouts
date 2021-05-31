@@ -8,7 +8,7 @@
 import HealthKit
 import CoreLocation
 
-class RouteOperation: SyncOperation {
+final class RouteOperation: SyncOperation {
     private var workout: HKWorkout
     
     private(set) var locations = [CLLocation]()

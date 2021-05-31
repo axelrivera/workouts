@@ -63,10 +63,10 @@ struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
             .onAppear(perform: {
-                workoutManager.workouts = WorkoutManager.sampleWorkouts()
                 workoutManager.state = .ok
                 workoutManager.shouldRequestReadingAuthorization = false
             })
+            .environment(\.managedObjectContext, StorageProvider.preview.persistentContainer.viewContext)
             .environmentObject(workoutManager)
             .environmentObject(IAPManager())
     }

@@ -14,3 +14,17 @@ extension Collection {
     }
     
 }
+
+extension String {
+    
+    func removingCharacters(in set: CharacterSet) -> String {
+        var chars = self
+        for idx in chars.indices.reversed() {
+            if set.contains(String(chars[idx]).unicodeScalars.first!) {
+                chars.remove(at: idx)
+            }
+        }
+        return String(chars)
+    }
+    
+}

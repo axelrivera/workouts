@@ -9,7 +9,6 @@ import Foundation
 
 extension Array {
     
-    
     func slicedInSeconds(_ seconds: Int, key: KeyPath<Element, Date>) -> [Date: [Element]] {
         var dictionary: [Date: [Element]] = [:]
         guard let first = self.first else { return dictionary }

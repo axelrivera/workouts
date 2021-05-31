@@ -170,6 +170,33 @@ extension WorkoutImport {
         records.compactMap { $0.location }
     }
     
+    var filteredEvents: [Event] {
+        let events = self.events.sorted { lhs, rhs in
+            guard let ldate = lhs.timestamp.dateValue, let rdate = rhs.timestamp.dateValue else { return false }
+            return ldate < rdate
+        }
+        
+        var finalEvents = [Event]()
+        for (first, second) in zip(events, events.dropFirst()) {
+            if first.eventType == second.eventType { continue }
+            finalEvents.append(first)
+        }
+        
+        if finalEvents.first?.eventType == .resume {
+            finalEvents.removeFirst()
+        }
+        
+        if finalEvents.last?.eventType == .pause {
+            finalEvents.removeLast()
+        }
+        
+        return finalEvents
+    }
+    
+    var workoutEvents: [HKWorkoutEvent] {
+        filteredEvents.compactMap({ $0.workoutEvent })
+    }
+    
 }
 
 // MARK: - Presentation

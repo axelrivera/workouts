@@ -160,7 +160,7 @@ func formattedElevationString(for elevation: Double?) -> String {
 
 // MARK: - Activities
 
-func formattedActivityTypeString(for activityType: HKWorkoutActivityType, indoor: Bool) -> String {
+func formattedActivityTypeString(for activityType: Sport, indoor: Bool) -> String {
     var strings = [String]()
     
     switch activityType {

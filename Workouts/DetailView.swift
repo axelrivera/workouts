@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import CoreData
 
 struct DetailView: View {
     enum ActiveSheet: Identifiable {
@@ -15,15 +16,19 @@ struct DetailView: View {
         var id: Int { hashValue }
     }
     
+    var viewContext: NSManagedObjectContext
     @ObservedObject var workout: Workout
     @StateObject var detailManager: DetailManager
     
     @State var activeSheet: ActiveSheet?
     @State var showMapOverlay = false
     
-    init(workout: Workout) {
+    init(workout: Workout, context: NSManagedObjectContext) {
         self.workout = workout
-        _detailManager = StateObject(wrappedValue: DetailManager(workoutID: workout.id))
+        self.viewContext = context
+        
+        let manager = DetailManager(workout: workout, context: context)
+        _detailManager = StateObject(wrappedValue: manager)
     }
     
     var body: some View {
@@ -34,82 +39,81 @@ struct DetailView: View {
                     .padding(.bottom, 5.0)
                 
                 HStack(alignment: .lastTextBaseline) {
-                    Text(formattedFullDateString(for: workout.startDate))
+                    Text(formattedFullDateString(for: workout.start))
                         .font(.headline)
                         .padding(.bottom, 2.0)
-                    Text(formattedTimeRangeString(start: workout.startDate, end: workout.endDate))
+                    Text(formattedTimeRangeString(start: workout.start, end: workout.end))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
             .padding([.top, .bottom], 5.0)
             
-            if detailManager.updateUI {
-                if detailManager.showDetailMap {
-                    Button(action: { activeSheet = .map }) {
-                        WorkoutMap(points: $detailManager.points)
-                            .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/, minHeight: 200.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                            .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
-                            .cornerRadius(Constants.cornerRadius)
+            if workout.showMap {
+                Button(action: { activeSheet = .map }) {
+                    WorkoutMap(points: $detailManager.points)
+                        .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
+                        .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
+                        .cornerRadius(Constants.cornerRadius)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+//                if let locationName = detailManager.locationName {
+//                    HStack {
+//                        Image(systemName: "mappin")
+//                            .imageScale(.small)
+//                        Text("Location")
+//                        Spacer()
+//                        Text(locationName)
+//                    }
+//                }
+            }
+            
+            Group {
+                RoundButton(text: "Workout Analysis") {
+                    activeSheet = .analysis
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            ForEach(gridRows(for: workout, heartRate: workout.avgHeartRate)) { row in
+                HStack(spacing: 5.0) {
+                    if let left = row.left {
+                        DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
                     }
-                    .buttonStyle(PlainButtonStyle())
                     
-                    if let locationName = detailManager.locationName {
-                        HStack {
-                            Image(systemName: "mappin")
-                                .imageScale(.small)
-                            Text("Location")
-                            Spacer()
-                            Text(locationName)
-                        }
-                    }
-                }
-                
-                if detailManager.showAnalysis {
-                    Group {
-                        RoundButton(text: "Workout Analysis") {
-                            activeSheet = .analysis
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                
-                ForEach(gridRows(for: workout, heartRate: detailManager.avgHeartRate)) { row in
-                    HStack(spacing: 5.0) {
-                        if let left = row.left {
-                            DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
-                        }
-                        
-                        if let right = row.right {
-                            DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
-                        }
-                    }
-                }
-                
-                HStack {
-                    Text("Source")
-                    Spacer()
-                    Text(workout.sourceString)
-                        .foregroundColor(.secondary)
-                }
-                
-                if let device = workout.deviceString {
-                    HStack {
-                        Text("Device")
-                        Spacer()
-                        Text(device)
-                            .foregroundColor(.secondary)
+                    if let right = row.right {
+                        DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
                     }
                 }
             }
+            
+            HStack {
+                Text("Source")
+                Spacer()
+                Text(workout.source)
+                    .foregroundColor(.secondary)
+            }
+            
+            if let device = workout.deviceString {
+                HStack {
+                    Text("Device")
+                    Spacer()
+                    Text(device)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
+        .onAppear(perform: {
+            detailManager.run()
+        })
         .navigationTitle(workout.detailTitle)
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .fullScreenCover(item: $activeSheet) { (item) in
             switch item {
             case .map:
-                DetailMapView(workout: workout, detailManager: detailManager)
+                DetailMapView(points: detailManager.points)
             case .analysis:
                 DetailAnalysisView(workout: workout, detailManager: detailManager)
             }
@@ -139,58 +143,58 @@ extension DetailView {
         }
     }
     
-    var avgSpeed: Double? {
-        if let avgSpeed = workout.avgSpeed { return avgSpeed }
-        let speed = detailManager.avgSpeed
-        return speed > 0 ? speed : nil
-    }
-    
-    var totalTime: (String, Double)? {
-        if detailManager.movingTime > 0 { return ("Moving Time", detailManager.movingTime) }
-        return ("Time", workout.elapsedTime)
-    }
+//    var avgSpeed: Double? {
+//        if let avgSpeed = workout.avgSpeed { return avgSpeed }
+//        let speed = detailManager.avgSpeed
+//        return speed > 0 ? speed : nil
+//    }
+//
+//    var totalTime: (String, Double)? {
+//        if detailManager.movingTime > 0 { return ("Moving Time", detailManager.movingTime) }
+//        return ("Time", workout.elapsedTime)
+//    }
     
     func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
         var items = [GridItem]()
         var item: GridItem
         
-        if let distance = workout.distance {
-            item = GridItem(text: "Distance", detail: formattedDistanceString(for: distance), detailColor: .distance)
+        if workout.distance > 0 {
+            item = GridItem(text: "Distance", detail: formattedDistanceString(for: workout.distance), detailColor: .distance)
             items.append(item)
         }
         
-        if let (timeLabel, time) = totalTime {
-            item = GridItem(text: timeLabel, detail: formattedHoursMinutesDurationString(for: time), detailColor: .time)
+//        if let (timeLabel, time) = totalTime {
+//            item = GridItem(text: timeLabel, detail: formattedHoursMinutesDurationString(for: time), detailColor: .time)
+//            items.append(item)
+//        }
+        
+        if workout.avgHeartRate > 0 {
+            item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
             items.append(item)
         }
         
-        if let heartRate = heartRate {
-            item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: heartRate), detailColor: .calories)
+        if workout.energyBurned > 0 {
+            item = GridItem(text: "Calories", detail: formattedCaloriesString(for: workout.energyBurned), detailColor: .calories)
             items.append(item)
         }
         
-        if let calories = workout.energyBurned {
-            item = GridItem(text: "Calories", detail: formattedCaloriesString(for: calories), detailColor: .calories)
+        if workout.avgSpeed > 0 {
+            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
             items.append(item)
         }
         
-        if let speed = avgSpeed {
-            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: speed), detailColor: .speed)
+//        if workout.isPacePresent {
+//            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .cadence)
+//            items.append(item)
+//        }
+        
+        if workout.sport == .cycling && workout.avgCyclingCadence > 0 {
+            item = GridItem(text: "Avg Cadence", detail: formattedCyclingCadenceString(for: workout.avgCyclingCadence), detailColor: .cadence)
             items.append(item)
         }
         
-        if workout.isPacePresent {
-            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .cadence)
-            items.append(item)
-        }
-        
-        if workout.isCadencePresent {
-            item = GridItem(text: "Avg Cadence", detail: formattedCyclingCadenceString(for: workout.avgCadence), detailColor: .cadence)
-            items.append(item)
-        }
-        
-        if let elevation = workout.elevationAscended {
-            item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: elevation), detailColor: .elevation)
+        if workout.elevationAscended > 0 {
+            item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
             items.append(item)
         }
         
@@ -229,9 +233,11 @@ struct DetailGridView: View {
 }
 
 struct DetailView_Previews: PreviewProvider {
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    
     static var previews: some View {
         NavigationView {
-            DetailView(workout: Workout.sample)
+            DetailView(workout: Workout(context: viewContext), context: viewContext)
         }
         .colorScheme(.dark)
     }

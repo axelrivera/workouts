@@ -44,6 +44,7 @@ enum Sport: String, Identifiable, CaseIterable {
         }
     }
     
+    static let indoorOutdoorList: [Sport] = [.running, .cycling, .walking]
     static let supportedSports: [Sport] = [.cycling, .running, .walking]
     static let distanceSports: [Sport] = [.cycling, .walking, .running]
     static let walkingAndRunningSports: [Sport] = [.walking, .running]

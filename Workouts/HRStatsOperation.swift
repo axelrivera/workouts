@@ -7,11 +7,11 @@
 
 import HealthKit
 
-class HeartRateStatsOperation: SyncOperation {
+final class HRStatsOperation: SyncOperation {
     private var workout: HKWorkout
     
-    private(set) var avgHeartRate: Double?
-    private(set) var maxHeartRate: Double?
+    private(set) var avgHeartRate: Double = 0
+    private(set) var maxHeartRate: Double = 0
     private(set) var error: Error?
     
     init(workout: HKWorkout) {
@@ -25,8 +25,8 @@ class HeartRateStatsOperation: SyncOperation {
         WorkoutDataStore.fetchHeartRateStatsValue(workout: workout) { result in
             switch result {
             case .success(let sample):
-                self.avgHeartRate = sample.avg
-                self.maxHeartRate = sample.max
+                self.avgHeartRate = sample.avg ?? 0
+                self.maxHeartRate = sample.max ?? 0
             case .failure(let error):
                 Log.debug("fetching heart rate failed: \(error.localizedDescription)")
                 self.error = error
