@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreLocation
 
 extension Sequence {
     /// Similar to
@@ -61,4 +62,17 @@ extension Array {
         }
         return result
     }
+}
+
+
+extension Sequence where Iterator.Element: CLLocation {
+    
+    var totalDistance: Double {
+        var distance: Double = 0
+        for (prev, current) in zip(self, self.dropFirst()) {
+            distance += current.distance(from: prev)
+        }
+        return distance
+    }
+    
 }

@@ -11,3 +11,13 @@ struct Quantity {
     let timestamp: Date
     let value: Double
 }
+
+struct Pace {
+    let start: Date
+    let end: Date
+    let distance: Double
+    
+    var duration: Double {
+        end.timeIntervalSince(start)
+    }
+}

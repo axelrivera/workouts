@@ -7,6 +7,7 @@
 
 import Foundation
 import HealthKit
+import CoreData
 import Combine
 
 class StatsManager: ObservableObject {
@@ -18,17 +19,20 @@ class StatsManager: ObservableObject {
             fetchSummaries()
         }
     }
+    
+    private let dataProvider: DataProvider
         
     @Published var weekStats: StatsSummary
     @Published var monthStats: StatsSummary
     @Published var yearStats: StatsSummary
     @Published var allStats: StatsSummary
     
-    var summariesPublishers = [Timeframe: Cancellable]()
-    var refreshCancellable: Cancellable?
-    
-    init() {
+    private var refreshCancellable: Cancellable?
+        
+    init(context: NSManagedObjectContext) {
         sport = AppSettings.defaultStatsFilter
+        dataProvider = DataProvider(context: context)
+        
         weekStats = StatsSummary(sport: sport, timeframe: .week)
         monthStats = StatsSummary(sport: sport, timeframe: .month)
         yearStats = StatsSummary(sport: sport, timeframe: .year)
@@ -70,17 +74,12 @@ extension StatsManager {
     }
     
     func fetchSummary(for timeframe: Timeframe) {
-        if let publisher = summariesPublishers[timeframe] {
-            publisher.cancel()
-            summariesPublishers.removeValue(forKey: timeframe)
+        do {
+            let summary = try dataProvider.fetchStatsSummary(sport: sport, timeframe: timeframe)
+            updateSummary(summary)
+        } catch {
+            Log.debug("fetch summary error: \(error.localizedDescription)")
         }
-        
-        summariesPublishers[timeframe] = StatsProvider.fetchStatsSummary(sport: sport, timeframe: timeframe)
-            .sink(receiveCompletion: { (completion) in
-                Log.debug("summary for timeframe completed: \(timeframe)")
-            }, receiveValue: { (summary) in
-                self.updateSummary(summary)
-            })
     }
     
     func updateSummary(_ summary: StatsSummary) {

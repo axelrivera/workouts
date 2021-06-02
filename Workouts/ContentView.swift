@@ -12,6 +12,7 @@ struct ContentView: View {
         case workouts, stats, settings
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @State private var selected = Tabs.workouts
@@ -29,7 +30,7 @@ struct ContentView: View {
                         workoutManager.fetchRequestStatusForReading()
                     }
                 
-                StatsView()
+                StatsView(context: viewContext)
                     .tabItem { Label("Statistics", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
                     .tag(Tabs.stats)
                 

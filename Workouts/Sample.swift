@@ -18,7 +18,8 @@ class Sample: NSManagedObject {
     @NSManaged var altitude: Double
     @NSManaged var heartRate: Double
     @NSManaged var cyclingCadence: Double
-    @NSManaged var pace: Double
+    @NSManaged var paceDistance: Double
+    @NSManaged var paceDuration: Double
     @NSManaged var temperature: Double
     
     // MARK: - Relationships
@@ -65,7 +66,8 @@ extension Sample {
         sample.altitude = remoteSample.altitude
         sample.heartRate = remoteSample.heartRate
         sample.cyclingCadence = remoteSample.cyclingCadence
-        sample.pace = remoteSample.pace
+        sample.paceDuration = remoteSample.paceDuration
+        sample.paceDistance = remoteSample.paceDistance
         sample.temperature = remoteSample.temperature
         sample.workout = workout
         

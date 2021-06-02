@@ -143,16 +143,9 @@ extension DetailView {
         }
     }
     
-//    var avgSpeed: Double? {
-//        if let avgSpeed = workout.avgSpeed { return avgSpeed }
-//        let speed = detailManager.avgSpeed
-//        return speed > 0 ? speed : nil
-//    }
-//
-//    var totalTime: (String, Double)? {
-//        if detailManager.movingTime > 0 { return ("Moving Time", detailManager.movingTime) }
-//        return ("Time", workout.elapsedTime)
-//    }
+    var totalTime: Workout.Time {
+        workout.totalTime
+    }
     
     func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
         var items = [GridItem]()
@@ -163,10 +156,14 @@ extension DetailView {
             items.append(item)
         }
         
-//        if let (timeLabel, time) = totalTime {
-//            item = GridItem(text: timeLabel, detail: formattedHoursMinutesDurationString(for: time), detailColor: .time)
-//            items.append(item)
-//        }
+        switch workout.totalTime {
+        case .moving(let duration):
+            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesDurationString(for: duration), detailColor: .time)
+            items.append(item)
+        case .total(let duration):
+            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesDurationString(for: duration), detailColor: .time)
+            items.append(item)
+        }
         
         if workout.avgHeartRate > 0 {
             item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
@@ -178,22 +175,22 @@ extension DetailView {
             items.append(item)
         }
         
-        if workout.avgSpeed > 0 {
+        if workout.sport.isSpeedSport && workout.avgSpeed > 0 {
             item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
             items.append(item)
         }
         
-//        if workout.isPacePresent {
-//            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .cadence)
-//            items.append(item)
-//        }
+        if workout.sport.isWalkingOrRunning  && detailManager.avgPace > 0 {
+            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: detailManager.avgPace), detailColor: .cadence)
+            items.append(item)
+        }
         
-        if workout.sport == .cycling && workout.avgCyclingCadence > 0 {
+        if workout.sport.isCycling && workout.avgCyclingCadence > 0 {
             item = GridItem(text: "Avg Cadence", detail: formattedCyclingCadenceString(for: workout.avgCyclingCadence), detailColor: .cadence)
             items.append(item)
         }
         
-        if workout.elevationAscended > 0 {
+        if workout.showMap && workout.elevationAscended > 0 {
             item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
             items.append(item)
         }

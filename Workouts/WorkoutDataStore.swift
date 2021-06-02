@@ -100,10 +100,6 @@ struct WorkoutDataStore {
                 }
             }
         }
-
-//        query.updateHandler = { (query, samples, deleted, anchor, error) in
-//
-//        }
         
         healthStore.execute(query)
     }
@@ -169,7 +165,7 @@ extension WorkoutDataStore {
         healthStore.execute(query)
     }
     
-    static func fetchHeartRateSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+    static func fetchHeartRateSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Any], Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
         
@@ -203,7 +199,7 @@ extension WorkoutDataStore {
         healthStore.execute(query)
     }
             
-    static func fetchRunningWalkingPaceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+    static func fetchRunningWalkingPaceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Any], Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
         
@@ -228,20 +224,17 @@ extension WorkoutDataStore {
             }
             
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
-            let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
+            let values: [Pace] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.sumQuantity(for: source) else { return nil }
                 let distance = quantity.doubleValue(for: .meter())
-                let duration = statistics.endDate.timeIntervalSince(statistics.startDate)
-                let pace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
-                                
-                return Quantity(timestamp: statistics.startDate, value: pace)
+                return Pace(start: statistics.startDate, end: statistics.endDate, distance: distance)
             }
             completionHandler(.success(values))
         }
         healthStore.execute(query)
     }
     
-    static func fetchCyclingCadenceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+    static func fetchCyclingCadenceSamples(workout: HKWorkout, completionHandler: @escaping (Result<[Any], Error>) -> Void) {
         let datePredicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let cadencePredicate = HKQuery.predicateForObjects(withMetadataKey: MetadataKeySampleCadence)
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, cadencePredicate])

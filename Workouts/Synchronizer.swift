@@ -30,6 +30,9 @@ class Synchronizer {
         context.performAndWait {
             self.importer.importLatestWorkouts()
         }
+        
+        Log.debug("send refresh workouts notification")
+        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
     }
     
     deinit {

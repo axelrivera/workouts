@@ -17,45 +17,43 @@ struct WorkoutsView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @State var activeSheet: ActiveSheet?
     
-    static var fetchRequest: NSFetchRequest<Workout> = {
-        let request = Workout.sortedFetchRequest
-        request.fetchBatchSize = 20
-        request.returnsObjectsAsFaults = false
-        return request
-    }()
+    @State var sport: Sport? {
+        didSet {
+            AppSettings.defaultWorkoutsFilter = sport
+        }
+    }
     
     @Environment(\.managedObjectContext) private var viewContext
     
-    @FetchRequest(fetchRequest: Self.fetchRequest, animation: .default)
-    private var workouts: FetchedResults<Workout>
-    
+    init() {
+        self.sport = AppSettings.defaultWorkoutsFilter
+    }
+            
     var body: some View {
         NavigationView {
             ZStack {
-                List {
-                    ForEach(workouts) { workout in
-                        NavigationLink(destination: DetailView(workout: workout, context: self.viewContext)) {
-                            VStack(alignment: .leading, spacing: 2.0) {
-                                Text(formattedActivityTypeString(for: workout.sport, indoor: workout.indoor))
-                                
-                                if let distance = workout.distance {
-                                    Text(formattedDistanceString(for: distance))
-                                        .font(.title)
-                                        .foregroundColor(.distance)
-                                } else {
-                                    Text(formattedHoursMinutesDurationString(for: workout.elapsedTime))
-                                        .font(.title)
-                                        .foregroundColor(.time)
-                                }
-                                
-                                HStack {
-                                    Text(workout.source)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(formattedRelativeDateString(for: workout.start))
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
+                FilteredList(sport: sport) { workout in
+                    NavigationLink(destination: DetailView(workout: workout, context: self.viewContext)) {
+                        VStack(alignment: .leading, spacing: 2.0) {
+                            Text(formattedActivityTypeString(for: workout.sport, indoor: workout.indoor))
+                            
+                            if workout.distance > 0 {
+                                Text(formattedDistanceString(for: workout.distance))
+                                    .font(.title)
+                                    .foregroundColor(.distance)
+                            } else {
+                                Text(formattedHoursMinutesDurationString(for: workout.duration))
+                                    .font(.title)
+                                    .foregroundColor(.time)
+                            }
+                            
+                            HStack {
+                                Text(workout.source)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text(formattedRelativeDateString(for: workout.start))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }
@@ -70,9 +68,29 @@ struct WorkoutsView: View {
             }
             .navigationTitle("Workouts")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeSheet = .add }) {
                         Image(systemName: "plus")
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(action: {
+                            self.sport = nil
+                        }, label: {
+                            Text("All Workouts")
+                        })
+                        
+                        ForEach(Sport.supportedSports) { sport in
+                            Button(action: {
+                                self.sport = sport
+                            }, label: {
+                                Text(sport.title)
+                            })
+                        }
+                    } label: {
+                        Text(sport?.title ?? "All Workouts")
                     }
                 }
             }
@@ -99,5 +117,35 @@ struct WorkoutsView_Previews: PreviewProvider {
             .environment(\.managedObjectContext, StorageProvider.preview.persistentContainer.viewContext)
             .environmentObject(workoutManager)
             .colorScheme(.dark)
+    }
+}
+
+struct FilteredList<Content: View>: View {
+    var fetchRequest: FetchRequest<Workout>
+    var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
+
+    // this is our content closure; we'll call this once for each item in the list
+    let content: (Workout) -> Content
+
+    var body: some View {
+        List(fetchRequest.wrappedValue, id: \.self) { workout in
+            self.content(workout)
+        }
+    }
+
+    init(sport: Sport?, @ViewBuilder content: @escaping (Workout) -> Content) {
+        var predicates = [NSPredicate]()
+        
+        if let sport = sport {
+            predicates.append(Workout.predicateForSport(sport))
+        }
+        
+        predicates.append(Workout.notMarkedForLocalDeletionPredicate)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        
+        let sort = [Workout.sortedByDateDescriptor()]
+        fetchRequest = FetchRequest(entity: Workout.entity(), sortDescriptors: sort, predicate: predicate, animation: .default)
+        
+        self.content = content
     }
 }

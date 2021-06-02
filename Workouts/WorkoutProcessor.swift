@@ -20,9 +20,13 @@ final class WorkoutProcessor {
     let workout: HKWorkout
     
     var records = [SampleProcessor.Record]()
+    var duration: Double = 0
     var movingTime: Double = 0
+    var avgMovingSpeed: Double = 0
     var avgHeartRate: Double = 0
     var maxHeartRate: Double = 0
+    var avgPace: Double = 0
+    var bestPace: Double = 0
     var showMap: Bool = false
     
     // Operations
@@ -68,9 +72,9 @@ final class WorkoutProcessor {
                 locations = locationOperation.locations
             }
             
-            let hrSamples = self.heartRateOperation?.samples ?? []
-            let cadenceSamples = self.cadenceOperation?.samples ?? []
-            let paceSamples = self.paceOperation?.samples ?? []
+            let hrSamples = self.heartRateOperation?.samples as? [Quantity] ?? []
+            let cadenceSamples = self.cadenceOperation?.samples as? [Quantity] ?? []
+            let paceSamples = self.paceOperation?.samples as? [Pace] ?? []
                         
             let generator = SampleProcessor(
                 workout: self.workout,
@@ -83,7 +87,9 @@ final class WorkoutProcessor {
             
             self.showMap = locations.isPresent
             self.records = generator.validRecords
+            self.duration = generator.duration
             self.movingTime = generator.movingTime
+            self.avgMovingSpeed = generator.avgMovingSpeed
             self.avgHeartRate = self.statsOperation?.avgHeartRate ?? 0
             self.maxHeartRate = self.statsOperation?.maxHeartRate ?? 0
         }

@@ -10,29 +10,22 @@ import CoreLocation
 import HealthKit
 
 class SampleProcessor {
-    struct Constants {
-        static let baseSpeed: Double = 2.68 // This should be good for cycling but needs to be updated depending on sport
-    }
-    
     let workout: HKWorkout
     let locations: [CLLocation]
     let heartRateSamples: [Quantity]
     let cadenceSamples: [Quantity]
-    let paceSamples: [Quantity]
+    let paceSamples: [Pace]
     
+    private(set) var avgMovingSpeed: Double = 0
     private(set) var records = [Record]()
     private(set) var movingTime: Double = 0
     
     private var dictionary = [Int: Record]()
     private var stoppedIntervals = [DateInterval]()
-        
-    lazy var baseSpeed: Double = {
-        Constants.baseSpeed
-    }()
     
-    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity], paceSamples: [Quantity]) {
+    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity], paceSamples: [Pace]) {
         self.workout = workout
-        self.locations = locations
+        self.locations = locations.sorted(by: { $0.timestamp < $1.timestamp })
         self.heartRateSamples = heartRateSamples
         self.cadenceSamples = cadenceSamples
         self.paceSamples = paceSamples
@@ -68,9 +61,27 @@ extension SampleProcessor {
         locations.isPresent
     }
     
+    var workoutEvents: [HKWorkoutEvent] {
+        workout.workoutEvents ?? [HKWorkoutEvent]()
+    }
+    
+    var hasSystemEvents: Bool {
+        workoutEvents.isPresent
+    }
+    
     static let validEvents: [HKWorkoutEventType] = [.pause, .resume]
     
     private func generateStoppedIntervals() {
+        if hasSystemEvents {
+            generateSystemEventIntervals()
+        } else {
+            generateManualEventIntervals()
+        }
+        
+        Log.debug("total stopped intervals: \(stoppedIntervals.count)")
+    }
+    
+    private func generateSystemEventIntervals() {
         let events = workout.workoutEvents ?? [HKWorkoutEvent]()
         let sortedEvents = events.sorted(by: { $0.dateInterval.start < $1.dateInterval.start })
         
@@ -92,10 +103,52 @@ extension SampleProcessor {
                 pauseEvent = nil
             }
         }
+    }
+    
+    func totalDistance() -> Double {
+        workout.totalDistance?.doubleValue(for: .meter()) ?? 0
+    }
+    
+    func avgSpeed() -> Double {
+        guard workout.duration > 0 else { return 0 }
+        let distance = totalDistance()
+        return distance / workout.duration
+    }
+    
+    private func generateManualEventIntervals() {
+        let speed = avgSpeed()
+        let baseDistance = max(speed * 0.25, 1.0)
         
-        Log.debug("total duration: \(duration)")
-        Log.debug("stopped: \(stoppedIntervals.map { $0.duration }.reduce(0, +))")
-        Log.debug("events: \(events.count), intervals: \(stoppedIntervals.count)")
+        var pauseTimestamp: Date?
+        
+        for (prev, current) in zip(locations, locations.dropFirst()) {
+            let distance = current.distance(from: prev)
+                        
+            if distance <= baseDistance && pauseTimestamp == nil {
+                pauseTimestamp = current.timestamp
+                continue
+            }
+            
+            if distance <= baseDistance && pauseTimestamp != nil { continue }
+            
+            if let pause = pauseTimestamp, distance > baseDistance {
+                let interval = DateInterval(start: pause, end: current.timestamp)
+                
+                if interval.duration > 1.0 {
+                    Log.debug("creating stop interval: \(interval.duration), speed: \(speed), base distance: \(baseDistance)")
+                    stoppedIntervals.append(interval)
+                }
+                pauseTimestamp = nil
+            }
+        }
+        
+        if let pause = pauseTimestamp, let last = locations.last?.timestamp {
+            let interval = DateInterval(start: pause, end: last)
+            if interval.duration > 0.0 {
+                Log.debug("creating last stop interval: \(interval.duration)")
+                stoppedIntervals.append(interval)
+            }
+        }
     }
     
     private func isTimestampActive(_ timestamp: Date) -> Bool {
@@ -127,7 +180,6 @@ extension SampleProcessor {
             records.append(record)
             dictionary[key] = record
         }
-        
     }
     
     func keyForTimestamp(_ timestamp: Date) -> Int {
@@ -138,6 +190,7 @@ extension SampleProcessor {
         processLocationSamples()
         processHeartRateSamples()
         processCadenceSamples()
+        processPaceSamples()
     }
     
     private func processLocationSamples() {
@@ -153,31 +206,12 @@ extension SampleProcessor {
             record.longitude = location.coordinate.longitude
             record.altitude = location.altitude
         }
-
-//        let sortedLocations = locations.sorted(by: { $0.timestamp < $1.timestamp })
-//        for (prev, current) in zip(sortedLocations, sortedLocations.dropFirst()) {
-//            let start = prev.timestamp
-//            let end = current.timestamp
-////            let intervalDuration = end.timeIntervalSince(start)
-//
-//            let key = keyForTimestamp(start)
-//            guard let record = dictionary[key] else { continue }
-//
-//            record.isLocation = true
-//            record.speed = current.speed
-//            record.latitude = current.coordinate.latitude
-//            record.longitude = current.coordinate.longitude
-//            record.altitude = current.altitude
-//
-////            if intervalDuration > 0 {
-////                let distance = current.distance(from: prev)
-////                let speed = distance / intervalDuration
-////                record.speed = speed
-////            }
-//            record.isActive = record.speed > 2.0
-//        }
         
         movingTime = Double(records.filter({ $0.isActive }).count)
+        if movingTime > 0 {
+            let distance = totalDistance()
+            avgMovingSpeed = distance / movingTime
+        }
     }
     
     private func processHeartRateSamples() {
@@ -206,10 +240,11 @@ extension SampleProcessor {
         guard workout.workoutActivityType.isRunningWalking && paceSamples.isPresent else { return }
         
         for sample in paceSamples {
-            let key = keyForTimestamp(sample.timestamp)
+            let key = keyForTimestamp(sample.start)
             guard let record = dictionary[key] else { continue }
             
-            record.pace = max(record.pace, sample.value)
+            record.paceDistance = sample.distance
+            record.paceDuration = sample.duration
         }
     }
     
@@ -227,7 +262,8 @@ extension SampleProcessor {
         var altitude: Double = 0
         var heartRate: Double = 0
         var cyclingCadence: Double = 0
-        var pace: Double = 0
+        var paceDistance: Double = 0
+        var paceDuration: Double = 0
         var temperature: Double = 0
         
         init(timestamp: Date) {
@@ -235,7 +271,17 @@ extension SampleProcessor {
         }
         
         var isEmpty: Bool {
-            let sum = [latitude, longitude, speed, altitude, heartRate, cyclingCadence, pace, temperature].reduce(0, +)
+            let sum = [
+                latitude,
+                longitude,
+                speed,
+                altitude,
+                heartRate,
+                cyclingCadence,
+                paceDistance,
+                paceDuration,
+                temperature
+            ].reduce(0, +)
             return sum == 0
         }
         

@@ -28,6 +28,7 @@ struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
+        static let defaultWorkoutsFilter = "arn_default_workouts_filter"
         static let mockPurchaseActive = "arn_mock_purchase_active"
     }
 
@@ -58,6 +59,16 @@ struct AppSettings {
         }
         set {
             setValue(newValue.rawValue, for: Keys.defaultStatsFilter)
+        }
+    }
+    
+    static var defaultWorkoutsFilter: Sport? {
+        get {
+            let string = objectForKey(Keys.defaultWorkoutsFilter) as? String ?? ""
+            return Sport(rawValue: string)
+        }
+        set {
+            setValue(newValue?.rawValue, for: Keys.defaultWorkoutsFilter)
         }
     }
     

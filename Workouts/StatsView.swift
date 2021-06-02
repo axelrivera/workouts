@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct StatsView: View {
     @EnvironmentObject var purchaseManager: IAPManager
-    @StateObject var statsManager = StatsManager()
+    @StateObject var statsManager: StatsManager
     
     let availableSports: [Sport] = [.cycling, .running]
+    
+    init(context: NSManagedObjectContext) {
+        let manager = StatsManager(context: context)
+        _statsManager = StateObject(wrappedValue: manager)
+    }
     
     var body: some View {
         NavigationView {
@@ -165,8 +171,10 @@ struct StatsView_Previews: PreviewProvider {
         return manager
     }()
     
+    static var context = StorageProvider.preview.persistentContainer.viewContext
+    
     static var previews: some View {
-        StatsView()
+        StatsView(context: context)
             .colorScheme(.dark)
             .environmentObject(purchaseManager)
     }

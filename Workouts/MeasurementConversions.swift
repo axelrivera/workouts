@@ -19,6 +19,12 @@ func nativeAltitudeToLocalizedUnit(for meters: Double) -> Double {
     return conversion.value
 }
 
+func nativeDistanceToLocalizedUnit(for meters: Double) -> Double {
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
+    return conversion.value
+}
+
 func kilogramsToLocalizedWeightUnit(for kilograms: Double) -> Double {
     if Locale.isMetric() {
         return kilograms

@@ -15,15 +15,15 @@ class StorageProvider {
     init(inMemory: Bool = false) {
         persistentContainer = PersistentContainer(name: "Workouts")
         
-        #if DEBUG
-        if let storeDescription = persistentContainer.persistentStoreDescriptions.first, let url = storeDescription.url {
-            do {
-                try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: storeDescription.type)
-            } catch {
-                Log.debug("failed to reset persistent store: \(error.localizedDescription)")
-            }
-        }
-        #endif
+//        #if DEBUG
+//        if let storeDescription = persistentContainer.persistentStoreDescriptions.first, let url = storeDescription.url {
+//            do {
+//                try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: storeDescription.type)
+//            } catch {
+//                Log.debug("failed to reset persistent store: \(error.localizedDescription)")
+//            }
+//        }
+//        #endif
         
         if inMemory {
             persistentContainer.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")

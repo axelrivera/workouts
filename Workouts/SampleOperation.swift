@@ -18,7 +18,7 @@ final class SampleOperation: SyncOperation {
     private(set) var sampleType: SampleType
     private var workout: HKWorkout
     
-    private(set) var samples = [Quantity]()
+    private(set) var samples = [Any]()
     
     init(workout: HKWorkout, sampleType: SampleType) {
         self.workout = workout
@@ -45,8 +45,8 @@ final class SampleOperation: SyncOperation {
 
 extension SampleOperation {
     
-    private func completionHandler() -> (Result<[Quantity], Error>) -> Void {
-        let completion: (Result<[Quantity], Error>) -> Void = { [unowned self] result in
+    private func completionHandler() -> (Result<[Any], Error>) -> Void {
+        let completion: (Result<[Any], Error>) -> Void = { [unowned self] result in
             if let samples = try? result.get() {
                 self.samples = samples
             }

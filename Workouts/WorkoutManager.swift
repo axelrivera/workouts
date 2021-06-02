@@ -20,10 +20,7 @@ class WorkoutManager: ObservableObject {
         
     @Published var shouldRequestReadingAuthorization = false
     @Published var state = State.ok
-    
-    var workoutQuery: HKAnchoredObjectQuery?
-    var lastWorkoutAnchor: HKQueryAnchor?
-        
+            
     func fetchRequestStatusForReading() {
         Log.debug("request status for reading")
         
@@ -122,16 +119,6 @@ extension WorkoutManager {
         DispatchQueue.main.async {
             self.state = state
         }
-    }
-    
-}
-
-// MARK: Sample Data
-
-extension WorkoutManager {
-    
-    static func sampleWorkouts() -> [BWorkout] {
-        (0 ..< 10).map({ _ -> BWorkout in BWorkout.sample })
     }
     
 }

@@ -90,26 +90,26 @@ func formattedTimeRangeString(start: Date?, end: Date?) -> String {
 // MARK: - Distance and Speed
 
 func formattedDistanceString(for meters: Double?) -> String {
-    guard let meters = meters else { return "" }
+    guard let meters = meters, meters > 0 else { return "" }
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     return MeasurementFormatter.distance.string(from: measurement)
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
-    guard let speed = metersPerSecond else { return "" }
+    guard let speed = metersPerSecond, speed > 0 else { return "" }
     let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
     return MeasurementFormatter.speed.string(from: measurement)
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
-    guard let duration = duration else { return "" }
+    guard let duration = duration, duration > 0 else { return "" }
     let pace = formattedPaceString(for: duration)
     let unit = runningWalkingDistanceTargetUnit().symbol
     return String(format: "%@ /%@", pace, unit)
 }
 
 func formattedPaceString(for duration: Double?) -> String {
-    guard let duration = duration else { return "n/a" }
+    guard let duration = duration, duration > 0 else { return "" }
     let (m, s) = secondsToMinutesSeconds(seconds: Int(duration))
     return String(format: "%d:%02d", m, s)
 }
@@ -118,6 +118,7 @@ func formattedPaceString(for duration: Double?) -> String {
 
 func formattedHeartRateString(for heartRate: Double?) -> String {
     let number = (heartRate ?? 0) as NSNumber
+    guard number.doubleValue > 0 else { return ""}
     return String(format: "%@ bpm", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
@@ -125,6 +126,7 @@ func formattedHeartRateString(for heartRate: Double?) -> String {
 
 func formattedCyclingCadenceString(for cadence: Double?) -> String {
     let number = (cadence ?? 0) as NSNumber
+    guard number.doubleValue > 0 else { return "" }
     return String(format: "%@ rpm", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
@@ -132,6 +134,7 @@ func formattedCyclingCadenceString(for cadence: Double?) -> String {
 
 func formattedCaloriesString(for calories: Double?) -> String {
     let number = (calories ?? 0) as NSNumber
+    guard number.doubleValue > 0 else { return "" }
     return String(format: "%@ cal", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
@@ -152,7 +155,7 @@ func formattedLocalizedWeightString(for weight: Double?) -> String {
 // MARK: - Elevation
 
 func formattedElevationString(for elevation: Double?) -> String {
-    guard let elevation = elevation else { return "n/a" }
+    guard let elevation = elevation else { return "" }
     let measurement = Measurement<UnitLength>(value: elevation, unit: .meters)
     let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .feet)
     return MeasurementFormatter.elevation.string(from: conversion)
