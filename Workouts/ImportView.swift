@@ -78,7 +78,6 @@ struct ImportView: View {
                         importManager.state = .processing
                         importManager.processDocuments(at: urls) {
                             importManager.state = urls.isEmpty ? .empty : .ok
-                            Log.debug("finish processing documents")
                         }
                     }
                 case .tutorial:
@@ -135,6 +134,7 @@ private extension ImportView {
         if importManager.isProcessingImports {
             activeAlert = .dismiss
         } else {
+            NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil)
             presentationMode.wrappedValue.dismiss()
         }
     }

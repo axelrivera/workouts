@@ -15,6 +15,10 @@ extension Date {
         return currentNumberOfDays <= number
     }
     
+    public func isBetween(date date1: Date, andDate date2: Date) -> Bool {
+        (min(date1, date2) ... max(date1, date2)).contains(self)
+    }
+    
 }
 
 extension Date {

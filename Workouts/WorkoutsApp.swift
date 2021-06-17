@@ -16,13 +16,29 @@ import SwiftUI
 
 @main
 struct WorkoutsApp: App {
-    let workoutManager = WorkoutManager()
     let purchaseManager = IAPManager()
+    let workoutDataStore: WorkoutDataStore
+    let storageProvider = StorageProvider()
+    let workoutManager: WorkoutManager
+    let statsManager: StatsManager
+    let synchronizer: Synchronizer
+    
+    init() {
+        workoutDataStore = WorkoutDataStore.shared
+        workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
+        statsManager = StatsManager(context: storageProvider.persistentContainer.viewContext)
+        
+        let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
+        backgroundContext.automaticallyMergesChangesFromParent = true
+        synchronizer = Synchronizer(context: backgroundContext)
+    }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.managedObjectContext, storageProvider.persistentContainer.viewContext)
                 .environmentObject(workoutManager)
+                .environmentObject(statsManager)
                 .environmentObject(purchaseManager)
         }
     }

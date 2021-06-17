@@ -19,7 +19,7 @@ class ImportOperation: SyncOperation {
     override func start() {
         super.start()
         
-        WorkoutDataStore.saveWorkoutImport(workout) { result in
+        WorkoutDataStore.shared.saveWorkoutImport(workout) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:

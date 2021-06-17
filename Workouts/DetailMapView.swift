@@ -48,14 +48,13 @@ struct DetailMapView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
-    @ObservedObject var workout: Workout
-    @ObservedObject var detailManager: DetailManager
     
+    @State var points: [CLLocationCoordinate2D]
     @State var selectedMapType: MKMapType = .standard
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            DetailMap(points: $detailManager.points, mapType: $selectedMapType)
+            DetailMap(points: $points, mapType: $selectedMapType)
                 .ignoresSafeArea()
             
             HStack {
@@ -96,7 +95,7 @@ struct DetailMapView: View {
 
 struct DetailMapView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailMapView(workout: Workout.sample, detailManager: DetailManager(workoutID: Workout.sample.id))
+        DetailMapView(points: [])
             .colorScheme(.dark)
     }
 }

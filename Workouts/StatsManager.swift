@@ -7,6 +7,7 @@
 
 import Foundation
 import HealthKit
+import CoreData
 import Combine
 
 class StatsManager: ObservableObject {
@@ -18,23 +19,26 @@ class StatsManager: ObservableObject {
             fetchSummaries()
         }
     }
+    
+    private let dataProvider: DataProvider
         
     @Published var weekStats: StatsSummary
     @Published var monthStats: StatsSummary
     @Published var yearStats: StatsSummary
     @Published var allStats: StatsSummary
     
-    var summariesPublishers = [Timeframe: Cancellable]()
-    var refreshCancellable: Cancellable?
-    
-    init() {
+    private var refreshCancellable: Cancellable?
+        
+    init(context: NSManagedObjectContext) {
         sport = AppSettings.defaultStatsFilter
+        dataProvider = DataProvider(context: context)
+        
         weekStats = StatsSummary(sport: sport, timeframe: .week)
         monthStats = StatsSummary(sport: sport, timeframe: .month)
         yearStats = StatsSummary(sport: sport, timeframe: .year)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
         fetchSummaries()
-        addObservers()
+        //addObservers()
     }
 }
 
@@ -64,23 +68,20 @@ extension StatsManager {
 extension StatsManager {
     
     func fetchSummaries() {
+        Log.debug("fetching stats summaries for sport: \(sport.rawValue)")
+        
         for timeframe in Timeframe.allCases {
             fetchSummary(for: timeframe)
         }
     }
     
     func fetchSummary(for timeframe: Timeframe) {
-        if let publisher = summariesPublishers[timeframe] {
-            publisher.cancel()
-            summariesPublishers.removeValue(forKey: timeframe)
+        do {
+            let summary = try dataProvider.fetchStatsSummary(sport: sport, timeframe: timeframe)
+            updateSummary(summary)
+        } catch {
+            Log.debug("fetch summary error: \(error.localizedDescription)")
         }
-        
-        summariesPublishers[timeframe] = StatsProvider.fetchStatsSummary(sport: sport, timeframe: timeframe)
-            .sink(receiveCompletion: { (completion) in
-                Log.debug("summary for timeframe completed: \(timeframe)")
-            }, receiveValue: { (summary) in
-                self.updateSummary(summary)
-            })
     }
     
     func updateSummary(_ summary: StatsSummary) {
@@ -104,11 +105,11 @@ extension StatsManager {
 
 extension StatsManager {
     
-    func addObservers() {
-        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
-            .sink { _ in
-                self.fetchSummaries()
-            }
-    }
+//    func addObservers() {
+//        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
+//            .sink { _ in
+//                self.fetchSummaries()
+//            }
+//    }
     
 }

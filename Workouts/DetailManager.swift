@@ -9,213 +9,234 @@ import Foundation
 import MapKit
 import SwiftUI
 import HealthKit
+import CoreData
 
 class DetailManager: ObservableObject {
-    @Published var locations = [CLLocation]() {
-        didSet {
-            points = locations.map { $0.coordinate }
-        }
-    }
-    
-    private lazy var processQueue: OperationQueue = {
-       let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-        return queue
-    }()
-    
-    var isProcessing: Bool {
-        processQueue.operations.isPresent
-    }
-    
-    private var routeOperation: RouteOperation?
-    private var paceOperation: PaceOperation?
-    private var heartRateStatsOperation: HeartRateStatsOperation?
-    private var heartRateOperation: HeartRateOperation?
-    private var cadenceOperation: CyclingCadenceOperation?
-    
-    @Published var updateUI = false
-    @Published var showAnalysis = false
+    let baseIntervalPoints : Int = 600
     
     @Published var points = [CLLocationCoordinate2D]()
-    
-    @Published var showDetailMap = false
-    @Published var locationName: String?
-    @Published var avgHeartRate: Double?
-    @Published var maxHeartRate: Double?
-    
-    @Published var movingTime: Double = 0
-    @Published var bestPace: Double = 0
-    
-    @Published var avgSpeed: Double = 0
-    @Published var avgMovingSpeed: Double = 0
-    @Published var maxSpeed: Double = 0
-    
+    @Published var heartRateValues = [ChartInterval]()
+    @Published var speedValues = [ChartInterval]()
+    @Published var cyclingCadenceValues = [ChartInterval]()
+    @Published var paceValues = [ChartInterval]()
+    @Published var altitudeValues = [ChartInterval]()
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
+    @Published var showMap: Bool = false
     
-    @Published var heartRateValues = [TimeAxisValue]()
-    @Published var speedValues = [TimeAxisValue]()
-    @Published var cyclingCadenceValues = [TimeAxisValue]()
-    @Published var paceValues = [TimeAxisValue]()
-    @Published var altitudeValues = [TimeAxisValue]()
+    @Published var avgPace: Double = 0
+    @Published var bestPace: Double = 0
+    @Published var city: String?
+    @Published var state: String?
     
-    var isFetchingLocation = false
-    var workoutID: UUID
-    private var workout: HKWorkout?
-    
-    init(workoutID: UUID) {
-        self.workoutID = workoutID
-        fetchData()
+    @Published var workout: Workout
+    private var context: NSManagedObjectContext
+    private var geocoder = CLGeocoder()
+        
+    init(workout: Workout) {
+        self.workout = workout
+        self.showMap = workout.showMap
+        self.city = workout.locationCity
+        self.state = workout.locationState
+        self.context = workout.managedObjectContext!
     }
-    
 }
 
 extension DetailManager {
     
-    func fetchData() {
-        if let workout = workout {
-            addOperations(workout: workout)
-        } else {
-            WorkoutDataStore.fetchWorkout(for: workoutID) { [weak self] (workout) in
+    var locationName: String? {
+        let strings: [String] = [city, state].compactMap{ $0 }
+        if strings.isEmpty { return nil }
+        return strings.joined(separator: ", ")
+    }
+    
+    func run() {
+        Log.debug("running samples - retries: \(workout.totalRetries)")
+        
+        if workout.shouldRegenerateSamples {
+            Log.debug("regenerating samples")
+            WorkoutDataStore.shared.fetchWorkout(for: workout.remoteIdentifier!) { [weak self] remoteWorkout in
                 guard let self = self else { return }
-                guard let workout = workout else { return }
-                self.addOperations(workout: workout)
+                guard let remoteWorkout = remoteWorkout else {
+                    self.context.perform {
+                        self.updateValues(animated: false)
+                    }
+                    return
+                }
+                
+                self.context.perform {
+                    self.workout.updateSamples(remoteWorkout: remoteWorkout)
+                    self.updateValues(animated: self.workout.showMap)
+                }
+            }
+        } else {
+            Log.debug("samples in place")
+            
+            context.perform { [weak self] in
+                guard let self = self else { return }
+                self.updateValues(animated: false)
             }
         }
     }
     
-    func addOperations(workout: HKWorkout) {
-        if isProcessing { return }
+    private func updateValues(animated: Bool = true) {
+        let samples = workout.samples.sorted(by: { $0.timestamp < $1.timestamp })
         
-        let completionOperation = BlockOperation { [weak self] in
-            Log.debug("completed operations")
+        let showMap = workout.showMap
+        let locations = samples.filter({ $0.isLocation }).compactMap { $0.location }
+        let points = locations.map { $0.coordinate }
+        let altitude = locations.map { $0.altitude }
+        let minElevation = altitude.min() ?? 0
+        let maxElevation = altitude.max() ?? 0
+        
+        let movingSamples = samples.filter { sample in
+            if workout.showMap {
+                return sample.isActive && sample.speed > 0
+            } else {
+                return sample.isActive
+            }
+        }
+        
+        let heartRateValues = heartRateChartIntervals(for: movingSamples)
+        let speedValues = speedChartIntervals(for: movingSamples)
+        let cadenceValues = cadenceChartIntervals(for: movingSamples)
+        let altitudeValues = altitudeChartIntervals(for: movingSamples)
+
+        var avgPace: Double = 0
+        if workout.sport.isWalkingOrRunning {
+            let duration = workout.movingTime > 0 ? workout.movingTime : workout.duration
+            let distance = workout.distance
+            avgPace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
+        }
+                    
+        DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            self.updateValues()
-        }
-        
-        let routeOperation = RouteOperation(workout: workout)
-        completionOperation.addDependency(routeOperation)
-        
-        var paceOperation: PaceOperation?
-        if Workout.paceActivities.contains(workout.workoutActivityType) {
-            paceOperation = PaceOperation(workout: workout)
-            completionOperation.addDependency(paceOperation!)
-        }
-        
-        let heartRateStatsOperation = HeartRateStatsOperation(workout: workout)
-        completionOperation.addDependency(heartRateStatsOperation)
-        
-        let heartRateOperation = HeartRateOperation(workout: workout)
-        completionOperation.addDependency(heartRateOperation)
-        
-        var cadenceOperation: CyclingCadenceOperation?
-        if workout.workoutActivityType == .cycling {
-            cadenceOperation = CyclingCadenceOperation(workout: workout)
-            completionOperation.addDependency(cadenceOperation!)
-        }
-        
-        let operations: [Operation?] = [
-            routeOperation,
-            paceOperation,
-            heartRateStatsOperation,
-            heartRateOperation,
-            cadenceOperation,
-            completionOperation
-        ]
-        
-        Log.debug("adding operations")
-        
-        operations.compactMap({ $0 }).forEach { operation in
-            processQueue.addOperation(operation)
-        }
-        
-        self.routeOperation = routeOperation
-        self.paceOperation = paceOperation
-        self.heartRateStatsOperation = heartRateStatsOperation
-        self.heartRateOperation = heartRateOperation
-        self.cadenceOperation = cadenceOperation
-    }
-    
-    func updateValues() {
-        guard let routeOperation = routeOperation,
-              let heartRateStatsOperation = heartRateStatsOperation,
-              let heartRateOperation = heartRateOperation else { return }
-        
-        let locations = routeOperation.locations
-        let locationName = routeOperation.locationName
-        let movingTime = routeOperation.movingTime
-        let speedValues = routeOperation.speedValues
-        let altitudeValues = routeOperation.altitudeValues
-        let avgSpeed = routeOperation.avgSpeed
-        let avgMovingSpeed = routeOperation.avgMovingSpeed
-        let maxSpeed = routeOperation.maxSpeed
-        let minElevation = routeOperation.minElevation
-        let maxElevation = routeOperation.maxElevation
-        
-        let avgHeartRate = heartRateStatsOperation.avgHeartRate
-        let maxHeartRate = heartRateStatsOperation.maxHeartRate
-        
-        let heartRateValues = heartRateOperation.heartRateValues
-        
-        let paceValues = paceOperation?.paceValues ?? [TimeAxisValue]()
-        let bestPace = paceOperation?.bestPace ?? 0
-        
-        let cyclingCadenceValues = cadenceOperation?.cadenceValues ?? [TimeAxisValue]()
-        
-        let valuesCheck = [
-            heartRateValues.isPresent,
-            speedValues.isPresent,
-            cyclingCadenceValues.isPresent,
-            paceValues.isPresent,
-            altitudeValues.isPresent
-        ]
-        
-        let showAnalysis = valuesCheck.filter({ $0 == true }).isPresent
-        let showDetailMap = locations.isPresent
-        
-        Log.debug("update values in UI")
-        
-        resetQueues()
-        DispatchQueue.main.async {
-            withAnimation {
-                self.locations = locations
-                self.locationName = locationName
-                self.movingTime = movingTime
-                self.speedValues = speedValues
-                self.altitudeValues = altitudeValues
-                self.avgSpeed = avgSpeed
-                self.avgMovingSpeed = avgMovingSpeed
-                self.maxSpeed = maxSpeed
+            
+            withAnimation(animated ? .default : nil) {
+                self.showMap = showMap
+                self.points = points
                 self.minElevation = minElevation
                 self.maxElevation = maxElevation
-                self.avgHeartRate = avgHeartRate
-                self.maxHeartRate = maxHeartRate
                 self.heartRateValues = heartRateValues
-                self.paceValues = paceValues
-                self.bestPace = bestPace
-                self.cyclingCadenceValues = cyclingCadenceValues
-                self.showAnalysis = showAnalysis
-                self.showDetailMap = showDetailMap
-                self.updateUI = true
+                self.speedValues = speedValues
+                self.cyclingCadenceValues = cadenceValues
+                self.altitudeValues = altitudeValues
+                self.avgPace = avgPace
+                
+                if let location = locations.first, self.city == nil || self.state == nil {
+                    self.geocoder.reverseGeocodeLocation(location) { placemarks, error in
+                        if let placemark = placemarks?.first {
+                            if let city = placemark.locality {
+                                self.city = city
+                                self.workout.locationCity = city
+                            }
+
+                            if let state = placemark.administrativeArea {
+                                self.state = state
+                                self.workout.locationState = state
+                            }
+                        }
+                        
+                        if self.context.hasChanges {
+                            self.context.saveOrRollback()
+                        }
+                    }
+                }
             }
         }
     }
     
-    func resetQueues() {
-        if isProcessing { return }
-        routeOperation = nil
-        paceOperation = nil
-        heartRateStatsOperation = nil
-        heartRateOperation = nil
-        cadenceOperation = nil
+    private var sampleInterval: Float {
+        let movingTime = self.movingTime
+        var intervalPoints: Float
+        
+        switch movingTime {
+        case let x where x > 3600:
+            intervalPoints = 500
+        case let x where x > 1800:
+            intervalPoints = 600
+        default:
+            intervalPoints = 1000
+        }
+        return Float(movingTime) / intervalPoints
     }
     
-    var showSpeedSection: Bool {
-        speedValues.isPresent
+    private var movingTime: Double {
+        if workout.movingTime > 0 && workout.movingTime < workout.duration {
+            return workout.movingTime
+        }
+        return workout.duration
     }
     
-    var showHeartRateSection: Bool {
-        heartRateValues.isPresent || avgHeartRate != nil || maxHeartRate != nil
+    private func interpolatedValues(for values: [Float], interval: Float? = nil) -> (xStep: Double, points: [Float]) {
+        guard values.isPresent else { return (0, []) }
+
+        let resampleInterval = interval ?? sampleInterval
+        let points = LinearInterpolator(points: values).resample(interval: resampleInterval)
+        let xStep = movingTime / Double(points.count)
+        return (xStep, points)
+    }
+    
+    private func heartRateChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
+        let heartRates = movingSamples.filter({ $0.heartRate > 0 }).map({ Float($0.heartRate) })
+        let (xStep, samples) = interpolatedValues(for: heartRates)
+        
+        return samples.enumerated().map { index, value in
+            let xValue = Double(index) * xStep
+            return ChartInterval(xValue: xValue, yValue: Double(value))
+        }
+    }
+    
+    private func speedChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
+        guard workout.sport.isSpeedSport else { return [] }
+        
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.speed) }))
+        
+        return samples.enumerated().map { index, value in
+            let xValue = Double(index) * xStep
+            return ChartInterval(xValue: xValue, yValue: nativeSpeedToLocalizedUnit(for: Double(value)))
+        }
+    }
+    
+    private func cadenceChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
+        guard workout.sport.isCycling else { return [] }
+        
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.cyclingCadence) }))
+        
+        return samples.enumerated().map { index, value in
+            let xValue = Double(index) * xStep
+            return ChartInterval(xValue: xValue, yValue: Double(value))
+        }
+    }
+    
+    private func altitudeChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.altitude) }))
+        
+        return samples.enumerated().map { index, value in
+            let xValue = Double(index) * xStep
+            return ChartInterval(xValue: xValue, yValue: nativeAltitudeToLocalizedUnit(for: Double(value)))
+        }
+    }
+    
+    private func paceChartIntervals(for movingSamples: [Sample]) -> (best: Double, intervals: [ChartInterval]) {
+        guard workout.sport.isWalkingOrRunning else { return (0, []) }
+        
+        let paces: [Float] = movingSamples.compactMap { sample in
+            let duration = sample.paceDuration
+            let distance = sample.paceDistance
+            guard let value = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) else { return nil }
+            return Float(value)
+        }
+        
+        let (xStep, samples) = interpolatedValues(for: paces)
+
+        let intervals: [ChartInterval] = samples.enumerated().map { index, value in
+            let xValue = Double(index) * xStep
+            return ChartInterval(xValue: xValue, yValue:  Double(value))
+        }
+        let best = paces.filter({ $0 > 0 }).min() ?? 0
+        
+        return (Double(best), intervals)
     }
     
 }

@@ -27,6 +27,22 @@ enum Sport: String, Identifiable, CaseIterable {
         Self.walkingAndRunningSports.contains(self)
     }
     
+    var isCycling: Bool {
+        self == .cycling
+    }
+    
+    var isRunning: Bool {
+        self == .running
+    }
+    
+    var isWalking: Bool {
+        self == .walking
+    }
+    
+    var isSpeedSport: Bool {
+        Self.speedSports.contains(self)
+    }
+    
     var title: String {
         self.rawValue.capitalized
     }
@@ -44,7 +60,9 @@ enum Sport: String, Identifiable, CaseIterable {
         }
     }
     
+    static let indoorOutdoorList: [Sport] = [.running, .cycling, .walking]
     static let supportedSports: [Sport] = [.cycling, .running, .walking]
     static let distanceSports: [Sport] = [.cycling, .walking, .running]
     static let walkingAndRunningSports: [Sport] = [.walking, .running]
+    static let speedSports: [Sport] = [.cycling]
 }

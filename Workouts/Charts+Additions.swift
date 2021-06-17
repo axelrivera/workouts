@@ -11,8 +11,9 @@ import Charts
 class DateValueFormatter: NSObject, AxisValueFormatter {
     
     public func stringForValue(_ value: Double, axis: AxisBase?) -> String {
-        formattedHoursMinutesDurationString(for: value)
+        formattedChartDurationString(for: value)
     }
+    
 }
 
 class PaceValueFormatter: NSObject, AxisValueFormatter {
