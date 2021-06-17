@@ -171,25 +171,41 @@ extension WorkoutImport {
     }
     
     var filteredEvents: [Event] {
-        let events = self.events.sorted { lhs, rhs in
+        let filtered = self.events.filter({ $0.timestamp.dateValue != nil })
+        let events = filtered.sorted { lhs, rhs in
             guard let ldate = lhs.timestamp.dateValue, let rdate = rhs.timestamp.dateValue else { return false }
             return ldate < rdate
         }
-        
+                
+        let totalEvents = events.count
         var finalEvents = [Event]()
-        for (first, second) in zip(events, events.dropFirst()) {
-            if first.eventType == second.eventType { continue }
-            finalEvents.append(first)
+        
+        for index in 0 ..< totalEvents {
+            let event = events[index]
+            
+            if finalEvents.isEmpty && event.eventType == .resume { continue }
+            if finalEvents.isEmpty && event.eventType == .pause {
+                finalEvents.append(event)
+                continue
+            }
+            
+            guard let last = finalEvents.last else { continue }
+            
+            if last.eventType == .pause && event.eventType == .resume {
+                finalEvents.append(event)
+                continue
+            }
+            
+            if last.eventType == .resume && event.eventType == .pause {
+                finalEvents.append(event)
+                continue
+            }
         }
         
-        if finalEvents.first?.eventType == .resume {
-            finalEvents.removeFirst()
+        if let last = finalEvents.last, last.eventType == .pause {
+            finalEvents = finalEvents.dropLast()
         }
-        
-        if finalEvents.last?.eventType == .pause {
-            finalEvents.removeLast()
-        }
-        
+                
         return finalEvents
     }
     

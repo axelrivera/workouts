@@ -20,4 +20,9 @@ extension NSManagedObjectContext {
         }
     }
     
+    func batchDeleteObjects() {
+        Workout.batchDeleteObjectsMarkedForDeletion(in: self)
+        Sample.batchDeleteOrphanedObjects(in: self)
+    }
+    
 }

@@ -12,7 +12,7 @@ struct ProfileDataStore {
         case failure
     }
     
-    static let healthStore = HealthData.healthStore
+    static let healthStore = HealthData.shared.healthStore
     
     static func fetchWeightInKilograms(completionHandler: @escaping (Double?) -> Void) {
         fetchMostRecentSample(for: .weight()) { result in

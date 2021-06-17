@@ -10,13 +10,18 @@ import HealthKit
 
 private let MarkedForDeletionDateKey = "markedForDeletionDate"
 private let SportKey = "sportValue"
+private let RemoteIdentifierKey = "remoteIdentifier"
+private let CreatedAtKey = "createdAt"
+private let UpdatedAtKey = "updatedAt"
 
 extension Workout: Identifiable {}
 
 @objc(Workout)
 class Workout: NSManagedObject {
+    static var MAX_RETRIES: Int = 5
+    
     @NSManaged var remoteIdentifier: UUID?
-    @NSManaged fileprivate(set) var sportValue: String
+    @NSManaged fileprivate(set) var sportValue: String?
     @NSManaged var indoor: Bool
     @NSManaged var start: Date
     @NSManaged var end: Date
@@ -31,22 +36,39 @@ class Workout: NSManagedObject {
     @NSManaged var avgMovingSpeed: Double
     @NSManaged var avgCyclingCadence: Double
     @NSManaged var maxCyclingCadence: Double
-    @NSManaged var avgPaceDistance: Double
     @NSManaged var elevationAscended: Double
     @NSManaged var elevationDescended: Double
     @NSManaged var source: String
     @NSManaged var device: String?
     @NSManaged var appIdentifier: String?
     @NSManaged var showMap: Bool
+    @NSManaged var locationCity: String?
+    @NSManaged var locationState: String?
     @NSManaged var markedForDeletionDate: Date?
+    @NSManaged fileprivate(set) var totalRetries: Int
+    
+    @NSManaged private(set) var createdAt: Date
+    @NSManaged private(set) var updatedAt: Date
     
     // MARK: Relationships
     @NSManaged var samples: Set<Sample>
     
     // MARK: Enums
+    @nonobjc
     var sport: Sport {
-        get { Sport(string: sportValue) }
+        get { Sport(string: sportValue ?? "") }
         set { sportValue = newValue.rawValue }
+    }
+    
+    override func awakeFromInsert() {
+        super.awakeFromInsert()
+        setPrimitiveValue(Date(), forKey: CreatedAtKey)
+        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
+    }
+    
+    override func willSave() {
+        super.willSave()
+        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
     }
     
 }
@@ -96,9 +118,25 @@ extension Workout {
         }
     }
     
+    var locationName: String? {
+        let strings: [String] = [locationCity, locationState].compactMap{ $0 }
+        if strings.isEmpty { return nil }
+        return strings.joined(separator: ", ")
+    }
+    
     var deviceString: String? {
         guard let identifier = appIdentifier else { return nil }
         return identifier.contains(BWAppleHealthIdentifier) ? device : nil
+    }
+    
+    var shouldRegenerateSamples: Bool {
+        if indoor { return false }
+        if showMap { return false }
+        return totalRetries < Self.MAX_RETRIES
+    }
+    
+    func updateRetries() {
+        totalRetries += 1
     }
     
 }
@@ -141,47 +179,96 @@ extension Workout {
         }
     }
     
+    static func find(using identifier: UUID, in context: NSManagedObjectContext) -> Workout? {
+        let request = defaultFetchRequest()
+        request.predicate = NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
+        return try? context.fetch(request).first
+    }
+    
 }
 
 extension Workout {
     
     @discardableResult
-    static func insert(into moc: NSManagedObjectContext, remoteWorkout: HKWorkout) -> Workout {
-        let processor = WorkoutProcessor(workout: remoteWorkout)
-        processor.generateRecords()
-
-        Log.debug("inserting workout: \(remoteWorkout.uuid), records: \(processor.records.count)")
-
-        let workout = Workout(context: moc)
+    static func insert(into context: NSManagedObjectContext, remoteWorkout: HKWorkout, regenerate: Bool) -> Workout {
+        if let workout = find(using: remoteWorkout.uuid, in: context) {
+            Log.debug("found existing workout: \(remoteWorkout.uuid)")
+            if regenerate {
+                Log.debug("regenerating samples for workout: \(remoteWorkout.uuid)")
+                workout.resetSamples()
+                updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
+            }
+            return workout
+        } else {
+            Log.debug("inserting workout: \(remoteWorkout.uuid)")
+            let workout = Workout(context: context)
+            updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
+            return workout
+        }
+    }
+    
+    private static func updateValues(for workout: Workout, remoteWorkout: HKWorkout, in context: NSManagedObjectContext) {
+        let object = WorkoutProcessor.object(for: remoteWorkout)
+        
         workout.remoteIdentifier = remoteWorkout.uuid
         workout.sport = remoteWorkout.workoutActivityType.sport()
         workout.indoor = remoteWorkout.isIndoor
         workout.start = remoteWorkout.startDate
         workout.end = remoteWorkout.endDate
-        workout.duration = processor.duration
-        workout.movingTime = processor.movingTime
-        workout.avgMovingSpeed = processor.avgMovingSpeed
-        workout.distance = remoteWorkout.totalDistance?.doubleValue(for: .meter()) ?? 0
-        workout.avgHeartRate = processor.avgHeartRate
-        workout.maxHeartRate = processor.maxHeartRate
+        workout.duration = object.duration
+        workout.movingTime = object.movingTime
+        workout.avgMovingSpeed = object.avgMovingSpeed
+        workout.distance = object.distance
+        workout.avgHeartRate = object.avgHeartRate
+        workout.maxHeartRate = object.maxHeartRate
         workout.energyBurned = remoteWorkout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
-        workout.avgSpeed = remoteWorkout.avgSpeed?.doubleValue(for: .metersPerSecond()) ?? 0
-        workout.maxSpeed = remoteWorkout.maxSpeed?.doubleValue(for: .metersPerSecond()) ?? 0
+        workout.avgSpeed = object.avgSpeed
+        workout.maxSpeed = object.maxSpeed
         workout.avgCyclingCadence = remoteWorkout.avgCyclingCadence ?? 0
         workout.maxCyclingCadence = remoteWorkout.maxCyclingCadence ?? 0
         workout.elevationAscended = remoteWorkout.elevationAscended?.doubleValue(for: .meter()) ?? 0
         workout.elevationDescended = remoteWorkout.elevationDescended?.doubleValue(for: .meter()) ?? 0
         workout.source = remoteWorkout.sourceRevision.source.name
         workout.device = remoteWorkout.device?.name
-        workout.showMap = processor.showMap
-
-        for remoteSample in processor.records {
-            Sample.insert(into: moc, remoteSample: remoteSample, workout: workout)
+        workout.showMap = object.showMap
+        
+        for remoteSample in object.records {
+            Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
         }
-
-        return workout
     }
-
+    
+    func updateSamples(remoteWorkout: HKWorkout) {
+        guard let context = managedObjectContext else {
+            fatalError("missing context")
+        }
+        
+        resetSamples()
+        Self.updateValues(for: self, remoteWorkout: remoteWorkout, in: context)
+        updateRetries()
+    }
+    
+    func resetSamples() {
+        let samples = self.samples
+        samples.forEach({ $0.workout = nil })
+    }
+    
+    private static let DeletionAgeBeforePermanentlyDeletingObjects = TimeInterval(2 * 60)
+    
+    static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {
+        let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+        fetchRequest.predicate = NSPredicate(format: "%K < %@", MarkedForDeletionDateKey, cutoff as NSDate)
+        
+        let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        batchRequest.resultType = .resultTypeStatusOnly
+        
+        do {
+            try context.execute(batchRequest)
+        } catch {
+            Log.debug("batch delete failed: \(error.localizedDescription)")
+        }
+    }
     
 }
 

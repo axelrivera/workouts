@@ -16,32 +16,42 @@ struct DetailView: View {
         var id: Int { hashValue }
     }
     
-    var viewContext: NSManagedObjectContext
-    @ObservedObject var workout: Workout
     @StateObject var detailManager: DetailManager
     
     @State var activeSheet: ActiveSheet?
     @State var showMapOverlay = false
     
-    init(workout: Workout, context: NSManagedObjectContext) {
-        self.workout = workout
-        self.viewContext = context
-        
-        let manager = DetailManager(workout: workout, context: context)
+    var workout: Workout {
+        detailManager.workout
+    }
+    
+    var totalTime: Workout.Time {
+        workout.totalTime
+    }
+    
+    init(workout: Workout) {
+        let manager = DetailManager(workout: workout)
         _detailManager = StateObject(wrappedValue: manager)
     }
     
     var body: some View {
         List {
-            VStack(alignment: .leading, spacing: 0.0) {
+            VStack(alignment: .leading, spacing: 5.0) {
                 Text(workout.title)
                     .font(.title)
-                    .padding(.bottom, 5.0)
+                
+                if detailManager.showMap {
+                    HStack(alignment: .firstTextBaseline, spacing: 5.0) {
+                        Image(systemName: "location.fill")
+                            .font(.caption)
+                        Text(detailManager.locationName ?? "Unknown Location")
+                    }
+                    .foregroundColor(.secondary)
+                }
                 
                 HStack(alignment: .lastTextBaseline) {
                     Text(formattedFullDateString(for: workout.start))
-                        .font(.headline)
-                        .padding(.bottom, 2.0)
+                        .font(.subheadline)
                     Text(formattedTimeRangeString(start: workout.start, end: workout.end))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -49,7 +59,7 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], 5.0)
             
-            if workout.showMap {
+            if detailManager.showMap {
                 Button(action: { activeSheet = .map }) {
                     WorkoutMap(points: $detailManager.points)
                         .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
@@ -57,16 +67,6 @@ struct DetailView: View {
                         .cornerRadius(Constants.cornerRadius)
                 }
                 .buttonStyle(PlainButtonStyle())
-                
-//                if let locationName = detailManager.locationName {
-//                    HStack {
-//                        Image(systemName: "mappin")
-//                            .imageScale(.small)
-//                        Text("Location")
-//                        Spacer()
-//                        Text(locationName)
-//                    }
-//                }
             }
             
             Group {
@@ -95,7 +95,7 @@ struct DetailView: View {
                     .foregroundColor(.secondary)
             }
             
-            if let device = workout.deviceString {
+            if let device = workout.device {
                 HStack {
                     Text("Device")
                     Spacer()
@@ -115,7 +115,8 @@ struct DetailView: View {
             case .map:
                 DetailMapView(points: detailManager.points)
             case .analysis:
-                DetailAnalysisView(workout: workout, detailManager: detailManager)
+                DetailAnalysisView()
+                    .environmentObject(detailManager)
             }
         }
     }
@@ -143,10 +144,6 @@ extension DetailView {
         }
     }
     
-    var totalTime: Workout.Time {
-        workout.totalTime
-    }
-    
     func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
         var items = [GridItem]()
         var item: GridItem
@@ -158,10 +155,10 @@ extension DetailView {
         
         switch workout.totalTime {
         case .moving(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesDurationString(for: duration), detailColor: .time)
+            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
             items.append(item)
         case .total(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesDurationString(for: duration), detailColor: .time)
+            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
             items.append(item)
         }
         
@@ -175,7 +172,7 @@ extension DetailView {
             items.append(item)
         }
         
-        if workout.sport.isSpeedSport && workout.avgSpeed > 0 {
+        if workout.sport.isSpeedSport && !workout.indoor && workout.avgSpeed > 0 {
             item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
             items.append(item)
         }
@@ -190,7 +187,7 @@ extension DetailView {
             items.append(item)
         }
         
-        if workout.showMap && workout.elevationAscended > 0 {
+        if detailManager.showMap && workout.elevationAscended > 0 {
             item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
             items.append(item)
         }
@@ -230,11 +227,11 @@ struct DetailGridView: View {
 }
 
 struct DetailView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = StorageProvider.sampleWorkout()
     
     static var previews: some View {
         NavigationView {
-            DetailView(workout: Workout(context: viewContext), context: viewContext)
+            DetailView(workout: workout)
         }
         .colorScheme(.dark)
     }

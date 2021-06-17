@@ -24,9 +24,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
 }
 
 extension DocumentPicker {
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        Log.debug("creating picker with content types: \(contentTypes)")
-        
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {        
         let picker = UIDocumentPickerViewController(
             forOpeningContentTypes: contentTypes,
             asCopy: true

@@ -54,7 +54,7 @@ struct AppSettings {
     
     static var defaultStatsFilter: Sport {
         get {
-            let string = objectForKey(Keys.defaultStatsFilter) as? String ?? ""
+            guard let string = objectForKey(Keys.defaultStatsFilter) as? String else { return .cycling }
             return Sport(rawValue: string) ?? .cycling
         }
         set {
@@ -64,7 +64,7 @@ struct AppSettings {
     
     static var defaultWorkoutsFilter: Sport? {
         get {
-            let string = objectForKey(Keys.defaultWorkoutsFilter) as? String ?? ""
+            guard let string = objectForKey(Keys.defaultWorkoutsFilter) as? String else { return nil }
             return Sport(rawValue: string)
         }
         set {

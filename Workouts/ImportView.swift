@@ -78,7 +78,6 @@ struct ImportView: View {
                         importManager.state = .processing
                         importManager.processDocuments(at: urls) {
                             importManager.state = urls.isEmpty ? .empty : .ok
-                            Log.debug("finish processing documents")
                         }
                     }
                 case .tutorial:

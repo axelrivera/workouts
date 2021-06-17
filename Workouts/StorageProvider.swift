@@ -9,7 +9,7 @@ import CoreData
 
 class PersistentContainer: NSPersistentContainer {}
 
-class StorageProvider {
+class StorageProvider: ObservableObject {
     let persistentContainer: PersistentContainer
 
     init(inMemory: Bool = false) {
@@ -39,32 +39,51 @@ class StorageProvider {
         persistentContainer.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
     }
     
+    func destroy() {
+        
+    }
+    
     static let preview: StorageProvider = {
         let result = StorageProvider(inMemory: true)
         let viewContext = result.persistentContainer.viewContext
         
-        let start = Date.dateFor(month: 1, day: 1, year: 2021)!
-        let end = start.addingTimeInterval(3600) // 1 hour
-        
         for _ in 0 ..< 10 {
-            let newWorkout = Workout(context: viewContext)
-            newWorkout.remoteIdentifier = UUID()
-            newWorkout.sport = .cycling
-            newWorkout.start = start
-            newWorkout.end = end
-            newWorkout.distance = 20000.0
-            newWorkout.energyBurned = 500.0
-            newWorkout.avgSpeed = 6.7056
-            newWorkout.maxSpeed = 10.2919
-            newWorkout.avgCyclingCadence = 80.0
-            newWorkout.maxCyclingCadence = 95.0
-            newWorkout.elevationAscended = 500.0
-            newWorkout.elevationDescended = 200.0
-            newWorkout.source = "Workouts Preview"
-            
+            let _ = sampleWorkout(moc: viewContext)
             try! viewContext.save()
         }
         
         return result
     }()
+    
+    static var sampleContext: NSManagedObjectContext = {
+        let context = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        context.parent = preview.persistentContainer.viewContext
+        return context
+    }()
+    
+    static func sampleWorkout(moc context: NSManagedObjectContext? = nil) -> Workout {
+        let viewContext = context ?? sampleContext
+        
+        let start = Date.dateFor(month: 1, day: 1, year: 2021)!
+        let end = start.addingTimeInterval(3600) // 1 hour
+        
+        let workout = Workout(context: viewContext)
+        workout.remoteIdentifier = UUID()
+        workout.sport = .cycling
+        workout.start = start
+        workout.end = end
+        workout.distance = 20000.0
+        workout.energyBurned = 500.0
+        workout.avgSpeed = 6.7056
+        workout.maxSpeed = 10.2919
+        workout.avgCyclingCadence = 80.0
+        workout.maxCyclingCadence = 95.0
+        workout.elevationAscended = 500.0
+        workout.elevationDescended = 200.0
+        workout.locationCity = "Orlando"
+        workout.locationState = "FL"
+        workout.source = "Workouts Preview"
+        
+        return workout
+    }
 }

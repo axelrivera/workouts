@@ -11,7 +11,7 @@ import HealthKit
 
 extension WorkoutImport.Event {
     
-    public enum EventType {
+    public enum EventType: String {
         case pause, resume
         
         public init?(name: String) {
@@ -49,7 +49,10 @@ extension WorkoutImport {
             guard let name = message.interpretedField(key: "event_type")?.name,
                   let eventType = EventType(name: name) else { return nil }
                         
-            timestamp = .init(valueType: .date, field: message.interpretedField(key: "timestamp"))
+            let timestamp = Value(valueType: .date, field: message.interpretedField(key: "timestamp"))
+            if timestamp.dateValue == nil { return nil }
+            
+            self.timestamp = timestamp
             self.eventType = eventType
         }
     }
@@ -63,6 +66,14 @@ extension WorkoutImport.Event {
         
         let interval = DateInterval(start: timestamp, end: timestamp)
         return HKWorkoutEvent(type: eventType.workoutEventType, dateInterval: interval, metadata: nil)
+    }
+    
+}
+
+extension WorkoutImport.Event: CustomStringConvertible {
+    
+    public var description: String {
+        eventType.rawValue
     }
     
 }

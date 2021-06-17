@@ -9,22 +9,25 @@ import Foundation
 import HealthKit
 
 final class WorkoutsDownloader {
-    let healthStore = HealthData.healthStore
+    let healthStore = HealthData.shared.healthStore
     
-    func fetchLatestWorkouts(completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID]) -> Void) {
-        Log.debug("fetch latest workouts")
-        
+    func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
-            predicate: WorkoutDataStore.defaultActivitiesPredicate(),
-            anchor: nil, limit: HKObjectQueryNoLimit) { query, samples, deleted, newAnchor, error in
-            if let error = error {
-                Log.debug("failed to fetch workouts: \(error.localizedDescription)")
+            predicate: WorkoutDataStore.shared.defaultActivitiesPredicate(),
+            anchor: anchor, limit: HKObjectQueryNoLimit) { [weak self] query, samples, deleted, newAnchor, error in
+            guard let self = self else { return }
+            self.healthStore.stop(query)
+            
+            if let _ = error {
+                completion([], [], nil)
+                return
             }
 
             let workouts = samples as? [HKWorkout] ?? [HKWorkout]()
             let deleted = (deleted ?? [HKDeletedObject]()).map({ $0.uuid })
-            completion(workouts, deleted)
+            
+            completion(workouts, deleted, newAnchor)
         }
 
         healthStore.execute(query)

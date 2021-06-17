@@ -17,53 +17,72 @@ struct WorkoutsView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @State var activeSheet: ActiveSheet?
     
-    @State var sport: Sport? {
+    @State var sport: Sport? = AppSettings.defaultWorkoutsFilter {
         didSet {
             AppSettings.defaultWorkoutsFilter = sport
         }
     }
     
-    @Environment(\.managedObjectContext) private var viewContext
+    @State var isEmpty = false
     
-    init() {
-        self.sport = AppSettings.defaultWorkoutsFilter
+    @Environment(\.managedObjectContext) private var viewContext
+        
+    var isNotAvailable: Bool {
+        workoutManager.state == .empty || workoutManager.state == .notAvailable
+    }
+    
+    func destination(for workout: Workout) -> some View {
+        DetailView(workout: workout)
+    }
+    
+    var showEmptyText: Bool {
+        isEmpty && workoutManager.state == .ok && !workoutManager.isLoading
     }
             
     var body: some View {
         NavigationView {
             ZStack {
-                FilteredList(sport: sport) { workout in
-                    NavigationLink(destination: DetailView(workout: workout, context: self.viewContext)) {
+                FilteredList(sport: sport, isEmpty: $isEmpty) { workout in
+                    NavigationLink(destination: destination(for: workout)) {
                         VStack(alignment: .leading, spacing: 2.0) {
-                            Text(formattedActivityTypeString(for: workout.sport, indoor: workout.indoor))
+                            Text(workout.title)
                             
                             if workout.distance > 0 {
                                 Text(formattedDistanceString(for: workout.distance))
-                                    .font(.title)
+                                    .font(.largeTitle)
                                     .foregroundColor(.distance)
                             } else {
-                                Text(formattedHoursMinutesDurationString(for: workout.duration))
-                                    .font(.title)
+                                Text(formattedHoursMinutesSecondsDurationString(for: workout.duration))
+                                    .font(.largeTitle)
                                     .foregroundColor(.time)
                             }
                             
                             HStack {
                                 Text(workout.source)
-                                    .foregroundColor(.secondary)
                                 Spacer()
                                 Text(formattedRelativeDateString(for: workout.start))
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
                             }
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                         }
                     }
                 }
                 .listStyle(PlainListStyle())
+                .disabled(workoutManager.isLoading)
                 
-                if workoutManager.state == .empty || workoutManager.state == .notAvailable {
+                if isNotAvailable {
                     Color.systemBackground
                         .ignoresSafeArea()
                     WorkoutEmptyView(workoutState: workoutManager.state)
+                }
+                
+                if showEmptyText {
+                    Text("No Workouts")
+                        .foregroundColor(.secondary)
+                }
+                
+                if workoutManager.isLoading {
+                    ProcessView(text: "Fetching Workouts...", value: $workoutManager.processingRemoteDataValue)
                 }
             }
             .navigationTitle("Workouts")
@@ -72,6 +91,7 @@ struct WorkoutsView: View {
                     Button(action: { activeSheet = .add }) {
                         Image(systemName: "plus")
                     }
+                    .disabled(workoutManager.isLoading)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -81,6 +101,8 @@ struct WorkoutsView: View {
                         }, label: {
                             Text("All Workouts")
                         })
+                        
+                        Divider()
                         
                         ForEach(Sport.supportedSports) { sport in
                             Button(action: {
@@ -92,6 +114,7 @@ struct WorkoutsView: View {
                     } label: {
                         Text(sport?.title ?? "All Workouts")
                     }
+                    .disabled(workoutManager.isDisabled || workoutManager.isLoading)
                 }
             }
             .fullScreenCover(item: $activeSheet) { item in
@@ -106,15 +129,16 @@ struct WorkoutsView: View {
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
+    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var workoutManager: WorkoutManager = {
-        let manager = WorkoutManager()
+        let manager = WorkoutManager(context: viewContext)
         //manager.state = .notAvailable
         return manager
     }()
     
     static var previews: some View {
         WorkoutsView()
-            .environment(\.managedObjectContext, StorageProvider.preview.persistentContainer.viewContext)
+            .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .colorScheme(.dark)
     }
@@ -122,18 +146,30 @@ struct WorkoutsView_Previews: PreviewProvider {
 
 struct FilteredList<Content: View>: View {
     var fetchRequest: FetchRequest<Workout>
-    var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
+    @Binding var isEmpty: Bool
 
     // this is our content closure; we'll call this once for each item in the list
     let content: (Workout) -> Content
 
     var body: some View {
-        List(fetchRequest.wrappedValue, id: \.self) { workout in
+        let workouts = self.fetchRequest.wrappedValue
+        isEmpty = workouts.isEmpty
+        
+        return List(workouts, id: \.self) { workout in
             self.content(workout)
         }
     }
 
-    init(sport: Sport?, @ViewBuilder content: @escaping (Workout) -> Content) {
+    init(sport: Sport?, isEmpty: Binding<Bool>, @ViewBuilder content: @escaping (Workout) -> Content) {
+        _isEmpty = isEmpty
+        
+        let request = Self.fetchRequest(for: sport)
+        fetchRequest = FetchRequest(fetchRequest: request, animation: .default)
+        
+        self.content = content
+    }
+    
+    private static func fetchRequest(for sport: Sport?) -> NSFetchRequest<Workout> {
         var predicates = [NSPredicate]()
         
         if let sport = sport {
@@ -144,8 +180,9 @@ struct FilteredList<Content: View>: View {
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         
         let sort = [Workout.sortedByDateDescriptor()]
-        fetchRequest = FetchRequest(entity: Workout.entity(), sortDescriptors: sort, predicate: predicate, animation: .default)
-        
-        self.content = content
+        let request = Workout.defaultFetchRequest()
+        request.predicate = predicate
+        request.sortDescriptors = sort
+        return request
     }
 }

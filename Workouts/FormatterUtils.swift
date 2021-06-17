@@ -14,7 +14,7 @@ func formattedTimeDurationString(for duration: Double?) -> String {
     formattedTimer(for: Int(duration ?? 0))
 }
 
-func formattedHoursMinutesDurationString(for duration: Double?) -> String {
+func formattedHoursMinutesSecondsDurationString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
@@ -23,6 +23,23 @@ func formattedHoursMinutesDurationString(for duration: Double?) -> String {
     } else {
         return String(format: "%02d:%02d", m, s)
     }
+}
+
+func formattedChartDurationString(for duration: Double?) -> String {
+    let seconds = Int(duration ?? 0)
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        return String(format: "%d:%02d", h, m)
+    } else {
+        return String(format: "%02d:%02d", m, s)
+    }
+}
+
+func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
+    let seconds = Int(duration ?? 0)
+    let (h, m, _) = secondsToHoursMinutesSeconds(seconds: seconds)
+    return String(format: "%dh %02dm", h, m)
 }
 
 func formattedRelativeDateString(for date: Date?) -> String {
@@ -89,16 +106,27 @@ func formattedTimeRangeString(start: Date?, end: Date?) -> String {
 
 // MARK: - Distance and Speed
 
-func formattedDistanceString(for meters: Double?) -> String {
-    guard let meters = meters, meters > 0 else { return "" }
+func distanceUnitString() -> String {
+    Locale.isMetric() ? "km" : "mi"
+}
+
+func formattedDistanceString(for meters: Double?, rounded: Bool = false, zeroPadding: Bool = false) -> String {
+    guard let meters = meters, meters > 0 else { return zeroPadding ? "0 \(distanceUnitString())" : "" }
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
-    return MeasurementFormatter.distance.string(from: measurement)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
+    
+    if rounded {
+        return MeasurementFormatter.roundedDistance.string(from: conversion)
+    } else {
+        return MeasurementFormatter.distance.string(from: conversion)
+    }
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
     guard let speed = metersPerSecond, speed > 0 else { return "" }
     let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
-    return MeasurementFormatter.speed.string(from: measurement)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometersPerHour : .milesPerHour)
+    return MeasurementFormatter.speed.string(from: conversion)
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
@@ -118,7 +146,7 @@ func formattedPaceString(for duration: Double?) -> String {
 
 func formattedHeartRateString(for heartRate: Double?) -> String {
     let number = (heartRate ?? 0) as NSNumber
-    guard number.doubleValue > 0 else { return ""}
+    guard number.doubleValue > 0 else { return "" }
     return String(format: "%@ bpm", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
@@ -132,9 +160,9 @@ func formattedCyclingCadenceString(for cadence: Double?) -> String {
 
 // MARK: - Energy
 
-func formattedCaloriesString(for calories: Double?) -> String {
+func formattedCaloriesString(for calories: Double?, zeroPadding: Bool = false) -> String {
     let number = (calories ?? 0) as NSNumber
-    guard number.doubleValue > 0 else { return "" }
+    guard number.doubleValue > 0 else { return zeroPadding ? "0 cal" : "" }
     return String(format: "%@ cal", NumberFormatter.integer.string(from: number) ?? "n/a")
 }
 
@@ -291,6 +319,15 @@ private extension MeasurementFormatter {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distance
         formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
+    static let roundedDistance: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.integer
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
         return formatter
     }()
     
@@ -305,6 +342,7 @@ private extension MeasurementFormatter {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.speed
         formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
         return formatter
     }()
     

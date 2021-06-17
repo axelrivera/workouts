@@ -40,8 +40,9 @@ extension DataProvider {
         let (start, end) = timeframe.interval
         
         let sportPredicate = Workout.predicateForSport(sport)
+        let visiblePredicate = Workout.notMarkedForLocalDeletionPredicate
         let datePredicate = datePredicateFor(start: start, end: end)
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [sportPredicate, datePredicate])
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [sportPredicate, visiblePredicate, datePredicate])
         
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
         request.returnsObjectsAsFaults = false
@@ -54,6 +55,15 @@ extension DataProvider {
 // MARK: - Summary
 
 extension DataProvider {
+    
+    var totalWorkouts: Int {
+        let request = Workout.sortedFetchRequest
+        do {
+            return try context.count(for: request)
+        } catch {
+            return 0
+        }
+    }
     
     func fetchStatsSummary(sport: Sport, timeframe: StatsSummary.Timeframe) throws -> StatsSummary {
         let distanceDesc = expressionDescriptionForProperty(.distance, function: .sum)
@@ -73,7 +83,7 @@ extension DataProvider {
             let count = try context.count(for: request)
             
             let results = try context.fetch(request)
-            guard let dictionary = results[0] as? [String: Double] else {
+            guard let first = results.first, let dictionary = first as? [String: Double] else {
                 throw DataError.missingPropertyDictionary
             }
             

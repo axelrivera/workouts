@@ -16,6 +16,7 @@ class SampleProcessor {
     let cadenceSamples: [Quantity]
     let paceSamples: [Pace]
     
+    private(set) var sampleMaxSpeed: Double = 0
     private(set) var avgMovingSpeed: Double = 0
     private(set) var records = [Record]()
     private(set) var movingTime: Double = 0
@@ -77,8 +78,6 @@ extension SampleProcessor {
         } else {
             generateManualEventIntervals()
         }
-        
-        Log.debug("total stopped intervals: \(stoppedIntervals.count)")
     }
     
     private func generateSystemEventIntervals() {
@@ -110,9 +109,20 @@ extension SampleProcessor {
     }
     
     func avgSpeed() -> Double {
+        if let speed = workout.avgSpeed?.doubleValue(for: .metersPerSecond()) {
+            return speed
+        }
+        
         guard workout.duration > 0 else { return 0 }
         let distance = totalDistance()
         return distance / workout.duration
+    }
+    
+    func maxSpeed() -> Double {
+        if let speed = workout.maxSpeed?.doubleValue(for: .metersPerSecond()) {
+            return speed
+        }
+        return sampleMaxSpeed
     }
     
     private func generateManualEventIntervals() {
@@ -135,7 +145,6 @@ extension SampleProcessor {
                 let interval = DateInterval(start: pause, end: current.timestamp)
                 
                 if interval.duration > 1.0 {
-                    Log.debug("creating stop interval: \(interval.duration), speed: \(speed), base distance: \(baseDistance)")
                     stoppedIntervals.append(interval)
                 }
                 pauseTimestamp = nil
@@ -145,7 +154,6 @@ extension SampleProcessor {
         if let pause = pauseTimestamp, let last = locations.last?.timestamp {
             let interval = DateInterval(start: pause, end: last)
             if interval.duration > 0.0 {
-                Log.debug("creating last stop interval: \(interval.duration)")
                 stoppedIntervals.append(interval)
             }
         }
@@ -190,7 +198,6 @@ extension SampleProcessor {
         processLocationSamples()
         processHeartRateSamples()
         processCadenceSamples()
-        processPaceSamples()
     }
     
     private func processLocationSamples() {
@@ -205,6 +212,8 @@ extension SampleProcessor {
             record.latitude = location.coordinate.latitude
             record.longitude = location.coordinate.longitude
             record.altitude = location.altitude
+            
+            sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
         }
         
         movingTime = Double(records.filter({ $0.isActive }).count)
@@ -236,18 +245,6 @@ extension SampleProcessor {
         }
     }
     
-    private func processPaceSamples() {
-        guard workout.workoutActivityType.isRunningWalking && paceSamples.isPresent else { return }
-        
-        for sample in paceSamples {
-            let key = keyForTimestamp(sample.start)
-            guard let record = dictionary[key] else { continue }
-            
-            record.paceDistance = sample.distance
-            record.paceDuration = sample.duration
-        }
-    }
-    
 }
 
 extension SampleProcessor {
@@ -262,8 +259,6 @@ extension SampleProcessor {
         var altitude: Double = 0
         var heartRate: Double = 0
         var cyclingCadence: Double = 0
-        var paceDistance: Double = 0
-        var paceDuration: Double = 0
         var temperature: Double = 0
         
         init(timestamp: Date) {
@@ -278,8 +273,6 @@ extension SampleProcessor {
                 altitude,
                 heartRate,
                 cyclingCadence,
-                paceDistance,
-                paceDuration,
                 temperature
             ].reduce(0, +)
             return sum == 0

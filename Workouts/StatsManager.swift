@@ -38,7 +38,7 @@ class StatsManager: ObservableObject {
         yearStats = StatsSummary(sport: sport, timeframe: .year)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
         fetchSummaries()
-        addObservers()
+        //addObservers()
     }
 }
 
@@ -68,6 +68,8 @@ extension StatsManager {
 extension StatsManager {
     
     func fetchSummaries() {
+        Log.debug("fetching stats summaries for sport: \(sport.rawValue)")
+        
         for timeframe in Timeframe.allCases {
             fetchSummary(for: timeframe)
         }
@@ -103,11 +105,11 @@ extension StatsManager {
 
 extension StatsManager {
     
-    func addObservers() {
-        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
-            .sink { _ in
-                self.fetchSummaries()
-            }
-    }
+//    func addObservers() {
+//        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
+//            .sink { _ in
+//                self.fetchSummaries()
+//            }
+//    }
     
 }

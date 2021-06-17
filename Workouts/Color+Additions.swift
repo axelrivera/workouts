@@ -20,6 +20,8 @@ extension Color {
     static let secondarySystemBackground = Color(UIColor.secondarySystemBackground)
     static let tertiarySystemBackground = Color(UIColor.tertiarySystemBackground)
     static let divider = Color(UIColor.separator)
+    
+    static let systemFill = Color(UIColor.systemFill)
 }
 
 // MARK: Asset Colors

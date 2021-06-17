@@ -66,12 +66,24 @@ extension Sample {
         sample.altitude = remoteSample.altitude
         sample.heartRate = remoteSample.heartRate
         sample.cyclingCadence = remoteSample.cyclingCadence
-        sample.paceDuration = remoteSample.paceDuration
-        sample.paceDistance = remoteSample.paceDistance
         sample.temperature = remoteSample.temperature
         sample.workout = workout
         
         return sample
+    }
+    
+    static func batchDeleteOrphanedObjects(in context: NSManagedObjectContext) {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Sample")
+        fetchRequest.predicate = NSPredicate(format: "%K = nil", "workout")
+        
+        let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        batchRequest.resultType = .resultTypeStatusOnly
+                
+        do {
+            try context.execute(batchRequest)
+        } catch {
+            Log.debug("sample batch delete failed: \(error.localizedDescription)")
+        }
     }
     
 }

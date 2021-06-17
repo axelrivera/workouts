@@ -9,6 +9,8 @@ import CoreData
 import HealthKit
 
 class RemoteImporter {
+    static let BATCH_SIZE = 25
+    
     private let context: NSManagedObjectContext
     private lazy var downloader = WorkoutsDownloader()
     
@@ -16,18 +18,52 @@ class RemoteImporter {
         self.context = context
     }
     
-    func importLatestWorkouts() {
-        downloader.fetchLatestWorkouts { [unowned self] workouts, deleted in
+    func importLatestWorkouts(anchor: HKQueryAnchor?, regenerate: Bool, completion: @escaping (_ newAnchor: HKQueryAnchor?) -> Void) {
+        downloader.fetchLatestWorkouts(anchor: anchor) { [unowned self] workouts, deleted, newAnchor in
             self.context.perform { [unowned self] in
-                let workoutChunks = workouts.sliced(size: 5)
+                var responseAnchor: HKQueryAnchor? = newAnchor
+                
+                let totalWorkouts = workouts.count
+                DispatchQueue.main.async {
+                    let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
+                    NotificationCenter.default.post(
+                        name: .willBeginProcessingRemoteData,
+                        object: nil,
+                        userInfo: userInfo
+                    )
+                }
+                
+                let workoutChunks = workouts.sliced(size: Self.BATCH_SIZE)
                 for chunk in workoutChunks {
-                    self.insert(chunk)
-                    context.saveOrRollback()
+                    self.insert(chunk, regenerate: regenerate)
+                    
+                    do {
+                        try context.save()
+                    } catch {
+                        context.rollback()
+                        responseAnchor = nil
+                    }
+                    context.refreshAllObjects()
                 }
                 
                 self.deleteWorkouts(with: deleted)
-                context.saveOrRollback()
+                
+                do {
+                    try context.save()
+                } catch {
+                    context.rollback()
+                    responseAnchor = nil
+                }
+                
                 context.refreshAllObjects()
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .didFinishProcessingRemoteData,
+                        object: nil
+                    )
+                }
+                completion(responseAnchor)
             }
         }
     }
@@ -36,21 +72,13 @@ class RemoteImporter {
 
 extension RemoteImporter {
     
-    fileprivate func insert(_ remoteWorkouts: [HKWorkout]) {
-        let existingWorkouts = { () -> [UUID: Workout] in
-            let ids = remoteWorkouts.map { $0.uuid }
-            let workouts = Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: self.context)
-            
-            var result: [UUID: Workout] = [:]
-            for workout in workouts {
-                result[workout.remoteIdentifier!] = workout
-            }
-            return result
-        }()
-        
+    fileprivate func insert(_ remoteWorkouts: [HKWorkout], regenerate: Bool) {
         for remoteWorkout in remoteWorkouts {
-            guard existingWorkouts[remoteWorkout.uuid] == nil else { continue }
-            Workout.insert(into: context, remoteWorkout: remoteWorkout)
+            Workout.insert(into: context, remoteWorkout: remoteWorkout, regenerate: regenerate)
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+            }
         }
     }
     
