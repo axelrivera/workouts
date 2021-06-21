@@ -95,7 +95,7 @@ struct DetailView: View {
                     .foregroundColor(.secondary)
             }
             
-            if let device = workout.device {
+            if let device = workout.deviceString {
                 HStack {
                     Text("Device")
                     Spacer()
