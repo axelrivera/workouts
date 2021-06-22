@@ -8,11 +8,16 @@
 import Foundation
 
 struct Quantity {
-    enum QuantityType {
-        case heartRate, cadence, pace
-    }
-    
-    let quantityType: QuantityType
     let timestamp: Date
     let value: Double
+}
+
+struct Pace {
+    let start: Date
+    let end: Date
+    let distance: Double
+    
+    var duration: Double {
+        end.timeIntervalSince(start)
+    }
 }

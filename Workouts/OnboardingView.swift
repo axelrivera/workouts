@@ -28,7 +28,8 @@ struct OnboardingView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 100, height: 100, alignment: .center)
                     .foregroundColor(.red)
-                Text("Workouts needs your permission to read your workout data from the Apple Health app.")
+                
+                Text("The app needs your permission to read your workout data from the Apple Health app.")
                     .multilineTextAlignment(.center)
                     .padding(.top, 40.0)
             }
@@ -45,5 +46,6 @@ struct OnboardingView: View {
 struct OnboardingView_Previews: PreviewProvider {
     static var previews: some View {
         OnboardingView()
+            .preferredColorScheme(.dark)
     }
 }

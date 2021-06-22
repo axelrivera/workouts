@@ -2,110 +2,111 @@
 //  Workout.swift
 //  Workouts
 //
-//  Created by Axel Rivera on 12/28/20.
+//  Created by Axel Rivera on 5/27/21.
 //
 
-import Foundation
+import CoreData
 import HealthKit
+
+private let MarkedForDeletionDateKey = "markedForDeletionDate"
+private let SportKey = "sportValue"
+private let RemoteIdentifierKey = "remoteIdentifier"
+private let CreatedAtKey = "createdAt"
+private let UpdatedAtKey = "updatedAt"
 
 extension Workout: Identifiable {}
 
-class Workout: ObservableObject {
-    var id = UUID()
+@objc(Workout)
+class Workout: NSManagedObject {
+    static var MAX_RETRIES: Int = 5
     
-    var activityType = HKWorkoutActivityType.other
-    var indoor = false
-    var startDate: Date = Date()
-    var endDate: Date = Date()
-    var source: String = ""
-    var appIdentifier: String?
-    var device: String?
+    @NSManaged var remoteIdentifier: UUID?
+    @NSManaged fileprivate(set) var sportValue: String?
+    @NSManaged var indoor: Bool
+    @NSManaged var start: Date
+    @NSManaged var end: Date
+    @NSManaged var duration: Double
+    @NSManaged var movingTime: Double
+    @NSManaged var distance: Double
+    @NSManaged var avgHeartRate: Double
+    @NSManaged var maxHeartRate: Double
+    @NSManaged var energyBurned: Double
+    @NSManaged var avgSpeed: Double
+    @NSManaged var maxSpeed: Double
+    @NSManaged var avgMovingSpeed: Double
+    @NSManaged var avgCyclingCadence: Double
+    @NSManaged var maxCyclingCadence: Double
+    @NSManaged var elevationAscended: Double
+    @NSManaged var elevationDescended: Double
+    @NSManaged var source: String
+    @NSManaged var device: String?
+    @NSManaged var appIdentifier: String?
+    @NSManaged var showMap: Bool
+    @NSManaged var locationCity: String?
+    @NSManaged var locationState: String?
+    @NSManaged var markedForDeletionDate: Date?
+    @NSManaged fileprivate(set) var totalRetries: Int
     
-    var distance: Double?
-    var energyBurned: Double?
+    @NSManaged private(set) var createdAt: Date
+    @NSManaged private(set) var updatedAt: Date
     
-    var avgSpeed: Double?
-    var maxSpeed: Double?
-        
-    var avgCyclingCadence: Double?
-    var maxCyclingCadence: Double?
+    // MARK: Relationships
+    @NSManaged var samples: Set<Sample>
     
-    var elevationAscended: Double?
-    var elevationDescended: Double?
-    
-    static let paceActivities: [HKWorkoutActivityType] = [.walking, .running]
-    
-    init() {
-        // initialize empty object
+    // MARK: Enums
+    @nonobjc
+    var sport: Sport {
+        get { Sport(string: sportValue ?? "") }
+        set { sportValue = newValue.rawValue }
     }
     
-    convenience init(object: HKWorkout) {
-        self.init()
-        id = object.uuid
-        activityType = object.workoutActivityType
-        indoor = object.metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
-        startDate = object.startDate
-        endDate = object.endDate
-        
-        energyBurned = object.totalEnergyBurned?.doubleValue(for: .kilocalorie())
-        distance = object.totalDistance?.doubleValue(for: .meter())
-        
-        avgSpeed = object.avgSpeed?.doubleValue(for: .metersPerSecond())
-        maxSpeed = object.maxSpeed?.doubleValue(for: .metersPerSecond())
-        
-        elevationAscended = object.elevationAscended?.doubleValue(for: .meter())
-        elevationDescended = object.elevationDescended?.doubleValue(for: .meter())
-        
-        avgCyclingCadence = object.avgCyclingCadence
-        maxCyclingCadence = object.maxCyclingCadence
-        
-        source = object.sourceRevision.source.name
-        appIdentifier = object.sourceRevision.source.bundleIdentifier
-        device = object.device?.name
+    override func awakeFromInsert() {
+        super.awakeFromInsert()
+        setPrimitiveValue(Date(), forKey: CreatedAtKey)
+        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
     }
     
-    var sourceString: String {
-        #if DEVELOPMENT_BUILD
-            return "Workouts"
-        #else
-            return source
-        #endif
+    override func willSave() {
+        super.willSave()
+        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
     }
     
-    static var sample: Workout {
-        let workout = Workout()
-        workout.activityType = .cycling
-        workout.startDate = Date().addingTimeInterval(-(60 * 60))
-        workout.endDate = Date()
-        workout.distance = 20000.0
-        workout.energyBurned = 500.0
-        
-        workout.avgSpeed = 6.7056
-        workout.maxSpeed = 10.2919
-        
-        workout.avgCyclingCadence = 82.0
-        workout.maxCyclingCadence = 105.0
-        
-        workout.elevationAscended = 500.0
-        workout.elevationDescended = 200.0
-        
-        workout.source = "Apple Watch"
-        return workout
-    }
 }
 
 extension Workout {
     
-    var title: String {
-        if HKWorkoutActivityType.indoorOutdoorList.contains(activityType) {
-            return [indoor ? "Indoor" : "Outdoor", activityType.name].joined(separator: " ")
+    enum Time {
+        case moving(duration: Double)
+        case total(duration: Double)
+        
+        var title: String {
+            switch self {
+            case .moving:
+                return "Moving Time"
+            case .total:
+                return "Time"
+            }
+        }
+    }
+    
+    var totalTime: Time {
+        if movingTime > 0 && movingTime < duration {
+            return .moving(duration: movingTime)
         } else {
-            return activityType.name
+            return .total(duration: duration)
+        }
+    }
+    
+    var title: String {
+        if Sport.indoorOutdoorList.contains(sport) {
+            return [indoor ? "Indoor" : "Outdoor", sport.name].joined(separator: " ")
+        } else {
+            return sport.name
         }
     }
     
     var detailTitle: String {
-        switch activityType {
+        switch sport {
         case .cycling:
             return "Ride"
         case .running:
@@ -117,26 +118,10 @@ extension Workout {
         }
     }
     
-    var elapsedTime: Double {
-        endDate.timeIntervalSince(startDate)
-    }
-    
-    var avgCadence: Double? {
-        guard let avgCadence = avgCyclingCadence else { return nil }
-        return avgCadence
-    }
-    
-    var avgPace: Double? {
-        guard let distance = distance else { return nil }
-        return calculateRunningWalkingPace(distanceInMeters: distance, duration: elapsedTime)
-    }
-    
-    var sourceAndDeviceString: String {
-        var name = self.source
-        if let device = self.deviceString {
-            name.append(String(format: " (%@)", device))
-        }
-        return name
+    var locationName: String? {
+        let strings: [String] = [locationCity, locationState].compactMap{ $0 }
+        if strings.isEmpty { return nil }
+        return strings.joined(separator: ", ")
     }
     
     var deviceString: String? {
@@ -144,31 +129,156 @@ extension Workout {
         return identifier.contains(BWAppleHealthIdentifier) ? device : nil
     }
     
+    var shouldRegenerateSamples: Bool {
+        if indoor { return false }
+        if showMap { return false }
+        return totalRetries < Self.MAX_RETRIES
+    }
+    
+    func updateRetries() {
+        totalRetries += 1
+    }
+    
 }
-
-// MARK: Optional Checks
 
 extension Workout {
     
-    var isCadencePresent: Bool {
-        guard activityType == .cycling else { return false }
-        return avgCyclingCadence != nil || maxCyclingCadence != nil
+    static func predicateForSport(_ sport: Sport) -> NSPredicate {
+        NSPredicate(format: "%K == %@", SportKey, sport.rawValue)
     }
     
-    var isPacePresent: Bool {
-        Self.paceActivities.contains(activityType)
+    static func sortedByDateDescriptor() -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Workout.start, ascending: false)
     }
     
-    var isAvgSpeedPresent: Bool {
-        avgSpeed != nil
+    static var notMarkedForLocalDeletionPredicate: NSPredicate {
+        NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
     }
     
-    var isDistancePresent: Bool {
-        distance != nil
+    static func defaultFetchRequest() -> NSFetchRequest<Workout> {
+        NSFetchRequest<Workout>(entityName: "Workout")
     }
     
-    var isElevationAscendedPresent: Bool {
-        elevationAscended != nil
+    static var sortedFetchRequest: NSFetchRequest<Workout> {
+        let sortDescriptors = [Self.sortedByDateDescriptor()]
+        let request = defaultFetchRequest()
+        request.predicate = notMarkedForLocalDeletionPredicate
+        request.sortDescriptors = sortDescriptors
+        return request
+    }
+    
+    static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext) -> [Workout] {
+        let request = defaultFetchRequest()
+        request.predicate = NSPredicate(format: "%K in %@", "remoteIdentifier", ids)
+        request.returnsObjectsAsFaults = false
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
+    }
+    
+    static func find(using identifier: UUID, in context: NSManagedObjectContext) -> Workout? {
+        let request = defaultFetchRequest()
+        request.predicate = NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
+        return try? context.fetch(request).first
+    }
+    
+}
+
+extension Workout {
+    
+    @discardableResult
+    static func insert(into context: NSManagedObjectContext, remoteWorkout: HKWorkout, regenerate: Bool) -> Workout {
+        if let workout = find(using: remoteWorkout.uuid, in: context) {
+            Log.debug("found existing workout: \(remoteWorkout.uuid)")
+            if regenerate {
+                Log.debug("regenerating samples for workout: \(remoteWorkout.uuid)")
+                workout.resetSamples()
+                updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
+            }
+            return workout
+        } else {
+            Log.debug("inserting workout: \(remoteWorkout.uuid)")
+            let workout = Workout(context: context)
+            updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
+            return workout
+        }
+    }
+    
+    private static func updateValues(for workout: Workout, remoteWorkout: HKWorkout, in context: NSManagedObjectContext) {
+        let object = WorkoutProcessor.object(for: remoteWorkout)
+        
+        workout.remoteIdentifier = remoteWorkout.uuid
+        workout.sport = remoteWorkout.workoutActivityType.sport()
+        workout.indoor = remoteWorkout.isIndoor
+        workout.start = remoteWorkout.startDate
+        workout.end = remoteWorkout.endDate
+        workout.duration = object.duration
+        workout.movingTime = object.movingTime
+        workout.avgMovingSpeed = object.avgMovingSpeed
+        workout.distance = object.distance
+        workout.avgHeartRate = object.avgHeartRate
+        workout.maxHeartRate = object.maxHeartRate
+        workout.energyBurned = remoteWorkout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
+        workout.avgSpeed = object.avgSpeed
+        workout.maxSpeed = object.maxSpeed
+        workout.avgCyclingCadence = remoteWorkout.avgCyclingCadence ?? 0
+        workout.maxCyclingCadence = remoteWorkout.maxCyclingCadence ?? 0
+        workout.elevationAscended = remoteWorkout.elevationAscended?.doubleValue(for: .meter()) ?? 0
+        workout.elevationDescended = remoteWorkout.elevationDescended?.doubleValue(for: .meter()) ?? 0
+        workout.source = remoteWorkout.sourceRevision.source.name
+        workout.device = remoteWorkout.device?.name
+        workout.showMap = object.showMap
+        
+        for remoteSample in object.records {
+            Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
+        }
+    }
+    
+    func updateSamples(remoteWorkout: HKWorkout) {
+        guard let context = managedObjectContext else {
+            fatalError("missing context")
+        }
+        
+        resetSamples()
+        Self.updateValues(for: self, remoteWorkout: remoteWorkout, in: context)
+        updateRetries()
+    }
+    
+    func resetSamples() {
+        let samples = self.samples
+        samples.forEach({ $0.workout = nil })
+    }
+    
+    private static let DeletionAgeBeforePermanentlyDeletingObjects = TimeInterval(2 * 60)
+    
+    static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {
+        let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+        fetchRequest.predicate = NSPredicate(format: "%K < %@", MarkedForDeletionDateKey, cutoff as NSDate)
+        
+        let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+        batchRequest.resultType = .resultTypeStatusOnly
+        
+        do {
+            try context.execute(batchRequest)
+        } catch {
+            Log.debug("batch delete failed: \(error.localizedDescription)")
+        }
+    }
+    
+}
+
+// MARK: - Deletion
+
+extension Workout {
+    
+    func markForLocalDeletion() {
+        guard isFault || markedForDeletionDate == nil else { return }
+        markedForDeletionDate = Date()
     }
     
 }

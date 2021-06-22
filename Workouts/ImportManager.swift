@@ -47,7 +47,7 @@ extension ImportManager {
         // sample types must be an empty string for success
         // if response is nil or an array with values it means the user did not accept some of the permissions
         
-        if let sampleTypes = try? HealthData.filteredWriteSampleTypes(), sampleTypes.isEmpty {
+        if let sampleTypes = try? HealthData.shared.filteredWriteSampleTypes(), sampleTypes.isEmpty {
             updateState(workouts.isEmpty ? .empty : .ok)
             completionHandler(true)
         } else {
@@ -68,7 +68,7 @@ extension ImportManager {
     }
     
     func requestAuthorizationStatus(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestStatus(write: HealthData.writeSampleTypes()) { result in
+        HealthData.shared.requestStatus(write: HealthData.writeSampleTypes()) { result in
             switch result {
             case .success(let shouldRequest):
                 if shouldRequest {
@@ -84,7 +84,7 @@ extension ImportManager {
     }
     
     func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        HealthData.requestHealthAuthorization(read: HealthData.readObjectTypes(), write: HealthData.writeSampleTypes()) { result in
+        HealthData.shared.requestHealthAuthorization(read: HealthData.readObjectTypes(), write: HealthData.writeSampleTypes()) { result in
             switch result {
             case .success:
                 self.success(with: completionHandler)

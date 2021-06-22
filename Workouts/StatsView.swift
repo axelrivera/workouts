@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct StatsView: View {
     @EnvironmentObject var purchaseManager: IAPManager
-    @StateObject var statsManager = StatsManager()
+    @EnvironmentObject var statsManager: StatsManager
     
     let availableSports: [Sport] = [.cycling, .running]
     
@@ -26,7 +27,7 @@ struct StatsView: View {
                     }
                     
                     HStack(spacing: 10.0) {
-                        StatsWeekly(text: "Distance", detail: distanceString(for: statsManager.weekStats.distance), detailColor: .distance)
+                        StatsWeekly(text: "Distance", detail: distanceString(for: statsManager.weekStats.distance, rounded: false), detailColor: .distance)
                         Divider()
                         StatsWeekly(text: "Time", detail: timeString(for: statsManager.weekStats.duration), detailColor: .time)
                     }
@@ -102,12 +103,12 @@ extension StatsView {
         }
     }
     
-    func distanceString(for distance: Double?) -> String {
-        formattedDistanceString(for: distance)
+    func distanceString(for distance: Double?, rounded: Bool = true) -> String {
+        formattedDistanceString(for: distance, rounded: rounded, zeroPadding: true)
     }
     
     func timeString(for duration: Double?) -> String {
-        formattedHoursMinutesDurationString(for: duration)
+        formattedHoursMinutesPrettyString(for: duration)
     }
     
     func elevationString(for elevation: Double?) -> String {
@@ -115,7 +116,7 @@ extension StatsView {
     }
     
     func caloriesString(for calories: Double?) -> String {
-        formattedCaloriesString(for: calories)
+        formattedCaloriesString(for: calories, zeroPadding: true)
     }
     
 }
@@ -165,9 +166,12 @@ struct StatsView_Previews: PreviewProvider {
         return manager
     }()
     
+    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    
     static var previews: some View {
         StatsView()
             .colorScheme(.dark)
+            .environmentObject(StatsManager(context: viewContext))
             .environmentObject(purchaseManager)
     }
 }

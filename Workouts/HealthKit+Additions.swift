@@ -58,6 +58,14 @@ extension HKUnit {
 
 extension HKWorkout {
     
+    var isIndoor: Bool {
+        metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
+    }
+    
+    var isOutdoor: Bool {
+        !isIndoor
+    }
+    
     var avgSpeed: HKQuantity? {
         metadata?[HKMetadataKeyAverageSpeed] as? HKQuantity
     }
@@ -81,5 +89,32 @@ extension HKWorkout {
     var elevationDescended: HKQuantity? {
         metadata?[HKMetadataKeyElevationDescended] as? HKQuantity
     }
+    
+}
+
+extension HKWorkoutActivityType {
+    
+    func sport() -> Sport {
+        switch self {
+        case .cycling:
+            return .cycling
+        case .running:
+            return .running
+        case .walking:
+            return .walking
+        default:
+            return .other
+        }
+    }
+    
+    var isCycling: Bool {
+        self == .cycling
+    }
+    
+    var isRunningWalking: Bool {
+        Self.runninWalkingActivities.contains(self)
+    }
+    
+    static let runninWalkingActivities: [HKWorkoutActivityType] = [.running, .walking]
     
 }

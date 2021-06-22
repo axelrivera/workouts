@@ -8,7 +8,7 @@
 import Foundation
 import HealthKit
 
-final class HealthData {
+struct HealthData {
     enum DataError: Error {
         case dataNotAvailable
         case failed
@@ -16,10 +16,13 @@ final class HealthData {
         case unknown(Error)
     }
     
-    static let healthStore = HKHealthStore()
+    static let shared = HealthData()
     
-    private static let userDefaults = UserDefaults.standard
-    private static let anchorKeyPrefix = "ARN_Anchor_"
+    let healthStore = HKHealthStore()
+        
+    private init() {
+        // no-op
+    }
 }
 
 extension HealthData.DataError: LocalizedError {
@@ -43,7 +46,7 @@ extension HealthData.DataError: LocalizedError {
 
 extension HealthData {
     
-    class func readObjectTypes() -> Set<HKObjectType> {
+    static func readObjectTypes() -> Set<HKObjectType> {
         [
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
@@ -54,7 +57,7 @@ extension HealthData {
         ]
     }
     
-    class func writeSampleTypes() -> Set<HKSampleType> {
+    static func writeSampleTypes() -> Set<HKSampleType> {
         [
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
@@ -65,8 +68,8 @@ extension HealthData {
         ]
     }
     
-    class func filteredWriteSampleTypes() throws -> Set<HKSampleType> {
-        let objects = writeSampleTypes()
+    func filteredWriteSampleTypes() throws -> Set<HKSampleType> {
+        let objects = Self.writeSampleTypes()
         var statuses = [HKSampleType: HKAuthorizationStatus]()
         
         objects.forEach { statuses[$0] = healthStore.authorizationStatus(for: $0) }
@@ -103,21 +106,23 @@ extension HealthData {
     
     // MARK: - Request Status
     
-    class func requestStatusForReading(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestStatus(read: readObjectTypes(), completionHandler: completionHandler)
+    func requestStatusForReading(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestStatus(read: Self.readObjectTypes(), completionHandler: completionHandler)
     }
     
-    class func requestStatusForWriting(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-        requestStatus(read: [], write: writeSampleTypes(), completionHandler: completionHandler)
+    func requestStatusForWriting(completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+        requestStatus(read: [], write: Self.writeSampleTypes(), completionHandler: completionHandler)
     }
     
-    class func requestStatus(read: Set<HKObjectType> = [], write: Set<HKSampleType> = [], completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+    func requestStatus(read: Set<HKObjectType> = [], write: Set<HKSampleType> = [], completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
             completionHandler(.failure(DataError.dataNotAvailable))
             return
         }
         
         healthStore.getRequestStatusForAuthorization(toShare: write, read: read) { (status, error) in
+            Log.debug("got request status authorization")
+            
             if let error = error {
                 Log.debug("request health authorization status error: \(error.localizedDescription)")
             }
@@ -133,7 +138,7 @@ extension HealthData {
     
     // MARK: - Authorization
     
-    class func requestReadingAuthorization(for permissions: Set<HKObjectType>, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+    func requestReadingAuthorization(for permissions: Set<HKObjectType>, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         requestHealthAuthorization(read: permissions, write: nil, completionHandler: completionHandler)
     }
     
@@ -141,7 +146,7 @@ extension HealthData {
 //        requestHealthAuthorization(read: nil, write: permissions, completionHandler: completionHandler)
 //    }
     
-    class func requestHealthAuthorization(read: Set<HKObjectType>?, write: Set<HKSampleType>?, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
+    func requestHealthAuthorization(read: Set<HKObjectType>?, write: Set<HKSampleType>?, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
             completionHandler(.failure(DataError.dataNotAvailable))
             return
