@@ -13,7 +13,7 @@ import Combine
 class StatsManager: ObservableObject {
     typealias Timeframe = StatsSummary.Timeframe
     
-    var sport: Sport {
+    var sport: Sport? {
         didSet {
             AppSettings.defaultStatsFilter = sport
             fetchSummaries()
@@ -27,6 +27,19 @@ class StatsManager: ObservableObject {
     @Published var yearStats: StatsSummary
     @Published var allStats: StatsSummary
     
+    @Published var recentWeekly = [StatsSummary]()
+    @Published var recentMonthly = [StatsSummary]()
+    
+    @Published var avgWeeklyDistance: Double = 0
+    @Published var avgWeeklyDuration: Double = 0
+    @Published var avgWeeklyElevation: Double = 0
+    @Published var avgWeeklyCalories: Double = 0
+    
+    @Published var avgMonthlyDistance: Double = 0
+    @Published var avgMonthlyDuration: Double = 0
+    @Published var avgMonthlyElevation: Double = 0
+    @Published var avgMonthlyCalories: Double = 0
+    
     private var refreshCancellable: Cancellable?
         
     init(context: NSManagedObjectContext) {
@@ -37,65 +50,103 @@ class StatsManager: ObservableObject {
         monthStats = StatsSummary(sport: sport, timeframe: .month)
         yearStats = StatsSummary(sport: sport, timeframe: .year)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
+                
         fetchSummaries()
         //addObservers()
     }
 }
 
-// MARK: - Dates
-
-extension StatsManager {
-    
-    var weekStart: Date {
-        let (start, _) = weekStats.timeframe.interval
-        return start
-    }
-    
-    var weekEnd: Date {
-        let (_, end) = weekStats.timeframe.interval
-        return end
-    }
-    
-    var monthStart: Date {
-        let (start, _) = monthStats.timeframe.interval
-        return start
-    }
-    
-}
-
-// MARK: - Distance
+// MARK: - Fetching Summaries
 
 extension StatsManager {
     
     func fetchSummaries() {
-        Log.debug("fetching stats summaries for sport: \(sport.rawValue)")
+        Log.debug("fetching stats summaries for sport: \(String(describing: sport?.rawValue))")
         
-        for timeframe in Timeframe.allCases {
-            fetchSummary(for: timeframe)
+        dataProvider.context.perform { [weak self] in
+            guard let self = self else { return }
+            
+            let weekly = self.fetchSummary(for: .week)
+            let monthly = self.fetchSummary(for: .month)
+            let yearly = self.fetchSummary(for: .year)
+            let all = self.fetchSummary(for: .allTime)
+            
+            let recentWeekly = self.fetchRecentSummary(for: .week)
+            let recentMonthly = self.fetchRecentSummary(for: .month)
+            
+            let avgWeeklyValues = recentWeekly 
+            let totalWeekly = Double(avgWeeklyValues.count)
+            let avgWeeklyDistance = avgWeeklyValues.map({ $0.distance }).reduce(0, +) / totalWeekly
+            let avgWeeklyDuration = avgWeeklyValues.map({ $0.duration }).reduce(0, +) / totalWeekly
+            let avgWeeklyElevation = avgWeeklyValues.map({ $0.elevation }).reduce(0, +) / totalWeekly
+            let avgWeeklyCalories = avgWeeklyValues.map({ $0.energyBurned }).reduce(0, +) / totalWeekly
+            
+            let avgMonthlyValues = recentMonthly.dropFirst()
+            let totalMonthly = Double(avgMonthlyValues.count)
+            let avgMonthlyDistance = avgMonthlyValues.map({ $0.distance }).reduce(0, +) / totalMonthly
+            let avgMonthlyDuration = avgMonthlyValues.map({ $0.duration }).reduce(0, +) / totalMonthly
+            let avgMonthlyElevation = avgMonthlyValues.map({ $0.elevation }).reduce(0, +) / totalMonthly
+            let avgMonthlyCalories = avgMonthlyValues.map({ $0.energyBurned }).reduce(0, +) / totalMonthly
+            
+            DispatchQueue.main.async {
+                self.weekStats = weekly
+                self.monthStats = monthly
+                self.yearStats = yearly
+                self.allStats = all
+                
+                self.avgWeeklyDistance = avgWeeklyDistance
+                self.avgWeeklyDuration = avgWeeklyDuration
+                self.avgWeeklyElevation = avgWeeklyElevation
+                self.avgWeeklyCalories = avgWeeklyCalories
+                
+                self.avgMonthlyDistance = avgMonthlyDistance
+                self.avgMonthlyDuration = avgMonthlyDuration
+                self.avgMonthlyElevation = avgMonthlyElevation
+                self.avgMonthlyCalories = avgMonthlyCalories
+                
+                self.recentWeekly = recentWeekly
+                self.recentMonthly = recentMonthly
+            }
         }
     }
     
-    func fetchSummary(for timeframe: Timeframe) {
+    private func fetchSummary(for timeframe: Timeframe) -> StatsSummary {
+        let interval = StatsSummary.currentInterval(for: timeframe)
+        
         do {
-            let summary = try dataProvider.fetchStatsSummary(sport: sport, timeframe: timeframe)
-            updateSummary(summary)
+            let dictionary = try dataProvider.fetchStatsSummary(sport: sport, interval: interval)
+            return StatsSummary(sport: sport, timeframe: timeframe, dictionary: dictionary)
         } catch {
             Log.debug("fetch summary error: \(error.localizedDescription)")
+            return StatsSummary(sport: sport, timeframe: timeframe, interval: interval)
         }
     }
     
-    func updateSummary(_ summary: StatsSummary) {
-        DispatchQueue.main.async {
-            switch summary.timeframe {
-            case .week:
-                self.weekStats = summary
-            case .month:
-                self.monthStats = summary
-            case .year:
-                self.yearStats = summary
-            case .allTime:
-                self.allStats = summary
+    private func fetchRecentSummary(for timeframe: Timeframe) -> [StatsSummary] {
+        var intervals = [DateInterval]()
+        
+        switch timeframe {
+        case .week:
+            intervals = StatsSummary.lastTwelveWeeks
+        case .month:
+            intervals = StatsSummary.lastTwelveMonths
+        default:
+            break
+        }
+        
+        if intervals.isEmpty { return [] }
+        
+        do {
+            var summaries = [StatsSummary]()
+            for interval in intervals {
+                let dictionary = try dataProvider.fetchStatsSummary(sport: sport, interval: interval)
+                let summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval, dictionary: dictionary)
+                summaries.append(summary)
             }
+            return summaries
+        } catch {
+            Log.debug("fetch recent error: \(error.localizedDescription)")
+            return []
         }
     }
     

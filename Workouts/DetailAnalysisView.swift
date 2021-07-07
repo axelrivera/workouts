@@ -86,6 +86,13 @@ struct DetailAnalysisView: View {
                             }
                         }
                     }
+                    
+                    if detailManager.zones.isPresent {
+                        Section(header: Text("Heart Rate Zones")) {
+                            HRZonesView(summaries: $detailManager.zones)
+                                .padding()
+                        }
+                    }
                 }
 
                 if workout.sport.isCycling && workout.avgCyclingCadence > 0 {

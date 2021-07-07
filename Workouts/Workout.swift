@@ -13,6 +13,8 @@ private let SportKey = "sportValue"
 private let RemoteIdentifierKey = "remoteIdentifier"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
+private let StartDateKey = "start"
+private let EndDateKey = "end"
 
 extension Workout: Identifiable {}
 
@@ -46,6 +48,13 @@ class Workout: NSManagedObject {
     @NSManaged var locationState: String?
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
+    
+    // Heart Rate Zones
+    @NSManaged var zoneMaxHeartRate: Int
+    @NSManaged var zoneValue1: Int
+    @NSManaged var zoneValue2: Int
+    @NSManaged var zoneValue3: Int
+    @NSManaged var zoneValue4: Int
     
     @NSManaged private(set) var createdAt: Date
     @NSManaged private(set) var updatedAt: Date
@@ -139,9 +148,41 @@ extension Workout {
         totalRetries += 1
     }
     
+    var zoneValues: [Int] {
+        [zoneValue1, zoneValue2, zoneValue3, zoneValue4]
+    }
+    
 }
 
 extension Workout {
+    
+    static func activePredicate(sport: Sport?, interval: DateInterval?) -> NSPredicate {
+        var predicates = [NSPredicate]()
+
+        if let sport = sport {
+            predicates.append(Workout.predicateForSport(sport))
+        }
+
+        predicates.append(notMarkedForLocalDeletionPredicate)
+        
+        if let interval = interval {
+            predicates.append(predicateForInterval(interval))
+        }
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
+        NSPredicate(
+            format: "%K >= %@ AND %K <= %@",
+            EndDateKey, start as NSDate,
+            StartDateKey, end as NSDate
+        )
+    }
+    
+    static func predicateForInterval(_ interval: DateInterval) -> NSPredicate {
+        datePredicateFor(start: interval.start, end: interval.end)
+    }
     
     static func predicateForSport(_ sport: Sport) -> NSPredicate {
         NSPredicate(format: "%K == %@", SportKey, sport.rawValue)
@@ -156,7 +197,7 @@ extension Workout {
     }
     
     static func defaultFetchRequest() -> NSFetchRequest<Workout> {
-        NSFetchRequest<Workout>(entityName: "Workout")
+        NSFetchRequest<Workout>(entityName: entityName)
     }
     
     static var sortedFetchRequest: NSFetchRequest<Workout> {
@@ -232,6 +273,16 @@ extension Workout {
         workout.device = remoteWorkout.device?.name
         workout.showMap = object.showMap
         
+        // Heart Rate Zones
+        let zoneHeartRate = AppSettings.maxHeartRate
+        let zoneValues = AppSettings.heartRateZones
+        
+        workout.zoneMaxHeartRate = zoneHeartRate
+        workout.zoneValue1 = zoneValues[0]
+        workout.zoneValue2 = zoneValues[1]
+        workout.zoneValue3 = zoneValues[2]
+        workout.zoneValue4 = zoneValues[3]
+        
         for remoteSample in object.records {
             Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
         }
@@ -257,7 +308,7 @@ extension Workout {
     static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {
         let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
         
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = NSPredicate(format: "%K < %@", MarkedForDeletionDateKey, cutoff as NSDate)
         
         let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)

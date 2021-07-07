@@ -22,6 +22,10 @@ extension Color {
     static let divider = Color(UIColor.separator)
     
     static let systemFill = Color(UIColor.systemFill)
+    static let darkGray = Color(UIColor.darkGray)
+    static let lightGray = Color(UIColor.lightGray)
+    static let systemYellow = Color(UIColor.systemYellow)
+    
 }
 
 // MARK: Asset Colors

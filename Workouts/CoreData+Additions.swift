@@ -7,6 +7,14 @@
 
 import CoreData
 
+extension NSManagedObject {
+    
+    static var entityName: String {
+        String(describing: Self.self)
+    }
+    
+}
+
 extension NSManagedObjectContext {
     
     @discardableResult

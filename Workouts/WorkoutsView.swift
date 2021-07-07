@@ -144,45 +144,41 @@ struct WorkoutsView_Previews: PreviewProvider {
     }
 }
 
-struct FilteredList<Content: View>: View {
-    var fetchRequest: FetchRequest<Workout>
-    @Binding var isEmpty: Bool
 
-    // this is our content closure; we'll call this once for each item in the list
-    let content: (Workout) -> Content
+extension WorkoutsView {
+    
+    struct FilteredList<Content: View>: View {
+        var fetchRequest: FetchRequest<Workout>
+        @Binding var isEmpty: Bool
 
-    var body: some View {
-        let workouts = self.fetchRequest.wrappedValue
-        isEmpty = workouts.isEmpty
-        
-        return List(workouts, id: \.self) { workout in
-            self.content(workout)
+        // this is our content closure; we'll call this once for each item in the list
+        let content: (Workout) -> Content
+
+        var body: some View {
+            let workouts = fetchRequest.wrappedValue
+            isEmpty = workouts.isEmpty
+            
+            return List(workouts, id: \.self) { workout in
+                self.content(workout)
+            }
         }
-    }
 
-    init(sport: Sport?, isEmpty: Binding<Bool>, @ViewBuilder content: @escaping (Workout) -> Content) {
-        _isEmpty = isEmpty
+        init(sport: Sport?, isEmpty: Binding<Bool>, @ViewBuilder content: @escaping (Workout) -> Content) {
+            _isEmpty = isEmpty
+            
+            let request = Self.fetchRequest(for: sport)
+            fetchRequest = FetchRequest(fetchRequest: request, animation: .default)
+            
+            self.content = content
+        }
         
-        let request = Self.fetchRequest(for: sport)
-        fetchRequest = FetchRequest(fetchRequest: request, animation: .default)
-        
-        self.content = content
+        private static func fetchRequest(for sport: Sport?) -> NSFetchRequest<Workout> {
+            let sort = [Workout.sortedByDateDescriptor()]
+            let request = Workout.defaultFetchRequest()
+            request.predicate = Workout.activePredicate(sport: sport, interval: nil)
+            request.sortDescriptors = sort
+            return request
+        }
     }
     
-    private static func fetchRequest(for sport: Sport?) -> NSFetchRequest<Workout> {
-        var predicates = [NSPredicate]()
-        
-        if let sport = sport {
-            predicates.append(Workout.predicateForSport(sport))
-        }
-        
-        predicates.append(Workout.notMarkedForLocalDeletionPredicate)
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        
-        let sort = [Workout.sortedByDateDescriptor()]
-        let request = Workout.defaultFetchRequest()
-        request.predicate = predicate
-        request.sortDescriptors = sort
-        return request
-    }
 }

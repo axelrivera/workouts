@@ -229,8 +229,17 @@ extension SampleProcessor {
         for sample in heartRateSamples {
             let key = keyForTimestamp(sample.timestamp)
             guard let record = dictionary[key] else { continue }
-            
             record.heartRate = max(record.heartRate, sample.value)
+        }
+        
+        // padding
+        
+        var heartRate: Double = 0
+        for record in records {
+            if record.heartRate == 0 && heartRate > 0 {
+                record.heartRate = heartRate
+            }
+            heartRate = record.heartRate
         }
     }
     

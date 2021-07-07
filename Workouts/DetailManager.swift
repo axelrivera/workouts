@@ -29,9 +29,13 @@ class DetailManager: ObservableObject {
     @Published var city: String?
     @Published var state: String?
     
+    @Published var zones = [HRZoneSummary]()
+    
     @Published var workout: Workout
     private var context: NSManagedObjectContext
     private var geocoder = CLGeocoder()
+    
+    var zoneManager: HRZoneManager
         
     init(workout: Workout) {
         self.workout = workout
@@ -39,6 +43,8 @@ class DetailManager: ObservableObject {
         self.city = workout.locationCity
         self.state = workout.locationState
         self.context = workout.managedObjectContext!
+        
+        self.zoneManager = HRZoneManager(maxHeartRate: workout.zoneMaxHeartRate, zoneValues: workout.zoneValues)
     }
 }
 
@@ -55,16 +61,15 @@ extension DetailManager {
         
         if workout.shouldRegenerateSamples {
             Log.debug("regenerating samples")
-            WorkoutDataStore.shared.fetchWorkout(for: workout.remoteIdentifier!) { [weak self] remoteWorkout in
+            context.perform { [weak self] in
                 guard let self = self else { return }
-                guard let remoteWorkout = remoteWorkout else {
-                    self.context.perform {
-                        self.updateValues(animated: false)
-                    }
-                    return
-                }
                 
-                self.context.perform {
+                WorkoutDataStore.shared.fetchWorkout(for: self.workout.remoteIdentifier!) { remoteWorkout in
+                    guard let remoteWorkout = remoteWorkout else {
+                        self.updateValues(animated: false)
+                        return
+                    }
+                    
                     self.workout.updateSamples(remoteWorkout: remoteWorkout)
                     self.updateValues(animated: self.workout.showMap)
                 }
@@ -108,6 +113,15 @@ extension DetailManager {
             let distance = workout.distance
             avgPace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
         }
+        
+        let zoneMaxHeartRate = workout.zoneMaxHeartRate
+        let zoneValues = workout.zoneValues
+        zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
+        
+        var zones = [HRZoneSummary]()
+        if heartRateValues.isPresent {
+            zones = (try? zoneManager.fetchZones(for: workout, context: context)) ?? []
+        }
                     
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -122,6 +136,7 @@ extension DetailManager {
                 self.cyclingCadenceValues = cadenceValues
                 self.altitudeValues = altitudeValues
                 self.avgPace = avgPace
+                self.zones = zones
                 
                 if let location = locations.first, self.city == nil || self.state == nil {
                     self.geocoder.reverseGeocodeLocation(location) { placemarks, error in

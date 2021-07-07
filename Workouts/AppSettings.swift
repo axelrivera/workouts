@@ -30,6 +30,8 @@ struct AppSettings {
         static let defaultStatsFilter = "arn_default_stats_filter"
         static let defaultWorkoutsFilter = "arn_default_workouts_filter"
         static let mockPurchaseActive = "arn_mock_purchase_active"
+        static let maxHeartRate = "arn_max_heart_rate"
+        static let heartRateZones = "arn_heart_rate_zones"
     }
 
     static func synchronize() {
@@ -43,6 +45,30 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
+    
+    @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
+    static var maxHeartRate: Int
+    
+    // heart Rate Zones
+    static var heartRateZones: [Int] {
+        get {
+            var zones = objectForKey(Keys.heartRateZones) as? [Int] ?? []
+            if zones.count == 4 {
+                return zones
+            }
+            
+            guard zones.isEmpty else { fatalError("invalid value count") }
+            
+            let max = Double(maxHeartRate)
+            let percents = HRZoneManager.Defaults.percents
+            zones = HRZoneManager.calculateDefaultZones(for: max, percentZones: percents)
+            setValue(zones, for: Keys.heartRateZones)
+            return zones
+        }
+        set {
+            setValue(newValue, for: Keys.heartRateZones)
+        }
+    }
         
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
@@ -52,13 +78,13 @@ struct AppSettings {
     static var mockPurchaseActive: Bool
     #endif
     
-    static var defaultStatsFilter: Sport {
+    static var defaultStatsFilter: Sport? {
         get {
             guard let string = objectForKey(Keys.defaultStatsFilter) as? String else { return .cycling }
-            return Sport(rawValue: string) ?? .cycling
+            return Sport(rawValue: string)
         }
         set {
-            setValue(newValue.rawValue, for: Keys.defaultStatsFilter)
+            setValue(newValue?.rawValue, for: Keys.defaultStatsFilter)
         }
     }
     

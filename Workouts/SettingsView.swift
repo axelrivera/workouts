@@ -35,7 +35,7 @@ struct SettingsView: View {
             ZStack {
                 Form {
                     if purchaseManager.isActive {
-                        Section {
+                        Section(header: Color.clear.frame(height: 20.0)) {
                             HStack(spacing: 10.0) {
                                 Image(systemName: "heart.fill")
                                     .foregroundColor(.red)
@@ -54,7 +54,7 @@ struct SettingsView: View {
                             #endif
                         }
                     } else {
-                        Section(footer: Text("Purchasing helps support Better Workouts.")) {
+                        Section(header: Color.clear.frame(height: 20.0), footer: Text("Purchasing helps support Better Workouts.")) {
                             Button(action: { activeSheet = .paywall }, label: {
                                 HStack {
                                     Image(systemName: "star.fill")
@@ -67,6 +67,10 @@ struct SettingsView: View {
                     }
                     
                     Section(header: Text("Application Settings")) {
+                        NavigationLink(destination: HeartRateView()) {
+                            Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
+                        }
+                        
                         Button(action: { activeAlert = .regenerateWorkouts }) {
                             Text("Reset Workout Data")
                         }
@@ -97,6 +101,7 @@ struct SettingsView: View {
                 }
             }
             .navigationBarTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .paywall:

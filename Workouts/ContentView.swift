@@ -43,7 +43,7 @@ struct ContentView: View {
                     .onAppear {
                         fetchSummariesIfNecessary()
                     }
-                    .tabItem { Label("Statistics", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
+                    .tabItem { Label("Progress", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
                     .tag(Tabs.stats)
                 
                 SettingsView()
