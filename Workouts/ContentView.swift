@@ -86,6 +86,7 @@ struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
     static let workoutManager = WorkoutManager(context: viewContext)
     static let statsManager = StatsManager(context: viewContext)
+    static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         ContentView()
@@ -97,6 +98,6 @@ struct ContentView_Previews: PreviewProvider {
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(statsManager)
-            .environmentObject(IAPManager())
+            .environmentObject(purchaseManager)
     }
 }

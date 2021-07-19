@@ -56,7 +56,7 @@ struct StatsSummary {
         self.interval = interval ?? Self.currentInterval(for: timeframe)
         count = dictionary["count"] as? Int ?? 0
         distance = dictionary["distance"] as? Double ?? 0
-        duration = dictionary["duration"] as? Double ?? 0
+        duration = dictionary["movingTime"] as? Double ?? 0
         elevation = dictionary["elevation"] as? Double ?? 0
         energyBurned = dictionary["energyBurned"] as? Double ?? 0
         longestDistance = dictionary["longestDistance"] as? Double ?? 0
@@ -205,14 +205,28 @@ extension StatsSummary {
 
 extension StatsSummary {
     
-    static func samples() -> [StatsSummary] {
+    static func weeklySamples() -> [StatsSummary] {
         lastTwelveWeeks.map { interval in
             let dictionary: [String: Any] = [
                 "count": Int.random(in: 1...10),
-                "distance": Double.random(in: 5000...10000),
-                "duration": Double.random(in: 5000...10000),
+                "distance": Double.random(in: 25000...50000),
+                "movingTime": Double.random(in: 5000...10000),
                 "elevation": Double.random(in: 100...1000),
                 "energyBurned": Double.random(in: 1000...5000)
+            ]
+            
+            return StatsSummary(sport: .cycling, timeframe: .week, interval: interval, dictionary: dictionary)
+        }
+    }
+    
+    static func monthlySamples() -> [StatsSummary] {
+        lastTwelveMonths.map { interval in
+            let dictionary: [String: Any] = [
+                "count": Int.random(in: 5...30),
+                "distance": Double.random(in: 500000...1000000),
+                "movingTime": Double.random(in: 50000...100000),
+                "elevation": Double.random(in: 1000...10000),
+                "energyBurned": Double.random(in: 10000...50000)
             ]
             
             return StatsSummary(sport: .cycling, timeframe: .week, interval: interval, dictionary: dictionary)

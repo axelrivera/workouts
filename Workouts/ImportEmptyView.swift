@@ -7,30 +7,40 @@
 
 import SwiftUI
 
-struct ImportEmptyView: View {
-    var importState: ImportManager.State
-    var addAction = {}
-    var reviewAction = {}
+struct ImportEmptyModifier: ViewModifier {
+    let importState: ImportManager.State
+    let isActive: Bool
     
-    var body: some View {
-        Group {
+    func body(content: Content) -> some View {
+        if !isActive {
+            NoFilesView()
+        } else {
             switch importState {
-            case .empty:
-                NoFilesView(addAction: addAction, reviewAction: reviewAction)
+            case .ok:
+                content
             case .notAuthorized:
-                WriteDeniedView()
+                VStack {
+                    Spacer()
+                    WriteDeniedView()
+                    Spacer()
+                }
             case .notAvailable:
-                NotAvailableView()
-            default:
-                EmptyView()
+                VStack {
+                    Spacer()
+                    NotAvailableView()
+                    Spacer()
+                }
+            case .empty:
+                NoFilesView()
+            case .processing:
+                VStack {
+                    Spacer()
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                    Spacer()
+                }
             }
         }
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .center)
     }
-}
-
-struct ImportEmptyView_Previews: PreviewProvider {
-    static var previews: some View {
-        ImportEmptyView(importState: .empty)
-    }
+    
 }

@@ -117,7 +117,7 @@ extension RecentChart {
 
 struct RecentChart_Previews: PreviewProvider {
     static var values: [ChartInterval] = {
-        StatsSummary.samples().map { (summary) -> ChartInterval in
+        StatsSummary.weeklySamples().map { (summary) -> ChartInterval in
             ChartInterval(
                 xValue: summary.interval.start.timeIntervalSince1970,
                 yValue: nativeDistanceToLocalizedUnit(for: summary.distance)

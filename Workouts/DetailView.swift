@@ -25,10 +25,6 @@ struct DetailView: View {
         detailManager.workout
     }
     
-    var totalTime: Workout.Time {
-        workout.totalTime
-    }
-    
     init(workout: Workout) {
         let manager = DetailManager(workout: workout)
         _detailManager = StateObject(wrappedValue: manager)
@@ -153,14 +149,8 @@ extension DetailView {
             items.append(item)
         }
         
-        switch workout.totalTime {
-        case .moving(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
-            items.append(item)
-        case .total(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
-            items.append(item)
-        }
+        item = GridItem(text: workout.totalTimeLabel, detail: formattedHoursMinutesSecondsDurationString(for: workout.totalTime), detailColor: .time)
+        items.append(item)
         
         if workout.avgHeartRate > 0 {
             item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
@@ -172,8 +162,8 @@ extension DetailView {
             items.append(item)
         }
         
-        if workout.sport.isSpeedSport && !workout.indoor && workout.avgSpeed > 0 {
-            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
+        if workout.sport.isSpeedSport && !workout.indoor && workout.displayAvgSpeed > 0 {
+            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.displayAvgSpeed), detailColor: .speed)
             items.append(item)
         }
         

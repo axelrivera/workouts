@@ -35,7 +35,7 @@ class DetailManager: ObservableObject {
     private var context: NSManagedObjectContext
     private var geocoder = CLGeocoder()
     
-    var zoneManager: HRZoneManager
+    @Published var zoneManager: HRZoneManager
         
     init(workout: Workout) {
         self.workout = workout
@@ -50,17 +50,22 @@ class DetailManager: ObservableObject {
 
 extension DetailManager {
     
+    var maxHeartRate: Int {
+        Int(workout.maxHeartRate)
+    }
+    
+    var zoneValues: [Int] {
+        workout.zoneValues
+    }
+    
     var locationName: String? {
         let strings: [String] = [city, state].compactMap{ $0 }
         if strings.isEmpty { return nil }
         return strings.joined(separator: ", ")
     }
     
-    func run() {
-        Log.debug("running samples - retries: \(workout.totalRetries)")
-        
+    func run() {        
         if workout.shouldRegenerateSamples {
-            Log.debug("regenerating samples")
             context.perform { [weak self] in
                 guard let self = self else { return }
                 
@@ -75,8 +80,6 @@ extension DetailManager {
                 }
             }
         } else {
-            Log.debug("samples in place")
-            
             context.perform { [weak self] in
                 guard let self = self else { return }
                 self.updateValues(animated: false)
@@ -116,11 +119,11 @@ extension DetailManager {
         
         let zoneMaxHeartRate = workout.zoneMaxHeartRate
         let zoneValues = workout.zoneValues
-        zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
+        let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
         
         var zones = [HRZoneSummary]()
         if heartRateValues.isPresent {
-            zones = (try? zoneManager.fetchZones(for: workout, context: context)) ?? []
+            zones = (try? zoneManager.fetchZones(for: workout)) ?? []
         }
                     
         DispatchQueue.main.async { [weak self] in
@@ -136,6 +139,7 @@ extension DetailManager {
                 self.cyclingCadenceValues = cadenceValues
                 self.altitudeValues = altitudeValues
                 self.avgPace = avgPace
+                self.zoneManager = zoneManager
                 self.zones = zones
                 
                 if let location = locations.first, self.city == nil || self.state == nil {
@@ -156,6 +160,25 @@ extension DetailManager {
                             self.context.saveOrRollback()
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    func updateZones(maxHeartRate: Int, values: [Int]) {
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            
+            let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
+            let zones = (try? self.zoneManager.fetchZones(for: self.workout)) ?? []
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.workout.updateHeartRateZones(with: maxHeartRate, values: values)
+                    self.context.saveOrRollback()
+                    
+                    self.zoneManager = zoneManager
+                    self.zones = zones
                 }
             }
         }

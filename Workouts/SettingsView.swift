@@ -16,7 +16,6 @@ struct SettingsView: View {
     
     enum ActiveAlert: Identifiable {
         case emailError
-        case regenerateWorkouts
         var id: Int { hashValue }
     }
     
@@ -32,80 +31,55 @@ struct SettingsView: View {
         
     var body: some View {
         NavigationView {
-            ZStack {
-                Form {
-                    if purchaseManager.isActive {
-                        Section(header: Color.clear.frame(height: 20.0)) {
-                            HStack(spacing: 10.0) {
-                                Image(systemName: "heart.fill")
-                                    .foregroundColor(.red)
-                                    .font(.title2)
-                                VStack(alignment: .leading, spacing: 2.0) {
-                                    Text("Better Workouts Pro")
-                                    Text("Thank your for your support!")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            #if DEVELOPMENT_BUILD
-                            Button("Reset Mock Purchase", action: purchaseManager.resetMockPurchase)
-                                .foregroundColor(.red)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                            #endif
-                        }
-                    } else {
-                        Section(header: Color.clear.frame(height: 20.0), footer: Text("Purchasing helps support Better Workouts.")) {
-                            Button(action: { activeSheet = .paywall }, label: {
-                                HStack {
-                                    Image(systemName: "star.fill")
-                                        .foregroundColor(.orange)
-                                    Text("Unlock all Better Workouts Features")
-                                        .foregroundColor(.primary)
-                                }
-                            })
-                        }
+            Form {
+                Section(header: Color.clear.frame(height: 20.0)) {
+                    PaywallBanner(isActive: purchaseManager.isActive, action: { activeSheet = .paywall })
+                }
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                
+                Section(header: Text("Application Preferences")) {
+                    NavigationLink(destination: HeartRateView()) {
+                        Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
                     }
                     
-                    Section(header: Text("Application Settings")) {
-                        NavigationLink(destination: HeartRateView()) {
-                            Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
-                        }
-                        
-                        Button(action: { activeAlert = .regenerateWorkouts }) {
-                            Text("Reset Workout Data")
-                        }
-                        .disabled(workoutManager.isLoading)
-                    }
-                    
-                    Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
-                        //Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
-                        //Button("Frequently Asked Questions", action: { activeSheet = .faq })
-                        Button("Send Feedback", action: feedbackAction)
-                    }
-                    
-                    Section(header: Text("Better Workouts")) {
-                        Button("Review on the App Store", action: reviewAction)
-                        Button("Privacy Policy", action: { activeSheet = .privacy })
-                        HStack {
-                            Text("Version")
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(systemVersionAndBuildString())
-                        }
+                    NavigationLink(destination: AdvancedSettingsView()) {
+                        Label("Advanced", systemImage: "gearshape.2.fill")
                     }
                 }
-                .disabled(workoutManager.isProcessingRemoteData)
                 
-                if workoutManager.isProcessingRemoteData {
-                    ProcessView(text: "Processing Workouts...", value: $workoutManager.processingRemoteDataValue)
+                Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
+                    //Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
+                    //Button("Frequently Asked Questions", action: { activeSheet = .faq })
+                    Button("Send Feedback", action: feedbackAction)
+                }
+                
+                Section(header: Text("Better Workouts")) {
+                    Button("Review on the App Store", action: reviewAction)
+                    Button("Privacy Policy", action: { activeSheet = .privacy })
+                    HStack {
+                        Text("Version")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(systemVersionAndBuildString())
+                    }
                 }
             }
             .navigationBarTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                #if DEVELOPMENT_BUILD
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Reset IAP", action: purchaseManager.resetMockPurchase)
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(!purchaseManager.isActive)
+                }
+                #endif
+            }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .paywall:
-                    UpgradeView()
+                    PaywallView()
+                        .environmentObject(purchaseManager)
                 case .tutorial:
                     SafariView(urlString: URLStrings.tutorial)
                 case .privacy:
@@ -125,21 +99,6 @@ struct SettingsView: View {
                         title:  Text("Email Error"),
                         message: Text(message),
                         dismissButton: .default(Text("Ok"))
-                    )
-                case .regenerateWorkouts:
-                    let title = "Reset Workouts"
-                    let message = String(format: "This action will reset and regenerate your local workout data from Apple Health.")
-                    let continueButton: Alert.Button = .default(Text("Continue")) {
-                        let userInfo = [Notification.regenerateDataKey: true]
-                        NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
-                    }
-                    let cancelButton: Alert.Button = .cancel(Text("Cancel"))
-                                        
-                    return Alert(
-                        title:  Text(title),
-                        message: Text(message),
-                        primaryButton: continueButton,
-                        secondaryButton: cancelButton
                     )
                 }
             }
@@ -181,12 +140,7 @@ extension SettingsView {
 
 struct SettingsView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    
-    static let purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = true
-        return manager
-    }()
+    static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         SettingsView()

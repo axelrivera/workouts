@@ -7,16 +7,22 @@
 
 import CoreData
 
+typealias HRZoneManagerAction = (_ maxHeartRate: Int, _ values: [Int]) -> Void
+
 class HRZoneManager: ObservableObject {
     struct Defaults {
         static let max: Int = 200
-        static let percents: [Double] = [0.7, 0.8, 0.9, 1]
+        static let percents: [Double] = [0.5, 0.6, 0.7, 0.8, 0.9]
     }
     
-    @Published var maxHeartRate: Int {
-        didSet {
-            AppSettings.maxHeartRate = maxHeartRate
-        }
+    @Published var maxHeartRate: Double
+    
+    private var maxHeartRateValue: Int {
+        Int(maxHeartRate)
+    }
+    
+    var maxHeartRateString: String {
+        String(format: "%@ bpm", maxHeartRateValue as NSNumber)
     }
     
     // Don't update values directly, use helper method
@@ -24,10 +30,10 @@ class HRZoneManager: ObservableObject {
      
     init(maxHeartRate: Int, zoneValues: [Int]) {
         if maxHeartRate > 0 && zoneValues.isPresent {
-            self.maxHeartRate = maxHeartRate
+            self.maxHeartRate = Double(maxHeartRate)
             values = zoneValues
         } else {
-            self.maxHeartRate = AppSettings.maxHeartRate
+            self.maxHeartRate = Double(AppSettings.maxHeartRate)
             values = AppSettings.heartRateZones
         }
     }
@@ -41,34 +47,30 @@ class HRZoneManager: ObservableObject {
 extension HRZoneManager {
     
     func autoCalculate() {
-        values = Self.calculateDefaultZones(for: Double(maxHeartRate), percentZones: Defaults.percents)
-        AppSettings.heartRateZones = values
+        values = Self.calculateDefaultZones(for: Double(maxHeartRate))
     }
     
     func incrementZone(_ zone: HRZone) {
-        if zone == .zone1 { return }
         let index = indexForZone(zone)
         let (_, max) = rangeForZone(zone)
          
-        
         let value = values[index]
         let futureValue = value + 1
-        let maxValue = max > 0 ? max : maxHeartRate + 1
-        
+        let maxValue = max > 0 ? max : maxHeartRateValue + 1
+                
         if futureValue < maxValue {
             updateValue(futureValue, at: index)
         }
     }
     
     func decrementZone(_ zone: HRZone) {
-        if zone == .zone1 { return }
         let index = indexForZone(zone)
-        let (min, _) = prevRangeForZone(zone)
+        let (min, _) = prevRangeForZone(zone) ?? (0, 0)
         
         let value = values[index]
         let futureValue = value - 1
-        let minValue = min + 1
-        
+        let minValue = min > 0 ? min + 1 : 0
+                
         if futureValue > minValue {
             updateValue(futureValue, at: index)
         }
@@ -79,27 +81,29 @@ extension HRZoneManager {
             assertionFailure("invalid index")
             return
         }
-        values[index] = value
-        AppSettings.heartRateZones = values
+        
+        DispatchQueue.main.async { [unowned self] in
+            self.values[index] = value
+        }
     }
         
     private func indexForZone(_ zone: HRZone) -> Int {
         switch zone {
-        case .zone2: return 0
-        case .zone3: return 1
-        case .zone4: return 2
-        case .zone5: return 3
-        default: fatalError("invalid index")
+        case .zone1: return 0
+        case .zone2: return 1
+        case .zone3: return 2
+        case .zone4: return 3
+        case .zone5: return 4
         }
     }
     
-    private func prevRangeForZone(_ zone: HRZone) -> ZoneRange {
+    private func prevRangeForZone(_ zone: HRZone) -> ZoneRange? {
         switch zone {
+        case .zone1: return nil
         case .zone2: return zone1Range
         case .zone3: return zone2Range
         case .zone4: return zone3Range
         case .zone5: return zone4Range
-        default: fatalError("invalid zone")
         }
     }
     
@@ -134,23 +138,23 @@ extension HRZoneManager {
     // MARK: Ranges
     
     var zone1Range: ZoneRange {
-        (0, values[0] - 1)
-    }
-    
-    var zone2Range: ZoneRange {
         (values[0], values[1] - 1)
     }
     
-    var zone3Range: ZoneRange {
+    var zone2Range: ZoneRange {
         (values[1], values[2] - 1)
     }
     
-    var zone4Range: ZoneRange {
+    var zone3Range: ZoneRange {
         (values[2], values[3] - 1)
     }
     
+    var zone4Range: ZoneRange {
+        (values[3], values[4] - 1)
+    }
+    
     var zone5Range: ZoneRange {
-        (values[3], 0)
+        (values[4], 0)
     }
     
     // MARK: Percents
@@ -191,10 +195,6 @@ extension HRZoneManager {
 extension HRZoneManager {
     
     static func stringForPercentRange(_ range: ZonePercentRange) -> String {
-        if range.low == 0 && range.high > 0 {
-            return String(format: "< %.0f%% of HR max", range.high)
-        }
-        
         if range.low > 0 && range.high == 0 {
             return String(format: "> %.0f%% of HR max", range.low)
         }
@@ -210,8 +210,8 @@ extension HRZoneManager {
         return String(format: "%d - %d bpm", range.low, range.high)
     }
     
-    static func calculateDefaultZones(for maxHeartRate: Double, percentZones: [Double]) -> [Int] {
-        percentZones.map { Int(ceil($0 * Double(maxHeartRate))) }
+    static func calculateDefaultZones(for maxHeartRate: Double) -> [Int] {
+        return Defaults.percents.map { Int(ceil($0 * Double(maxHeartRate))) }
     }
     
 }
@@ -225,7 +225,9 @@ extension HRZoneManager {
         case missingZone
     }
     
-    func fetchZones(for workout: Workout, context: NSManagedObjectContext) throws -> [HRZoneSummary] {
+    func fetchZones(for workout: Workout) throws -> [HRZoneSummary] {
+        guard let context = workout.managedObjectContext else { throw DataError.database }
+        
         let total = try heartRateSamplesDuration(for: nil, workout: workout, context: context)
         
         var summaries = [HRZoneSummary]()

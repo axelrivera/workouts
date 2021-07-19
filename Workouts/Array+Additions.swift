@@ -76,3 +76,24 @@ extension Sequence where Iterator.Element: CLLocation {
     }
     
 }
+
+extension Array {
+    
+    var tuple: Any? {
+        switch count {
+        case 1:
+            return (self[0])
+        case 2:
+            return (self[0], self[1])
+        case 3:
+            return (self[0], self[1], self[2])
+        case 4:
+            return (self[0], self[1], self[2], self[3])
+        case 5:
+            return (self[0], self[1], self[2], self[3], self[4])
+        default:
+            return nil
+        }
+    }
+    
+}

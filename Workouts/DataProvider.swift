@@ -81,6 +81,7 @@ extension DataProvider {
 // MARK: - Samples
 
 extension DataProvider {
+    
     struct Function: RawRepresentable {
         typealias RawValue = String
         let rawValue: String
@@ -95,7 +96,7 @@ extension DataProvider {
         
         static let count = Name(rawValue: "count")
         static let distance = Name(rawValue: "distance")
-        static let duration = Name(rawValue: "duration")
+        static let duration = Name(rawValue: "movingTime")
         static let elevation = Name(rawValue: "elevation")
         static let energyBurned = Name(rawValue: "energyBurned")
         static let longestDistance = Name(rawValue: "longestDistance")

@@ -7,40 +7,86 @@
 
 import SwiftUI
 
+extension HeartRateEditView {
+    
+    enum DisplayType {
+        case config, workout
+    }
+    
+}
+
 struct HeartRateEditView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var zoneManager: HRZoneManager
     
+    let action: HRZoneManagerAction
+    
+    init(action: @escaping HRZoneManagerAction) {
+        self.action = action
+    }
+    
     var body: some View {
         NavigationView {
             Form {
-                ForEach(HRZone.allCases) {
-                    HREditSectionRow(zone: $0)
-                        .environmentObject(zoneManager)
+                Section(header: Color.clear.frame(height: 20), footer: Text("Your maximum heart rate is about 220 minus your age. For example, if you're 30 years old, subtract 30 from 220 to get a maximum heart rate of 190 bpm.")) {
+                    HStack {
+                        Text("Max Heart Rate")
+                        Spacer()
+                        Text(zoneManager.maxHeartRateString)
+                            .foregroundColor(.red)
+                    }
+                    Slider(value: $zoneManager.maxHeartRate, in: 140...220, step: 1)
+                }
+                
+                Section {
+                    ForEach(HRZone.allCases) {
+                        HREditSectionRow(zone: $0)
+                            .environmentObject(zoneManager)
+                    }
+                }
+                
+                Section(footer: Text("Resetting will use your Max Heart Rate to calculate new zones based on default values. You can adjust further to meet your training goals.")) {
+                    Button("Reset Zones", action: zoneManager.autoCalculate)
+                        .accentColor(.red)
                 }
             }
             .navigationBarTitle("Edit Zones")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(leading: resetButton(), trailing: doneButton())
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: save) {
+                        Text("Save")
+                            .bold()
+                    }
+                }
+            }
         }
     }
     
-    func resetButton() -> some View {
-        Button(action: { zoneManager.autoCalculate() }) {
-            Text("Reset")
-                .font(.body)
-                .foregroundColor(.red)
-        }
+}
+
+// MARK: - Actions
+
+extension HeartRateEditView {
+    
+    func save() {
+        action(Int(zoneManager.maxHeartRate), zoneManager.values)
     }
     
-    func doneButton() -> some View {
-        Button("Done", action: { presentationMode.wrappedValue.dismiss() })
-    }
 }
 
 struct HeartRateEditView_Previews: PreviewProvider {
+    
+    static func saveAction(_ heartRate: Int, _ values: [Int]) {
+        // no-op
+    }
+    
     static var previews: some View {
-        HeartRateEditView()
+        HeartRateEditView(action: saveAction)
             .environmentObject(HRZoneManager())
             .preferredColorScheme(.dark)
     }
@@ -70,21 +116,15 @@ struct HREditSectionRow: View {
             Text(textString())
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
-            if readOnly {
+                        
+            Stepper(
+                onIncrement: { zoneManager.incrementZone(zone) },
+                onDecrement: { zoneManager.decrementZone(zone)}) {
                 inputLabel()
-            } else {
-                Stepper(
-                    onIncrement: { zoneManager.incrementZone(zone) },
-                    onDecrement: { zoneManager.decrementZone(zone)}) {
-                    inputLabel()
-                }
             }
         }
     }
-    
-    var readOnly: Bool { zone == .zone1 }
-    
+        
     var range: HRZoneManager.ZoneRange {
         zoneManager.rangeForZone(zone)
     }
@@ -101,7 +141,7 @@ struct HREditSectionRow: View {
         HStack {
             Text("\(range.low)")
                 .padding(5)
-                .background(readOnly ? Color.systemFill : zone.color.opacity(0.3))
+                .background(zone.color.opacity(0.3))
                 .cornerRadius(5)
                 
             

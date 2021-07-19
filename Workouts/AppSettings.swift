@@ -53,15 +53,12 @@ struct AppSettings {
     static var heartRateZones: [Int] {
         get {
             var zones = objectForKey(Keys.heartRateZones) as? [Int] ?? []
-            if zones.count == 4 {
+            if let (_, _, _, _, _) = zones.tuple as? HRZoneTuple {
                 return zones
             }
             
-            guard zones.isEmpty else { fatalError("invalid value count") }
-            
             let max = Double(maxHeartRate)
-            let percents = HRZoneManager.Defaults.percents
-            zones = HRZoneManager.calculateDefaultZones(for: max, percentZones: percents)
+            zones = HRZoneManager.calculateDefaultZones(for: max)
             setValue(zones, for: Keys.heartRateZones)
             return zones
         }
@@ -80,7 +77,7 @@ struct AppSettings {
     
     static var defaultStatsFilter: Sport? {
         get {
-            guard let string = objectForKey(Keys.defaultStatsFilter) as? String else { return .cycling }
+            guard let string = objectForKey(Keys.defaultStatsFilter) as? String else { return nil }
             return Sport(rawValue: string)
         }
         set {

@@ -33,11 +33,13 @@ extension StatsRecentView {
 }
 
 struct StatsRecentView: View {
+    @EnvironmentObject var purchaseManager: IAPManager
+    
     let options: [Options] = [.distance, .calories, .elevation]
     @State var option = Options.distance
     
     var timeframe: StatsSummary.Timeframe
-    @Binding var summaries: [StatsSummary]
+    var summaries: [StatsSummary]
     
     @State private var values = [Double]()
     
@@ -97,6 +99,7 @@ struct StatsRecentView: View {
             .zIndex(0.0)
             .listStyle(PlainListStyle())
         }
+        .paywallOverlay()
         .navigationBarTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -170,11 +173,18 @@ extension StatsRecentView {
 }
 
 struct StatsRecentView_Previews: PreviewProvider {
-    @State static var summaries = StatsSummary.samples()
+    static var summaries = StatsSummary.weeklySamples()
+    
+    static let purchaseManager: IAPManager = {
+        let manager = IAPManager()
+        manager.isActive = false
+        return manager
+    }()
     
     static var previews: some View {
         NavigationView {
-            StatsRecentView(timeframe: .week, summaries: $summaries)
+            StatsRecentView(timeframe: .week, summaries: summaries)
+                .environmentObject(purchaseManager)
                 .preferredColorScheme(.dark)
         }
     }

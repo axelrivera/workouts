@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HRZonesView: View {
-    @Binding var summaries: [HRZoneSummary]
+    var summaries: [HRZoneSummary]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -20,36 +20,42 @@ struct HRZonesView: View {
 }
 
 struct HRZones_Previews: PreviewProvider {
-    @State static var summaries = HRZoneSummary.samples()
+    static var summaries = HRZoneSummary.samples()
     
     static var previews: some View {
-        HRZonesView(summaries: $summaries)
+        HRZonesView(summaries: summaries)
             .padding()
             .preferredColorScheme(.dark)
     }
 }
 
 struct HRZonesViewRow: View {
+    @Environment(\.isEnabled) var isEnabled
+    
     let summary: HRZoneSummary
+    
+    private var zoneColor: Color {
+        isEnabled ? summary.color : summary.color.opacity(0.5)
+    }
     
     var body: some View {
         HStack(alignment: .bottom, spacing: 10.0) {
             VStack(alignment: .leading) {
                 HStack(alignment: .firstTextBaseline, spacing: 10.0) {
                     Text(summary.name)
-                        .foregroundColor(summary.color)
+                        .foregroundColor(zoneColor)
                     Text(summary.text)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 
-                BarView(value: summary.percent, barColor: summary.color)
+                BarView(value: summary.percent, barColor: zoneColor)
             }
             
             VStack(alignment: .trailing) {
                 Text(NumberFormatter.percent.string(from: summary.percent as NSNumber) ?? "n/a")
                     .font(.subheadline)
-                    .foregroundColor(summary.color)
+                    .foregroundColor(zoneColor)
                 
                 Text(formattedHoursMinutesSecondsDurationString(for: summary.duration))
                     .font(.subheadline)

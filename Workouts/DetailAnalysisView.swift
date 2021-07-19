@@ -9,8 +9,16 @@ import SwiftUI
 import Charts
 
 struct DetailAnalysisView: View {
+    enum ActiveSheet: Identifiable {
+        case heartRateZones
+        var id: Int { hashValue }
+    }
+    
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var detailManager: DetailManager
+    @EnvironmentObject var purchaseManager: IAPManager
+    
+    @State private var activeSheet: ActiveSheet?
     
     var localizedAvgSpeed: Double? {
         nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
@@ -25,15 +33,17 @@ struct DetailAnalysisView: View {
         let titleStr = workout.title
         return String(format: "%@ %@", distanceStr, titleStr)
     }
-    
+        
     var body: some View {
         NavigationView {
             List {
                 Section(header: Color.clear.frame(width: 0, height: 20.0)) {
                     rowForText("Total Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.duration), detailColor: .time)
                     
-                    if workout.movingTime > 0 && workout.movingTime < workout.duration {
+                    if workout.shouldUseMovingTime {
                         rowForText("Moving Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.movingTime), detailColor: .time)
+                        
+                        rowForText("Paused Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
                     }
                     
                     if workout.sport.isWalkingOrRunning && detailManager.avgPace > 0 {
@@ -88,9 +98,10 @@ struct DetailAnalysisView: View {
                     }
                     
                     if detailManager.zones.isPresent {
-                        Section(header: Text("Heart Rate Zones")) {
-                            HRZonesView(summaries: $detailManager.zones)
-                                .padding()
+                        Section(header: zonesHeader()) {
+                            HRZonesView(summaries: purchaseManager.isActive ? detailManager.zones : HRZoneSummary.samples())
+                                .padding([.top, .bottom])
+                                .paywallOverlay()
                         }
                     }
                 }
@@ -145,12 +156,33 @@ struct DetailAnalysisView: View {
                     }
                 }
             }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .heartRateZones:
+                    HeartRateEditView(action: saveZones)
+                        .environmentObject(detailManager.zoneManager)
+                }
+            }
             
         }
     }
 }
 
 extension DetailAnalysisView {
+    
+    func saveZones(heartRate: Int, values: [Int]) {
+        detailManager.updateZones(maxHeartRate: heartRate, values: values)
+        activeSheet = nil
+    }
+    
+    func zonesHeader() -> some View {
+        HStack {
+            Text("Heart Rate Zones")
+            Spacer()
+            Button("Edit") { activeSheet = .heartRateZones }
+                .disabled(!purchaseManager.isActive)
+        }
+    }
     
     func chart(supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
         VStack(alignment: .leading) {
@@ -205,10 +237,12 @@ extension DetailAnalysisView {
 
 struct DetailAnalysisView_Previews: PreviewProvider {
     static let workout = StorageProvider.sampleWorkout()
+    static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         DetailAnalysisView()
             .environmentObject(DetailManager(workout: workout))
+            .environmentObject(purchaseManager)
             .colorScheme(.dark)
         
     }

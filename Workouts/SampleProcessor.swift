@@ -198,6 +198,17 @@ extension SampleProcessor {
         processLocationSamples()
         processHeartRateSamples()
         processCadenceSamples()
+        
+        if locations.isPresent {
+            movingTime = Double(records.filter({ $0.isActive }).count)
+        }
+        
+        if movingTime == 0 {
+            movingTime = duration
+        }
+        
+        let distance = totalDistance()
+        avgMovingSpeed = distance / movingTime
     }
     
     private func processLocationSamples() {
@@ -214,12 +225,6 @@ extension SampleProcessor {
             record.altitude = location.altitude
             
             sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
-        }
-        
-        movingTime = Double(records.filter({ $0.isActive }).count)
-        if movingTime > 0 {
-            let distance = totalDistance()
-            avgMovingSpeed = distance / movingTime
         }
     }
     

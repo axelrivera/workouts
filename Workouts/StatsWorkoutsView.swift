@@ -45,6 +45,7 @@ struct StatsWorkoutsView: View {
                     }
                 }
             }
+            .listStyle(PlainListStyle())
             
             if workouts.isEmpty {
                 Text("No Workouts")

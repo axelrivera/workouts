@@ -41,13 +41,21 @@ struct StatsView: View {
             .navigationBarTitle(title)
     }
     
+    var weeklySummaries: [StatsSummary] {
+        purchaseManager.isActive ? statsManager.recentWeekly : StatsSummary.weeklySamples()
+    }
+    
+    var monthlySummaries: [StatsSummary] {
+        purchaseManager.isActive ? statsManager.recentMonthly : StatsSummary.monthlySamples()
+    }
+    
     var body: some View {
         NavigationView {
             List {
                 Section(header: StatsHeader(text: weeklySectionTitle, detail: weeklySectionDetail)) {
                     StatsSummaryView(timeframe: .week, manager: statsManager)
                     
-                    NavigationLink(destination: StatsRecentView(timeframe: .week, summaries: $statsManager.recentWeekly)) {
+                    NavigationLink(destination: StatsRecentView(timeframe: .week, summaries: weeklySummaries)) {
                         Label(StatsSummary.Timeframe.week.recentTitle, systemImage: "calendar")
                     }
                 }
@@ -56,7 +64,7 @@ struct StatsView: View {
                 Section(header: StatsHeader(text: monthlySectionTitle, detail: monthlySectionDetail)) {
                     StatsSummaryView(timeframe: .month, manager: statsManager)
                     
-                    NavigationLink(destination: StatsRecentView(timeframe: .month, summaries: $statsManager.recentMonthly)) {
+                    NavigationLink(destination: StatsRecentView(timeframe: .month, summaries: monthlySummaries)) {
                         Label(StatsSummary.Timeframe.month.recentTitle, systemImage: "calendar")
                     }
                 }
@@ -122,13 +130,8 @@ struct StatsView: View {
 // MARK: - Methods
 
 struct StatsView_Previews: PreviewProvider {
-    static var purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = true
-        return manager
-    }()
-    
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         StatsView()

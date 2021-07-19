@@ -31,9 +31,32 @@ extension HRZoneSummary {
 extension HRZoneSummary {
     
     static func samples() -> [HRZoneSummary] {
-        let summaries: [HRZoneSummary] = HRZone.allCases.map { zone in
-            let text = "0 - 100 bpm"
-            return HRZoneSummary(name: zone.name, color: zone.color, text: text, duration: 500, totalDuration: 3600)
+        var summaries = [HRZoneSummary]()
+        
+        HRZone.allCases.forEach { zone in
+            var text: String
+            var duration: Double
+            let total: Double = 7200
+            
+            switch zone {
+            case .zone1:
+                text = "0 - 138 bpm"
+                duration = total * 0.05
+            case .zone2:
+                text = "139 - 160 bpm"
+                duration = total * 0.7
+            case .zone3:
+                text = "161 - 178 bpm"
+                duration = total * 0.2
+            case .zone4:
+                text = "179 - 189 bpm"
+                duration = total * 0.05
+            case .zone5:
+                text = "190 - ∞ bpm"
+                duration = 0
+            }
+            
+            summaries.append(HRZoneSummary(name: zone.name, color: zone.color, text: text, duration: duration, totalDuration: total))
         }
         return summaries
     }
