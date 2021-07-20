@@ -1319,7 +1319,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -1329,7 +1329,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1348,7 +1348,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -1358,7 +1358,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1403,7 +1403,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -1466,7 +1466,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1497,7 +1497,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -1507,7 +1507,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD -D PRODUCTION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
@@ -1526,7 +1526,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 31;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -1536,7 +1536,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
