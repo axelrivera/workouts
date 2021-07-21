@@ -30,7 +30,10 @@ struct AdvancedSettingsView: View {
             .disabled(workoutManager.isProcessingRemoteData)
             
             if workoutManager.isProcessingRemoteData {
-                ProcessView(text: "Processing Workouts...", value: $workoutManager.processingRemoteDataValue)
+                ProcessView(
+                    title: "Processing Workouts",
+                    value: $workoutManager.processingRemoteDataValue
+                )
             }
         }
         .navigationBarTitle("Advanced Settings")

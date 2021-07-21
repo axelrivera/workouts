@@ -9,28 +9,49 @@ import SwiftUI
 
 struct ProcessView: View {
     
-    var text: String
+    var title: String
     @Binding var value: Double
+    
+    @State private var isAnimating = false
+    
+    var foreverAnimation: Animation {
+            Animation.linear(duration: 5.0)
+                .repeatForever(autoreverses: false)
+        }
     
     var body: some View {
         GeometryReader { geometry in
-            VStack {
-                ProgressView(text, value: value)
-                    .padding()
-                    .frame(width: geometry.size.width * 0.75, height: 100.0, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
-                    .background(Color.secondarySystemBackground)
-                    .cornerRadius(12.0)
-                    .shadow(radius: 10)
-                    .padding()
-                    .position(x: geometry.size.width / 2.0, y: geometry.size.height / 2.0)
+            VStack(spacing: 20.0) {
+                Text(title)
+                    .font(.title3)
+                
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+                    .foregroundColor(.secondary)
+                    .rotationEffect(Angle(degrees: isAnimating ? 360.0 : 0.0))
+                    .animation(foreverAnimation)
+                    .onAppear { isAnimating = true }
+                
+                ProgressView(value: value)
             }
+            .padding()
+            .frame(width: geometry.size.width * 0.75, alignment: /*@START_MENU_TOKEN@*/.center/*@END_MENU_TOKEN@*/)
+            .background(Color.secondarySystemBackground)
+            .cornerRadius(12.0)
+            .shadow(radius: 10)
+            .padding()
+            .position(x: geometry.size.width / 2.0, y: geometry.size.height / 2.0)
         }
     }
 }
 
 struct LoadingView_Previews: PreviewProvider {
+    static var title = "Fetching Workouts"
+    
     static var previews: some View {
-        ProcessView(text: "Fetching Workouts...", value: .constant(0.5))
-            .environment(\.colorScheme, .light)
+        ProcessView(title: title, value: .constant(0.5))
+            .environment(\.colorScheme, .dark)
     }
 }

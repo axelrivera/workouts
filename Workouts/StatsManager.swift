@@ -40,6 +40,8 @@ class StatsManager: ObservableObject {
     @Published var avgMonthlyElevation: Double = 0
     @Published var avgMonthlyCalories: Double = 0
     
+    @Published var isDirty = true
+    
     private var refreshCancellable: Cancellable?
         
     init(context: NSManagedObjectContext) {
@@ -52,13 +54,23 @@ class StatsManager: ObservableObject {
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
                 
         fetchSummaries()
-        //addObservers()
+        addObservers()
     }
 }
 
 // MARK: - Fetching Summaries
 
 extension StatsManager {
+    
+    func refreshIfNeeded() {
+        guard isDirty else {
+            Log.debug("ignoring stats refresh")
+            return
+        }
+        
+        Log.debug("stats dirty -> trigger refresh")
+        fetchSummaries()
+    }
     
     func fetchSummaries() {
         Log.debug("fetching stats summaries for sport: \(String(describing: sport?.rawValue))")
@@ -106,6 +118,8 @@ extension StatsManager {
                 
                 self.recentWeekly = recentWeekly
                 self.recentMonthly = recentMonthly
+                
+                self.isDirty = false
             }
         }
     }
@@ -156,11 +170,11 @@ extension StatsManager {
 
 extension StatsManager {
     
-//    func addObservers() {
-//        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
-//            .sink { _ in
-//                self.fetchSummaries()
-//            }
-//    }
+    func addObservers() {
+        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
+            .sink { _ in
+                self.isDirty = true
+            }
+    }
     
 }

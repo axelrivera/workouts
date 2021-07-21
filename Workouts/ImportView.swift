@@ -61,7 +61,13 @@ struct ImportView: View {
             .onAppear { requestWritingAuthorizationIfNeeded() }
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: dismissButton())
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: dismissAction) {
+                        Text("Cancel")
+                    }
+                }
+            }
             .sheet(item: $activeSheet, onDismiss: onSheetDismiss) { item in
                 switch item {
                 case .document:
@@ -123,13 +129,7 @@ private extension ImportView {
         shouldFetchWritePermission = false
     }
     
-    func dismissButton() -> some View {
-        Button(action: { dismissAction(skipConfirmation: false) }) {
-            Text("Done")
-        }
-    }
-    
-    func dismissAction(skipConfirmation: Bool) {
+    func dismissAction() {
         if importManager.isProcessingImports {
             activeAlert = .dismiss
         } else {

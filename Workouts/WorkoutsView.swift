@@ -82,7 +82,10 @@ struct WorkoutsView: View {
                 }
                 
                 if workoutManager.isLoading {
-                    ProcessView(text: "Fetching Workouts...", value: $workoutManager.processingRemoteDataValue)
+                    ProcessView(
+                        title: "Importing Workouts",
+                        value: $workoutManager.processingRemoteDataValue
+                    )
                 }
             }
             .navigationTitle("Workouts")

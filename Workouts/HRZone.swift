@@ -35,15 +35,15 @@ enum HRZone: String, CaseIterable {
     var explanation: String {
         switch self {
         case .zone1:
-            return "Used to get your body moving with minimal stress and exertion. This zone might be used for an easy training day, warming up or cooling down."
+            return "Zone 1 is used to get your body moving at a relaxed, easy pace. This zone can be used during a brisk walk, easy training day, warming up or cooling down."
         case .zone2:
-            return "Used for longer training sessions, you can sustain this basic-effort zone for many miles, yet still chitchat a little bit with your workout partner."
+            return "Training in Zone 2 is used for longer training sessions. You can sustain a comfortable pace for many miles, yet still hold a conversation with your workout partner. Light or slow jogging falls info Zone 2."
         case .zone3:
-            return "This is a zone where you push the pace to build up speed and strength; conversation is reduced to single words."
+            return "Zone 3 training is where you push the pace to build up speed and strength and it’s more difficult to hold a conversation. Easy running falls into Zone 3."
         case .zone4:
-            return "In this zone your body is processing its maximum amount of lactic acid as a fuel source; above this level, lactic acid builds up too quickly to be processed and fatigues muscles; training in this zone helps your body develop efficiency when you’re operating at your maximum sustainable pace."
+            return "In Zone 4 you’re breathing hard and moving fast at an uncomfortable pace. Your body is processing lactic acid as a fuel source; beyond this level, lactic acid builds too fast and fatigues muscles. Fast running falls info Zone 4."
         case .zone5:
-            return "This maximum speed zone (think closing kick in a race) trains the neuromuscular system—your body learns how to recruit additional muscle fibers and how to fire muscles more effectively."
+            return "In Zone 5 you’re at maximum effort. Your heart and lungs will be working at their maximum capacity. Lactic acid will build up in your blood and it will be difficult to sustain your pace for long. Sprints fall into Zone 5."
         }
     }
     

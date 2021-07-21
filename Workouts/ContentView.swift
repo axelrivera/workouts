@@ -25,9 +25,7 @@ struct ContentView: View {
                 WorkoutsView()
                     .tabItem { Label("Workouts", systemImage: selected == .workouts ? "flame.fill" : "flame") }
                     .tag(Tabs.workouts)
-                    .onAppear {
-                        fetchWorkoutsIfNecessary(resetAnchor: false)
-                    }
+                    .onAppear { fetchWorkoutsIfNecessary(resetAnchor: false) }
                     .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                         fetchWorkoutsIfNecessary(resetAnchor: true)
                     }
@@ -40,9 +38,7 @@ struct ContentView: View {
                     }
                 
                 StatsView()
-                    .onAppear {
-                        fetchSummariesIfNecessary()
-                    }
+                    .onAppear { fetchSummariesIfNecessary() }
                     .tabItem { Label("Progress", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
                     .tag(Tabs.stats)
                 
@@ -63,15 +59,13 @@ struct ContentView: View {
 extension ContentView {
     
     func fetchWorkoutsIfNecessary(resetAnchor: Bool) {
-        if !workoutManager.isProcessingRemoteData {
-            workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
-        }
+        if workoutManager.isProcessingRemoteData { return }
+        workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
     }
     
     func fetchSummariesIfNecessary() {
-        if !workoutManager.isProcessingRemoteData {
-            statsManager.fetchSummaries()
-        }
+        if workoutManager.isProcessingRemoteData { return }
+        statsManager.refreshIfNeeded()
     }
     
     func onboardingAction() -> Void {
