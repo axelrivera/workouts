@@ -78,20 +78,39 @@ extension StatsManager {
         dataProvider.context.perform { [weak self] in
             guard let self = self else { return }
             
+            // Screenshot Values
+            
+//            let weekly = StatsSummary.weeklySample()
+//            let recentWeekly = StatsSummary.weeklySamples()
+//            let avgWeeklyDistance: Double = 241402
+//            let avgWeeklyDuration: Double = 34200
+//            let avgWeeklyElevation: Double = 915
+//            let avgWeeklyCalories: Double = 6000
+//
+//            let monthly = StatsSummary.monthlySample()
+//            let recentMonthly = StatsSummary.monthlySamples()
+//            let avgMonthlyDistance: Double = 724205
+//            let avgMonthlyDuration: Double = 88200
+//            let avgMonthlyElevation: Double = 9000.0
+//            let avgMonthlyCalories: Double = 24500.0
+//
+//            let yearly = StatsSummary.yearlySample()
+//            let all = StatsSummary.allSample()
+            
+            // End of Screenshot Values
+            
             let weekly = self.fetchSummary(for: .week)
-            let monthly = self.fetchSummary(for: .month)
-            let yearly = self.fetchSummary(for: .year)
-            let all = self.fetchSummary(for: .allTime)
-            
             let recentWeekly = self.fetchRecentSummary(for: .week)
-            let recentMonthly = self.fetchRecentSummary(for: .month)
-            
-            let avgWeeklyValues = recentWeekly 
+
+            let avgWeeklyValues = recentWeekly.dropFirst()
             let totalWeekly = Double(avgWeeklyValues.count)
             let avgWeeklyDistance = avgWeeklyValues.map({ $0.distance }).reduce(0, +) / totalWeekly
             let avgWeeklyDuration = avgWeeklyValues.map({ $0.duration }).reduce(0, +) / totalWeekly
             let avgWeeklyElevation = avgWeeklyValues.map({ $0.elevation }).reduce(0, +) / totalWeekly
             let avgWeeklyCalories = avgWeeklyValues.map({ $0.energyBurned }).reduce(0, +) / totalWeekly
+            
+            let monthly = self.fetchSummary(for: .month)
+            let recentMonthly = self.fetchRecentSummary(for: .month)
             
             let avgMonthlyValues = recentMonthly.dropFirst()
             let totalMonthly = Double(avgMonthlyValues.count)
@@ -99,6 +118,9 @@ extension StatsManager {
             let avgMonthlyDuration = avgMonthlyValues.map({ $0.duration }).reduce(0, +) / totalMonthly
             let avgMonthlyElevation = avgMonthlyValues.map({ $0.elevation }).reduce(0, +) / totalMonthly
             let avgMonthlyCalories = avgMonthlyValues.map({ $0.energyBurned }).reduce(0, +) / totalMonthly
+
+            let yearly = self.fetchSummary(for: .year)
+            let all = self.fetchSummary(for: .allTime)
             
             DispatchQueue.main.async {
                 self.weekStats = weekly

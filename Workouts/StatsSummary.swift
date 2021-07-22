@@ -205,6 +205,50 @@ extension StatsSummary {
 
 extension StatsSummary {
     
+    static func weeklySample() -> StatsSummary {
+        let dictionary: [String: Any] = [
+            "count": 3,
+            "distance": 160934.0,
+            "movingTime": 30600.0,
+            "elevation": 762.0,
+            "energyBurned": 5000.0
+        ]
+        return StatsSummary(sport: .cycling, timeframe: .week, dictionary: dictionary)
+    }
+    
+    static func monthlySample() -> StatsSummary {
+        let dictionary: [String: Any] = [
+            "count": 20,
+            "distance": 804672.0,
+            "movingTime": 90000.0,
+            "elevation": 9144.0,
+            "energyBurned": 25000.0
+        ]
+        return StatsSummary(sport: .cycling, timeframe: .week, dictionary: dictionary)
+    }
+    
+    static func yearlySample() -> StatsSummary {
+        let dictionary: [String: Any] = [
+            "count": 100,
+            "distance": 1609340.0,
+            "movingTime": 306000.0,
+            "elevation": 7620.0,
+            "energyBurned": 50000.0
+        ]
+        return StatsSummary(sport: .cycling, timeframe: .year, dictionary: dictionary)
+    }
+    
+    static func allSample() -> StatsSummary {
+        let dictionary: [String: Any] = [
+            "count": 100,
+            "distance": 1609340.0,
+            "movingTime": 306000.0,
+            "elevation": 7620.0,
+            "energyBurned": 50000.0
+        ]
+        return StatsSummary(sport: .cycling, timeframe: .allTime, dictionary: dictionary)
+    }
+    
     static func weeklySamples() -> [StatsSummary] {
         lastTwelveWeeks.map { interval in
             let dictionary: [String: Any] = [
