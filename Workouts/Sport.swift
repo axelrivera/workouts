@@ -49,14 +49,10 @@ enum Sport: String, Identifiable, CaseIterable {
     
     var name: String {
         switch self {
-        case .cycling:
-            return "Cycle"
-        case .running:
-            return "Run"
-        case .walking:
-            return "Walk"
-        default:
-            return "Generic Activity"
+        case .cycling: return "Cycle"
+        case .running: return "Run"
+        case .walking: return "Walk"
+        default: return "Generic Activity"
         }
     }
     

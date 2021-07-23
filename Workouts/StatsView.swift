@@ -11,70 +11,106 @@ import CoreData
 struct StatsView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     @EnvironmentObject var statsManager: StatsManager
+        
+    var weeklySectionTitle: String {
+        statsManager.weekStats.dateRangeHeader
+    }
     
-    let availableSports: [Sport] = [.cycling, .running]
+    var weeklySectionDetail: String {
+        statsManager.weekStats.countLabel
+    }
+    
+    var monthlySectionTitle: String {
+        statsManager.monthStats.dateRangeHeader
+    }
+    
+    var monthlySectionDetail: String {
+        statsManager.monthStats.countLabel
+    }
+    
+    var yearToDateSectionDetail: String {
+        statsManager.yearStats.countLabel
+    }
+    
+    var allTimeSectionDetail: String {
+        statsManager.allStats.countLabel
+    }
+    
+    func workoutsDestination(for sport: Sport?, interval: DateInterval?, title: String) -> some View {
+        StatsWorkoutsView(sport: sport, interval: interval)
+            .navigationBarTitle(title)
+    }
+    
+    var weeklySummaries: [StatsSummary] {
+        purchaseManager.isActive ? statsManager.recentWeekly : StatsSummary.weeklySamples()
+    }
+    
+    var monthlySummaries: [StatsSummary] {
+        purchaseManager.isActive ? statsManager.recentMonthly : StatsSummary.monthlySamples()
+    }
     
     var body: some View {
         NavigationView {
             List {
-                VStack(alignment: .leading, spacing: 10.0) {
-                    HStack(alignment: .lastTextBaseline) {
-                        Text(formattedMonthDayRangeString(start: statsManager.weekStart, end: statsManager.weekEnd))
-                            .font(.title2)
-                        Spacer()
-                        Text(String(format: "%@ %@", statsManager.weekStats.formattedCount, statsManager.sport == .cycling ? "Rides" : "Runs"))
-                            .foregroundColor(.secondary)
-                    }
+                Section(header: StatsHeader(text: weeklySectionTitle, detail: weeklySectionDetail)) {
+                    StatsSummaryView(timeframe: .week, manager: statsManager)
                     
-                    HStack(spacing: 10.0) {
-                        StatsWeekly(text: "Distance", detail: distanceString(for: statsManager.weekStats.distance, rounded: false), detailColor: .distance)
-                        Divider()
-                        StatsWeekly(text: "Time", detail: timeString(for: statsManager.weekStats.duration), detailColor: .time)
-                    }
-                    
-                    Divider()
-                    
-                    HStack {
-                        StatsWeekly(text: "Elevation Gain", detail: elevationString(for: statsManager.weekStats.elevation), detailColor: .elevation)
-                        Divider()
-                        StatsWeekly(text: "Calories", detail: caloriesString(for: statsManager.weekStats.energyBurned), detailColor: .calories)
+                    NavigationLink(destination: StatsRecentView(timeframe: .week, summaries: weeklySummaries)) {
+                        Label(StatsSummary.Timeframe.week.recentTitle, systemImage: "calendar")
                     }
                 }
+                .textCase(nil)
                 
-                Section(header: Text(formattedMonthYearString(for: statsManager.monthStart))) {
-                    StatsRow(text: sportTitle, detail: statsManager.monthStats.formattedCount)
-                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.monthStats.distance), detailColor: .distance)
-                    StatsRow(text: "Time", detail: timeString(for: statsManager.monthStats.duration), detailColor: .time)
-                    StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.monthStats.elevation), detailColor: .elevation)
-                    StatsRow(text: "Calories", detail: caloriesString(for: statsManager.monthStats.energyBurned), detailColor: .calories)
-                }
-                
-                Section(header: Text("Year to Date")) {
-                    StatsRow(text: sportTitle, detail: statsManager.yearStats.formattedCount)
-                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.yearStats.distance), detailColor: .distance)
-                    StatsRow(text: "Time", detail: timeString(for: statsManager.yearStats.duration), detailColor: .time)
-                    StatsRow(text: "Elevation Gain", detail: elevationString(for: statsManager.yearStats.elevation), detailColor: .elevation)
-                }
-                
-                Section(header: Text("All Time")) {
-                    StatsRow(text: sportTitle, detail: statsManager.allStats.formattedCount)
-                    StatsRow(text: "Distance", detail: distanceString(for: statsManager.allStats.distance), detailColor: .distance)
+                Section(header: StatsHeader(text: monthlySectionTitle, detail: monthlySectionDetail)) {
+                    StatsSummaryView(timeframe: .month, manager: statsManager)
                     
+                    NavigationLink(destination: StatsRecentView(timeframe: .month, summaries: monthlySummaries)) {
+                        Label(StatsSummary.Timeframe.month.recentTitle, systemImage: "calendar")
+                    }
+                }
+                .textCase(nil)
+                
+                Section(header: StatsHeader(text: "Year to Date", detail: yearToDateSectionDetail)) {
+                    StatsRow(text: "Distance", detail: statsManager.yearStats.distanceString, detailColor: .distance)
+                    StatsRow(text: "Time", detail: statsManager.yearStats.timeString, detailColor: .time)
+                    StatsRow(text: "Elevation Gain", detail: statsManager.yearStats.elevationString, detailColor: .elevation)
+                    
+                    NavigationLink(destination: workoutsDestination(for: statsManager.sport, interval: statsManager.yearStats.interval, title: "Year to Date")) {
+                        Text("See All")
+                    }
+                }
+                .textCase(nil)
+                
+                Section(header: StatsHeader(text: "All Time", detail: allTimeSectionDetail)) {
+                    StatsRow(text: "Distance", detail: statsManager.allStats.distanceString, detailColor: .distance)
+                                        
                     if statsManager.sport == .cycling {
-                        StatsRow(text: "Longest Ride", detail: distanceString(for: statsManager.allStats.longestDistance), detailColor: .distance)
-                        StatsRow(text: "Highest Climb", detail: elevationString(for: statsManager.allStats.highestElevation), detailColor: .elevation)
+                        StatsRow(text: "Longest Ride", detail: statsManager.allStats.longestDistanceString, detailColor: .distance)
+                        StatsRow(text: "Highest Climb", detail: statsManager.allStats.highestElevationString, detailColor: .elevation)
                     } else if statsManager.sport == .running {
-                        StatsRow(text: "Longest Run", detail: distanceString(for: statsManager.allStats.longestDistance), detailColor: .distance)
+                        StatsRow(text: "Longest Run", detail: statsManager.allStats.longestDistanceString, detailColor: .distance)
+                    }
+                    
+                    NavigationLink(destination: workoutsDestination(for: statsManager.sport, interval: nil, title: "All Time")) {
+                        Text("See All")
                     }
                 }
+                .textCase(nil)
             }
             .listStyle(InsetGroupedListStyle())
-            .zIndex(1.0)
-            .navigationBarTitle("Statistics")
+            .navigationBarTitle("Progress")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        ForEach(availableSports) { sport in
+                        Button(action: {
+                            statsManager.sport = nil
+                        }, label: {
+                            Text("All Workouts")
+                        })
+                        
+                        Divider()
+                        
+                        ForEach(Sport.supportedSports) { sport in
                             Button(action: {
                                 statsManager.sport = sport
                             }, label: {
@@ -82,51 +118,144 @@ struct StatsView: View {
                             })
                         }
                     } label: {
-                        Text(statsManager.sport.title)
+                        Text(statsManager.sport?.title ?? "All Workouts")
                     }
                 }
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
 // MARK: - Methods
 
-extension StatsView {
+struct StatsView_Previews: PreviewProvider {
+    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var purchaseManager = IAPManager.preview(isActive: true)
     
-    var sportTitle: String {
-        switch statsManager.sport {
-        case .cycling:
-            return "Rides"
-        default:
-            return "Runs"
-        }
+    static var previews: some View {
+        StatsView()
+            .colorScheme(.dark)
+            .environmentObject(StatsManager(context: viewContext))
+            .environmentObject(purchaseManager)
     }
-    
-    func distanceString(for distance: Double?, rounded: Bool = true) -> String {
-        formattedDistanceString(for: distance, rounded: rounded, zeroPadding: true)
-    }
-    
-    func timeString(for duration: Double?) -> String {
-        formattedHoursMinutesPrettyString(for: duration)
-    }
-    
-    func elevationString(for elevation: Double?) -> String {
-        formattedElevationString(for: elevation)
-    }
-    
-    func caloriesString(for calories: Double?) -> String {
-        formattedCaloriesString(for: calories, zeroPadding: true)
-    }
-    
 }
+
 
 // MARK: - SubViews
 
-struct StatsWeekly: View {
+struct StatsHeader: View {
     var text: String
     var detail: String
+    
+    var body: some View {
+        HStack {
+            Text(text)
+                .font(.title2)
+                .foregroundColor(.secondary)
+            Spacer()
+            Text(detail)
+                .font(.body)
+                .foregroundColor(.primary)
+        }
+        .padding(.all, 5)
+    }
+}
+
+struct StatsSummaryView: View {
+    var timeframe: StatsSummary.Timeframe = .week
+    @ObservedObject var manager: StatsManager
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10.0) {
+            HStack(spacing: 10.0) {
+                StatsSummaryItem(
+                    text: "Distance",
+                    detail: distance,
+                    average: avgDistance,
+                    detailColor: .distance,
+                    timeframe: timeframe
+                )
+                Divider()
+                StatsSummaryItem(
+                    text: "Time",
+                    detail: time,
+                    average: avgTime,
+                    detailColor: .time,
+                    timeframe: timeframe
+                )
+            }
+            
+            Divider()
+            
+            HStack {
+                StatsSummaryItem(
+                    text: "Calories",
+                    detail: calories,
+                    average: avgCalories,
+                    detailColor: .calories,
+                    timeframe: timeframe
+                )
+                Divider()
+                StatsSummaryItem(
+                    text: "Elevation Gain",
+                    detail: elevation,
+                    average: avgElevation,
+                    detailColor: .elevation,
+                    timeframe: timeframe
+                )
+            }
+        }
+        .padding([.top, .bottom], 5)
+    }
+    
+    var stats: StatsSummary {
+        timeframe == .week ? manager.weekStats : manager.monthStats
+    }
+    
+    var distance: String {
+        stats.distanceString
+    }
+    
+    var avgDistance: String {
+        let distance = timeframe == .week ? manager.avgWeeklyDistance : manager.avgMonthlyDistance
+        return formattedDistanceString(for: distance, mode: .compact, zeroPadding: true)
+    }
+    
+    var time: String {
+        stats.timeString
+    }
+    
+    var avgTime: String {
+        let duration = timeframe == .week ? manager.avgWeeklyDuration : manager.avgMonthlyDuration
+        return formattedHoursMinutesPrettyString(for: duration)
+    }
+    
+    var elevation: String {
+        stats.elevationString
+    }
+    
+    var avgElevation: String {
+        let elevation = timeframe == .week ? manager.avgWeeklyElevation : manager.avgMonthlyElevation
+        return formattedElevationString(for: elevation, zeroPadding: true)
+    }
+    
+    var calories: String {
+        stats.caloriesString
+    }
+    
+    var avgCalories: String {
+        let calories = timeframe == .week ? manager.avgWeeklyCalories : manager.avgMonthlyCalories
+        return formattedCaloriesString(for: calories, zeroPadding: true)
+    }
+}
+
+struct StatsSummaryItem: View {
+    var text: String
+    var detail: String
+    var average: String
     var detailColor = Color.primary
+    var timeframe: StatsSummary.Timeframe = .week
     
     var body: some View {
         VStack(spacing: 5.0) {
@@ -136,6 +265,14 @@ struct StatsWeekly: View {
                 Text(detail)
                     .font(.title)
                     .foregroundColor(detailColor)
+                
+                HStack {
+                    Text(average)
+                        .foregroundColor(detailColor)
+                    Text(timeframe == .week ? "/week" : "/month")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -157,21 +294,4 @@ struct StatsRow: View {
         }
     }
     
-}
-
-struct StatsView_Previews: PreviewProvider {
-    static var purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = true
-        return manager
-    }()
-    
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    
-    static var previews: some View {
-        StatsView()
-            .colorScheme(.dark)
-            .environmentObject(StatsManager(context: viewContext))
-            .environmentObject(purchaseManager)
-    }
 }

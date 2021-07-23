@@ -13,6 +13,15 @@ private let SportKey = "sportValue"
 private let RemoteIdentifierKey = "remoteIdentifier"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
+private let StartDateKey = "start"
+private let EndDateKey = "end"
+
+private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
+private let ZoneValue1Key = "zoneValue1"
+private let ZoneValue2Key = "zoneValue2"
+private let ZoneValue3Key = "zoneValue3"
+private let ZoneValue4Key = "zoneValue4"
+private let ZoneValue5Key = "zoneValue5"
 
 extension Workout: Identifiable {}
 
@@ -47,6 +56,14 @@ class Workout: NSManagedObject {
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
     
+    // Heart Rate Zones
+    @NSManaged private(set) var zoneMaxHeartRate: Int
+    @NSManaged private(set) var zoneValue1: Int
+    @NSManaged private(set) var zoneValue2: Int
+    @NSManaged private(set) var zoneValue3: Int
+    @NSManaged private(set) var zoneValue4: Int
+    @NSManaged private(set) var zoneValue5: Int
+    
     @NSManaged private(set) var createdAt: Date
     @NSManaged private(set) var updatedAt: Date
     
@@ -75,26 +92,24 @@ class Workout: NSManagedObject {
 
 extension Workout {
     
-    enum Time {
-        case moving(duration: Double)
-        case total(duration: Double)
-        
-        var title: String {
-            switch self {
-            case .moving:
-                return "Moving Time"
-            case .total:
-                return "Time"
-            }
-        }
+    var shouldUseMovingTime: Bool {
+        movingTime < duration
     }
     
-    var totalTime: Time {
-        if movingTime > 0 && movingTime < duration {
-            return .moving(duration: movingTime)
-        } else {
-            return .total(duration: duration)
-        }
+    var totalTimeLabel: String {
+        shouldUseMovingTime ? "Moving Time" : "Time"
+    }
+    
+    var totalTime: Double {
+        shouldUseMovingTime ? movingTime : duration
+    }
+    
+    var pausedTime: Double {
+        duration - movingTime
+    }
+    
+    var displayAvgSpeed: Double {
+        shouldUseMovingTime ? avgMovingSpeed : avgSpeed
     }
     
     var title: String {
@@ -139,9 +154,41 @@ extension Workout {
         totalRetries += 1
     }
     
+    var zoneValues: [Int] {
+        [zoneValue1, zoneValue2, zoneValue3, zoneValue4, zoneValue5]
+    }
+    
 }
 
 extension Workout {
+    
+    static func activePredicate(sport: Sport?, interval: DateInterval?) -> NSPredicate {
+        var predicates = [NSPredicate]()
+
+        if let sport = sport {
+            predicates.append(Workout.predicateForSport(sport))
+        }
+
+        predicates.append(notMarkedForLocalDeletionPredicate)
+        
+        if let interval = interval {
+            predicates.append(predicateForInterval(interval))
+        }
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
+        NSPredicate(
+            format: "%K >= %@ AND %K <= %@",
+            EndDateKey, start as NSDate,
+            StartDateKey, end as NSDate
+        )
+    }
+    
+    static func predicateForInterval(_ interval: DateInterval) -> NSPredicate {
+        datePredicateFor(start: interval.start, end: interval.end)
+    }
     
     static func predicateForSport(_ sport: Sport) -> NSPredicate {
         NSPredicate(format: "%K == %@", SportKey, sport.rawValue)
@@ -156,7 +203,7 @@ extension Workout {
     }
     
     static func defaultFetchRequest() -> NSFetchRequest<Workout> {
-        NSFetchRequest<Workout>(entityName: "Workout")
+        NSFetchRequest<Workout>(entityName: entityName)
     }
     
     static var sortedFetchRequest: NSFetchRequest<Workout> {
@@ -232,9 +279,28 @@ extension Workout {
         workout.device = remoteWorkout.device?.name
         workout.showMap = object.showMap
         
+        // Heart Rate Zones
+        let zoneHeartRate = AppSettings.maxHeartRate
+        let zoneValues = AppSettings.heartRateZones
+        workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
+        
         for remoteSample in object.records {
             Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
         }
+    }
+    
+    func updateHeartRateZones(with maxHeartRate: Int, values: [Int]) {
+        guard let (value1, value2, value3, value4, value5) = values.tuple as? HRZoneTuple else {
+            assertionFailure("missing values")
+            return
+        }
+                
+        zoneMaxHeartRate = maxHeartRate
+        zoneValue1 = value1
+        zoneValue2 = value2
+        zoneValue3 = value3
+        zoneValue4 = value4
+        zoneValue5 = value5
     }
     
     func updateSamples(remoteWorkout: HKWorkout) {
@@ -252,12 +318,47 @@ extension Workout {
         samples.forEach({ $0.workout = nil })
     }
     
+}
+
+// MARK: Batch Updates
+
+extension Workout {
+    
+    static func batchUpdateHeartRateZones(with maxHeartRate: Int, values: [Int], in context: NSManagedObjectContext) {
+        guard let (value1, value2, value3, value4, value5) = values.tuple as? HRZoneTuple else {
+            assertionFailure("missing values")
+            return
+        }
+                
+        let update = NSBatchUpdateRequest(entityName: entityName)
+        update.predicate = activePredicate(sport: nil, interval: nil)
+        update.propertiesToUpdate = [
+            ZoneMaxHeartRateKey: maxHeartRate,
+            ZoneValue1Key: value1,
+            ZoneValue2Key: value2,
+            ZoneValue3Key: value3,
+            ZoneValue4Key: value4,
+            ZoneValue5Key: value5
+        ]
+        update.resultType = .updatedObjectIDsResultType
+                
+        do {
+            let result = try context.execute(update) as? NSBatchUpdateResult
+            let objects = result?.result as? [NSManagedObjectID] ?? []
+            let changes = [NSUpdatedObjectsKey: objects]
+                        
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+        } catch {
+            assertionFailure(error.localizedDescription)
+        }
+    }
+    
     private static let DeletionAgeBeforePermanentlyDeletingObjects = TimeInterval(2 * 60)
     
     static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {
         let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
         
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = NSPredicate(format: "%K < %@", MarkedForDeletionDateKey, cutoff as NSDate)
         
         let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)

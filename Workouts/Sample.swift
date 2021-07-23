@@ -9,6 +9,10 @@ import CoreData
 
 extension Sample: Identifiable {}
 
+private let WorkoutKey = "workout"
+private let ActiveKey = "isActive"
+private let HeartRateKey = "heartRate"
+
 @objc(Sample)
 class Sample: NSManagedObject {
     @NSManaged var isActive: Bool
@@ -54,6 +58,34 @@ extension Sample {
 
 extension Sample {
     
+    static func heartRatePredicateForWorkout(_ workout: Workout, range: HRZoneManager.ZoneRange?) -> NSPredicate {
+        let workoutPredicate = NSPredicate(format: "%K = %@", WorkoutKey, workout)
+        let activePredicate = NSPredicate(format: "%K = %@", ActiveKey, NSNumber(booleanLiteral: true))
+        var heartRatePredicate: NSPredicate
+        
+        if let range = range {
+            if range.low == 0 && range.high > 0 {
+                heartRatePredicate = NSPredicate(format: "%K > %@ AND %K <= %@", HeartRateKey, 0 as NSNumber, HeartRateKey, range.high as NSNumber)
+            } else if range.low > 0 && range.high == 0 {
+                heartRatePredicate = NSPredicate(format: "%K >= %@", HeartRateKey, range.low as NSNumber)
+            } else {
+                heartRatePredicate = NSPredicate(format: "%K >= %@ AND %K <= %@", HeartRateKey, range.low as NSNumber, HeartRateKey, range.high as NSNumber)
+            }
+        } else {
+            heartRatePredicate = NSPredicate(format: "%K > %@", HeartRateKey, 0 as NSNumber)
+        }
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [workoutPredicate, activePredicate, heartRatePredicate])
+    }
+    
+    static func sortedByTimestampDescriptor() -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Sample.timestamp, ascending: true)
+    }
+    
+}
+
+extension Sample {
+    
     @discardableResult
     static func insert(into moc: NSManagedObjectContext, remoteSample: SampleProcessor.Record, workout: Workout) -> Sample {
         let sample = Sample(context: moc)
@@ -73,7 +105,7 @@ extension Sample {
     }
     
     static func batchDeleteOrphanedObjects(in context: NSManagedObjectContext) {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Sample")
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         fetchRequest.predicate = NSPredicate(format: "%K = nil", "workout")
         
         let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)

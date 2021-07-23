@@ -38,8 +38,13 @@ func formattedChartDurationString(for duration: Double?) -> String {
 
 func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
-    let (h, m, _) = secondsToHoursMinutesSeconds(seconds: seconds)
-    return String(format: "%dh %02dm", h, m)
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        return String(format: "%dh %02dm", h, m)
+    } else {
+        return String(format: "%dm %02ds", m, s)
+    }
 }
 
 func formattedRelativeDateString(for date: Date?) -> String {
@@ -110,15 +115,19 @@ func distanceUnitString() -> String {
     Locale.isMetric() ? "km" : "mi"
 }
 
-func formattedDistanceString(for meters: Double?, rounded: Bool = false, zeroPadding: Bool = false) -> String {
+enum DistanceMode {
+    case `default`, compact, rounded
+}
+
+func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default, zeroPadding: Bool = false) -> String {
     guard let meters = meters, meters > 0 else { return zeroPadding ? "0 \(distanceUnitString())" : "" }
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
     
-    if rounded {
-        return MeasurementFormatter.roundedDistance.string(from: conversion)
-    } else {
-        return MeasurementFormatter.distance.string(from: conversion)
+    switch mode {
+    case .compact: return MeasurementFormatter.distanceCompact.string(from: conversion)
+    case .rounded: return MeasurementFormatter.roundedDistance.string(from: conversion)
+    default: return MeasurementFormatter.distance.string(from: conversion)
     }
 }
 
@@ -182,8 +191,12 @@ func formattedLocalizedWeightString(for weight: Double?) -> String {
 
 // MARK: - Elevation
 
-func formattedElevationString(for elevation: Double?) -> String {
-    guard let elevation = elevation else { return "" }
+func elevationUnitString() -> String {
+    Locale.isMetric() ? "m" : "ft"
+}
+
+func formattedElevationString(for elevation: Double?, zeroPadding: Bool = false) -> String {
+    guard let elevation = elevation else { return zeroPadding ? "0 \(elevationUnitString())" : "" }
     let measurement = Measurement<UnitLength>(value: elevation, unit: .meters)
     let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .feet)
     return MeasurementFormatter.elevation.string(from: conversion)
@@ -215,7 +228,7 @@ func formattedActivityTypeString(for activityType: Sport, indoor: Bool) -> Strin
 
 // MARK: - Date Extensions
 
-private extension DateFormatter {
+extension DateFormatter {
     
     static let dayShortMonthFormat: String? = {
         let template = "EEEEMMMdyyyy"
@@ -269,6 +282,12 @@ private extension DateFormatter {
         return formatter
     }()
     
+    static let month: DateFormatter = {
+       let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM"
+        return formatter
+    }()
+    
     static let monthDay: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM dd"
@@ -284,13 +303,21 @@ private extension DateFormatter {
 
 // MARK: - Number Formatter Extensions
 
-private extension NumberFormatter {
+extension NumberFormatter {
     
     static let distance: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+    
+    static let distanceCompact: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 1
         return formatter
     }()
     
@@ -309,15 +336,32 @@ private extension NumberFormatter {
         formatter.maximumFractionDigits = 0
         return formatter
     }()
+    
+    static let percent: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .percent
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 0
+        
+        return formatter
+    }()
 }
 
 // MARK: - Measurement Extensions
 
-private extension MeasurementFormatter {
+extension MeasurementFormatter {
     
     static let distance: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distance
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
+    static let distanceCompact: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.distanceCompact
         formatter.unitStyle = .medium
         formatter.unitOptions = .providedUnit
         return formatter

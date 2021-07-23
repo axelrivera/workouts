@@ -29,6 +29,7 @@ struct URLStrings {
     static let tutorial = "https://mobile.betterworkouts.app/tutorial/"
     static let privacy = "https://mobile.betterworkouts.app/privacy/"
     static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"
+    static let heartRateInfo = "https://www.heart.org/en/healthy-living/fitness/fitness-basics/target-heart-rates"
 }
 
 struct Emails {

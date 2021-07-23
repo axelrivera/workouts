@@ -29,9 +29,13 @@ class DetailManager: ObservableObject {
     @Published var city: String?
     @Published var state: String?
     
+    @Published var zones = [HRZoneSummary]()
+    
     @Published var workout: Workout
     private var context: NSManagedObjectContext
     private var geocoder = CLGeocoder()
+    
+    @Published var zoneManager: HRZoneManager
         
     init(workout: Workout) {
         self.workout = workout
@@ -39,10 +43,20 @@ class DetailManager: ObservableObject {
         self.city = workout.locationCity
         self.state = workout.locationState
         self.context = workout.managedObjectContext!
+        
+        self.zoneManager = HRZoneManager(maxHeartRate: workout.zoneMaxHeartRate, zoneValues: workout.zoneValues)
     }
 }
 
 extension DetailManager {
+    
+    var maxHeartRate: Int {
+        Int(workout.maxHeartRate)
+    }
+    
+    var zoneValues: [Int] {
+        workout.zoneValues
+    }
     
     var locationName: String? {
         let strings: [String] = [city, state].compactMap{ $0 }
@@ -50,28 +64,22 @@ extension DetailManager {
         return strings.joined(separator: ", ")
     }
     
-    func run() {
-        Log.debug("running samples - retries: \(workout.totalRetries)")
-        
+    func run() {        
         if workout.shouldRegenerateSamples {
-            Log.debug("regenerating samples")
-            WorkoutDataStore.shared.fetchWorkout(for: workout.remoteIdentifier!) { [weak self] remoteWorkout in
+            context.perform { [weak self] in
                 guard let self = self else { return }
-                guard let remoteWorkout = remoteWorkout else {
-                    self.context.perform {
-                        self.updateValues(animated: false)
-                    }
-                    return
-                }
                 
-                self.context.perform {
+                WorkoutDataStore.shared.fetchWorkout(for: self.workout.remoteIdentifier!) { remoteWorkout in
+                    guard let remoteWorkout = remoteWorkout else {
+                        self.updateValues(animated: false)
+                        return
+                    }
+                    
                     self.workout.updateSamples(remoteWorkout: remoteWorkout)
                     self.updateValues(animated: self.workout.showMap)
                 }
             }
         } else {
-            Log.debug("samples in place")
-            
             context.perform { [weak self] in
                 guard let self = self else { return }
                 self.updateValues(animated: false)
@@ -108,6 +116,15 @@ extension DetailManager {
             let distance = workout.distance
             avgPace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
         }
+        
+        let zoneMaxHeartRate = workout.zoneMaxHeartRate
+        let zoneValues = workout.zoneValues
+        let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
+        
+        var zones = [HRZoneSummary]()
+        if heartRateValues.isPresent {
+            zones = (try? zoneManager.fetchZones(for: workout)) ?? []
+        }
                     
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -122,6 +139,8 @@ extension DetailManager {
                 self.cyclingCadenceValues = cadenceValues
                 self.altitudeValues = altitudeValues
                 self.avgPace = avgPace
+                self.zoneManager = zoneManager
+                self.zones = zones
                 
                 if let location = locations.first, self.city == nil || self.state == nil {
                     self.geocoder.reverseGeocodeLocation(location) { placemarks, error in
@@ -141,6 +160,25 @@ extension DetailManager {
                             self.context.saveOrRollback()
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    func updateZones(maxHeartRate: Int, values: [Int]) {
+        context.perform { [weak self] in
+            guard let self = self else { return }
+            
+            let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
+            let zones = (try? self.zoneManager.fetchZones(for: self.workout)) ?? []
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.workout.updateHeartRateZones(with: maxHeartRate, values: values)
+                    self.context.saveOrRollback()
+                    
+                    self.zoneManager = zoneManager
+                    self.zones = zones
                 }
             }
         }

@@ -15,18 +15,28 @@ class StorageProvider: ObservableObject {
     init(inMemory: Bool = false) {
         persistentContainer = PersistentContainer(name: "Workouts")
         
-//        #if DEBUG
-//        if let storeDescription = persistentContainer.persistentStoreDescriptions.first, let url = storeDescription.url {
-//            do {
-//                try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: storeDescription.type)
-//            } catch {
-//                Log.debug("failed to reset persistent store: \(error.localizedDescription)")
-//            }
-//        }
-//        #endif
-        
         if inMemory {
             persistentContainer.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            for description in persistentContainer.persistentStoreDescriptions {
+                description.shouldInferMappingModelAutomatically = false
+                description.shouldMigrateStoreAutomatically = false
+            }
+            
+            guard let storeURL = persistentContainer.persistentStoreDescriptions.first?.url else {
+                fatalError("missing persistent store url")
+            }
+
+            let migrator = CoreDataMigrator()
+            let currentVersion = ModelVersion.current
+            if migrator.requiresMigration(at: storeURL, toVersion: currentVersion) {
+                switch currentVersion {
+                case .v2:
+                    NSPersistentStoreCoordinator.destroyStore(at: storeURL)
+                default:
+                    migrator.migrateStore(at: storeURL, toVersion: currentVersion)
+                }
+            }
         }
         
         persistentContainer.loadPersistentStores(completionHandler: { description, error in
@@ -37,10 +47,6 @@ class StorageProvider: ObservableObject {
 
         persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
         persistentContainer.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
-    }
-    
-    func destroy() {
-        
     }
     
     static let preview: StorageProvider = {

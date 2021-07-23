@@ -49,8 +49,6 @@ extension WorkoutDataStore {
     }
     
     func fetchTotalWorkouts(completionHandler: @escaping (Result<Int, Error>) -> Void) {
-        Log.debug("fetching total workouts...")
-        
         let query = HKSampleQuery(
             sampleType: .workoutType(),
             predicate: defaultActivitiesPredicate(),
@@ -284,7 +282,6 @@ extension WorkoutDataStore {
 extension WorkoutDataStore {
     
     func saveWorkoutImport(_ workoutImport: WorkoutImport, completionHandler: @escaping (Result<Bool, DataError>) -> Void) {
-        Log.debug("start: \(workoutImport.startDate?.debugDescription ?? "n/a"), end: \(workoutImport.endDate?.debugDescription ?? "n/a")")
         guard let start = workoutImport.startDate, let end = workoutImport.endDate else {
             fatalError("missing dates")
         }

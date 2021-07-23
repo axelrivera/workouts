@@ -15,7 +15,7 @@ final class IAPManager: NSObject, ObservableObject {
         static let freePrice = 1.99
         static let freePriceString = "$1.99"
     }
-    
+        
     @Published var purchaserInfo: Purchases.PurchaserInfo? {
         didSet {
             withAnimation {
@@ -36,6 +36,12 @@ final class IAPManager: NSObject, ObservableObject {
         super.init()
         registerPurchasesManager()
         fetchOfferings()
+    }
+    
+    static func preview(isActive: Bool = true) -> IAPManager {
+        let manager = IAPManager()
+        manager.isActive = isActive
+        return manager
     }
     
 }
@@ -111,7 +117,7 @@ extension IAPManager {
         if packagePrice == 0 {
             return "FREE for a limited time!"
         } else {
-            return "All features for a one time payment."
+            return "All features for a one time payment!"
         }
     }
     

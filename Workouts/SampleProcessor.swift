@@ -198,6 +198,17 @@ extension SampleProcessor {
         processLocationSamples()
         processHeartRateSamples()
         processCadenceSamples()
+        
+        if locations.isPresent {
+            movingTime = Double(records.filter({ $0.isActive }).count)
+        }
+        
+        if movingTime == 0 {
+            movingTime = duration
+        }
+        
+        let distance = totalDistance()
+        avgMovingSpeed = distance / movingTime
     }
     
     private func processLocationSamples() {
@@ -215,12 +226,6 @@ extension SampleProcessor {
             
             sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
         }
-        
-        movingTime = Double(records.filter({ $0.isActive }).count)
-        if movingTime > 0 {
-            let distance = totalDistance()
-            avgMovingSpeed = distance / movingTime
-        }
     }
     
     private func processHeartRateSamples() {
@@ -229,8 +234,17 @@ extension SampleProcessor {
         for sample in heartRateSamples {
             let key = keyForTimestamp(sample.timestamp)
             guard let record = dictionary[key] else { continue }
-            
             record.heartRate = max(record.heartRate, sample.value)
+        }
+        
+        // padding
+        
+        var heartRate: Double = 0
+        for record in records {
+            if record.heartRate == 0 && heartRate > 0 {
+                record.heartRate = heartRate
+            }
+            heartRate = record.heartRate
         }
     }
     

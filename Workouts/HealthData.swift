@@ -74,8 +74,6 @@ extension HealthData {
         
         objects.forEach { statuses[$0] = healthStore.authorizationStatus(for: $0) }
         
-        Log.debug("statuses for sample types: \(statuses)")
-        
         let denied = statuses.compactMap { (object, status) -> HKSampleType? in
             switch status {
             case .notDetermined:

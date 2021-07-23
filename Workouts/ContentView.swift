@@ -25,9 +25,7 @@ struct ContentView: View {
                 WorkoutsView()
                     .tabItem { Label("Workouts", systemImage: selected == .workouts ? "flame.fill" : "flame") }
                     .tag(Tabs.workouts)
-                    .onAppear {
-                        fetchWorkoutsIfNecessary(resetAnchor: false)
-                    }
+                    .onAppear { fetchWorkoutsIfNecessary(resetAnchor: false) }
                     .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                         fetchWorkoutsIfNecessary(resetAnchor: true)
                     }
@@ -40,10 +38,8 @@ struct ContentView: View {
                     }
                 
                 StatsView()
-                    .onAppear {
-                        fetchSummariesIfNecessary()
-                    }
-                    .tabItem { Label("Statistics", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
+                    .onAppear { fetchSummariesIfNecessary() }
+                    .tabItem { Label("Progress", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
                     .tag(Tabs.stats)
                 
                 SettingsView()
@@ -63,15 +59,13 @@ struct ContentView: View {
 extension ContentView {
     
     func fetchWorkoutsIfNecessary(resetAnchor: Bool) {
-        if !workoutManager.isProcessingRemoteData {
-            workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
-        }
+        if workoutManager.isProcessingRemoteData { return }
+        workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
     }
     
     func fetchSummariesIfNecessary() {
-        if !workoutManager.isProcessingRemoteData {
-            statsManager.fetchSummaries()
-        }
+        if workoutManager.isProcessingRemoteData { return }
+        statsManager.refreshIfNeeded()
     }
     
     func onboardingAction() -> Void {
@@ -86,6 +80,7 @@ struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
     static let workoutManager = WorkoutManager(context: viewContext)
     static let statsManager = StatsManager(context: viewContext)
+    static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         ContentView()
@@ -97,6 +92,6 @@ struct ContentView_Previews: PreviewProvider {
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(statsManager)
-            .environmentObject(IAPManager())
+            .environmentObject(purchaseManager)
     }
 }
