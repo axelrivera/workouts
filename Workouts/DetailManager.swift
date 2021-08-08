@@ -18,79 +18,69 @@ class DetailManager: ObservableObject {
     @Published var heartRateValues = [ChartInterval]()
     @Published var speedValues = [ChartInterval]()
     @Published var cyclingCadenceValues = [ChartInterval]()
-    @Published var paceValues = [ChartInterval]()
     @Published var altitudeValues = [ChartInterval]()
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
-    @Published var showMap: Bool = false
-    
-    @Published var avgPace: Double = 0
-    @Published var bestPace: Double = 0
-    @Published var city: String?
-    @Published var state: String?
     
     @Published var zones = [HRZoneSummary]()
+    @Published var zoneManager: HRZoneManager = HRZoneManager()
     
-    @Published var workout: Workout
-    private var context: NSManagedObjectContext
-    private var geocoder = CLGeocoder()
+    @Published var detail = WorkoutDetail()
+    @Published var isMapDisabled = false
     
-    @Published var zoneManager: HRZoneManager
-        
-    init(workout: Workout) {
-        self.workout = workout
-        self.showMap = workout.showMap
-        self.city = workout.locationCity
-        self.state = workout.locationState
-        self.context = workout.managedObjectContext!
-        
-        self.zoneManager = HRZoneManager(maxHeartRate: workout.zoneMaxHeartRate, zoneValues: workout.zoneValues)
+    private var context: NSManagedObjectContext?
+    private var _workout: Workout?
+    
+    var remoteIdentifier: UUID
+            
+    init(remoteIdentifier: UUID) {
+        self.remoteIdentifier = remoteIdentifier
     }
 }
 
 extension DetailManager {
     
-    var maxHeartRate: Int {
-        Int(workout.maxHeartRate)
+    var workout: Workout {
+        if _workout == nil {
+            _workout = Workout.find(using: remoteIdentifier, in: context!)
+        }
+        return _workout!
     }
     
-    var zoneValues: [Int] {
-        workout.zoneValues
+    func loadWorkout(with context: NSManagedObjectContext) {
+        self.context = context
+        self.detail = WorkoutDetail(workout: workout)
+        self.run()
     }
     
-    var locationName: String? {
-        let strings: [String] = [city, state].compactMap{ $0 }
-        if strings.isEmpty { return nil }
-        return strings.joined(separator: ", ")
-    }
-    
-    func run() {        
-        if workout.shouldRegenerateSamples {
-            context.perform { [weak self] in
-                guard let self = self else { return }
-                
-                WorkoutDataStore.shared.fetchWorkout(for: self.workout.remoteIdentifier!) { remoteWorkout in
+    func run() {
+        guard let context = context else { return }
+        
+        context.perform { [weak self, unowned context] in
+            guard let self = self else { return }
+            let workout = self.workout
+            
+            if workout.shouldRegenerateSamples {
+                WorkoutDataStore.shared.fetchWorkout(for: self.remoteIdentifier) { remoteWorkout in
                     guard let remoteWorkout = remoteWorkout else {
-                        self.updateValues(animated: false)
+                        self.updateValues(workout: workout, context: context)
                         return
                     }
                     
-                    self.workout.updateSamples(remoteWorkout: remoteWorkout)
-                    self.updateValues(animated: self.workout.showMap)
+                    Log.debug("updating samples")
+                    workout.updateSamples(remoteWorkout: remoteWorkout)
+                    self.updateValues(workout: workout, context: context)
                 }
-            }
-        } else {
-            context.perform { [weak self] in
-                guard let self = self else { return }
-                self.updateValues(animated: false)
+            } else {
+                self.updateValues(workout: workout, context: context)
             }
         }
     }
     
-    private func updateValues(animated: Bool = true) {
+    private func updateValues(workout: Workout, context: NSManagedObjectContext) {
+        let detail = WorkoutDetail(workout: workout)
         let samples = workout.samples.sorted(by: { $0.timestamp < $1.timestamp })
         
-        let showMap = workout.showMap
         let locations = samples.filter({ $0.isLocation }).compactMap { $0.location }
         let points = locations.map { $0.coordinate }
         let altitude = locations.map { $0.altitude }
@@ -98,25 +88,19 @@ extension DetailManager {
         let maxElevation = altitude.max() ?? 0
         
         let movingSamples = samples.filter { sample in
-            if workout.showMap {
+            if locations.isPresent {
                 return sample.isActive && sample.speed > 0
             } else {
                 return sample.isActive
             }
         }
         
-        let heartRateValues = heartRateChartIntervals(for: movingSamples)
-        let speedValues = speedChartIntervals(for: movingSamples)
-        let cadenceValues = cadenceChartIntervals(for: movingSamples)
-        let altitudeValues = altitudeChartIntervals(for: movingSamples)
+        let movingTime = workout.movingTime
+        let heartRateValues = heartRateChartIntervals(for: movingSamples, movingTime: movingTime)
+        let speedValues = speedChartIntervals(for: movingSamples, movingTime: movingTime)
+        let cadenceValues = cadenceChartIntervals(for: movingSamples, movingTime: movingTime)
+        let altitudeValues = altitudeChartIntervals(for: movingSamples, movingTime: movingTime)
 
-        var avgPace: Double = 0
-        if workout.sport.isWalkingOrRunning {
-            let duration = workout.movingTime > 0 ? workout.movingTime : workout.duration
-            let distance = workout.distance
-            avgPace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
-        }
-        
         let zoneMaxHeartRate = workout.zoneMaxHeartRate
         let zoneValues = workout.zoneValues
         let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
@@ -129,54 +113,39 @@ extension DetailManager {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            withAnimation(animated ? .default : nil) {
-                self.showMap = showMap
-                self.points = points
-                self.minElevation = minElevation
-                self.maxElevation = maxElevation
-                self.heartRateValues = heartRateValues
-                self.speedValues = speedValues
-                self.cyclingCadenceValues = cadenceValues
-                self.altitudeValues = altitudeValues
-                self.avgPace = avgPace
-                self.zoneManager = zoneManager
-                self.zones = zones
-                
-                if let location = locations.first, self.city == nil || self.state == nil {
-                    self.geocoder.reverseGeocodeLocation(location) { placemarks, error in
-                        if let placemark = placemarks?.first {
-                            if let city = placemark.locality {
-                                self.city = city
-                                self.workout.locationCity = city
-                            }
-
-                            if let state = placemark.administrativeArea {
-                                self.state = state
-                                self.workout.locationState = state
-                            }
-                        }
-                        
-                        if self.context.hasChanges {
-                            self.context.saveOrRollback()
-                        }
-                    }
-                }
+            self.points = points
+            self.detail = detail
+            self.maxElevation = maxElevation
+            self.heartRateValues = heartRateValues
+            self.speedValues = speedValues
+            self.cyclingCadenceValues = cadenceValues
+            self.altitudeValues = altitudeValues
+            self.zoneManager = zoneManager
+            self.zones = zones
+            self.minElevation = minElevation
+            
+            Log.debug("total points: \(points.count), showMap: \(workout.showMap)")
+            
+            withAnimation {
+                self.isMapDisabled = detail.indoor || !workout.showMap
             }
         }
     }
     
     func updateZones(maxHeartRate: Int, values: [Int]) {
-        context.perform { [weak self] in
+        guard let context = context else { return }
+        let workout = self.workout
+        
+        context.perform { [weak self, unowned context] in
             guard let self = self else { return }
             
             let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
-            let zones = (try? self.zoneManager.fetchZones(for: self.workout)) ?? []
+            let zones = (try? self.zoneManager.fetchZones(for: workout)) ?? []
+            workout.updateHeartRateZones(with: maxHeartRate, values: values)
+            context.saveOrRollback()
             
             DispatchQueue.main.async {
                 withAnimation {
-                    self.workout.updateHeartRateZones(with: maxHeartRate, values: values)
-                    self.context.saveOrRollback()
-                    
                     self.zoneManager = zoneManager
                     self.zones = zones
                 }
@@ -184,8 +153,7 @@ extension DetailManager {
         }
     }
     
-    private var sampleInterval: Float {
-        let movingTime = self.movingTime
+    private func sampleInterval(movingTime: Double) -> Float {
         var intervalPoints: Float
         
         switch movingTime {
@@ -199,25 +167,18 @@ extension DetailManager {
         return Float(movingTime) / intervalPoints
     }
     
-    private var movingTime: Double {
-        if workout.movingTime > 0 && workout.movingTime < workout.duration {
-            return workout.movingTime
-        }
-        return workout.duration
-    }
-    
-    private func interpolatedValues(for values: [Float], interval: Float? = nil) -> (xStep: Double, points: [Float]) {
+    private func interpolatedValues(for values: [Float], movingTime: Double) -> (xStep: Double, points: [Float]) {
         guard values.isPresent else { return (0, []) }
 
-        let resampleInterval = interval ?? sampleInterval
+        let resampleInterval = sampleInterval(movingTime: movingTime)
         let points = LinearInterpolator(points: values).resample(interval: resampleInterval)
         let xStep = movingTime / Double(points.count)
         return (xStep, points)
     }
     
-    private func heartRateChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
+    private func heartRateChartIntervals(for movingSamples: [Sample], movingTime: Double) -> [ChartInterval] {
         let heartRates = movingSamples.filter({ $0.heartRate > 0 }).map({ Float($0.heartRate) })
-        let (xStep, samples) = interpolatedValues(for: heartRates)
+        let (xStep, samples) = interpolatedValues(for: heartRates, movingTime: movingTime)
         
         return samples.enumerated().map { index, value in
             let xValue = Double(index) * xStep
@@ -225,10 +186,10 @@ extension DetailManager {
         }
     }
     
-    private func speedChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        guard workout.sport.isSpeedSport else { return [] }
+    private func speedChartIntervals(for movingSamples: [Sample], movingTime: Double) -> [ChartInterval] {
+        guard detail.sport.isSpeedSport else { return [] }
         
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.speed) }))
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.speed) }), movingTime: movingTime)
         
         return samples.enumerated().map { index, value in
             let xValue = Double(index) * xStep
@@ -236,10 +197,10 @@ extension DetailManager {
         }
     }
     
-    private func cadenceChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        guard workout.sport.isCycling else { return [] }
+    private func cadenceChartIntervals(for movingSamples: [Sample], movingTime: Double) -> [ChartInterval] {
+        guard detail.sport.isCycling else { return [] }
         
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.cyclingCadence) }))
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.cyclingCadence) }), movingTime: movingTime)
         
         return samples.enumerated().map { index, value in
             let xValue = Double(index) * xStep
@@ -247,8 +208,8 @@ extension DetailManager {
         }
     }
     
-    private func altitudeChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.altitude) }))
+    private func altitudeChartIntervals(for movingSamples: [Sample], movingTime: Double) -> [ChartInterval] {
+        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.altitude) }), movingTime: movingTime)
         
         return samples.enumerated().map { index, value in
             let xValue = Double(index) * xStep
@@ -256,8 +217,8 @@ extension DetailManager {
         }
     }
     
-    private func paceChartIntervals(for movingSamples: [Sample]) -> (best: Double, intervals: [ChartInterval]) {
-        guard workout.sport.isWalkingOrRunning else { return (0, []) }
+    private func paceChartIntervals(for movingSamples: [Sample], movingTime: Double) -> (best: Double, intervals: [ChartInterval]) {
+        guard detail.sport.isWalkingOrRunning else { return (0, []) }
         
         let paces: [Float] = movingSamples.compactMap { sample in
             let duration = sample.paceDuration
@@ -266,7 +227,7 @@ extension DetailManager {
             return Float(value)
         }
         
-        let (xStep, samples) = interpolatedValues(for: paces)
+        let (xStep, samples) = interpolatedValues(for: paces, movingTime: movingTime)
 
         let intervals: [ChartInterval] = samples.enumerated().map { index, value in
             let xValue = Double(index) * xStep

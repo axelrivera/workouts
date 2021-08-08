@@ -16,7 +16,7 @@ extension WorkoutMap {
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
-        mapView.layoutMargins = UIEdgeInsets(top: 20.0, left: 20.0, bottom: 20.0, right: 20.0)
+        mapView.layoutMargins = UIEdgeInsets(top: 5.0, left: 5.0, bottom: 5.0, right: 5.0)
         mapView.isZoomEnabled = false
         mapView.isScrollEnabled = false
         mapView.isUserInteractionEnabled = false
@@ -48,16 +48,6 @@ extension WorkoutMap {
                         
         let line = MKGeodesicPolyline(coordinates: points, count: points.count)
         view.addOverlay(line)
-        
-        if let coordinate = points.first {
-            let start = WorkoutAnnotation(annotationType: .start, coordinate: coordinate)
-            view.addAnnotation(start)
-        }
-        
-        if let coordinate = points.last, points.count > 1 {
-            let end = WorkoutAnnotation(annotationType: .end, coordinate: coordinate)
-            view.addAnnotation(end)
-        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -76,21 +66,7 @@ extension WorkoutMap {
         }
         
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            guard let annotation = annotation as? WorkoutAnnotation else { return nil }
-
-            let identifier = "annotation"
-            var annotationView: MKMarkerAnnotationView! = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
-
-            if annotationView == nil {
-                annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-                annotationView.titleVisibility = .hidden
-            } else {
-                annotationView.annotation = annotation
-            }
-
-            annotationView.markerTintColor = annotation.color
-
-            return annotationView
+            return nil
         }
         
         func mapView(_ mapView: MKMapView, didAdd renderers: [MKOverlayRenderer]) {

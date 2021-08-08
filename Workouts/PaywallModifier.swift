@@ -10,24 +10,21 @@ import SwiftUI
 struct PaywallModifier: ViewModifier {
     @EnvironmentObject var purchaseManager: IAPManager
     
-    @State private var isPaywallShowing = false
+    @State var isPaywallShowing: Bool = false
     
     func body(content: Content) -> some View {
-        VStack {
-            ZStack(alignment: .topLeading) {
-                content
-                    .disabled(!purchaseManager.isActive)
-                    
-                if !purchaseManager.isActive {
+        ZStack(alignment: .topLeading) {
+            content
+                .disabled(!purchaseManager.isActive)
+                
+            if !purchaseManager.isActive {
+                VStack {
                     PaywallOverlay()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                    PaywallButton(action: { isPaywallShowing = true })
+                        .padding([.bottom, .leading, .trailing])
                 }
-            }
-            
-            if !purchaseManager.isActive {
-                PaywallButton(action: { isPaywallShowing = true })
-                    .buttonStyle(PlainButtonStyle())
-                    .padding()
             }
         }
         .sheet(isPresented: $isPaywallShowing) {

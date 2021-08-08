@@ -24,16 +24,10 @@ struct DetailAnalysisView: View {
         nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
     }
     
-    var workout: Workout {
-        detailManager.workout
+    var workout: WorkoutDetail {
+        detailManager.detail
     }
     
-    var workoutTitle: String {
-        let distanceStr = formattedDistanceString(for: workout.distance)
-        let titleStr = workout.title
-        return String(format: "%@ %@", distanceStr, titleStr)
-    }
-        
     var body: some View {
         NavigationView {
             List {
@@ -46,8 +40,8 @@ struct DetailAnalysisView: View {
                         rowForText("Paused Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
                     }
                     
-                    if workout.sport.isWalkingOrRunning && detailManager.avgPace > 0 {
-                        rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: detailManager.avgPace), detailColor: .cadence)
+                    if workout.sport.isWalkingOrRunning && workout.avgPace > 0 {
+                        rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .cadence)
                     }
                 }
                 
@@ -125,7 +119,7 @@ struct DetailAnalysisView: View {
                     }
                 }
 
-                if (detailManager.showMap && detailManager.altitudeValues.isPresent) || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
+                if (workout.showMap && detailManager.altitudeValues.isPresent) || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
                     Section(header: Text("Elevation")) {
                         if detailManager.altitudeValues.isPresent {
                             chart(
@@ -147,7 +141,7 @@ struct DetailAnalysisView: View {
                 }
             }
             .listStyle(GroupedListStyle())
-            .navigationTitle(workoutTitle)
+            .navigationTitle(workout.analysisTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -163,7 +157,6 @@ struct DetailAnalysisView: View {
                         .environmentObject(detailManager.zoneManager)
                 }
             }
-            
         }
     }
 }
@@ -236,12 +229,13 @@ extension DetailAnalysisView {
 }
 
 struct DetailAnalysisView_Previews: PreviewProvider {
-    static let workout = StorageProvider.sampleWorkout()
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
     static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
         DetailAnalysisView()
-            .environmentObject(DetailManager(workout: workout))
+            .environmentObject(DetailManager(remoteIdentifier: workout.remoteIdentifier!))
             .environmentObject(purchaseManager)
             .colorScheme(.dark)
         

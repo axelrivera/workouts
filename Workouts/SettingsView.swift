@@ -21,6 +21,7 @@ struct SettingsView: View {
     
     @Environment(\.openURL) var openURL
     @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.presentationMode) var presentationMode
     
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
@@ -67,8 +68,14 @@ struct SettingsView: View {
             .navigationBarTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                #if DEVELOPMENT_BUILD
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Text("Done").bold()
+                    }
+                }
+                
+                #if DEVELOPMENT_BUILD
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button("Reset IAP", action: purchaseManager.resetMockPurchase)
                         .buttonStyle(PlainButtonStyle())
                         .disabled(!purchaseManager.isActive)

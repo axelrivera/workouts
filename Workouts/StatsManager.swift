@@ -15,7 +15,6 @@ class StatsManager: ObservableObject {
     
     var sport: Sport? {
         didSet {
-            AppSettings.defaultStatsFilter = sport
             fetchSummaries()
         }
     }
@@ -45,7 +44,6 @@ class StatsManager: ObservableObject {
     private var refreshCancellable: Cancellable?
         
     init(context: NSManagedObjectContext) {
-        sport = AppSettings.defaultStatsFilter
         dataProvider = DataProvider(context: context)
         
         weekStats = StatsSummary(sport: sport, timeframe: .week)

@@ -20,12 +20,12 @@ extension Color {
     static let secondarySystemBackground = Color(UIColor.secondarySystemBackground)
     static let tertiarySystemBackground = Color(UIColor.tertiarySystemBackground)
     static let divider = Color(UIColor.separator)
+    static let selectedCell = divider
     
     static let systemFill = Color(UIColor.systemFill)
     static let darkGray = Color(UIColor.darkGray)
     static let lightGray = Color(UIColor.lightGray)
     static let systemYellow = Color(UIColor.systemYellow)
-    
 }
 
 // MARK: Asset Colors
@@ -38,4 +38,10 @@ extension Color {
     static let speed = Color("SpeedColor")
     static let cadence = Color("CadenceColor")
     static let chartBackground = Color("ChartBackgroundColor")
+    
+    // Sport
+    static let sport = Color("SportColor")
+    static let cycling = Color("CyclingColor")
+    static let running = Color("RunningColor")
+    static let walking = Color("WalkingColor")
 }

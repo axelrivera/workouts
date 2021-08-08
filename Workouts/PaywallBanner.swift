@@ -31,23 +31,25 @@ struct PaywallBanner: View {
             if isActive {
                 VStack {
                     Text("Better Workouts Pro")
-                        .font(isActive ? .title2 : .title)
+                        .font(isActive ? .fixedTitle2 : .fixedTitle)
                     Text("Thank you for your support!")
-                        .font(.subheadline)
+                        .font(.fixedSubheadline)
                         .foregroundColor(.secondary)
                 }
             } else {
                 VStack {
                     Text("Better Workouts Pro")
-                        .font(.title)
+                        .font(.fixedTitle)
                     Text("All features for a one time payment!")
+                        .font(.fixedBody)
                         .foregroundColor(.yellow)
+                        .multilineTextAlignment(.center)
                 }
                
                 VStack {
                     PaywallButton(action: action)
                     Text("Purchasing helps support future development.")
-                        .font(.subheadline)
+                        .font(.fixedSubheadline)
                         .multilineTextAlignment(.center)
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -84,15 +86,22 @@ struct PaywallButton: View {
     }
     
     var body: some View {
-        Button(action: action) {
-            Text("Upgrade to Pro Now")
-                .foregroundColor(.black)
-            .frame(minWidth: 0, maxWidth: .infinity)
-            .padding()
-            .background(Color.yellow)
-            .cornerRadius(Constants.cornerRadius)
-            .shadow(radius: 1)
-        }
+        Button("Upgrade to Pro Now", action: action)
+            .buttonStyle(PaywallButtonStyle())
     }
     
+}
+
+struct PaywallButtonStyle: ButtonStyle {
+
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+        .foregroundColor(.black)
+        .frame(minWidth: 0, maxWidth: .infinity)
+        .padding()
+        .background(configuration.isPressed ? Color.lightGray : Color.yellow)
+        .cornerRadius(Constants.cornerRadius)
+        .shadow(radius: 1)
+  }
+
 }

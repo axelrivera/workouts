@@ -115,6 +115,10 @@ func distanceUnitString() -> String {
     Locale.isMetric() ? "km" : "mi"
 }
 
+func speedUnitString() -> String {
+    Locale.isMetric() ? "mph": "km/hr"
+}
+
 enum DistanceMode {
     case `default`, compact, rounded
 }
@@ -138,11 +142,15 @@ func formattedSpeedString(for metersPerSecond: Double?) -> String {
     return MeasurementFormatter.speed.string(from: conversion)
 }
 
+func formattedRunningWalkingPaceUnitString() -> String {
+    let unit = runningWalkingDistanceTargetUnit().symbol
+    return String(format: "/%@", unit)
+}
+
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
     guard let duration = duration, duration > 0 else { return "" }
     let pace = formattedPaceString(for: duration)
-    let unit = runningWalkingDistanceTargetUnit().symbol
-    return String(format: "%@ /%@", pace, unit)
+    return String(format: "%@ %@", pace, formattedRunningWalkingPaceUnitString())
 }
 
 func formattedPaceString(for duration: Double?) -> String {
@@ -297,6 +305,12 @@ extension DateFormatter {
     static let monthYear: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM YYYY"
+        return formatter
+    }()
+    
+    static let weekdayFirstLetter: DateFormatter = {
+       let formatter = DateFormatter()
+        formatter.dateFormat = "EEEEE"
         return formatter
     }()
 }

@@ -67,20 +67,25 @@ class StorageProvider: ObservableObject {
         return context
     }()
     
-    static func sampleWorkout(moc context: NSManagedObjectContext? = nil) -> Workout {
+    static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
         let viewContext = context ?? sampleContext
         
-        let start = Date.dateFor(month: 1, day: 1, year: 2021)!
-        let end = start.addingTimeInterval(3600) // 1 hour
+        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
+        let end = start.addingTimeInterval(9000) // 1 hour
+        let duration = end.timeIntervalSince(start)
+        let avgSpeed = 6.7056
         
         let workout = Workout(context: viewContext)
         workout.remoteIdentifier = UUID()
-        workout.sport = .cycling
+        workout.sport = sport ?? .cycling
         workout.start = start
         workout.end = end
+        workout.duration = duration
+        workout.movingTime = duration + 0.5
         workout.distance = 20000.0
         workout.energyBurned = 500.0
-        workout.avgSpeed = 6.7056
+        workout.avgSpeed = avgSpeed
+        workout.avgMovingSpeed = avgSpeed + 0.5
         workout.maxSpeed = 10.2919
         workout.avgCyclingCadence = 80.0
         workout.maxCyclingCadence = 95.0

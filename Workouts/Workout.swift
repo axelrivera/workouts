@@ -45,6 +45,7 @@ class Workout: NSManagedObject {
     @NSManaged var avgMovingSpeed: Double
     @NSManaged var avgCyclingCadence: Double
     @NSManaged var maxCyclingCadence: Double
+    @NSManaged var avgPace: Double
     @NSManaged var elevationAscended: Double
     @NSManaged var elevationDescended: Double
     @NSManaged var source: String
@@ -162,11 +163,29 @@ extension Workout {
 
 extension Workout {
     
+    // MARK: Predicates
+    
     static func activePredicate(sport: Sport?, interval: DateInterval?) -> NSPredicate {
         var predicates = [NSPredicate]()
 
         if let sport = sport {
             predicates.append(Workout.predicateForSport(sport))
+        }
+
+        predicates.append(notMarkedForLocalDeletionPredicate)
+        
+        if let interval = interval {
+            predicates.append(predicateForInterval(interval))
+        }
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    static func activePredicate(sports: [Sport], interval: DateInterval?) -> NSPredicate {
+        var predicates = [NSPredicate]()
+
+        if sports.isPresent {
+            predicates.append(Workout.predicateForSports(sports))
         }
 
         predicates.append(notMarkedForLocalDeletionPredicate)
@@ -194,13 +213,23 @@ extension Workout {
         NSPredicate(format: "%K == %@", SportKey, sport.rawValue)
     }
     
-    static func sortedByDateDescriptor() -> NSSortDescriptor {
-        NSSortDescriptor(keyPath: \Workout.start, ascending: false)
+    static func predicateForSports(_ sports: [Sport]) -> NSPredicate {
+        NSPredicate(format: "%K IN %@", SportKey, sports.map({ $0.rawValue }))
+    }
+    
+    static func sortedByDateDescriptor(ascending: Bool = false) -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Workout.start, ascending: ascending)
     }
     
     static var notMarkedForLocalDeletionPredicate: NSPredicate {
         NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
     }
+    
+    static func predicateForIdentifiers(_ identifiers: [UUID]) -> NSPredicate {
+        NSPredicate(format: "%K IN %@", RemoteIdentifierKey, identifiers)
+    }
+    
+    // MARK: Reqeusts
     
     static func defaultFetchRequest() -> NSFetchRequest<Workout> {
         NSFetchRequest<Workout>(entityName: entityName)
@@ -216,7 +245,7 @@ extension Workout {
     
     static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext) -> [Workout] {
         let request = defaultFetchRequest()
-        request.predicate = NSPredicate(format: "%K in %@", "remoteIdentifier", ids)
+        request.predicate = predicateForIdentifiers(ids)
         request.returnsObjectsAsFaults = false
         
         do {
@@ -268,6 +297,7 @@ extension Workout {
         workout.distance = object.distance
         workout.avgHeartRate = object.avgHeartRate
         workout.maxHeartRate = object.maxHeartRate
+        workout.avgPace = object.avgPace
         workout.energyBurned = remoteWorkout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
         workout.avgSpeed = object.avgSpeed
         workout.maxSpeed = object.maxSpeed

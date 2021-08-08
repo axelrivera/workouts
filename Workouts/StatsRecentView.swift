@@ -74,7 +74,7 @@ struct StatsRecentView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 5.0) {
                             Text(summary.dateRangeHeader)
-                                .font(.title3)
+                                .font(.fixedTitle3)
                                 .foregroundColor(summary.isCurrentInterval ? .time : .primary)
                             
                             HStack {
@@ -86,6 +86,7 @@ struct StatsRecentView: View {
                                 Text(summary.countLabel)
                                     .foregroundColor(.secondary)
                             }
+                            .font(.fixedBody)
                         }
                         
                         Spacer()
@@ -108,7 +109,7 @@ struct StatsRecentView: View {
 extension StatsRecentView {
     
     func destination(for summary: StatsSummary) -> some View {
-        StatsWorkoutsView(sport: summary.sport, interval: summary.interval)
+        WorkoutsView(sport: .constant(summary.sport), interval: summary.interval, showFilter: false)
             .navigationBarTitle(summary.dateRangeHeader)
     }
     

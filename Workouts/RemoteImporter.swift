@@ -58,6 +58,7 @@ class RemoteImporter {
                 context.refreshAllObjects()
                 
                 DispatchQueue.main.async {
+                    Log.debug("LOG - send finish processing remote data notification")
                     NotificationCenter.default.post(
                         name: .didFinishProcessingRemoteData,
                         object: nil

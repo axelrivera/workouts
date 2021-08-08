@@ -47,12 +47,15 @@ class Synchronizer {
             self.isFetchingWorkouts = true
             self.importer.importLatestWorkouts(anchor: anchor, regenerate: self.regenerate) { [unowned self] newAnchor in
                 self.anchor = newAnchor
+                self.isFetchingWorkouts = false
+                self.regenerate = false
+                
+                DispatchQueue.main.async {
+                    Log.debug("LOG - send did refresh notification")
+                    NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
+                }
             }
-            self.isFetchingWorkouts = false
-            self.regenerate = false
         }
-        
-        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
     }
     
     deinit {

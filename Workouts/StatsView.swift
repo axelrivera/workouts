@@ -36,8 +36,8 @@ struct StatsView: View {
         statsManager.allStats.countLabel
     }
     
-    func workoutsDestination(for sport: Sport?, interval: DateInterval?, title: String) -> some View {
-        StatsWorkoutsView(sport: sport, interval: interval)
+    func workoutsDestination(sport: Sport?, interval: DateInterval?, title: String) -> some View {
+        WorkoutsView(sport: $statsManager.sport, interval: interval, showFilter: false)
             .navigationBarTitle(title)
     }
     
@@ -75,7 +75,7 @@ struct StatsView: View {
                     StatsRow(text: "Time", detail: statsManager.yearStats.timeString, detailColor: .time)
                     StatsRow(text: "Elevation Gain", detail: statsManager.yearStats.elevationString, detailColor: .elevation)
                     
-                    NavigationLink(destination: workoutsDestination(for: statsManager.sport, interval: statsManager.yearStats.interval, title: "Year to Date")) {
+                    NavigationLink(destination: workoutsDestination(sport: statsManager.sport, interval: statsManager.yearStats.interval, title: "Year to Date")) {
                         Text("See All")
                     }
                 }
@@ -91,13 +91,14 @@ struct StatsView: View {
                         StatsRow(text: "Longest Run", detail: statsManager.allStats.longestDistanceString, detailColor: .distance)
                     }
                     
-                    NavigationLink(destination: workoutsDestination(for: statsManager.sport, interval: nil, title: "All Time")) {
+                    NavigationLink(destination: workoutsDestination(sport: statsManager.sport, interval: nil, title: "All Time")) {
                         Text("See All")
                     }
                 }
                 .textCase(nil)
             }
             .listStyle(InsetGroupedListStyle())
+            .workoutStateOverlay()
             .navigationBarTitle("Progress")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -132,12 +133,19 @@ struct StatsView: View {
 struct StatsView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var purchaseManager = IAPManager.preview(isActive: true)
+    static var workoutManager: WorkoutManager = {
+        let manager = WorkoutManager(context: viewContext)
+        manager.state = .notAvailable
+        manager.isLoading = false
+        return manager
+    }()
     
     static var previews: some View {
         StatsView()
             .colorScheme(.dark)
             .environmentObject(StatsManager(context: viewContext))
             .environmentObject(purchaseManager)
+            .environmentObject(workoutManager)
     }
 }
 
@@ -151,7 +159,7 @@ struct StatsHeader: View {
     var body: some View {
         HStack {
             Text(text)
-                .font(.title2)
+                .font(.fixedTitle2)
                 .foregroundColor(.secondary)
             Spacer()
             Text(detail)
@@ -261,6 +269,7 @@ struct StatsSummaryItem: View {
         VStack(spacing: 5.0) {
             Group {
                 Text(text)
+                    .font(.fixedBody)
                     .foregroundColor(.secondary)
                 Text(detail)
                     .font(.title)
@@ -272,7 +281,7 @@ struct StatsSummaryItem: View {
                     Text(timeframe == .week ? "/week" : "/month")
                         .foregroundColor(.secondary)
                 }
-                .font(.subheadline)
+                .font(.fixedSubheadline)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

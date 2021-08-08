@@ -21,6 +21,7 @@ extension WorkoutProcessor.Object {
             avgMovingSpeed: 0,
             avgSpeed: 0,
             maxSpeed: 0,
+            avgPace: 0,
             avgHeartRate: 0,
             maxHeartRate: 0,
             showMap: false
@@ -38,6 +39,7 @@ extension WorkoutProcessor {
         let avgMovingSpeed: Double
         let avgSpeed: Double
         let maxSpeed: Double
+        let avgPace: Double
         let avgHeartRate: Double
         let maxHeartRate: Double
         let showMap: Bool
@@ -47,15 +49,13 @@ extension WorkoutProcessor {
 final class WorkoutProcessor {
     let workout: HKWorkout
     
-    var locations = [CLLocation]()
-    var heartRateSamples = [Quantity]()
-    var cadenceSamples = [Quantity]()
-    var paceSamples = [Pace]()
-    
     private(set) var object: Object
     
-    private var avgHeartRate: Double = 0
-    private var maxHeartRate: Double = 0
+    private lazy var processQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        return queue
+    }()
     
     init(workout: HKWorkout) {
         self.workout = workout
@@ -75,62 +75,84 @@ final class WorkoutProcessor {
 extension WorkoutProcessor {
     
     private func generateRecords() {
+        var operations = [Operation]()
+        
+        let locationOperation = LocationOperation(workout: workout)
         if workout.isOutdoor {
-            fetchLocations()
+            operations.append(locationOperation)
         }
         
-        fetchHeartRateStats()
-        fetchHeartRateSamples()
+        let hrStatsOperation = HRStatsOperation(workout: workout)
+        operations.append(hrStatsOperation)
         
+        let hrOperation = HRSamplesOperation(workout: workout)
+        operations.append(hrOperation)
+        
+        let cadenceOperation = CadenceSamplesOperation(workout: workout)
         if workout.workoutActivityType.isCycling {
-            fetchCadenceSamples()
+            operations.append(cadenceOperation)
         }
         
-        if workout.workoutActivityType.isRunningWalking {
-            fetchPaceSamples()
-        }
-        
-        let shouldGenerateRecords = locations.isPresent || heartRateSamples.isPresent ||
-            cadenceSamples.isPresent || paceSamples.isPresent
-        
-        if shouldGenerateRecords {
-            let generator = SampleProcessor(
-                workout: self.workout,
-                locations: locations,
-                heartRateSamples: heartRateSamples,
-                cadenceSamples: cadenceSamples,
-                paceSamples: paceSamples
-            )
-            generator.process()
+        let completionOperation = BlockOperation { [unowned self] in
+            let locations = locationOperation.locations
+            let heartRateSamples = hrOperation.samples
+            let cadenceSamples = cadenceOperation.samples
+            let avgHeartRate = hrStatsOperation.avg
+            let maxHeartRate = hrStatsOperation.max
             
-            let showMap = !workout.isIndoor && locations.isPresent
-            
-            object = Object(
-                records: generator.validRecords,
-                duration: generator.duration,
-                distance: totalDistance(),
-                movingTime: generator.movingTime,
-                avgMovingSpeed: generator.avgMovingSpeed,
-                avgSpeed: generator.avgSpeed(),
-                maxSpeed: generator.maxSpeed(),
-                avgHeartRate: self.avgHeartRate,
-                maxHeartRate: self.maxHeartRate,
-                showMap: showMap
-            )
-        } else {
-            object = Object(
-                records: [],
-                duration: workout.duration,
-                distance: totalDistance(),
-                movingTime: workout.duration,
-                avgMovingSpeed: avgSpeed(),
-                avgSpeed: avgSpeed(),
-                maxSpeed: maxSpeed(),
-                avgHeartRate: self.avgHeartRate,
-                maxHeartRate: self.maxHeartRate,
-                showMap: false
-            )
+            let validations = [
+                locations.isPresent,
+                heartRateSamples.isPresent,
+                cadenceSamples.isPresent
+            ].compactMap { $0 ? true : nil }
+               
+            let shouldGenerateRecords = validations.isPresent
+            if shouldGenerateRecords {
+                let generator = SampleProcessor(
+                    workout: self.workout,
+                    locations: locations,
+                    heartRateSamples: heartRateSamples,
+                    cadenceSamples: cadenceSamples
+                )
+                generator.process()
+                
+                let showMap = !workout.isIndoor && locations.isPresent
+                
+                self.object = Object(
+                    records: generator.validRecords,
+                    duration: generator.duration,
+                    distance: totalDistance(),
+                    movingTime: generator.movingTime,
+                    avgMovingSpeed: generator.avgMovingSpeed,
+                    avgSpeed: generator.avgSpeed(),
+                    maxSpeed: generator.maxSpeed(),
+                    avgPace: generator.avgPace(),
+                    avgHeartRate: avgHeartRate,
+                    maxHeartRate: maxHeartRate,
+                    showMap: showMap
+                )
+            } else {
+                self.object = Object(
+                    records: [],
+                    duration: workout.duration,
+                    distance: totalDistance(),
+                    movingTime: workout.duration,
+                    avgMovingSpeed: avgSpeed(),
+                    avgSpeed: avgSpeed(),
+                    maxSpeed: maxSpeed(),
+                    avgPace: avgPace(),
+                    avgHeartRate: avgHeartRate,
+                    maxHeartRate: maxHeartRate,
+                    showMap: false
+                )
+            }
         }
+        
+        operations.forEach({ completionOperation.addDependency($0) })
+        operations.append(completionOperation)
+        
+        processQueue.addOperations(operations, waitUntilFinished: true)
+        processQueue.waitUntilAllOperationsAreFinished()
     }
     
     private func totalDistance() -> Double {
@@ -151,99 +173,13 @@ extension WorkoutProcessor {
         workout.maxSpeed?.doubleValue(for: .metersPerSecond()) ?? 0
     }
     
-    private func fetchLocations() {
-        let semaphore = DispatchSemaphore(value: 0)
+    func avgPace() -> Double {
+        let sport = workout.workoutActivityType.sport()
+        guard sport.isWalkingOrRunning else { return 0 }
         
-        WorkoutDataStore.shared.fetchRoute(for: workout) { [weak self] (result) in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            switch result {
-            case .success(let locations):
-                self.locations = locations
-            case .failure(let error):
-                Log.debug("fetching route failed: \(error.localizedDescription)")
-            }
-                        
-            semaphore.signal()
-        }
-        _ = semaphore.wait(timeout: .distantFuture)
-    }
-    
-    private func fetchHeartRateStats() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchHeartRateStatsValue(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            switch result {
-            case .success(let sample):
-                self.avgHeartRate = sample.avg ?? 0
-                self.maxHeartRate = sample.max ?? 0
-            case .failure(let error):
-                Log.debug("fetching heart rate failed: \(error.localizedDescription)")
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
-    }
-    
-    private func fetchHeartRateSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchHeartRateSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            if let samples = try? result.get() as? [Quantity] {
-                self.heartRateSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
-    }
-    
-    private func fetchCadenceSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchCyclingCadenceSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            if let samples = try? result.get() as? [Quantity] {
-                self.cadenceSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
-    }
-    
-    private func fetchPaceSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchRunningWalkingPaceSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            if let samples = try? result.get() as? [Pace] {
-                self.paceSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
+        let duration = workout.duration
+        let distance = totalDistance()
+        return calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
     }
     
 }

@@ -23,7 +23,7 @@ struct PaywallView: View {
             isProcessing = isRestoring
         }
     }
-        
+            
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -41,9 +41,10 @@ struct PaywallView: View {
                     
                     VStack {
                         Text("Better Workouts Pro")
-                            .font(.title)
+                            .font(.fixedTitle)
                         
                         Text(purchaseManager.packageSupportString)
+                            .font(.fixedBody)
                             .foregroundColor(.yellow)
                     }
                     
@@ -57,16 +58,13 @@ struct PaywallView: View {
                                     .foregroundColor(.black)
                             }
                         }
-                        .frame(minWidth: 0, maxWidth: .infinity)
-                        .padding()
-                        .background(Color.yellow.opacity(isPurchasing ? 0.5 : 1.0))
-                        .cornerRadius(Constants.cornerRadius)
-                        .shadow(radius: 1)
                     }
+                    .buttonStyle(PaywallButtonStyle())
                     .disabled(isProcessing)
                     
                     Button(action: restore) {
                         Text("Restore Purchases")
+                            .font(.fixedBody)
                             .underline()
                     }
                     .disabled(isProcessing)

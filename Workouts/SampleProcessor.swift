@@ -14,7 +14,6 @@ class SampleProcessor {
     let locations: [CLLocation]
     let heartRateSamples: [Quantity]
     let cadenceSamples: [Quantity]
-    let paceSamples: [Pace]
     
     private(set) var sampleMaxSpeed: Double = 0
     private(set) var avgMovingSpeed: Double = 0
@@ -24,12 +23,11 @@ class SampleProcessor {
     private var dictionary = [Int: Record]()
     private var stoppedIntervals = [DateInterval]()
     
-    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity], paceSamples: [Pace]) {
+    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity]) {
         self.workout = workout
         self.locations = locations.sorted(by: { $0.timestamp < $1.timestamp })
         self.heartRateSamples = heartRateSamples
         self.cadenceSamples = cadenceSamples
-        self.paceSamples = paceSamples
     }
     
     var start: Date {
@@ -123,6 +121,15 @@ extension SampleProcessor {
             return speed
         }
         return sampleMaxSpeed
+    }
+    
+    func avgPace() -> Double {
+        let sport = workout.workoutActivityType.sport()
+        guard sport.isWalkingOrRunning else { return 0 }
+        
+        let duration = movingTime
+        let distance = totalDistance()
+        return calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
     }
     
     private func generateManualEventIntervals() {

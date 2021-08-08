@@ -17,6 +17,8 @@ class WorkoutManager: ObservableObject {
     
     enum State {
         case ok, empty, notAvailable, permissionDenied, none
+        
+        static var disabledStates: [State] = [.notAvailable, .permissionDenied]
     }
     
     var context: NSManagedObjectContext
@@ -29,6 +31,8 @@ class WorkoutManager: ObservableObject {
     @Published var processingRemoteDataValue: Double = 0
     private var totalPendingWorkouts = 0
     private var totalCurrentWorkouts = 0
+    
+    @Published var didFetchWorkout = false
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -50,6 +54,10 @@ class WorkoutManager: ObservableObject {
         } catch {
             return 0
         }
+    }
+    
+    var isDataAvailable: Bool {
+        !State.disabledStates.contains(state)
     }
     
 }
@@ -201,6 +209,9 @@ extension WorkoutManager {
     
     @objc
     func didProcessWorkouts(_ notification: Notification) {
+        didFetchWorkout = true
+        didFetchWorkout = false
+        
         isLoading = false
         totalPendingWorkouts = 0
         totalCurrentWorkouts = 0

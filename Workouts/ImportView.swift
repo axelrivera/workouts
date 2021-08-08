@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ImportView: View {
     enum ActiveSheet: Identifiable {
-        case document, paywall
+        case document
         var id: Int { hashValue }
     }
     
@@ -27,7 +27,7 @@ struct ImportView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
     @State private var shouldFetchWritePermission = false
-    
+        
     var body: some View {
         NavigationView {
             VStack {
@@ -42,23 +42,17 @@ struct ImportView: View {
                 
                 Spacer()
                 
-                if purchaseManager.isActive {
-                    RoundButton(text: "Add FIT Files", action: addAction)
-                        .disabled(importManager.isImportDisabled)
-                        .padding()
-                } else {
-                    VStack(spacing: 20.0) {
-                        Text("Importing FIT Files requires\nBetter Workouts Pro")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        PaywallButton(action: paywallAction)
-                    }
+                RoundButton(text: "Add FIT Files", action: addAction)
+                    .disabled(importManager.isImportDisabled)
                     .padding()
-                }
+                    .opacity(purchaseManager.isActive ? 1.0 : 0.0)
             }
+            .opacity(purchaseManager.isActive ? 1.0 : 0.5)
+            .paywallOverlay()
             .onAppear { requestWritingAuthorizationIfNeeded() }
+            .onChange(of: purchaseManager.isActive, perform: { isActive in
+                requestWritingAuthorizationIfNeeded()
+            })
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -77,9 +71,6 @@ struct ImportView: View {
                             importManager.state = urls.isEmpty ? .empty : .ok
                         }
                     }
-                case .paywall:
-                    PaywallView()
-                        .environmentObject(purchaseManager)
                 }
             }
             .alert(item: $activeAlert) { item in
@@ -110,11 +101,6 @@ private extension ImportView {
                 }
             }
         }
-    }
-    
-    func paywallAction() {
-        shouldFetchWritePermission = true
-        activeSheet = .paywall
     }
     
     func requestWritingAuthorizationIfNeeded() {

@@ -28,7 +28,6 @@ struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
-        static let defaultWorkoutsFilter = "arn_default_workouts_filter"
         static let mockPurchaseActive = "arn_mock_purchase_active"
         static let maxHeartRate = "arn_max_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
@@ -74,25 +73,5 @@ struct AppSettings {
     @Settings(Keys.mockPurchaseActive, defaultValue: false)
     static var mockPurchaseActive: Bool
     #endif
-    
-    static var defaultStatsFilter: Sport? {
-        get {
-            guard let string = objectForKey(Keys.defaultStatsFilter) as? String else { return nil }
-            return Sport(rawValue: string)
-        }
-        set {
-            setValue(newValue?.rawValue, for: Keys.defaultStatsFilter)
-        }
-    }
-    
-    static var defaultWorkoutsFilter: Sport? {
-        get {
-            guard let string = objectForKey(Keys.defaultWorkoutsFilter) as? String else { return nil }
-            return Sport(rawValue: string)
-        }
-        set {
-            setValue(newValue?.rawValue, for: Keys.defaultWorkoutsFilter)
-        }
-    }
     
 }

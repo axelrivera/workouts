@@ -23,6 +23,10 @@ extension Date {
 
 extension Date {
     
+    var isToday: Bool {
+        Calendar.current.isDateInToday(self)
+    }
+    
     static func dateFor(month: Int, day: Int, year: Int) -> Date? {
         var components = DateComponents()
         components.month = month
@@ -111,6 +115,75 @@ extension Date {
     
     var noon: Date {
         return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
+    }
+    
+}
+
+extension Date {
+    
+    static func dates(from fromDate: Date, to toDate: Date) -> [Date] {
+        var dates: [Date] = []
+        var date = fromDate
+        
+        while date <= toDate {
+            dates.append(date)
+            guard let newDate = Calendar.current.date(byAdding: .day, value: 1, to: date) else { break }
+            date = newDate
+        }
+        return dates
+    }
+    
+}
+
+extension Date {
+    
+    func year() -> Int {
+        Calendar.current.component(.year, from: self)
+    }
+    
+    static func firstDayForYear(year: Int) -> Date? {
+        Date.dateFor(month: 1, day: 1, year: year)
+    }
+    
+    static func lastDayForYear(year: Int) -> Date? {
+        guard let first = firstDayForYear(year: year) else { return nil }
+        return first.endOfYear
+    }
+    
+}
+
+extension DateInterval {
+    
+    static func lastTwelveMonths() -> DateInterval {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .month, value: -11, to: end)!.startOfMonth
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func lastFiveYears() -> DateInterval {
+        let now = Date()
+        let endYear = now.year()
+        let startYear = endYear - 4
+        
+        let start = Date.firstDayForYear(year: startYear)!
+        let end = now
+        
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func intervalForYear(_ year: Int) -> DateInterval? {
+        guard let start = Date.firstDayForYear(year: year), let end = Date.lastDayForYear(year: year) else { return nil }
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func lastThirtyDays() -> DateInterval? {
+        let start = Calendar.current.date(byAdding: .day, value: -30, to: Date())!.startOfDay
+        return DateInterval(start: start, end: Date())
+    }
+    
+    static func lastTwoWeeks() -> DateInterval? {
+        let start = Calendar.current.date(byAdding: .day, value: -14, to: Date())!.startOfDay
+        return DateInterval(start: start, end: Date())
     }
     
 }

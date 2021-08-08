@@ -7,12 +7,37 @@
 
 import Foundation
 import CoreData
+import SwiftUI
 
 final class DataProvider {
     let context: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {
         self.context = context
+    }
+    
+}
+
+// MARK: - Requests
+
+extension DataProvider {
+    
+    static func fetchRequest(for identifiers: [UUID]) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.predicateForIdentifiers(identifiers)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.returnsObjectsAsFaults = false
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
+        
+    }
+    
+    static func fetchRequest(sport: Sport?, interval: DateInterval?) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
     }
     
 }

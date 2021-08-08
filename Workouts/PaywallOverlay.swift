@@ -10,15 +10,19 @@ import SwiftUI
 struct SampleLabel: View {
     var body: some View {
         VStack(spacing: 10.0) {
-            Color.label
-                .frame(width: 200, height: 5)
-            
-            Text("Sample")
-                .font(.system(size: 60, weight: .semibold, design: .monospaced))
+            Image(systemName: "lock.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 48, height: 48)
                 .foregroundColor(.label)
-            Color.label
-                .frame(width: 200, height: 5)
+            
+            Text("PRO")
+                .font(.system(size: 52, weight: .semibold, design: .monospaced))
+                .foregroundColor(.label)
+                .multilineTextAlignment(.center)
         }
+        .padding(.all, 32)
+        .overlay(Circle().stroke(lineWidth: 8.0))
     }
 }
 
@@ -26,7 +30,6 @@ struct PaywallOverlay: View {
     var body: some View {
         VStack {
             SampleLabel()
-                .rotationEffect(Angle(degrees: -30))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

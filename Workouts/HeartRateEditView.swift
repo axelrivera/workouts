@@ -102,19 +102,19 @@ struct HREditSectionRow: View {
         VStack(alignment: .leading, spacing: 5.0) {
             HStack(alignment: .lastTextBaseline) {
                 Text(zone.name)
-                    .font(.title3)
+                    .font(.fixedTitle3)
                     .foregroundColor(zone.color)
                     .multilineTextAlignment(.leading)
                 
                 Spacer()
                 
                 Text(zone.zoneString)
-                    .font(.body)
+                    .font(.fixedBody)
                     .foregroundColor(zone.color)
             }
             
             Text(textString())
-                .font(.subheadline)
+                .font(.fixedSubheadline)
                 .foregroundColor(.secondary)
                         
             Stepper(
