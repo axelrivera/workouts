@@ -12,6 +12,7 @@ extension Sample: Identifiable {}
 private let WorkoutKey = "workout"
 private let ActiveKey = "isActive"
 private let HeartRateKey = "heartRate"
+private let TimestampKey = "timestamp"
 
 @objc(Sample)
 class Sample: NSManagedObject {
@@ -38,7 +39,8 @@ extension Sample {
     
     var coordinate: CLLocationCoordinate2D? {
         guard let lat = latitude?.doubleValue, let long = longitude?.doubleValue else { return nil }
-        return CLLocationCoordinate2D(latitude: lat, longitude: long)
+        let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        return CLLocationCoordinate2DIsValid(coordinate) ? coordinate : nil
     }
     
     var location: CLLocation? {
@@ -58,24 +60,48 @@ extension Sample {
 
 extension Sample {
     
+    static func predicateForWorkout(_ workout: Workout) -> NSPredicate {
+        NSPredicate(format: "%K = %@", WorkoutKey, workout)
+    }
+    
+    static func activePredicate() -> NSPredicate {
+        NSPredicate(format: "%K = %@", ActiveKey, NSNumber(booleanLiteral: true))
+    }
+    
+    static func predicateForStart(_ start: Date, end: Date) -> NSPredicate {
+        NSPredicate(
+            format: "%K >= %@ AND %K <= %@",
+            TimestampKey, start as NSDate,
+            TimestampKey, end as NSDate
+        )
+    }
+    
+    static func predicateForDateInterval(_ interval: DateInterval) -> NSPredicate {
+        predicateForStart(interval.start, end: interval.end)
+    }
+    
+    static func predicate(for workout: Workout, interval: DateInterval) -> NSPredicate {
+        let predicates = [predicateForWorkout(workout), predicateForDateInterval(interval)]
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
     static func heartRatePredicateForWorkout(_ workout: Workout, range: HRZoneManager.ZoneRange?) -> NSPredicate {
-        let workoutPredicate = NSPredicate(format: "%K = %@", WorkoutKey, workout)
-        let activePredicate = NSPredicate(format: "%K = %@", ActiveKey, NSNumber(booleanLiteral: true))
-        var heartRatePredicate: NSPredicate
+        var predicate: NSPredicate
         
         if let range = range {
             if range.low == 0 && range.high > 0 {
-                heartRatePredicate = NSPredicate(format: "%K > %@ AND %K <= %@", HeartRateKey, 0 as NSNumber, HeartRateKey, range.high as NSNumber)
+                predicate = NSPredicate(format: "%K > %@ AND %K <= %@", HeartRateKey, 0 as NSNumber, HeartRateKey, range.high as NSNumber)
             } else if range.low > 0 && range.high == 0 {
-                heartRatePredicate = NSPredicate(format: "%K >= %@", HeartRateKey, range.low as NSNumber)
+                predicate = NSPredicate(format: "%K >= %@", HeartRateKey, range.low as NSNumber)
             } else {
-                heartRatePredicate = NSPredicate(format: "%K >= %@ AND %K <= %@", HeartRateKey, range.low as NSNumber, HeartRateKey, range.high as NSNumber)
+                predicate = NSPredicate(format: "%K >= %@ AND %K <= %@", HeartRateKey, range.low as NSNumber, HeartRateKey, range.high as NSNumber)
             }
         } else {
-            heartRatePredicate = NSPredicate(format: "%K > %@", HeartRateKey, 0 as NSNumber)
+            predicate = NSPredicate(format: "%K > %@", HeartRateKey, 0 as NSNumber)
         }
         
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [workoutPredicate, activePredicate, heartRatePredicate])
+        let predicates = [predicateForWorkout(workout), activePredicate(), predicate]
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }
     
     static func sortedByTimestampDescriptor() -> NSSortDescriptor {
@@ -83,6 +109,8 @@ extension Sample {
     }
     
 }
+
+
 
 extension Sample {
     

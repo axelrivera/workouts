@@ -8,7 +8,7 @@
 import SwiftUI
 import Charts
 
-struct DetailAnalysisView: View {
+struct AnalysisView: View {
     enum ActiveSheet: Identifiable {
         case heartRateZones
         var id: Int { hashValue }
@@ -161,7 +161,7 @@ struct DetailAnalysisView: View {
     }
 }
 
-extension DetailAnalysisView {
+extension AnalysisView {
     
     func saveZones(heartRate: Int, values: [Int]) {
         detailManager.updateZones(maxHeartRate: heartRate, values: values)
@@ -234,7 +234,7 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     static let purchaseManager = IAPManager.preview(isActive: true)
     
     static var previews: some View {
-        DetailAnalysisView()
+        AnalysisView()
             .environmentObject(DetailManager(remoteIdentifier: workout.remoteIdentifier!))
             .environmentObject(purchaseManager)
             .colorScheme(.dark)

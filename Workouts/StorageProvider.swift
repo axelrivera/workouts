@@ -17,25 +17,25 @@ class StorageProvider: ObservableObject {
         
         if inMemory {
             persistentContainer.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
-        } else {
-            for description in persistentContainer.persistentStoreDescriptions {
-                description.shouldInferMappingModelAutomatically = false
-                description.shouldMigrateStoreAutomatically = false
-            }
-            
-            guard let storeURL = persistentContainer.persistentStoreDescriptions.first?.url else {
-                fatalError("missing persistent store url")
-            }
+        }
+        
+        for description in persistentContainer.persistentStoreDescriptions {
+            description.shouldInferMappingModelAutomatically = false
+            description.shouldMigrateStoreAutomatically = false
+        }
+        
+        guard let storeURL = persistentContainer.persistentStoreDescriptions.first?.url else {
+            fatalError("missing persistent store url")
+        }
 
-            let migrator = CoreDataMigrator()
-            let currentVersion = ModelVersion.current
-            if migrator.requiresMigration(at: storeURL, toVersion: currentVersion) {
-                switch currentVersion {
-                case .v2:
-                    NSPersistentStoreCoordinator.destroyStore(at: storeURL)
-                default:
-                    migrator.migrateStore(at: storeURL, toVersion: currentVersion)
-                }
+        let migrator = CoreDataMigrator()
+        let currentVersion = ModelVersion.current
+        if migrator.requiresMigration(at: storeURL, toVersion: currentVersion) {
+            switch currentVersion {
+            case .v2, .v3:
+                NSPersistentStoreCoordinator.destroyStore(at: storeURL)
+            default:
+                migrator.migrateStore(at: storeURL, toVersion: currentVersion)
             }
         }
         

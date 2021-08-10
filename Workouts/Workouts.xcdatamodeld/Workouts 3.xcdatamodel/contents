@@ -25,6 +25,7 @@
         <attribute name="avgMovingSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="avgPace" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="avgSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="coordinatesValue" attributeType="String"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="device" optional="YES" attributeType="String"/>
         <attribute name="distance" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -67,6 +68,6 @@
     </entity>
     <elements>
         <element name="Sample" positionX="-54" positionY="-9" width="128" height="224"/>
-        <element name="Workout" positionX="-63" positionY="-18" width="128" height="569"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="584"/>
     </elements>
 </model>

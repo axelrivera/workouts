@@ -44,3 +44,18 @@ func localizedWeightUnitToKilograms(for weight: Double) -> Double {
         return conversion.value
     }
 }
+
+func milesToMeters(for miles: Double) -> Double {
+    let measurement = Measurement<UnitLength>(value: miles, unit: .miles)
+    return measurement.converted(to: .meters).value
+}
+
+func kilometersToMeters(for kilometers: Double) -> Double {
+    let measurement = Measurement<UnitLength>(value: kilometers, unit: .kilometers)
+    return measurement.converted(to: .meters).value
+}
+
+func metersToMiles(for meters: Double) -> Double {
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
+    return measurement.converted(to: .miles).value
+}

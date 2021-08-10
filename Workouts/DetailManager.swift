@@ -28,6 +28,14 @@ class DetailManager: ObservableObject {
     @Published var detail = WorkoutDetail()
     @Published var isMapDisabled = false
     
+    @Published var showLaps = false
+    @Published var selectedLapDistance = LapDistance.option1 {
+        didSet {
+            reloadLaps()
+        }
+    }
+    @Published var laps = [WorkoutLap]()
+    
     private var context: NSManagedObjectContext?
     private var _workout: Workout?
     
@@ -36,6 +44,11 @@ class DetailManager: ObservableObject {
     init(remoteIdentifier: UUID) {
         self.remoteIdentifier = remoteIdentifier
     }
+    
+    lazy var processor: WorkoutSamplesProcessor = {
+        let processor = WorkoutSamplesProcessor(workout: workout)
+        return processor
+    }()
 }
 
 extension DetailManager {
@@ -47,59 +60,72 @@ extension DetailManager {
         return _workout!
     }
     
+    var sport: Sport { workout.sport }
+        
     func loadWorkout(with context: NSManagedObjectContext) {
         self.context = context
         self.detail = WorkoutDetail(workout: workout)
+        self.points = workout.coordinates
         self.run()
     }
     
     func run() {
-        guard let context = context else { return }
-        
-        context.perform { [weak self, unowned context] in
-            guard let self = self else { return }
-            let workout = self.workout
+        processor.process { intervals in
+            Log.debug("processing samples")
+            let heartRateValues = self.heartRateChartIntervals(for: intervals)
             
-            if workout.shouldRegenerateSamples {
-                WorkoutDataStore.shared.fetchWorkout(for: self.remoteIdentifier) { remoteWorkout in
-                    guard let remoteWorkout = remoteWorkout else {
-                        self.updateValues(workout: workout, context: context)
-                        return
-                    }
-                    
-                    Log.debug("updating samples")
-                    workout.updateSamples(remoteWorkout: remoteWorkout)
-                    self.updateValues(workout: workout, context: context)
-                }
-            } else {
-                self.updateValues(workout: workout, context: context)
+            Log.debug("finish processing samples: \(intervals.count)")
+            
+            DispatchQueue.main.async {
+                self.heartRateValues = heartRateValues
             }
         }
+        
+        
+//        context.perform { [weak self, unowned context] in
+//            guard let self = self else { return }
+//            let workout = self.workout
+//
+//            if workout.shouldRegenerateSamples {
+//                WorkoutDataStore.shared.fetchWorkout(for: self.remoteIdentifier) { remoteWorkout in
+//                    guard let remoteWorkout = remoteWorkout else {
+//                        self.updateValues(workout: workout, context: context)
+//                        return
+//                    }
+//
+//                    Log.debug("updating samples")
+//                    workout.updateSamples(remoteWorkout: remoteWorkout)
+//                    self.updateValues(workout: workout, context: context)
+//                }
+//            } else {
+//                self.updateValues(workout: workout, context: context)
+//            }
+//        }
     }
     
     private func updateValues(workout: Workout, context: NSManagedObjectContext) {
         let detail = WorkoutDetail(workout: workout)
-        let samples = workout.samples.sorted(by: { $0.timestamp < $1.timestamp })
+        //let samples = workout.samples.sortedSamples()
         
-        let locations = samples.filter({ $0.isLocation }).compactMap { $0.location }
-        let points = locations.map { $0.coordinate }
-        let altitude = locations.map { $0.altitude }
-        let minElevation = altitude.min() ?? 0
-        let maxElevation = altitude.max() ?? 0
+//        let locations = samples.filter({ $0.isLocation }).compactMap { $0.location }
+//        let points = locations.map { $0.coordinate }
+//        let altitude = locations.map { $0.altitude }
+//        let minElevation = altitude.min() ?? 0
+//        let maxElevation = altitude.max() ?? 0
+//
+//        let movingSamples = samples.filter { sample in
+//            if locations.isPresent {
+//                return sample.isActive && sample.speed > 0
+//            } else {
+//                return sample.isActive
+//            }
+//        }
         
-        let movingSamples = samples.filter { sample in
-            if locations.isPresent {
-                return sample.isActive && sample.speed > 0
-            } else {
-                return sample.isActive
-            }
-        }
-        
-        let movingTime = workout.movingTime
-        let heartRateValues = heartRateChartIntervals(for: movingSamples, movingTime: movingTime)
-        let speedValues = speedChartIntervals(for: movingSamples, movingTime: movingTime)
-        let cadenceValues = cadenceChartIntervals(for: movingSamples, movingTime: movingTime)
-        let altitudeValues = altitudeChartIntervals(for: movingSamples, movingTime: movingTime)
+//        let movingTime = workout.movingTime
+//        let heartRateValues = heartRateChartIntervals(for: movingSamples, movingTime: movingTime)
+//        let speedValues = speedChartIntervals(for: movingSamples, movingTime: movingTime)
+//        let cadenceValues = cadenceChartIntervals(for: movingSamples, movingTime: movingTime)
+//        let altitudeValues = altitudeChartIntervals(for: movingSamples, movingTime: movingTime)
 
         let zoneMaxHeartRate = workout.zoneMaxHeartRate
         let zoneValues = workout.zoneValues
@@ -109,27 +135,48 @@ extension DetailManager {
         if heartRateValues.isPresent {
             zones = (try? zoneManager.fetchZones(for: workout)) ?? []
         }
+        
+//        let lapDistance = selectedLapDistance.distanceInMeters(for: sport)
+//        let intervals = workout.intervals(for: lapDistance)
+//        //let laps = Self.lapsFor(workout: workout, intervals: intervals, context: context)
                     
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            self.points = points
+            self.points = workout.coordinates
             self.detail = detail
-            self.maxElevation = maxElevation
-            self.heartRateValues = heartRateValues
-            self.speedValues = speedValues
-            self.cyclingCadenceValues = cadenceValues
-            self.altitudeValues = altitudeValues
+//            self.maxElevation = maxElevation
+//            self.heartRateValues = heartRateValues
+//            self.speedValues = speedValues
+//            self.cyclingCadenceValues = cadenceValues
+//            self.altitudeValues = altitudeValues
             self.zoneManager = zoneManager
             self.zones = zones
-            self.minElevation = minElevation
+//            self.minElevation = minElevation
+            //self.laps = laps
             
-            Log.debug("total points: \(points.count), showMap: \(workout.showMap)")
+            //Log.debug("total points: \(points.count), showMap: \(workout.showMap)")
             
             withAnimation {
                 self.isMapDisabled = detail.indoor || !workout.showMap
             }
         }
+    }
+    
+    func reloadLaps() {
+//        guard let context = context else { return }
+//        let lapDistance = selectedLapDistance.distanceInMeters(for: sport)
+//
+//        context.perform { [weak self] in
+//            guard let self = self else { return }
+//
+//            let intervals = self.workout.intervals(for: lapDistance)
+//            let laps = Self.lapsFor(workout: self.workout, intervals: intervals, context: context)
+//
+//            DispatchQueue.main.async {
+//                self.laps = laps
+//            }
+//        }
     }
     
     func updateZones(maxHeartRate: Int, values: [Int]) {
@@ -167,7 +214,13 @@ extension DetailManager {
         return Float(movingTime) / intervalPoints
     }
     
-    private func interpolatedValues(for values: [Float], movingTime: Double) -> (xStep: Double, points: [Float]) {
+    private func interpolatedValues(for values: [Float]) -> [Float] {
+        guard values.isPresent else { return [] }
+        let points = LinearInterpolator(points: values).resample(interval: 5)
+        return points
+    }
+    
+    private func interpolatedValues(for values: [(Float)], movingTime: Double) -> (xStep: Double, points: [Float]) {
         guard values.isPresent else { return (0, []) }
 
         let resampleInterval = sampleInterval(movingTime: movingTime)
@@ -176,13 +229,15 @@ extension DetailManager {
         return (xStep, points)
     }
     
-    private func heartRateChartIntervals(for movingSamples: [Sample], movingTime: Double) -> [ChartInterval] {
-        let heartRates = movingSamples.filter({ $0.heartRate > 0 }).map({ Float($0.heartRate) })
-        let (xStep, samples) = interpolatedValues(for: heartRates, movingTime: movingTime)
+    private func heartRateChartIntervals(for movingSamples: [WorkoutInterval]) -> [ChartInterval] {
+        let heartRates = movingSamples.compactMap { $0.heartRate > 0 ? Float($0.heartRate) : nil }
+        Log.debug("heart rates: \(heartRates)")
+        
+        let samples = interpolatedValues(for: heartRates)
         
         return samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue: Double(value))
+            Log.debug("charting sample for value: \(value)")
+            return ChartInterval(xValue: Double(index), yValue: Double(value))
         }
     }
     
@@ -236,6 +291,50 @@ extension DetailManager {
         let best = paces.filter({ $0 > 0 }).min() ?? 0
         
         return (Double(best), intervals)
+    }
+    
+}
+
+// MARK: - Samples
+
+extension DetailManager {
+    
+    static func fetchSamples(for workout: Workout, interval: DateInterval, context: NSManagedObjectContext) -> [Sample] {
+        let request: NSFetchRequest<Sample> = NSFetchRequest(entityName: Sample.entityName)
+        request.returnsObjectsAsFaults = false
+        request.predicate = Sample.predicate(for: workout, interval: interval)
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
+        
+    }
+    
+    static func lapsFor(workout: Workout, intervals: [DateInterval], context: NSManagedObjectContext) -> [WorkoutLap] {
+        intervals.enumerated().map { (index, interval) in
+            let samples = Self.fetchSamples(for: workout, interval: interval, context: context)
+            let distance = samples.distance()
+            let duration = samples.duration(active: true)
+            let avgSpeed = samples.avgSpeed()
+            let avgPace = workout.sport.isWalkingOrRunning ? samples.avgPace() : 0
+            let avgCadence = workout.sport.isCycling && workout.outdoor ? samples.avgCyclingCadence() : 0
+            let avgHeartRate = samples.avgHeartRate()
+            let maxHeartRate = samples.maxHeartRate()
+            
+            return WorkoutLap(
+                sport: workout.sport,
+                lapNumber: index + 1,
+                distance: distance,
+                duration: duration,
+                avgSpeed: avgSpeed,
+                avgPace: avgPace,
+                avgCadence: avgCadence,
+                avgHeartRate: avgHeartRate,
+                maxHeartRate: maxHeartRate
+            )
+        }
     }
     
 }

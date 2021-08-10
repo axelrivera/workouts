@@ -9,7 +9,6 @@ import Foundation
 import CoreLocation
 import HealthKit
 
-
 class HealthOperation: SyncOperation {
     private(set) var workout: HKWorkout
     

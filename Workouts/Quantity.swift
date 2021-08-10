@@ -8,8 +8,11 @@
 import Foundation
 
 struct Quantity {
-    let timestamp: Date
+    let start: Date
+    let end: Date
     let value: Double
+    
+    var timestamp: Date { start }
 }
 
 struct Pace {

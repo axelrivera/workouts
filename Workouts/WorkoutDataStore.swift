@@ -204,7 +204,7 @@ extension WorkoutDataStore {
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
             let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.maximumQuantity(for: source) else { return nil }
-                return Quantity(timestamp: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+                return Quantity(start: statistics.startDate, end: statistics.endDate, value: quantity.doubleValue(for: .bpm()))
             }
             completionHandler(.success(values))
         }
@@ -267,7 +267,7 @@ extension WorkoutDataStore {
             
             let cadenceSamples: [Quantity] = samples.compactMap { sample in
                 guard let cadence = sample.metadata?[MetadataKeySampleCadence] as? Double else { return nil }
-                return Quantity(timestamp: sample.startDate, value: cadence)
+                return Quantity(start: sample.startDate, end: sample.endDate, value: cadence)
             }
             completionHandler(.success(cadenceSamples))
             

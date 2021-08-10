@@ -135,11 +135,26 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     }
 }
 
+func formattedLapDistanceString(for meters: Double?) -> String {
+    guard let meters = meters, meters > 0 else { return "0 \(distanceUnitString())" }
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
+    
+    return MeasurementFormatter.distanceLap.string(from: conversion)
+}
+
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
     guard let speed = metersPerSecond, speed > 0 else { return "" }
     let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometersPerHour : .milesPerHour)
     return MeasurementFormatter.speed.string(from: conversion)
+}
+
+func formattedLapSpeedString(for metersPerSecond: Double?) -> String {
+    guard let speed = metersPerSecond, speed > 0 else { return "" }
+    let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometersPerHour : .milesPerHour)
+    return MeasurementFormatter.speedLap.string(from: conversion)
 }
 
 func formattedRunningWalkingPaceUnitString() -> String {
@@ -327,10 +342,26 @@ extension NumberFormatter {
         return formatter
     }()
     
+    static let distanceLap: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+    
     static let distanceCompact: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 1
+        return formatter
+    }()
+    
+    static let speedLap: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 1
         return formatter
     }()
@@ -373,6 +404,14 @@ extension MeasurementFormatter {
         return formatter
     }()
     
+    static let distanceLap: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.distanceLap
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
     static let distanceCompact: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distanceCompact
@@ -399,6 +438,14 @@ extension MeasurementFormatter {
     static let speed: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.speed
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
+    static let speedLap: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.speedLap
         formatter.unitStyle = .medium
         formatter.unitOptions = .providedUnit
         return formatter

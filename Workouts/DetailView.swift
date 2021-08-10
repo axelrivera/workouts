@@ -13,6 +13,12 @@ struct DetailView: View {
     enum ActiveSheet: Identifiable {
         case map
         case analysis
+        case laps
+        var id: Int { hashValue }
+    }
+    
+    enum RowType: Identifiable, CaseIterable {
+        case row1, row2, row3, row4
         var id: Int { hashValue }
     }
     
@@ -21,7 +27,7 @@ struct DetailView: View {
     @StateObject var detailManager: DetailManager
     
     @State var activeSheet: ActiveSheet?
-    
+        
     var workout: WorkoutDetail { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
         
@@ -66,31 +72,27 @@ struct DetailView: View {
                 .buttonStyle(WorkoutAnalysisButtonStyle())
             }
             
-            HStack {
-                DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
-                DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
+            ForEach(RowType.allCases) { rowType in
+                viewForRow(rowType)
             }
             
-            HStack {
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
-                } else if sport.isWalkingOrRunning {
-                    DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+            Button(action: { activeSheet = .laps }) {
+                Label("Show Laps", systemImage: "arrow.2.squarepath")
+                    .foregroundColor(.accentColor)
+            }
+            
+            if detailManager.showLaps {
+                VStack(alignment: .leading) {
+                    ForEach(detailManager.laps) { lap in
+                        HStack {
+                            Text("Lap \(lap.lapNumber)")
+                            Spacer()
+                            Text(formattedDistanceString(for: lap.distance, mode: .default, zeroPadding: true))
+                            Text(formattedTimeDurationString(for: lap.duration))
+                        }
+                    }
+                    .padding([.top, .bottom], 10.0)
                 }
-                
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
-                }
-            }
-            
-            HStack {
-                DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
-                DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
-            }
-            
-            HStack {
-                DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
-                DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
             
             HStack {
@@ -118,7 +120,10 @@ struct DetailView: View {
             case .map:
                 DetailMapView(points: detailManager.points)
             case .analysis:
-                DetailAnalysisView()
+                AnalysisView()
+                    .environmentObject(detailManager)
+            case .laps:
+                LapsView()
                     .environmentObject(detailManager)
             }
         }
@@ -126,6 +131,33 @@ struct DetailView: View {
 }
 
 extension DetailView {
+    
+    @ViewBuilder
+    func viewForRow(_ rowType: RowType) -> some View {
+        HStack {
+            switch rowType {
+            case .row1:
+                DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
+                DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
+            case .row2:
+                if sport.isCycling {
+                    DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
+                } else if sport.isWalkingOrRunning {
+                    DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+                }
+                
+                if sport.isCycling {
+                    DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
+                }
+            case .row3:
+                DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
+                DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
+            case .row4:
+                DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+                DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
+            }
+        }
+    }
     
     @ViewBuilder
     func mapOverlay() -> some View {

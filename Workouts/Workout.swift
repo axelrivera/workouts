@@ -7,6 +7,7 @@
 
 import CoreData
 import HealthKit
+import Polyline
 
 private let MarkedForDeletionDateKey = "markedForDeletionDate"
 private let SportKey = "sportValue"
@@ -56,6 +57,7 @@ class Workout: NSManagedObject {
     @NSManaged var locationState: String?
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
+    @NSManaged fileprivate(set) var coordinatesValue: String
     
     // Heart Rate Zones
     @NSManaged private(set) var zoneMaxHeartRate: Int
@@ -78,6 +80,9 @@ class Workout: NSManagedObject {
         set { sportValue = newValue.rawValue }
     }
     
+    @nonobjc
+    var outdoor: Bool { !indoor }
+    
     override func awakeFromInsert() {
         super.awakeFromInsert()
         setPrimitiveValue(Date(), forKey: CreatedAtKey)
@@ -87,6 +92,11 @@ class Workout: NSManagedObject {
     override func willSave() {
         super.willSave()
         setPrimitiveValue(Date(), forKey: UpdatedAtKey)
+    }
+    
+    @nonobjc var coordinates: [CLLocationCoordinate2D] {
+        let polyline = Polyline(encodedPolyline: coordinatesValue)
+        return polyline.coordinates ?? []
     }
     
 }
@@ -285,6 +295,12 @@ extension Workout {
     
     private static func updateValues(for workout: Workout, remoteWorkout: HKWorkout, in context: NSManagedObjectContext) {
         let object = WorkoutProcessor.object(for: remoteWorkout)
+        let coordinates = object.records
+            .sorted(by: {$0.timestamp < $1.timestamp})
+            .compactMap({ $0.isLocation ? CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) : nil })
+        
+        let polylineString = Polyline(coordinates: coordinates).encodedPolyline
+        Log.debug("encoded polyline: \(polylineString.utf8.count)")
         
         workout.remoteIdentifier = remoteWorkout.uuid
         workout.sport = remoteWorkout.workoutActivityType.sport()
@@ -308,15 +324,20 @@ extension Workout {
         workout.source = remoteWorkout.sourceRevision.source.name
         workout.device = remoteWorkout.device?.name
         workout.showMap = object.showMap
+        workout.coordinatesValue = polylineString
         
         // Heart Rate Zones
         let zoneHeartRate = AppSettings.maxHeartRate
         let zoneValues = AppSettings.heartRateZones
         workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
         
-        for remoteSample in object.records {
-            Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
-        }
+//        var samples = Set<Sample>()
+//        for remoteSample in object.records {
+//            let sample = Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
+//            samples.insert(sample)
+//        }
+        
+        //workout.samples = samples
     }
     
     func updateHeartRateZones(with maxHeartRate: Int, values: [Int]) {

@@ -221,6 +221,9 @@ extension SampleProcessor {
     private func processLocationSamples() {
         guard isLocationSupported else { return }
         
+        Log.debug("LOCATION - id: \(workout.uuid)")
+        Log.debug("LOCATION - before: \(metersToMiles(for: locations.totalDistance))")
+        
         for location in locations {
             let key = keyForTimestamp(location.timestamp)
             guard let record = dictionary[key] else { continue }
@@ -233,6 +236,9 @@ extension SampleProcessor {
             
             sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
         }
+        
+        let recordLocations = records.compactMap({ $0.isLocation ? CLLocation(latitude: $0.latitude, longitude: $0.longitude) : nil })
+        Log.debug("LOCATION - after: \(metersToMiles(for: recordLocations.totalDistance))")
     }
     
     private func processHeartRateSamples() {
@@ -287,9 +293,9 @@ extension SampleProcessor {
         }
         
         var isEmpty: Bool {
+            if isLocation { return false }
+            
             let sum = [
-                latitude,
-                longitude,
                 speed,
                 altitude,
                 heartRate,

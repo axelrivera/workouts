@@ -20,6 +20,11 @@ class MigrationStep {
             fatalError("expected modal mapping not present")
         }
         
+//        if sourceVersion == .v2 && destinationVersion == .v3 {
+//            let fullClassName = NSStringFromClass(Workout2ToWorkout3MigrationPolicy.self)
+//            mappingModel.entityMappings.forEach { $0.entityMigrationPolicyClassName = fullClassName}
+//        }
+        
         self.sourceModel = sourceModel
         self.destinationModel = destinationModel
         self.mappingModel = mappingModel
@@ -40,7 +45,7 @@ class MigrationStep {
     }
     
     private static func customMappingModel(fromSourceModel sourceModel: NSManagedObjectModel, toDestinationModel destinationModel: NSManagedObjectModel) -> NSMappingModel? {
-        return NSMappingModel(from: [Bundle.main], forSourceModel: sourceModel, destinationModel: destinationModel)
+        NSMappingModel(from: [Bundle.main], forSourceModel: sourceModel, destinationModel: destinationModel)
     }
     
 }

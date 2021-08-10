@@ -103,7 +103,7 @@ extension DataProvider {
     
 }
 
-// MARK: - Samples
+// MARK: - Helper Methods
 
 extension DataProvider {
     
@@ -153,5 +153,14 @@ extension DataProvider {
         expressionDesc.expressionResultType = .doubleAttributeType
         return expressionDesc
     }
+    
+}
+
+// MARK: - Samples
+
+extension DataProvider {
+    
+    
+    
     
 }
