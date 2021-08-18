@@ -24,16 +24,6 @@ struct ProcessView: View {
             VStack(spacing: 20.0) {
                 Text(title)
                     .font(.title3)
-                
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 32, height: 32)
-                    .foregroundColor(.secondary)
-                    .rotationEffect(Angle(degrees: isAnimating ? 360.0 : 0.0))
-                    .animation(foreverAnimation)
-                    .onAppear { isAnimating = true }
-                
                 ProgressView(value: value)
             }
             .padding()

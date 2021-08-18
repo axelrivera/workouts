@@ -31,41 +31,40 @@ struct WorkoutLogView: View {
     
     let columns = Array(repeating:  GridItem(.flexible(), spacing: 0), count: 7)
     
-    var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                Picker("Display", selection: $manager.displayType.animation()) {
-                    ForEach(LogManager.DisplayType.allCases, id: \.self) { dataType in
-                        Text(dataType.rawValue.capitalized)
-                    }
+    func headerView() -> some View {
+        VStack(alignment: .center, spacing: 0) {
+            Picker("Display", selection: $manager.displayType.animation()) {
+                ForEach(LogManager.DisplayType.allCases, id: \.self) { dataType in
+                    Text(dataType.rawValue.capitalized)
                 }
-                .pickerStyle(SegmentedPickerStyle())
             }
+            .pickerStyle(SegmentedPickerStyle())
             .padding()
-            .background(Color.secondarySystemBackground)
             
             Divider()
-            
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 10, pinnedViews: [.sectionHeaders]) {
+        }
+        .background(.regularMaterial)
+    }
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section(header: headerView()) {
                     ForEach(manager.intervals, id: \.self) { interval in
-                        WorkoutLogGridSection(
-                            displayType: $manager.displayType,
-                            interval: interval
-                        )
+                        WorkoutLogIntervalRow(displayType: $manager.displayType, interval: interval)
+                        Divider()
                     }
                 }
-                .padding(.bottom)
-                .onAppear {
-                    reloadIntervalsIfNeeded()
-                }
-                .onChange(of: purchaseManager.isActive, perform: { isActive in
-                    reloadIntervalsIfNeeded()
-                })
             }
+            .onAppear {
+                reloadIntervalsIfNeeded()
+            }
+            .onChange(of: purchaseManager.isActive, perform: { isActive in
+                reloadIntervalsIfNeeded()
+            })
         }
         .paywallOverlay()
-        .navigationBarTitle("Workout Log")
+        .navigationTitle("Workout Log")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {

@@ -24,15 +24,6 @@ struct WorkoutLap: Identifiable, Equatable, Hashable {
     let maxHeartRate: Double
 }
 
-extension Sample {
-    
-    func distance(from: Sample) -> Double {
-        guard let location = location, let fromLocation = from.location else { return 0 }
-        return abs(fromLocation.distance(from: location))
-    }
-    
-}
-
 extension Workout {
     
     func intervals(for lapDistance: Double) -> [DateInterval] {

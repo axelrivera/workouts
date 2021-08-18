@@ -50,7 +50,7 @@ struct WorkoutLogIntervalStack: View {
     @ViewBuilder
     func overlayIfNeeded() -> some View {
         if isEmpty {
-            Text("No Workouts this Week")
+            Text("No Workouts")
                 .offset(x: 0, y: -20.0)
                 .foregroundColor(.secondary)
         }
@@ -58,31 +58,35 @@ struct WorkoutLogIntervalStack: View {
     
 }
 
-struct WorkoutLogGridSection: View {
+struct WorkoutLogIntervalRow: View {
     @Binding var displayType: LogDisplayType
     var interval: LogInterval
+    let totalActivities: Int
     
-    var body: some View {
-        Section(header: header(interval: interval)) {
-            Group {
-                ForEach(interval.days, id: \.self) { day in
-                    WorkoutLogItem(displayType: $displayType, day: day)
-                }
-            }
-            .padding(.horizontal, 5.0)
-        }
+    init(displayType: Binding<LogDisplayType>, interval: LogInterval) {
+        _displayType = displayType
+        self.interval = interval
+        self.totalActivities = interval.totalActivities
     }
     
-    func header(interval: LogInterval) -> some View {
-        HStack {
-            Text(interval.header).animation(.none)
-            Spacer()
-            Text(headerText(for: interval))
-                .animation(.none)
-                .foregroundColor(displayType.color)
+    var body: some View {
+        VStack {
+            HStack {
+                Text(interval.header).animation(.none)
+                Spacer()
+                Text(headerText(for: interval))
+                    .animation(.none)
+                    .foregroundColor(displayType.color)
+            }
+            .padding(.all, 10.0)
+            
+            HStack {
+                ForEach(interval.days) { day in
+                    WorkoutLogItem(displayType: $displayType, day: day, hideBubble: false, navigatable: true)
+                }
+            }
+            .frame(height: 80)
         }
-        .padding(.all, 10.0)
-        .background(Color.secondarySystemBackground)
     }
     
     func headerText(for interval: LogInterval) -> String {
@@ -91,6 +95,7 @@ struct WorkoutLogGridSection: View {
         case .time: return formattedHoursMinutesPrettyString(for: interval.duration)
         }
     }
+    
 }
 
 struct WorkoutLogItem: View {
@@ -100,26 +105,35 @@ struct WorkoutLogItem: View {
     var day: LogDay
     var hideBubble: Bool = false
     let totalActivities: Int
+    var navigatable = false
     
     var isEmpty: Bool { totalActivities == 0 }
     
-    init(displayType: Binding<LogDisplayType>, day: LogDay, hideBubble: Bool = false) {
+    init(displayType: Binding<LogDisplayType>, day: LogDay, hideBubble: Bool = false, navigatable: Bool = false) {
         _displayType = displayType
         self.day = day
         self.hideBubble = hideBubble
         totalActivities = day.totalActivities
+        self.navigatable = navigatable
     }
     
     var body: some View {
         VStack(spacing: 5.0) {
-            NavigationLink(destination: destinationView()) {
+            if navigatable {
+                NavigationLink(destination: destinationView()) {
+                    LogBubble(color: day.color, scaleFactor: scaleFactor)
+                        .overlay(bubbleOverlay())
+                        .frame(idealWidth: maxWidth, idealHeight: maxWidth, alignment: .center)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(isEmpty)
+                .opacity(hideBubble ? 0.0 : 1.0)
+            } else {
                 LogBubble(color: day.color, scaleFactor: scaleFactor)
                     .overlay(bubbleOverlay())
                     .frame(idealWidth: maxWidth, idealHeight: maxWidth, alignment: .center)
+                    .opacity(hideBubble ? 0.0 : 1.0)
             }
-            .buttonStyle(PlainButtonStyle())
-            .disabled(isEmpty)
-            .opacity(hideBubble ? 0.0 : 1.0)
             
             Text(day.label)
                 .font(.footnote)

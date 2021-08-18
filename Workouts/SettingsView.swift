@@ -77,7 +77,7 @@ struct SettingsView: View {
                 #if DEVELOPMENT_BUILD
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Reset IAP", action: purchaseManager.resetMockPurchase)
-                        .buttonStyle(PlainButtonStyle())
+                        .tint(.red)
                         .disabled(!purchaseManager.isActive)
                 }
                 #endif

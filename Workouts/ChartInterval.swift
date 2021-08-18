@@ -23,3 +23,9 @@ extension ChartInterval: Comparable {
     }
     
 }
+
+extension ChartInterval {
+    enum ValueType {
+        case heartRate, speed, pace, cadence, altitude
+    }
+}

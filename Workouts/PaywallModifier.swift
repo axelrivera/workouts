@@ -25,7 +25,7 @@ struct PaywallModifier: ViewModifier {
                     PaywallButton(action: { isPaywallShowing = true })
                         .padding([.bottom, .leading, .trailing])
                 }
-            }
+             }
         }
         .sheet(isPresented: $isPaywallShowing) {
             PaywallView()

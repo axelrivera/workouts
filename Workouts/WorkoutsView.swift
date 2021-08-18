@@ -37,8 +37,9 @@ struct WorkoutsView: View {
         List {
             WorkoutFilter(sport: sport, interval: interval) { workout in
                 NavigationLink(destination: detailView(identifier: workout.remoteIdentifier!)) {
-                    WorkoutPlainCell(workout: workout)
+                    WorkoutMapCell(workout: workout.workoutData())
                 }
+                .buttonStyle(WorkoutPlainButtonStyle())
             }
         }
         .listStyle(PlainListStyle())

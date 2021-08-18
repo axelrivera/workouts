@@ -108,9 +108,18 @@ struct WorkoutMapButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 120.0, alignment: .center)
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
         .overlay(configuration.isPressed ? Color.black.opacity(0.3) : Color.clear)
         .cornerRadius(12.0)
+  }
+
+}
+
+struct WorkoutPlainButtonStyle: ButtonStyle {
+
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+        .background(configuration.isPressed ? Color.selectedCell : Color.clear)
   }
 
 }

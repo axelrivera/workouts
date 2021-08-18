@@ -6,6 +6,7 @@
 //
 
 import CoreData
+import HealthKit
 
 typealias HRZoneManagerAction = (_ maxHeartRate: Int, _ values: [Int]) -> Void
 
@@ -27,6 +28,10 @@ class HRZoneManager: ObservableObject {
     
     // Don't update values directly, use helper method
     @Published var values: [Int]
+    
+    lazy private var provider: HealthProvider = {
+        HealthProvider.shared
+    }()
      
     init(maxHeartRate: Int, zoneValues: [Int]) {
         if maxHeartRate > 0 && zoneValues.isPresent {
@@ -225,42 +230,23 @@ extension HRZoneManager {
         case missingZone
     }
     
-    func fetchZones(for workout: Workout) throws -> [HRZoneSummary] {
-        guard let context = workout.managedObjectContext else { throw DataError.database }
+    func fetchZones(for remoteWorkout: HKWorkout) async throws -> [HRZoneSummary] {
+        let dateInterval = DateInterval(start: remoteWorkout.startDate, end: remoteWorkout.endDate)
+        let source = remoteWorkout.sourceRevision.source
         
-        let total = try heartRateSamplesDuration(for: nil, workout: workout, context: context)
+        let total = try await provider.fetchHeartRateSamples(interval: dateInterval, range: nil, source: source).count
         
         var summaries = [HRZoneSummary]()
         for zone in HRZone.allCases {
             let range = rangeForZone(zone)
-            let duration = try heartRateSamplesDuration(for: range, workout: workout, context: context)
+            let duration = try await provider.fetchHeartRateSamples(interval: dateInterval, range: range, source: source).count
             let text = Self.stringForRange(range)
-            let summary = HRZoneSummary(name: zone.name, color: zone.color, text: text, duration: duration, totalDuration: total)
+            let summary = HRZoneSummary(name: zone.name, color: zone.color, text: text, duration: Double(duration), totalDuration: Double(total))
             summaries.append(summary)
         }
         
         guard summaries.count == HRZone.allCases.count else { throw DataError.missingZone }
         return summaries
-    }
-    
-    static func fetchRequestForHeartRateSamples(workout: Workout, range: HRZoneManager.ZoneRange?) -> NSFetchRequest<NSFetchRequestResult> {
-        let predicate = Sample.heartRatePredicateForWorkout(workout, range: range)
-        
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: Sample.entityName)
-        request.returnsObjectsAsFaults = false
-        request.predicate = predicate
-        return request
-    }
-    
-    private func heartRateSamplesDuration(for range: ZoneRange?, workout: Workout, context: NSManagedObjectContext) throws -> Double {
-        let request = Self.fetchRequestForHeartRateSamples(workout: workout, range: range)
-        do {
-            let result = try context.count(for: request)
-            return Double(result)
-        } catch {
-            throw error
-        }
-        
     }
     
 }

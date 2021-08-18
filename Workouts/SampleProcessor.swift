@@ -12,8 +12,6 @@ import HealthKit
 class SampleProcessor {
     let workout: HKWorkout
     let locations: [CLLocation]
-    let heartRateSamples: [Quantity]
-    let cadenceSamples: [Quantity]
     
     private(set) var sampleMaxSpeed: Double = 0
     private(set) var avgMovingSpeed: Double = 0
@@ -26,8 +24,6 @@ class SampleProcessor {
     init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity]) {
         self.workout = workout
         self.locations = locations.sorted(by: { $0.timestamp < $1.timestamp })
-        self.heartRateSamples = heartRateSamples
-        self.cadenceSamples = cadenceSamples
     }
     
     var start: Date {
@@ -36,10 +32,6 @@ class SampleProcessor {
     
     var end: Date {
         workout.endDate
-    }
-    
-    var validRecords: [Record] {
-        records.filter({ $0.isPresent })
     }
     
 }
@@ -203,8 +195,6 @@ extension SampleProcessor {
     
     private func processSamples() {
         processLocationSamples()
-        processHeartRateSamples()
-        processCadenceSamples()
         
         if locations.isPresent {
             movingTime = Double(records.filter({ $0.isActive }).count)
@@ -220,10 +210,7 @@ extension SampleProcessor {
     
     private func processLocationSamples() {
         guard isLocationSupported else { return }
-        
-        Log.debug("LOCATION - id: \(workout.uuid)")
-        Log.debug("LOCATION - before: \(metersToMiles(for: locations.totalDistance))")
-        
+                
         for location in locations {
             let key = keyForTimestamp(location.timestamp)
             guard let record = dictionary[key] else { continue }
@@ -235,40 +222,6 @@ extension SampleProcessor {
             record.altitude = location.altitude
             
             sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
-        }
-        
-        let recordLocations = records.compactMap({ $0.isLocation ? CLLocation(latitude: $0.latitude, longitude: $0.longitude) : nil })
-        Log.debug("LOCATION - after: \(metersToMiles(for: recordLocations.totalDistance))")
-    }
-    
-    private func processHeartRateSamples() {
-        guard heartRateSamples.isPresent else { return }
-        
-        for sample in heartRateSamples {
-            let key = keyForTimestamp(sample.timestamp)
-            guard let record = dictionary[key] else { continue }
-            record.heartRate = max(record.heartRate, sample.value)
-        }
-        
-        // padding
-        
-        var heartRate: Double = 0
-        for record in records {
-            if record.heartRate == 0 && heartRate > 0 {
-                record.heartRate = heartRate
-            }
-            heartRate = record.heartRate
-        }
-    }
-    
-    private func processCadenceSamples() {
-        guard workout.workoutActivityType.isCycling && cadenceSamples.isPresent else { return }
-        
-        for sample in cadenceSamples {
-            let key = keyForTimestamp(sample.timestamp)
-            guard let record = dictionary[key] else { continue }
-            
-            record.cyclingCadence = max(record.cyclingCadence, sample.value)
         }
     }
     
@@ -284,29 +237,9 @@ extension SampleProcessor {
         var longitude: Double = 0
         var speed: Double = 0
         var altitude: Double = 0
-        var heartRate: Double = 0
-        var cyclingCadence: Double = 0
-        var temperature: Double = 0
         
         init(timestamp: Date) {
             self.timestamp = timestamp
-        }
-        
-        var isEmpty: Bool {
-            if isLocation { return false }
-            
-            let sum = [
-                speed,
-                altitude,
-                heartRate,
-                cyclingCadence,
-                temperature
-            ].reduce(0, +)
-            return sum == 0
-        }
-        
-        var isPresent: Bool {
-            !isEmpty
         }
     }
     

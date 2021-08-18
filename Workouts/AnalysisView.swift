@@ -31,7 +31,7 @@ struct AnalysisView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: Color.clear.frame(width: 0, height: 20.0)) {
+                Section {
                     rowForText("Total Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.duration), detailColor: .time)
                     
                     if workout.shouldUseMovingTime {
@@ -45,10 +45,11 @@ struct AnalysisView: View {
                     }
                 }
                 
-                if workout.sport.isSpeedSport && workout.showMap && workout.avgSpeed > 0 {
+                if workout.sport.isSpeedSport && workout.avgSpeed > 0 {
                     Section(header: Text("Speed")) {
                         if detailManager.speedValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .speed,
                                 supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
                                 supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
                                 values: detailManager.speedValues, avgValue: localizedAvgSpeed,
@@ -76,7 +77,8 @@ struct AnalysisView: View {
                 if workout.avgHeartRate > 0 {
                     Section(header: Text("Heart Rate")) {
                         if detailManager.heartRateValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .heartRate,
                                 supportLabel1: "Average", supportValue1: formattedHeartRateString(for: workout.avgHeartRate),
                                 supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: workout.maxHeartRate),
                                 values: detailManager.heartRateValues, avgValue: workout.avgHeartRate,
@@ -103,7 +105,8 @@ struct AnalysisView: View {
                 if workout.sport.isCycling && workout.avgCyclingCadence > 0 {
                     Section(header: Text("Cadence")) {
                         if detailManager.cyclingCadenceValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .cadence,
                                 supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
                                 supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
                                 values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
@@ -119,10 +122,11 @@ struct AnalysisView: View {
                     }
                 }
 
-                if (workout.showMap && detailManager.altitudeValues.isPresent) || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
+                if detailManager.altitudeValues.isPresent || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
                     Section(header: Text("Elevation")) {
                         if detailManager.altitudeValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .altitude,
                                 supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
                                 supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
                                 values: detailManager.altitudeValues, avgValue: nil,
@@ -164,8 +168,10 @@ struct AnalysisView: View {
 extension AnalysisView {
     
     func saveZones(heartRate: Int, values: [Int]) {
-        detailManager.updateZones(maxHeartRate: heartRate, values: values)
-        activeSheet = nil
+        Task(priority: .userInitiated) {
+            await detailManager.updateZones(maxHeartRate: heartRate, values: values)
+            activeSheet = nil
+        }
     }
     
     func zonesHeader() -> some View {
@@ -177,7 +183,7 @@ extension AnalysisView {
         }
     }
     
-    func chart(supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    func chartArea(valueType: ChartInterval.ValueType, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
         VStack(alignment: .leading) {
             if supportValue1.isPresent || supportValue2.isPresent {
                 HStack {
@@ -208,13 +214,25 @@ extension AnalysisView {
                 .padding()
             }
             
-            lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
+            chart(
+                valueType: valueType,
+                values: values,
+                avg: avgValue,
+                color: accentColor,
+                yAxisFormatter: yAxisFormatter
+            )
         }
     }
 
-    func lineChart(values: [ChartInterval], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
-        LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
-            .frame(maxWidth: .infinity, minHeight: 200.0)
+    @ViewBuilder
+    func chart(valueType: ChartInterval.ValueType, values: [ChartInterval], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+        if valueType == .cadence {
+            ScatterChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
+                .frame(maxWidth: .infinity, minHeight: 200.0)
+        } else {
+            LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
+                .frame(maxWidth: .infinity, minHeight: 200.0)
+        }
     }
     
     func rowForText(_ text: String, detail: String, detailColor: Color = .secondary) -> some View {

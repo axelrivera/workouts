@@ -11,7 +11,7 @@ import CoreData
 extension HomeView {
     
     enum ActiveSheet: Identifiable {
-        case log, settings, add
+        case settings, add
         var id: Int { hashValue }
     }
     
@@ -28,15 +28,37 @@ struct HomeView: View {
     
     @State private var sport: Sport?
     @State private var activeSheet: ActiveSheet?
+    @State private var selectedTab = 1
     
     init() {
         _workouts = DataProvider.fetchRequest(sport: nil, interval: DateInterval.lastTwoWeeks())
     }
     
+    func header(text: String) -> some View {
+        Text(text)
+            .font(.headline)
+            .foregroundColor(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding([.top, .bottom])
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+    }
+    
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack {
+            List {
+                Section(header: header(text: "My Workouts")) {
+                    NavigationLink(destination: workoutsDestination()) {
+                        Label("All Workouts", systemImage: "flame")
+                    }
+                    
+                    Button(action: { activeSheet = .add }) {
+                        Label("Import Workouts", systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(isAddDisabled)
+                }
+                .textCase(nil)
+                
+                Section(header: header(text: "Activity")) {
                     VStack(alignment: .leading) {
                         Picker("Display", selection: $logManager.displayType.animation()) {
                             ForEach(LogDisplayType.allCases, id: \.self) { dataType in
@@ -44,107 +66,79 @@ struct HomeView: View {
                             }
                         }
                         .pickerStyle(SegmentedPickerStyle())
-                        .padding(.bottom)
                         
-                        Text("Current Week")
-                            .font(.title)
-                            .padding(.bottom, 2.0)
-                        HStack(alignment: .lastTextBaseline, spacing: 10.0) {
-                            Text(logManager.currentIntervalDateLabel)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(logManager.currentIntervalDisplayLabel)
-                                .animation(.none)
-                                .foregroundColor(logManager.displayType.color)
-                        }
-                                            
-                        WorkoutLogIntervalStack(
-                            displayType: $logManager.displayType,
-                            interval: logManager.currentInterval
-                        )
-                        .onAppear { logManager.reloadCurrentInterval() }
-                    }
-                    
-                    NavigationLink(destination: WorkoutLogView()
-                                    .environmentObject(logManager)
-                                    .environmentObject(purchaseManager)) {
-                        HStack {
-                            Label("Workout Log", systemImage: "calendar")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .buttonStyle(WorkoutButtonStyle())
-                    .padding(.top)
-                    
-                }
-                .padding()
-                
-                VStack(spacing: 5.0) {
-                    HStack {
-                        Text("Recent Workouts")
-                            .font(.title)
-                            .foregroundColor(.primary)
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Spacer()
-                        
-                        if workouts.isPresent {
-                            NavigationLink("See All", destination: workoutsDestination())
-                        }
-                    }
-                    .padding([.leading, .trailing])
-                    .padding(.bottom, 10.0)
-                    
-                    if workouts.isEmpty {
-                        NavigationLink(destination: workoutsDestination()) {
-                            HStack(alignment: .center, spacing: 10.0) {
-                                Image(systemName: "flame")
-                                    .font(.title2)
-                                    .foregroundColor(.primary)
-                                
-                                VStack(alignment: .leading) {
-                                    Text("No Recent Workouts")
-                                        .font(.title3)
-                                    Text("See All Workouts")
-                                        .font(.subheadline)
+                        VStack {
+                            VStack(alignment: .leading) {
+                                HStack(alignment: .lastTextBaseline, spacing: 10.0) {
+                                    Text("Current Week")
+                                        .font(.fixedBody)
                                         .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(logManager.currentIntervalDisplayLabel)
+                                        .animation(.none)
+                                        .font(.fixedBody)
+                                        .foregroundColor(logManager.displayType.color)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.secondary)
+                                                    
+                                WorkoutLogIntervalStack(
+                                    displayType: $logManager.displayType,
+                                    interval: logManager.currentInterval
+                                )
+                            }
+                            
+                            Divider()
+                            
+                            VStack(alignment: .leading) {
+                                HStack(alignment: .lastTextBaseline, spacing: 10.0) {
+                                    Text("Last Week")
+                                        .font(.fixedBody)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(logManager.prevIntervalDisplayLabel)
+                                        .animation(.none)
+                                        .font(.fixedBody)
+                                        .foregroundColor(logManager.displayType.color)
+                                }
+                                                    
+                                WorkoutLogIntervalStack(
+                                    displayType: $logManager.displayType,
+                                    interval: logManager.prevInterval
+                                )
                             }
                         }
-                        .buttonStyle(WorkoutButtonStyle())
-                        .padding([.leading, .trailing])
+                        .padding([.top, .bottom], 5.0)
+                        .onAppear { logManager.reloadCurrentInterval() }
+                    }
+                    .padding([.top], 10.0)
+                    
+                    NavigationLink(destination: logDestination()) {
+                        Label("Workout Log", systemImage: "calendar")
+                    }
+                }
+                .textCase(nil)
+                
+                Section(header: header(text: "Recent")) {
+                    if workouts.isEmpty {
+                        Text("You haven't completed any workouts in the past two weeks.")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding([.top, .bottom], 20.0)
                     } else {
                         ForEach(workouts) { workout in
                             NavigationLink(destination: DetailView(identifier: workout.remoteIdentifier!)) {
-                                HStack {
-                                    WorkoutCell(workout: workout)
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.secondary)
-                                }
+                                HomeMapCell(workout: workout.workoutData())
                             }
-                            .buttonStyle(WorkoutButtonStyle())
                         }
-                        .padding([.leading, .trailing])
+                        .padding([.top, .bottom], 5.0)
                     }
                 }
-                .padding(.bottom)
+                .textCase(nil)
             }
-            .workoutStateOverlay()
+            .listStyle(InsetGroupedListStyle())
             .navigationBarTitle("Home")
             .navigationViewStyle(StackNavigationViewStyle())
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { activeSheet = .add }) {
-                       Image(systemName: "plus")
-                    }
-                    .disabled(isAddDisabled)
-                }
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { activeSheet = .settings }) {
                        Image(systemName: "gearshape")
@@ -153,10 +147,6 @@ struct HomeView: View {
             }
             .fullScreenCover(item: $activeSheet) { item in
                 switch item {
-                case .log:
-                    WorkoutLogView()
-                        .environmentObject(logManager)
-                        .environmentObject(purchaseManager)
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
@@ -178,6 +168,12 @@ extension HomeView {
         !workoutManager.isDataAvailable || workoutManager.isLoading
     }
     
+    func logDestination() -> some View {
+        WorkoutLogView()
+            .environmentObject(logManager)
+            .environmentObject(purchaseManager)
+    }
+    
     func workoutsDestination() -> some View {
         WorkoutsView(sport: $sport, interval: nil, showFilter: true)
             .navigationBarTitle("Workouts")
@@ -196,8 +192,8 @@ struct HomeView_Previews: PreviewProvider {
     
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManager(context: viewContext)
-        manager.state = .notAvailable
-        
+        manager.state = .ok
+        manager.isLoading = false
         return manager
     }()
     

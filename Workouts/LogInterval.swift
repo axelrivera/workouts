@@ -66,9 +66,23 @@ extension LogInterval {
         return LogInterval(days: days)
     }
     
+    static func previousInterval() -> LogInterval {
+        let interval = previousWeekDateInterval()
+        let dates = Date.dates(from: interval.start, to: interval.end)
+        let days = dates.map { LogDay(date: $0, activities: []) }
+        return LogInterval(days: days)
+    }
+    
     static func currentDateInterval() -> DateInterval {
         let now = Date()
         return DateInterval(start: now.workoutWeekStart, end: now.workoutWeekEnd)
+    }
+    
+    static func previousWeekDateInterval() -> DateInterval {
+        let now = Date()
+        let start = now.workoutWeekStart.addingTimeInterval(-1).workoutWeekStart
+        let end = start.workoutWeekEnd
+        return DateInterval(start: start, end: end)
     }
     
 }

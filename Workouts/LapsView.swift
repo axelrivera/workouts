@@ -20,33 +20,33 @@ struct LapsView: View {
                     Text(selectedLapTitle)
                         .font(.largeTitle)
                         .foregroundColor(.secondary)
-                    
+
                     HStack {
                         detailView(text: "Distance", detail: selectedDistance, detailColor: .distance)
                         detailView(text: detailManager.workout.totalTimeLabel, detail: selectedTime, detailColor: .time)
                     }
-                    
+
                     HStack {
                         if detailManager.sport.isCycling {
                             detailView(text: "Avg Speed", detail: selectedAvgSpeed, detailColor: .speed)
                         } else if detailManager.sport.isWalkingOrRunning {
                             detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .cadence)
                         }
-                        
+
                         if detailManager.sport.isCycling {
                             detailView(text: "Avg Cadence", detail: selectedAvgCadence, detailColor: .cadence)
                         }
                     }
-                    
+
                     HStack {
                         detailView(text: "Avg Heart Rate", detail: selectedAvgHeartRate, detailColor: .calories)
                         detailView(text: "Max Heart Rate", detail: selectedMaxHeartRate, detailColor: .calories)
                     }
-                    
+
                 }
                 .padding()
                 .background(Color.secondarySystemBackground)
-                
+
                 Divider()
                 
                 List {
@@ -55,18 +55,18 @@ struct LapsView: View {
                             HStack {
                                 Image(systemName: selectedLap == lap ? "checkmark.circle" : "circle")
                                     .foregroundColor(.accentColor)
-                                
+
                                 Text("\(lap.lapNumber)")
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                
+
                                 Text(formattedHoursMinutesSecondsDurationString(for: lap.duration))
                                     .foregroundColor(.time)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
-                                
+
                                 Text(formattedLapDistanceString(for: lap.distance))
                                     .foregroundColor(.distance)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
-                                
+
                                 if detailManager.sport.isWalkingOrRunning {
                                     Text(formattedRunningWalkingPaceString(for: lap.avgPace))
                                         .foregroundColor(.cadence)
@@ -83,6 +83,8 @@ struct LapsView: View {
                 }
                 .listStyle(PlainListStyle())
             }
+            .paywallOverlay()
+            .onAppear { detailManager.reloadLapsIfNeeded() }
             .navigationBarTitle("Laps")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

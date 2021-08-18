@@ -59,3 +59,7 @@ func metersToMiles(for meters: Double) -> Double {
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     return measurement.converted(to: .miles).value
 }
+
+func hoursToSeconds(for duration: Double) -> Double {
+    trunc(duration * 3600.0)
+}

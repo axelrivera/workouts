@@ -9,14 +9,14 @@ import SwiftUI
 import MapKit
 
 struct WorkoutMap: UIViewRepresentable {
-    @Binding var points: [CLLocationCoordinate2D]
+    var points: [CLLocationCoordinate2D]
 }
 
 extension WorkoutMap {
     
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView(frame: .zero)
-        mapView.layoutMargins = UIEdgeInsets(top: 5.0, left: 5.0, bottom: 5.0, right: 5.0)
+        mapView.layoutMargins = UIEdgeInsets(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
         mapView.isZoomEnabled = false
         mapView.isScrollEnabled = false
         mapView.isUserInteractionEnabled = false
@@ -36,13 +36,7 @@ extension WorkoutMap {
             view.removeAnnotations(view.annotations)
         }
         
-        var zoomRect = MKMapRect.null
-        for coordinate in points {
-            let mapPoint = MKMapPoint(coordinate)
-            let pointRect = MKMapRect(x: mapPoint.x, y: mapPoint.y, width: 0.1, height: 0.1)
-            zoomRect = zoomRect.union(pointRect)
-        }
-        
+        let zoomRect = MKMapRect.rectForCoordinates(points)
         let mapFrame = view.mapRectThatFits(zoomRect, edgePadding: .zero)
         view.setVisibleMapRect(mapFrame, animated: false)
                         
@@ -84,9 +78,9 @@ extension WorkoutMap {
 }
 
 struct WorkoutMap_Previews: PreviewProvider {
-    @State static var points = [CLLocationCoordinate2D]()
+    static var points = [CLLocationCoordinate2D]()
     
     static var previews: some View {
-        WorkoutMap(points: $points)
+        WorkoutMap(points: points)
     }
 }

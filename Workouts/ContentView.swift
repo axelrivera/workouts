@@ -19,6 +19,7 @@ struct ContentView: View {
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
     @State private var selected = Tabs.home
+    @State private var imageCache = MapImageCache.getImageCache()
     
     var body: some View {
         TabView(selection: $selected) {

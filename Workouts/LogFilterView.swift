@@ -20,7 +20,7 @@ struct LogFilterView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Color.clear.frame(height: 20)) {
+                Section {
                     Picker("Date", selection: $dateFilter.animation()) {
                         ForEach(DateFilter.allCases, id: \.self) { filter in
                             Text(filter.title)

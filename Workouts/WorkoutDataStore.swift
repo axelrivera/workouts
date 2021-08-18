@@ -30,7 +30,6 @@ struct WorkoutDataStore {
 
 extension WorkoutDataStore {
     
-    
     func dataError(_ error: DataError, system: Error?) -> DataError {
         if let systemError = system {
             return .system(systemError)
@@ -238,10 +237,10 @@ extension WorkoutDataStore {
             }
             
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
-            let values: [Pace] = sortedStatistics.compactMap { (statistics) in
+            let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.sumQuantity(for: source) else { return nil }
                 let distance = quantity.doubleValue(for: .meter())
-                return Pace(start: statistics.startDate, end: statistics.endDate, distance: distance)
+                return Quantity(start: statistics.startDate, end: statistics.endDate, value: distance)
             }
             completionHandler(.success(values))
         }
@@ -466,6 +465,13 @@ extension WorkoutDataStore {
         dictionary[HKMetadataKeyElevationAscended] = file.totalAscentQuantity
         dictionary[HKMetadataKeyElevationDescended] = file.totalDescentQuantity
         dictionary[HKMetadataKeyAverageMETs] = file.avgMETQuantity
+        dictionary[MetadataKeyMaxTemperature] = file.maxTemperatureValue
+        dictionary[MetadataKeyMovingTime] = file.totalTimerTimeValue
+        dictionary[MetadataKeyAvgHeartRate] = file.avgHeartRateValue
+        dictionary[MetadataKeyMinHeartRate] = file.minHeartRateValue
+        dictionary[MetadataKeyMaxHeartRate] = file.maxHeartRateValue
+        dictionary[MetadataKeyMinAltitude] = file.minAltitudeValue
+        dictionary[MetadataKeyMaxAltitude] = file.maxAltitudeValue
         
         if file.sport == .cycling {
             dictionary[MetadataKeyAvgCyclingCadence] = file.totalAvgCadenceValue

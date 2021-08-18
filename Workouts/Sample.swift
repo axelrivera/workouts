@@ -6,6 +6,7 @@
 //
 
 import CoreData
+import CoreLocation
 
 extension Sample: Identifiable {}
 
@@ -117,17 +118,17 @@ extension Sample {
     @discardableResult
     static func insert(into moc: NSManagedObjectContext, remoteSample: SampleProcessor.Record, workout: Workout) -> Sample {
         let sample = Sample(context: moc)
-        sample.isActive = remoteSample.isActive
-        sample.isLocation = remoteSample.isLocation
-        sample.timestamp = remoteSample.timestamp
-        sample.latitude = remoteSample.latitude as NSNumber
-        sample.longitude = remoteSample.longitude as NSNumber
-        sample.speed = remoteSample.speed
-        sample.altitude = remoteSample.altitude
-        sample.heartRate = remoteSample.heartRate
-        sample.cyclingCadence = remoteSample.cyclingCadence
-        sample.temperature = remoteSample.temperature
-        sample.workout = workout
+//        sample.isActive = remoteSample.isActive
+//        sample.isLocation = remoteSample.isLocation
+//        sample.timestamp = remoteSample.timestamp
+//        sample.latitude = remoteSample.latitude as NSNumber
+//        sample.longitude = remoteSample.longitude as NSNumber
+//        sample.speed = remoteSample.speed
+//        sample.altitude = remoteSample.altitude
+//        sample.heartRate = remoteSample.heartRate
+//        sample.cyclingCadence = remoteSample.cyclingCadence
+//        sample.temperature = remoteSample.temperature
+//        sample.workout = workout
         
         return sample
     }

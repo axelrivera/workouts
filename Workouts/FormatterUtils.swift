@@ -47,14 +47,32 @@ func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     }
 }
 
-func formattedRelativeDateString(for date: Date?) -> String {
+func formattedRelativeDateString(for date: Date?, shortDay: Bool = false, showTime: Bool = false) -> String {
     guard let date = date else { return "n/a" }
+    
+    var dateString: String
+    var isCurrentDay = false
     if Calendar.current.isDateInToday(date) {
-        return DateFormatter.time.string(from: date)
+        isCurrentDay = true
+        dateString = DateFormatter.time.string(from: date)
     } else if date.isWithinNumberOfDays(6) {
-        return DateFormatter.relative.string(from: date)
+        dateString = DateFormatter.relative.string(from: date)
     } else {
-        return DateFormatter.medium.string(from: date)
+        if shortDay {
+            dateString = DateFormatter.shortDayShortMonthFormatter.string(from: date)
+        } else {
+            dateString = DateFormatter.longDayShortMonthFormatter.string(from: date)
+        }
+    }
+    
+    if showTime {
+        if isCurrentDay {
+            return String(format: "Today at %@", dateString)
+        } else {
+            return String(format: "%@ at %@", dateString, DateFormatter.time.string(from: date))
+        }
+    } else {
+        return dateString
     }
 }
 
@@ -97,7 +115,7 @@ func formattedMonthYearString(for date: Date?) -> String {
 
 func formattedFullDateString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
-    return DateFormatter.dayShortMonthFormatter.string(from: date)
+    return DateFormatter.longDayShortMonthFormatter.string(from: date)
 }
 
 func formattedTimeRangeString(start: Date?, end: Date?) -> String {
@@ -144,7 +162,7 @@ func formattedLapDistanceString(for meters: Double?) -> String {
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
-    guard let speed = metersPerSecond, speed > 0 else { return "" }
+    let speed = metersPerSecond ?? 0
     let measurement = Measurement<UnitSpeed>(value: speed, unit: .metersPerSecond)
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometersPerHour : .milesPerHour)
     return MeasurementFormatter.speed.string(from: conversion)
@@ -163,7 +181,7 @@ func formattedRunningWalkingPaceUnitString() -> String {
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
-    guard let duration = duration, duration > 0 else { return "" }
+    let duration = duration ?? 0
     let pace = formattedPaceString(for: duration)
     return String(format: "%@ %@", pace, formattedRunningWalkingPaceUnitString())
 }
@@ -253,16 +271,34 @@ func formattedActivityTypeString(for activityType: Sport, indoor: Bool) -> Strin
 
 extension DateFormatter {
     
-    static let dayShortMonthFormat: String? = {
+    static let longDayShortMonthFormat: String? = {
         let template = "EEEEMMMdyyyy"
         let locale = Locale.current
         return DateFormatter.dateFormat(fromTemplate: template, options: 0, locale: locale)
     }()
     
-    static let dayShortMonthFormatter: DateFormatter = {
+    static let shortDayShortMonthFormat: String? = {
+        let template = "EEEMMMdyyyy"
+        let locale = Locale.current
+        return DateFormatter.dateFormat(fromTemplate: template, options: 0, locale: locale)
+    }()
+    
+    static let longDayShortMonthFormatter: DateFormatter = {
         let formatter = DateFormatter()
         
-        if let format = dayShortMonthFormat {
+        if let format = longDayShortMonthFormat {
+            formatter.dateFormat = format
+        } else {
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+        }
+        return formatter
+    }()
+    
+    static let shortDayShortMonthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        
+        if let format = shortDayShortMonthFormat {
             formatter.dateFormat = format
         } else {
             formatter.dateStyle = .short

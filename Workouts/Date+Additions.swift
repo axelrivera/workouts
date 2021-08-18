@@ -182,7 +182,8 @@ extension DateInterval {
     }
     
     static func lastTwoWeeks() -> DateInterval? {
-        let start = Calendar.current.date(byAdding: .day, value: -14, to: Date())!.startOfDay
+        let now = Date()
+        let start = now.workoutWeekStart.addingTimeInterval(-1).workoutWeekStart
         return DateInterval(start: start, end: Date())
     }
     

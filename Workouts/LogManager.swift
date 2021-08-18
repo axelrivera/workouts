@@ -68,6 +68,7 @@ class LogManager: ObservableObject {
     // Data
     @Published var intervals = [LogInterval]()
     @Published var currentInterval = LogInterval.currentInterval()
+    @Published var prevInterval = LogInterval.previousInterval()
     
     private var refreshCancellable: Cancellable?
     
@@ -84,9 +85,8 @@ class LogManager: ObservableObject {
 
 extension LogManager {
     
-    func reloadCurrentInterval() {
-        let interval = LogInterval.currentDateInterval()
-        let dates = Date.dates(from: interval.start, to: interval.end)
+    private func logInterval(for dateInterval: DateInterval) -> LogInterval {
+        let dates = Date.dates(from: dateInterval.start, to: dateInterval.end)
         
         var dictionary = [String: LogDay]()
         let days: [LogDay] = dates.map { date -> LogDay in
@@ -95,7 +95,7 @@ extension LogManager {
             return day
         }
         
-        let request = Self.fetchRequest(for: Sport.supportedSports, interval: interval, ascending: false)
+        let request = Self.fetchRequest(for: Sport.supportedSports, interval: dateInterval, ascending: false)
         let workouts = (try? context.fetch(request)) ?? [Workout]()
         
         for workout in workouts {
@@ -105,11 +105,24 @@ extension LogManager {
             }
         }
         
-        let currentInterval = LogInterval(days: days)
+        return LogInterval(days: days)
+    }
+    
+    func reloadCurrentInterval() {
+        // Current Interval
+        
+        let currentDateInterval = LogInterval.currentDateInterval()
+        let currentInterval = logInterval(for: currentDateInterval)
+        
+        let prevDateInterval = LogInterval.previousWeekDateInterval()
+        let prevInterval = logInterval(for: prevDateInterval)
+        
+        // Setup Variables
         
         DispatchQueue.main.async {
             withAnimation(.none) {
                 self.currentInterval = currentInterval
+                self.prevInterval = prevInterval
             }
         }
     }
@@ -244,6 +257,23 @@ extension LogManager {
             return formattedDistanceString(for: currentInterval.distance, zeroPadding: true)
         case .time:
             return formattedHoursMinutesPrettyString(for: currentInterval.duration)
+        }
+    }
+    
+    var prevIntervalDateLabel: String {
+        let start = prevInterval.start ?? Date().workoutWeekStart
+        let end = prevInterval.end ?? Date().workoutWeekEnd
+        
+        let formatter = DateFormatter.monthDay
+        return String(format: "%@ - %@", formatter.string(from: start), formatter.string(from: end))
+    }
+    
+    var prevIntervalDisplayLabel: String {
+        switch displayType {
+        case .distance:
+            return formattedDistanceString(for: prevInterval.distance, zeroPadding: true)
+        case .time:
+            return formattedHoursMinutesPrettyString(for: prevInterval.duration)
         }
     }
     

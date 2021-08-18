@@ -6,12 +6,24 @@
 //
 
 import SwiftUI
+import HealthKit
 
 let BWAppleHealthIdentifier = "com.apple.health"
 
 let MetadataKeyAvgCyclingCadence = "BWAvgCyclingCadence"
 let MetadataKeyMaxCyclingCadence = "BWMaxCyclingCadence"
 let MetadataKeyAvgMET = "BWAvgMETValue"
+
+// Added 8/15/2021
+let MetadataKeyMaxTemperature = "BWMaxTemperature"
+let MetadataKeyMovingTime = "BWMovingTime"
+let MetadataKeyMinAltitude = "BWMinAltitude"
+let MetadataKeyMaxAltitude = "BWMaxAltitude"
+let MetadataKeyAvgHeartRate = "BWAvgHeartRate"
+let MetadataKeyMinHeartRate = "BWMinHeartRate"
+let MetadataKeyMaxHeartRate = "BWMaxHeartRate"
+let MetadataKeyStartLatitude = "BWStartLatitude"
+let MetadataKeyStartLongitude = "BWStartLongitude"
 
 // MARK: - Sample Metadata
 
@@ -22,6 +34,10 @@ struct Constants {
     static let defaultChartSampleInSeconds = 10
     static let defaultWeight: Double = 81.6466 // Use default weight of 180 lbs (81.6466 Kg)
     static let cornerRadius: CGFloat = 12.0
+}
+
+struct WorkoutConstants {
+    static let availableActivityTypes: [HKWorkoutActivityType] = [.cycling, .running, .walking]
 }
 
 struct URLStrings {

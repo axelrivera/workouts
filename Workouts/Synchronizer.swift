@@ -37,15 +37,20 @@ class Synchronizer {
             return
         }
         
-        guard isAuthorizedToFetchWorkouts else {
-            Log.debug("ignore remote data fetch - not authorized yet")
-            return
-        }
+        // FIXME: Re-enable this when done
+        
+//        guard isAuthorizedToFetchWorkouts else {
+//            Log.debug("ignore remote data fetch - not authorized yet")
+//            return
+//        }
         
         Log.debug("fetching remote data")
         context.performAndWait {
             self.isFetchingWorkouts = true
-            self.importer.importLatestWorkouts(anchor: anchor, regenerate: self.regenerate) { [unowned self] newAnchor in
+            
+            Task {
+                let newAnchor = await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
+                
                 self.anchor = newAnchor
                 self.isFetchingWorkouts = false
                 self.regenerate = false

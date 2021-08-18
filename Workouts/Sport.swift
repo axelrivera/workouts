@@ -47,6 +47,24 @@ enum Sport: String, Identifiable, CaseIterable {
         self.rawValue.capitalized
     }
     
+    var normalizedDistanceValue: Double {
+        switch self {
+        case .cycling:
+            return 3
+        default:
+            return 3
+        }
+    }
+    
+    var defaultDistanceValue: Double {
+        switch self {
+        case .cycling:
+            return 100
+        default:
+            return 3
+        }
+    }
+    
     var color: Color {
         switch self {
         case .cycling: return .cycling

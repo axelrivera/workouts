@@ -8,6 +8,7 @@
 import CoreData
 import HealthKit
 import Polyline
+import CoreLocation
 
 private let MarkedForDeletionDateKey = "markedForDeletionDate"
 private let SportKey = "sportValue"
@@ -47,14 +48,17 @@ class Workout: NSManagedObject {
     @NSManaged var avgCyclingCadence: Double
     @NSManaged var maxCyclingCadence: Double
     @NSManaged var avgPace: Double
+    @NSManaged var avgMovingPace: Double
     @NSManaged var elevationAscended: Double
     @NSManaged var elevationDescended: Double
+    @NSManaged var maxElevation: Double
+    @NSManaged var minElevation: Double
     @NSManaged var source: String
     @NSManaged var device: String?
     @NSManaged var appIdentifier: String?
-    @NSManaged var showMap: Bool
-    @NSManaged var locationCity: String?
-    @NSManaged var locationState: String?
+    @NSManaged var showMap: Bool // deprecated
+    @NSManaged var locationCity: String? // deprecated
+    @NSManaged var locationState: String? // deprecated
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
     @NSManaged fileprivate(set) var coordinatesValue: String
@@ -80,9 +84,6 @@ class Workout: NSManagedObject {
         set { sportValue = newValue.rawValue }
     }
     
-    @nonobjc
-    var outdoor: Bool { !indoor }
-    
     override func awakeFromInsert() {
         super.awakeFromInsert()
         setPrimitiveValue(Date(), forKey: CreatedAtKey)
@@ -93,15 +94,20 @@ class Workout: NSManagedObject {
         super.willSave()
         setPrimitiveValue(Date(), forKey: UpdatedAtKey)
     }
-    
-    @nonobjc var coordinates: [CLLocationCoordinate2D] {
-        let polyline = Polyline(encodedPolyline: coordinatesValue)
-        return polyline.coordinates ?? []
-    }
-    
+        
 }
 
 extension Workout {
+    var workoutIdentifier: UUID {
+        remoteIdentifier!
+    }
+    
+    var outdoor: Bool { !indoor }
+    
+    var coordinates: [CLLocationCoordinate2D] {
+        let polyline = Polyline(encodedPolyline: coordinatesValue)
+        return polyline.coordinates ?? []
+    }
     
     var shouldUseMovingTime: Bool {
         movingTime < duration
@@ -274,39 +280,21 @@ extension Workout {
 }
 
 extension Workout {
+    typealias WorkoutObject = WorkoutProcessor.Object
     
     @discardableResult
-    static func insert(into context: NSManagedObjectContext, remoteWorkout: HKWorkout, regenerate: Bool) -> Workout {
-        if let workout = find(using: remoteWorkout.uuid, in: context) {
-            Log.debug("found existing workout: \(remoteWorkout.uuid)")
-            if regenerate {
-                Log.debug("regenerating samples for workout: \(remoteWorkout.uuid)")
-                workout.resetSamples()
-                updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
-            }
-            return workout
-        } else {
-            Log.debug("inserting workout: \(remoteWorkout.uuid)")
-            let workout = Workout(context: context)
-            updateValues(for: workout, remoteWorkout: remoteWorkout, in: context)
-            return workout
-        }
+    static func insert(into context: NSManagedObjectContext, object: WorkoutObject, regenerate: Bool) -> Workout {
+        let workout = Workout(context: context)
+        updateValues(for: workout, object: object, in: context)
+        return workout
     }
     
-    private static func updateValues(for workout: Workout, remoteWorkout: HKWorkout, in context: NSManagedObjectContext) {
-        let object = WorkoutProcessor.object(for: remoteWorkout)
-        let coordinates = object.records
-            .sorted(by: {$0.timestamp < $1.timestamp})
-            .compactMap({ $0.isLocation ? CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) : nil })
-        
-        let polylineString = Polyline(coordinates: coordinates).encodedPolyline
-        Log.debug("encoded polyline: \(polylineString.utf8.count)")
-        
-        workout.remoteIdentifier = remoteWorkout.uuid
-        workout.sport = remoteWorkout.workoutActivityType.sport()
-        workout.indoor = remoteWorkout.isIndoor
-        workout.start = remoteWorkout.startDate
-        workout.end = remoteWorkout.endDate
+    static func updateValues(for workout: Workout, object: WorkoutObject, in context: NSManagedObjectContext) {
+        workout.remoteIdentifier = object.identifier
+        workout.sport = object.sport
+        workout.indoor = object.indoor
+        workout.start = object.start
+        workout.end = object.end
         workout.duration = object.duration
         workout.movingTime = object.movingTime
         workout.avgMovingSpeed = object.avgMovingSpeed
@@ -314,30 +302,24 @@ extension Workout {
         workout.avgHeartRate = object.avgHeartRate
         workout.maxHeartRate = object.maxHeartRate
         workout.avgPace = object.avgPace
-        workout.energyBurned = remoteWorkout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
+        workout.avgMovingPace = object.avgMovingPace
+        workout.energyBurned = object.energyBurned
         workout.avgSpeed = object.avgSpeed
         workout.maxSpeed = object.maxSpeed
-        workout.avgCyclingCadence = remoteWorkout.avgCyclingCadence ?? 0
-        workout.maxCyclingCadence = remoteWorkout.maxCyclingCadence ?? 0
-        workout.elevationAscended = remoteWorkout.elevationAscended?.doubleValue(for: .meter()) ?? 0
-        workout.elevationDescended = remoteWorkout.elevationDescended?.doubleValue(for: .meter()) ?? 0
-        workout.source = remoteWorkout.sourceRevision.source.name
-        workout.device = remoteWorkout.device?.name
-        workout.showMap = object.showMap
-        workout.coordinatesValue = polylineString
+        workout.avgCyclingCadence = object.avgCyclingCadence
+        workout.maxCyclingCadence = object.maxCyclingCadence
+        workout.elevationAscended = object.elevationAscended
+        workout.elevationDescended = object.elevationDescended
+        workout.minElevation = object.minElevation
+        workout.maxElevation = object.maxElevation
+        workout.source = object.source
+        workout.device = object.device
+        workout.coordinatesValue = object.coordinatesValue
         
         // Heart Rate Zones
         let zoneHeartRate = AppSettings.maxHeartRate
         let zoneValues = AppSettings.heartRateZones
         workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
-        
-//        var samples = Set<Sample>()
-//        for remoteSample in object.records {
-//            let sample = Sample.insert(into: context, remoteSample: remoteSample, workout: workout)
-//            samples.insert(sample)
-//        }
-        
-        //workout.samples = samples
     }
     
     func updateHeartRateZones(with maxHeartRate: Int, values: [Int]) {
@@ -352,16 +334,6 @@ extension Workout {
         zoneValue3 = value3
         zoneValue4 = value4
         zoneValue5 = value5
-    }
-    
-    func updateSamples(remoteWorkout: HKWorkout) {
-        guard let context = managedObjectContext else {
-            fatalError("missing context")
-        }
-        
-        resetSamples()
-        Self.updateValues(for: self, remoteWorkout: remoteWorkout, in: context)
-        updateRetries()
     }
     
     func resetSamples() {

@@ -53,32 +53,32 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], 5.0)
             
+            Button(action: { activeSheet = .map }) {
+                WorkoutMap(points: detailManager.points)
+            }
+            .buttonStyle(WorkoutMapButtonStyle())
+            .disabled(detailManager.isMapDisabled)
+            .overlay(mapOverlay())
+            
             HStack {
-                Button(action: { activeSheet = .map }) {
-                    WorkoutMap(points: $detailManager.points)
-                }
-                .buttonStyle(WorkoutMapButtonStyle())
-                .disabled(detailManager.isMapDisabled)
-                .overlay(mapOverlay())
-                
                 Button(action: { activeSheet = .analysis }) {
-                    VStack(alignment: .leading) {
-                        Image(systemName: "flame.fill")
-                        Spacer()
-                        Text("Workout Analysis")
-                            .bold()
-                    }
+                    Label("Analysis", systemImage: "flame")
+                        .padding([.top, .bottom], 10.0)
+                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(WorkoutAnalysisButtonStyle())
+                .buttonStyle(.bordered)
+                
+                Button(action: { activeSheet = .laps }) {
+                    Label("Laps", systemImage: "arrow.2.squarepath")
+                        .padding([.top, .bottom], 10.0)
+                        .frame(maxWidth: .infinity)
+                    
+                }
+                .buttonStyle(.bordered)
             }
             
             ForEach(RowType.allCases) { rowType in
                 viewForRow(rowType)
-            }
-            
-            Button(action: { activeSheet = .laps }) {
-                Label("Show Laps", systemImage: "arrow.2.squarepath")
-                    .foregroundColor(.accentColor)
             }
             
             if detailManager.showLaps {
