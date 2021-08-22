@@ -147,9 +147,12 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
     
     switch mode {
-    case .compact: return MeasurementFormatter.distanceCompact.string(from: conversion)
-    case .rounded: return MeasurementFormatter.roundedDistance.string(from: conversion)
-    default: return MeasurementFormatter.distance.string(from: conversion)
+    case .compact:
+        return MeasurementFormatter.distanceCompact.string(from: conversion)
+    case .rounded:
+        return MeasurementFormatter.roundedDistance.string(from: conversion)
+    default:
+        return MeasurementFormatter.distance.string(from: conversion)
     }
 }
 

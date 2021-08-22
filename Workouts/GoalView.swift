@@ -13,17 +13,23 @@ struct GoalView: View {
         
         var color: Color {
             switch self {
-            case .pending: return .secondary
-            case .progress: return .yellow
-            case .completed: return .green
+            case .pending:
+                return .secondary
+            case .progress:
+                return .yellow
+            case .completed:
+                return .green
             }
         }
         
         var image: String {
             switch self {
-            case .pending: return "circle"
-            case .progress: return "bolt.horizontal.circle"
-            case .completed: return "checkmark.circle"
+            case .pending:
+                return "circle"
+            case .progress:
+                return "bolt.horizontal.circle"
+            case .completed:
+                return "checkmark.circle"
             }
         }
     }

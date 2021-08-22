@@ -110,7 +110,7 @@ struct StatsView: View {
                         })
                         
                         Divider()
-                        
+                         
                         ForEach(Sport.supportedSports) { sport in
                             Button(action: {
                                 statsManager.sport = sport
@@ -132,11 +132,9 @@ struct StatsView: View {
 
 struct StatsView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static var purchaseManager = IAPManager.preview(isActive: true)
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
     static var workoutManager: WorkoutManager = {
-        let manager = WorkoutManager(context: viewContext)
-        manager.state = .notAvailable
-        manager.isLoading = false
+        let manager = WorkoutManagerPreview.manager(context: viewContext)
         return manager
     }()
     
@@ -159,14 +157,15 @@ struct StatsHeader: View {
     var body: some View {
         HStack {
             Text(text)
-                .font(.fixedTitle2)
-                .foregroundColor(.secondary)
+                .font(.headline)
+                .foregroundColor(.primary)
             Spacer()
             Text(detail)
                 .font(.body)
-                .foregroundColor(.primary)
+                .foregroundColor(.secondary)
         }
-        .padding(.all, 5)
+        .padding([.top, .bottom])
+        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
 }
 

@@ -97,7 +97,8 @@ struct AnalysisView: View {
                         Section(header: zonesHeader()) {
                             HRZonesView(summaries: purchaseManager.isActive ? detailManager.zones : HRZoneSummary.samples())
                                 .padding([.top, .bottom])
-                                .paywallOverlay()
+                                .paywallButtonOverlay()
+                                
                         }
                     }
                 }
@@ -249,7 +250,7 @@ extension AnalysisView {
 struct DetailAnalysisView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
-    static let purchaseManager = IAPManager.preview(isActive: true)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         AnalysisView()

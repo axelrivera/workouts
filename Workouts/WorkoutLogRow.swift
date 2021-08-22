@@ -87,6 +87,7 @@ struct WorkoutLogIntervalRow: View {
             }
             .frame(height: 80)
         }
+        .padding([.leading, .trailing])
     }
     
     func headerText(for interval: LogInterval) -> String {
@@ -188,8 +189,10 @@ extension WorkoutLogItem {
     
     var value: CGFloat {
         switch displayType {
-        case .distance: return CGFloat(day.distance)
-        case .time: return CGFloat(day.duration)
+        case .distance:
+            return CGFloat(day.distance)
+        case .time:
+            return CGFloat(day.duration)
         }
     }
     

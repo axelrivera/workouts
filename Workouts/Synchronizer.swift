@@ -23,43 +23,36 @@ class Synchronizer {
         addObservers()
     }
     
-    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) {
+    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) async {
         // reset anchor even if is fetching
         // request will be ignored but anchor will be respected on next fetch
         if resetAnchor {
             anchor = nil
         }
-        
+
         self.regenerate = regenerate
-        
+
         if isFetchingWorkouts {
             Log.debug("ignore remote data fetch - already fetching workouts")
             return
         }
+
+        guard isAuthorizedToFetchWorkouts else {
+            Log.debug("ignore remote data fetch - not authorized yet")
+            return
+        }
         
-        // FIXME: Re-enable this when done
+        Log.debug("importing workouts")
+        self.isFetchingWorkouts = true
+        let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
+
+        self.anchor = newAnchor
+        self.regenerate = false
+        self.isFetchingWorkouts = false
         
-//        guard isAuthorizedToFetchWorkouts else {
-//            Log.debug("ignore remote data fetch - not authorized yet")
-//            return
-//        }
-        
-        Log.debug("fetching remote data")
-        context.performAndWait {
-            self.isFetchingWorkouts = true
-            
-            Task {
-                let newAnchor = await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
-                
-                self.anchor = newAnchor
-                self.isFetchingWorkouts = false
-                self.regenerate = false
-                
-                DispatchQueue.main.async {
-                    Log.debug("LOG - send did refresh notification")
-                    NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
-                }
-            }
+        DispatchQueue.main.async {
+            Log.debug("LOG - send did refresh notification")
+            NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
         }
     }
     
@@ -76,16 +69,18 @@ extension Synchronizer {
         if let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool {
             isAuthorizedToFetchWorkouts = isAuthorized
         }
+
+        let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
         
-        var resetAnchor = notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
+        // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
         let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? false
         
-        if regenerate {
-            // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
-            resetAnchor = true
+        let _ = context.performAndWait {
+            Task {
+                Log.debug("fetching remote data")
+                await fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
+            }
         }
-        
-        fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
     }
     
     func addObservers() {

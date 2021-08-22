@@ -13,77 +13,80 @@ struct LapsView: View {
     
     @State var selectedLap: WorkoutLap?
     
+    func headerView() -> some View {
+        VStack(alignment: .leading, spacing: 10.0) {
+            Text(selectedLapTitle)
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+
+            HStack {
+                detailView(text: "Distance", detail: selectedDistance, detailColor: .distance)
+                detailView(text: detailManager.workout.totalTimeLabel, detail: selectedTime, detailColor: .time)
+            }
+
+            HStack {
+                if detailManager.sport.isCycling {
+                    detailView(text: "Avg Speed", detail: selectedAvgSpeed, detailColor: .speed)
+                } else if detailManager.sport.isWalkingOrRunning {
+                    detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .cadence)
+                }
+
+                if detailManager.sport.isCycling {
+                    detailView(text: "Avg Cadence", detail: selectedAvgCadence, detailColor: .cadence)
+                }
+            }
+
+            HStack {
+                detailView(text: "Avg Heart Rate", detail: selectedAvgHeartRate, detailColor: .calories)
+                detailView(text: "Max Heart Rate", detail: selectedMaxHeartRate, detailColor: .calories)
+            }
+
+        }
+        .padding()
+        .background(.bar)
+    }
+    
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: 10.0) {
-                    Text(selectedLapTitle)
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: headerView()) {
+                        ForEach(detailManager.laps, id: \.self) { lap in
+                            Button(action: { selectLap(lap) }) {
+                                HStack {
+                                    Image(systemName: selectedLap == lap ? "checkmark.circle" : "circle")
+                                        .foregroundColor(.accentColor)
 
-                    HStack {
-                        detailView(text: "Distance", detail: selectedDistance, detailColor: .distance)
-                        detailView(text: detailManager.workout.totalTimeLabel, detail: selectedTime, detailColor: .time)
-                    }
+                                    Text("\(lap.lapNumber)")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                    HStack {
-                        if detailManager.sport.isCycling {
-                            detailView(text: "Avg Speed", detail: selectedAvgSpeed, detailColor: .speed)
-                        } else if detailManager.sport.isWalkingOrRunning {
-                            detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .cadence)
-                        }
-
-                        if detailManager.sport.isCycling {
-                            detailView(text: "Avg Cadence", detail: selectedAvgCadence, detailColor: .cadence)
-                        }
-                    }
-
-                    HStack {
-                        detailView(text: "Avg Heart Rate", detail: selectedAvgHeartRate, detailColor: .calories)
-                        detailView(text: "Max Heart Rate", detail: selectedMaxHeartRate, detailColor: .calories)
-                    }
-
-                }
-                .padding()
-                .background(Color.secondarySystemBackground)
-
-                Divider()
-                
-                List {
-                    ForEach(detailManager.laps, id: \.self) { lap in
-                        Button(action: { selectLap(lap) }) {
-                            HStack {
-                                Image(systemName: selectedLap == lap ? "checkmark.circle" : "circle")
-                                    .foregroundColor(.accentColor)
-
-                                Text("\(lap.lapNumber)")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                                Text(formattedHoursMinutesSecondsDurationString(for: lap.duration))
-                                    .foregroundColor(.time)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                                Text(formattedLapDistanceString(for: lap.distance))
-                                    .foregroundColor(.distance)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-
-                                if detailManager.sport.isWalkingOrRunning {
-                                    Text(formattedRunningWalkingPaceString(for: lap.avgPace))
-                                        .foregroundColor(.cadence)
+                                    Text(formattedHoursMinutesSecondsDurationString(for: lap.duration))
+                                        .foregroundColor(.time)
                                         .frame(maxWidth: .infinity, alignment: .trailing)
-                                } else if detailManager.sport.isCycling {
-                                    Text(formattedLapSpeedString(for: lap.avgSpeed))
-                                        .foregroundColor(.speed)
+
+                                    Text(formattedLapDistanceString(for: lap.distance))
+                                        .foregroundColor(.distance)
                                         .frame(maxWidth: .infinity, alignment: .trailing)
+
+                                    if detailManager.sport.isWalkingOrRunning {
+                                        Text(formattedRunningWalkingPaceString(for: lap.avgPace))
+                                            .foregroundColor(.cadence)
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
+                                    } else if detailManager.sport.isCycling {
+                                        Text(formattedLapSpeedString(for: lap.avgSpeed))
+                                            .foregroundColor(.speed)
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
+                                    }
                                 }
+                                .font(.fixedBody)
+                                .padding()
                             }
-                            .font(.fixedBody)
+                            .buttonStyle(WorkoutPlainButtonStyle())
+                            Divider()
                         }
                     }
                 }
-                .listStyle(PlainListStyle())
             }
-            .paywallOverlay()
             .onAppear { detailManager.reloadLapsIfNeeded() }
             .navigationBarTitle("Laps")
             .navigationBarTitleDisplayMode(.inline)
@@ -183,15 +186,19 @@ extension LapsView {
 struct LapsView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    
     static let detailManager: DetailManager = {
         let manager = DetailManager(remoteIdentifier: workout.remoteIdentifier!)
         manager.loadWorkout(with: viewContext)
         return manager
     }()
     
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
+    
     static var previews: some View {
         LapsView()
             .environmentObject(detailManager)
+            .environmentObject(purchaseManager)
             .preferredColorScheme(.dark)
     }
 }

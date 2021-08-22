@@ -18,7 +18,6 @@ extension HomeView {
 }
 
 struct HomeView: View {
-    @Environment(\.managedObjectContext) var managedObjectContext
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
@@ -28,13 +27,12 @@ struct HomeView: View {
     
     @State private var sport: Sport?
     @State private var activeSheet: ActiveSheet?
-    @State private var selectedTab = 1
     
     init() {
         _workouts = DataProvider.fetchRequest(sport: nil, interval: DateInterval.lastTwoWeeks())
     }
     
-    func header(text: String) -> some View {
+    func sectionHeader(text: String) -> some View {
         Text(text)
             .font(.headline)
             .foregroundColor(.primary)
@@ -46,91 +44,61 @@ struct HomeView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: header(text: "My Workouts")) {
+                Section(header: sectionHeader(text: "My Workouts")) {
                     NavigationLink(destination: workoutsDestination()) {
                         Label("All Workouts", systemImage: "flame")
                     }
-                    
+
                     Button(action: { activeSheet = .add }) {
                         Label("Import Workouts", systemImage: "square.and.arrow.down")
                     }
                     .disabled(isAddDisabled)
                 }
                 .textCase(nil)
-                
-                Section(header: header(text: "Activity")) {
-                    VStack(alignment: .leading) {
-                        Picker("Display", selection: $logManager.displayType.animation()) {
-                            ForEach(LogDisplayType.allCases, id: \.self) { dataType in
-                                Text(dataType.rawValue.capitalized)
-                            }
+
+                Section(header: sectionHeader(text: "My Training")) {
+                    Picker("Display", selection: $logManager.displayType.animation()) {
+                        ForEach(LogDisplayType.allCases, id: \.self) { dataType in
+                            Text(dataType.rawValue.capitalized)
                         }
-                        .pickerStyle(SegmentedPickerStyle())
-                        
-                        VStack {
-                            VStack(alignment: .leading) {
-                                HStack(alignment: .lastTextBaseline, spacing: 10.0) {
-                                    Text("Current Week")
-                                        .font(.fixedBody)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(logManager.currentIntervalDisplayLabel)
-                                        .animation(.none)
-                                        .font(.fixedBody)
-                                        .foregroundColor(logManager.displayType.color)
-                                }
-                                                    
-                                WorkoutLogIntervalStack(
-                                    displayType: $logManager.displayType,
-                                    interval: logManager.currentInterval
-                                )
-                            }
-                            
-                            Divider()
-                            
-                            VStack(alignment: .leading) {
-                                HStack(alignment: .lastTextBaseline, spacing: 10.0) {
-                                    Text("Last Week")
-                                        .font(.fixedBody)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(logManager.prevIntervalDisplayLabel)
-                                        .animation(.none)
-                                        .font(.fixedBody)
-                                        .foregroundColor(logManager.displayType.color)
-                                }
-                                                    
-                                WorkoutLogIntervalStack(
-                                    displayType: $logManager.displayType,
-                                    interval: logManager.prevInterval
-                                )
-                            }
-                        }
-                        .padding([.top, .bottom], 5.0)
-                        .onAppear { logManager.reloadCurrentInterval() }
                     }
-                    .padding([.top], 10.0)
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding([.top, .bottom], CGFloat(5.0))
+                    
+                    HomeLogRow(
+                        displayType: $logManager.displayType,
+                        title: "Current Week",
+                        supportText: logManager.currentIntervalDisplayLabel,
+                        interval: logManager.currentInterval
+                    )
+                                        
+                    HomeLogRow(
+                        displayType: $logManager.displayType,
+                        title: "Last Week",
+                        supportText: logManager.prevIntervalDisplayLabel,
+                        interval: logManager.prevInterval
+                    )
                     
                     NavigationLink(destination: logDestination()) {
                         Label("Workout Log", systemImage: "calendar")
                     }
                 }
+                .onAppear { logManager.reloadCurrentInterval() }
                 .textCase(nil)
                 
-                Section(header: header(text: "Recent")) {
+                Section(header: sectionHeader(text: "Recent Workouts")) {
                     if workouts.isEmpty {
                         Text("You haven't completed any workouts in the past two weeks.")
                             .font(.title3)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
-                            .padding([.top, .bottom], 20.0)
+                            .padding([.top, .bottom], CGFloat(20.0))
                     } else {
                         ForEach(workouts) { workout in
-                            NavigationLink(destination: DetailView(identifier: workout.remoteIdentifier!)) {
+                            NavigationLink(destination: detailDestination(remoteIdentifier: workout.workoutIdentifier)) {
                                 HomeMapCell(workout: workout.workoutData())
                             }
                         }
-                        .padding([.top, .bottom], 5.0)
                     }
                 }
                 .textCase(nil)
@@ -156,7 +124,6 @@ struct HomeView: View {
                 }
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
@@ -165,24 +132,19 @@ struct HomeView: View {
 extension HomeView {
     
     var isAddDisabled: Bool {
-        !workoutManager.isDataAvailable || workoutManager.isLoading
+        return !workoutManager.isAuthorized
     }
     
     func logDestination() -> some View {
         WorkoutLogView()
-            .environmentObject(logManager)
-            .environmentObject(purchaseManager)
     }
     
     func workoutsDestination() -> some View {
         WorkoutsView(sport: $sport, interval: nil, showFilter: true)
-            .navigationBarTitle("Workouts")
     }
     
-    func selectDay() -> (_ day: LogDay) -> Void {
-        { day in
-            Log.debug("selected day: \(day.date), activities: \(day.totalActivities)")
-        }
+    func detailDestination(remoteIdentifier: UUID) -> some View {
+        DetailView(identifier: remoteIdentifier)
     }
     
 }
@@ -191,26 +153,61 @@ struct HomeView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     
     static var workoutManager: WorkoutManager = {
-        let manager = WorkoutManager(context: viewContext)
-        manager.state = .ok
-        manager.isLoading = false
+        let manager = WorkoutManagerPreview.manager(context: viewContext)
+        manager.isAuthorized = true
         return manager
     }()
     
     static var logManager: LogManager = {
-        let manager = LogManager(context: viewContext)
-        //manager.currentInterval = LogInterval.sampleInterval(moc: viewContext)
+        let manager = LogManagerPreview.manager(context: viewContext)
+        manager.currentInterval = LogInterval.sampleInterval(moc: viewContext)
+        manager.prevInterval = LogInterval.sampleInterval(moc: viewContext)
         return manager
     }()
     
-    static var purchaseManager = IAPManager()
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
-        HomeView()
-            .environment(\.managedObjectContext, viewContext)
-            .environmentObject(workoutManager)
-            .environmentObject(logManager)
-            .environmentObject(purchaseManager)
-            .preferredColorScheme(.dark)
+        TabView {
+            HomeView()
+                .tabItem { Label("Home", systemImage: "house") }
+
+        }
+        .environment(\.managedObjectContext, viewContext)
+        .environmentObject(workoutManager)
+        .environmentObject(logManager)
+        .environmentObject(purchaseManager)
+        .preferredColorScheme(.dark)
+        
     }
+}
+
+struct HomeLogRow: View {
+    @Binding var displayType: LogDisplayType
+    let title: String
+    let supportText: String
+    let interval: LogInterval
+    
+    var body: some View {
+        VStack {
+            VStack(alignment: .leading) {
+                HStack(alignment: .lastTextBaseline, spacing: 10.0) {
+                    Text(title)
+                        .font(.fixedBody)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Text(supportText)
+                        .animation(.none)
+                        .font(.fixedBody)
+                        .foregroundColor(displayType.color)
+                }
+
+                WorkoutLogIntervalStack(
+                    displayType: $displayType,
+                    interval: interval
+                )
+            }
+        }
+    }
+    
 }

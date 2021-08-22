@@ -12,6 +12,10 @@ import HealthKit
 import CoreData
 
 class DetailManager: ObservableObject {
+    enum DetailError: Error {
+        case lap
+    }
+    
     let baseIntervalPoints : Int = 600
     
     @Published var points = [CLLocationCoordinate2D]()
@@ -31,9 +35,7 @@ class DetailManager: ObservableObject {
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1 {
         didSet {
-            Task(priority: .userInitiated) {
-                await reloadLaps()
-            }
+            reloadLaps()
         }
     }
     @Published var laps = [WorkoutLap]()
@@ -69,10 +71,10 @@ extension DetailManager {
     
     private func defaultDistanceSamples(remoteWorkout: HKWorkout) async -> [Quantity] {
         if let currentSamples = distanceSamples { return currentSamples }
-        
+
         let interval = DateInterval(start: remoteWorkout.startDate, end: remoteWorkout.endDate)
         let source = remoteWorkout.sourceRevision.source
-        
+
         var samples = [Quantity]()
         do {
             if sport.isCycling {
@@ -83,7 +85,7 @@ extension DetailManager {
         } catch {
             samples = []
         }
-        
+
         return samples.normalizedByDistance(sport: sport)
     }
     
@@ -102,30 +104,30 @@ extension DetailManager {
     func run() async {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { return }
-            
+
             let locations = (try? await provider.fetchLocations(for: remoteWorkout)) ?? []
-            let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)            
+            let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
             let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
-            
+
             let (speed, heartRate, cadence, _, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
-            
+
             let zoneMaxHeartRate = workout.zoneMaxHeartRate
             let zoneValues = workout.zoneValues
             let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
-            
+
             let zones: [HRZoneSummary]
             if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout),  heartRate.isPresent {
                 zones = fetchedZones
             } else {
                 zones = []
             }
-            
+
             let locationAltitudes = locations.altitudeValues()
             let maxElevation = locationAltitudes.max() ?? 0
             let minElevation = locationAltitudes.min() ?? 0
-            
+
             DispatchQueue.main.async {
                 self.speedValues = speed
                 self.heartRateValues = heartRate
@@ -143,19 +145,29 @@ extension DetailManager {
     
     func reloadLapsIfNeeded() {
         guard laps.isEmpty else { return }
+        reloadLaps()
+    }
+    
+    func reloadLaps() {
         Task(priority: .userInitiated) {
-            await reloadLaps()
+            let laps = await currentLaps()
+            
+            DispatchQueue.main.async {
+                self.laps = laps
+            }
         }
     }
     
-    func reloadLaps() async {
+    func currentLaps() async -> [WorkoutLap] {
         do {
-            guard let remoteWorkout = try? await remoteWorkout() else { return }
-            
+            guard let remoteWorkout = try? await remoteWorkout() else { throw  DetailError.lap }
+
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
+            Log.debug("samples: \(samples.count)")
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
-            
+
             let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: selectedLapDistance.distanceInMeters(for: sport))
+            Log.debug("lap intervals: \(lapIntervals.count)")
             let laps = lapIntervals.map { interval in
                 WorkoutLap(
                     sport: interval.sport,
@@ -170,22 +182,24 @@ extension DetailManager {
                 )
             }
             
-            DispatchQueue.main.async {
-                self.laps = laps
-            }
+            laps.forEach({ Log.debug(String(describing: $0))})
+            
+            Log.debug("laps: \(laps.count)")
+            return laps
         } catch {
             Log.debug("unable to process intervals")
+            return []
         }
     }
     
     func updateZones(maxHeartRate: Int, values: [Int]) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
         guard let context = context else { return }
-        
+
         let workout = self.workout
         workout.updateHeartRateZones(with: maxHeartRate, values: values)
         context.saveOrRollback()
-        
+
         let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
         let zones: [HRZoneSummary]
         if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout) {

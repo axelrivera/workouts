@@ -119,7 +119,7 @@ struct WorkoutPlainButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-        .background(configuration.isPressed ? Color.selectedCell : Color.clear)
+          .background(configuration.isPressed ? Color.selectedCell : .systemBackground)
   }
 
 }

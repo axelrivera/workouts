@@ -20,11 +20,10 @@ struct AdvancedSettingsView: View {
     var body: some View {
         ZStack {
             Form {
-                Section(header: Color.clear.frame(height: 20), footer: Text("Regenerate your local workout data from Apple Health.")) {
+                Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
                     Button(action: { activeAlert = .regenerateWorkouts }) {
                         Text("Reset Workout Data")
                     }
-                    .disabled(workoutManager.isLoading)
                 }
             }
             .disabled(workoutManager.isProcessingRemoteData)
@@ -65,7 +64,7 @@ struct AdvancedSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             AdvancedSettingsView()
-                .environmentObject(WorkoutManager(context: viewContext))
+                .environmentObject(WorkoutManagerPreview.manager(context: viewContext))
         }
         .preferredColorScheme(.dark)
     }

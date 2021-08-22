@@ -16,6 +16,7 @@ import SwiftUI
 
 @main
 struct WorkoutsApp: App {
+    
     let purchaseManager = IAPManager()
     // Instanciate LogManager and StatsManager first because they have observers that may depend from other singletons
     let logManager: LogManager
@@ -37,7 +38,7 @@ struct WorkoutsApp: App {
         synchronizer = Synchronizer(context: backgroundContext)
     }
     
-    var body: some Scene {
+    @SceneBuilder var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, storageProvider.persistentContainer.viewContext)

@@ -48,7 +48,11 @@ extension Collection where Element == Quantity {
         
         if excludeZeros {
             let samples = filter({ $0.value > 0 })
-            return samples.sumValues() / Double(samples.count)
+            if samples.isEmpty {
+                return 0
+            } else {
+                return samples.sumValues() / Double(samples.count)
+            }
         } else {
             return sumValues() / Double(count)
         }

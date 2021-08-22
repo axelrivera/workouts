@@ -75,25 +75,36 @@ class StorageProvider: ObservableObject {
         let duration = end.timeIntervalSince(start)
         let avgSpeed = 6.7056
         
+        let object = WorkoutProcessor.Object(
+            identifier: UUID(),
+            sport: sport ?? .cycling,
+            indoor: false,
+            start: start,
+            end: end,
+            duration: duration,
+            distance: 20000.0,
+            movingTime: duration - 300.0,
+            avgMovingSpeed: avgSpeed,
+            avgSpeed: avgSpeed,
+            maxSpeed: avgSpeed + 1.0,
+            avgPace: 0.0,
+            avgMovingPace: 0.0,
+            avgCyclingCadence: 80.0,
+            maxCyclingCadence: 90.0,
+            energyBurned: 500.0,
+            avgHeartRate: 140.0,
+            maxHeartRate: 170.0,
+            coordinatesValue: "",
+            elevationAscended: 0.0,
+            elevationDescended: 0.0,
+            maxElevation: 0.0,
+            minElevation: 0.0,
+            source: "Workouts Preview",
+            device: nil
+        )
+        
         let workout = Workout(context: viewContext)
-        workout.remoteIdentifier = UUID()
-        workout.sport = sport ?? .cycling
-        workout.start = start
-        workout.end = end
-        workout.duration = duration
-        workout.movingTime = duration + 0.5
-        workout.distance = 20000.0
-        workout.energyBurned = 500.0
-        workout.avgSpeed = avgSpeed
-        workout.avgMovingSpeed = avgSpeed + 0.5
-        workout.maxSpeed = 10.2919
-        workout.avgCyclingCadence = 80.0
-        workout.maxCyclingCadence = 95.0
-        workout.elevationAscended = 500.0
-        workout.elevationDescended = 200.0
-        workout.locationCity = "Orlando"
-        workout.locationState = "FL"
-        workout.source = "Workouts Preview"
+        Workout.updateValues(for: workout, object: object, in: viewContext)
         
         return workout
     }

@@ -17,20 +17,11 @@ extension WorkoutLogView {
 }
 
 struct WorkoutLogView: View {
-    @Environment(\.managedObjectContext) var viewContext
-    @Environment(\.presentationMode) var presentationMode
-    
     @EnvironmentObject var manager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
-    
+
     @State private var activeSheet: ActiveSheet?
-    
-    @State private var selectedIdentifiers: [UUID]?
-    @State private var isWorkoutDetailShowing = false
-    @State private var isWorkoutsViewShowing = false
-    
-    let columns = Array(repeating:  GridItem(.flexible(), spacing: 0), count: 7)
-    
+
     func headerView() -> some View {
         VStack(alignment: .center, spacing: 0) {
             Picker("Display", selection: $manager.displayType.animation()) {
@@ -40,12 +31,12 @@ struct WorkoutLogView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding()
-            
+
             Divider()
         }
-        .background(.regularMaterial)
+        .background(.bar)
     }
-    
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
@@ -63,7 +54,7 @@ struct WorkoutLogView: View {
                 reloadIntervalsIfNeeded()
             })
         }
-        .paywallOverlay()
+        .paywallButtonOverlay()
         .navigationTitle("Workout Log")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -77,7 +68,7 @@ struct WorkoutLogView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing)  {
                 Button(action: { activeSheet = .filter }) {
                     Image(systemName: "line.horizontal.3.decrease.circle")
@@ -116,19 +107,23 @@ extension WorkoutLogView {
 struct WorkoutLogView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     
+    static var workoutManager = WorkoutManagerPreview.manager(context: viewContext)
+    
     static var manager: LogManager = {
-        let manager = LogManager(context: viewContext)
+        let manager = LogManagerPreview.manager(context: viewContext)
         manager.intervals = LogInterval.sampleLastTwelveMonths()
         return manager
     }()
     
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
+    
     static var previews: some View {
         NavigationView {
             WorkoutLogView()
-                .environmentObject(manager)
-                .environmentObject(IAPManager())
         }
-        .preferredColorScheme(.dark)
+        .environmentObject(workoutManager)
+        .environmentObject(manager)
+        .environmentObject(purchaseManager)
     }
 }
 

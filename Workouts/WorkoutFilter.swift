@@ -9,8 +9,6 @@ import SwiftUI
 import CoreData
 
 struct WorkoutFilter<Content: View>: View {
-    @Environment(\.managedObjectContext) var managedObjectContext
-    
     @FetchRequest<Workout>
     var workouts: FetchedResults<Workout>
     

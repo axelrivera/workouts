@@ -75,7 +75,7 @@ struct WorkoutsView: View {
 struct WorkoutsView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var workoutManager: WorkoutManager = {
-        let manager = WorkoutManager(context: viewContext)
+        let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable
         return manager
     }()
@@ -85,9 +85,10 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             WorkoutsView(sport: $sport)
-                .environment(\.managedObjectContext, viewContext)
-                .environmentObject(workoutManager)
+                .navigationTitle("Workouts")
         }
+        .environment(\.managedObjectContext, viewContext)
+        .environmentObject(workoutManager)
         .preferredColorScheme(.dark)
     }
 }

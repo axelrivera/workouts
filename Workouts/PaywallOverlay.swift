@@ -14,15 +14,18 @@ struct SampleLabel: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 48, height: 48)
-                .foregroundColor(.label)
+                .foregroundColor(.white)
             
             Text("PRO")
                 .font(.system(size: 52, weight: .semibold, design: .monospaced))
-                .foregroundColor(.label)
+                .foregroundColor(.white)
                 .multilineTextAlignment(.center)
         }
         .padding(.all, 32)
-        .overlay(Circle().stroke(lineWidth: 8.0))
+        .overlay(
+            Circle()
+                .strokeBorder(Color.white, lineWidth: 8.0)
+        )
     }
 }
 

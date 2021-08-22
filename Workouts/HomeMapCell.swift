@@ -16,7 +16,15 @@ struct HomeMapCell: View {
     
     var body: some View {
         HStack {
-            if !workout.indoor {
+            if workout.indoor {
+                Image(systemName: "flame")
+                    .font(.title)
+                    .foregroundColor(.secondary)
+                    .frame(width: mapWidth, height: mapWidth, alignment: .center)
+                    .background(Color.systemFill)
+                    .cornerRadius(5.0)
+                
+            } else {
                 MapImage(
                     workoutIdentifier: workout.id,
                     coordinates: workout.coordinates,
@@ -61,7 +69,7 @@ struct HomeMapCell_Previews: PreviewProvider {
         WorkoutData(
             id: UUID(),
             sport: .cycling,
-            indoor: false,
+            indoor: true,
             coordinates: [],
             title: "Outdoor Cycling",
             date: Date(),

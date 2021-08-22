@@ -51,7 +51,7 @@ struct DetailView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .padding([.top, .bottom], 5.0)
+            .padding([.top, .bottom], CGFloat(5.0))
             
             Button(action: { activeSheet = .map }) {
                 WorkoutMap(points: detailManager.points)
@@ -63,14 +63,14 @@ struct DetailView: View {
             HStack {
                 Button(action: { activeSheet = .analysis }) {
                     Label("Analysis", systemImage: "flame")
-                        .padding([.top, .bottom], 10.0)
+                        .padding([.top, .bottom], CGFloat(10.0))
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
                 
                 Button(action: { activeSheet = .laps }) {
                     Label("Laps", systemImage: "arrow.2.squarepath")
-                        .padding([.top, .bottom], 10.0)
+                        .padding([.top, .bottom], CGFloat(10.0))
                         .frame(maxWidth: .infinity)
                     
                 }
@@ -79,20 +79,6 @@ struct DetailView: View {
             
             ForEach(RowType.allCases) { rowType in
                 viewForRow(rowType)
-            }
-            
-            if detailManager.showLaps {
-                VStack(alignment: .leading) {
-                    ForEach(detailManager.laps) { lap in
-                        HStack {
-                            Text("Lap \(lap.lapNumber)")
-                            Spacer()
-                            Text(formattedDistanceString(for: lap.distance, mode: .default, zeroPadding: true))
-                            Text(formattedTimeDurationString(for: lap.duration))
-                        }
-                    }
-                    .padding([.top, .bottom], 10.0)
-                }
             }
             
             HStack {
@@ -122,9 +108,11 @@ struct DetailView: View {
             case .analysis:
                 AnalysisView()
                     .environmentObject(detailManager)
+                    .environmentObject(purchaseManager)
             case .laps:
                 LapsView()
                     .environmentObject(detailManager)
+                    .environmentObject(purchaseManager)
             }
         }
     }
@@ -252,7 +240,7 @@ struct DetailGridView: View {
 struct DetailView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
-    static let purchaseManager = IAPManager()
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         NavigationView {

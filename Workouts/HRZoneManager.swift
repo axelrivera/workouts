@@ -94,41 +94,61 @@ extension HRZoneManager {
         
     private func indexForZone(_ zone: HRZone) -> Int {
         switch zone {
-        case .zone1: return 0
-        case .zone2: return 1
-        case .zone3: return 2
-        case .zone4: return 3
-        case .zone5: return 4
+        case .zone1:
+            return 0
+        case .zone2:
+            return 1
+        case .zone3:
+            return 2
+        case .zone4:
+            return 3
+        case .zone5:
+            return 4
         }
     }
     
     private func prevRangeForZone(_ zone: HRZone) -> ZoneRange? {
         switch zone {
-        case .zone1: return nil
-        case .zone2: return zone1Range
-        case .zone3: return zone2Range
-        case .zone4: return zone3Range
-        case .zone5: return zone4Range
+        case .zone1:
+            return nil
+        case .zone2:
+            return zone1Range
+        case .zone3:
+            return zone2Range
+        case .zone4:
+            return zone3Range
+        case .zone5:
+            return zone4Range
         }
     }
     
     func rangeForZone(_ zone: HRZone) -> ZoneRange {
         switch zone {
-        case .zone1: return zone1Range
-        case .zone2: return zone2Range
-        case .zone3: return zone3Range
-        case .zone4: return zone4Range
-        case .zone5: return zone5Range
+        case .zone1:
+            return zone1Range
+        case .zone2:
+            return zone2Range
+        case .zone3:
+            return zone3Range
+        case .zone4:
+            return zone4Range
+        case .zone5:
+            return zone5Range
         }
     }
     
     func percentRangeForZone(_ zone: HRZone) -> ZonePercentRange {
         switch zone {
-        case .zone1: return zone1PercentRange
-        case .zone2: return zone2PercentRange
-        case .zone3: return zone3PercentRange
-        case .zone4: return zone4PercentRange
-        case .zone5: return zone5PercentRange
+        case .zone1:
+            return zone1PercentRange
+        case .zone2:
+            return zone2PercentRange
+        case .zone3:
+            return zone3PercentRange
+        case .zone4:
+            return zone4PercentRange
+        case .zone5:
+            return zone5PercentRange
         }
     }
     

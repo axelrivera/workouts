@@ -6,15 +6,20 @@
 //
 
 import SwiftUI
-import Purchases
 
-final class IAPManager: NSObject, ObservableObject {
+#if PRODUCTION_BUILD
+import Purchases
+#endif
+
+class IAPManager: NSObject, ObservableObject {
     enum Constants {
         static let apiKey = "NYucELjRYAuIEelhphHUNKTcZYaCoRSH"
         static let entitlementId = "pro"
         static let freePrice = 1.99
         static let freePriceString = "$1.99"
     }
+    
+    #if PRODUCTION_BUILD
         
     @Published var purchaserInfo: Purchases.PurchaserInfo? {
         didSet {
@@ -24,6 +29,9 @@ final class IAPManager: NSObject, ObservableObject {
         }
     }
     @Published var offerings: Purchases.Offerings?
+    
+    #endif
+    
     @Published var isActive: Bool = false {
         didSet {
             #if DEVELOPMENT_BUILD
@@ -36,12 +44,6 @@ final class IAPManager: NSObject, ObservableObject {
         super.init()
         registerPurchasesManager()
         fetchOfferings()
-    }
-    
-    static func preview(isActive: Bool = true) -> IAPManager {
-        let manager = IAPManager()
-        manager.isActive = isActive
-        return manager
     }
     
 }
@@ -85,6 +87,8 @@ extension IAPManager {
         #endif
     }
     
+    #if PRODUCTION_BUILD
+    
     var offering: Purchases.Offering? {
         offerings?.current
     }
@@ -92,6 +96,8 @@ extension IAPManager {
     var package: Purchases.Package? {
         offering?.lifetime
     }
+    
+    #endif
     
     var packagePrice: Double {
         #if PRODUCTION_BUILD
@@ -222,6 +228,8 @@ extension IAPManager {
 
 // MARK: - Purchases Delegate
 
+#if PRODUCTION_BUILD
+
 extension IAPManager: PurchasesDelegate {
     
     func purchases(_ purchases: Purchases, didReceiveUpdated purchaserInfo: Purchases.PurchaserInfo) {
@@ -229,6 +237,8 @@ extension IAPManager: PurchasesDelegate {
     }
     
 }
+
+#endif
 
 // MARK: - Errors
 
@@ -260,7 +270,23 @@ extension IAPManager.PurchaseError: LocalizedError {
 
 // MARK: - Helpers
 
+#if PRODUCTION_BUILD
+
 extension Purchases.Package: Identifiable {
     public var id: String { self.identifier }
+}
+
+#endif
+
+// MARK: - Previews
+
+class IAPManagerPreview: IAPManager {
+    
+    static func manager(isActive: Bool) -> IAPManager {
+        let manager = IAPManagerPreview()
+        manager.isActive = isActive
+        return manager as IAPManager
+    }
+    
 }
 

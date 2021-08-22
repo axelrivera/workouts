@@ -16,8 +16,10 @@ enum LogDisplayType: String, Identifiable, CaseIterable {
     
     var color: Color {
         switch self {
-        case .distance: return .distance
-        case .time: return .time
+        case .distance:
+            return .distance
+        case .time:
+            return .time
         }
     }
 }
@@ -30,9 +32,12 @@ extension LogManager {
         
         var title: String {
             switch self {
-            case .recentMonths: return "Last 12 Months"
-            case .recentYears: return "Last 5 Years"
-            case .byYear: return "By Year"
+            case .recentMonths:
+                return "Last 12 Months"
+            case .recentYears:
+                return "Last 5 Years"
+            case .byYear:
+                return "By Year"
             }
         }
     }
@@ -72,11 +77,35 @@ class LogManager: ObservableObject {
     
     private var refreshCancellable: Cancellable?
     
-    private(set) var context: NSManagedObjectContext
+    fileprivate(set) var context: NSManagedObjectContext
         
     init(context: NSManagedObjectContext) {
         self.context = context
         addObservers()
+    }
+    
+    func reloadCurrentInterval() {
+        // Current Interval
+        
+        let currentDateInterval = LogInterval.currentDateInterval()
+        let currentInterval = logInterval(for: currentDateInterval)
+        
+        let prevDateInterval = LogInterval.previousWeekDateInterval()
+        let prevInterval = logInterval(for: prevDateInterval)
+        
+        // Setup Variables
+        
+        DispatchQueue.main.async {
+            withAnimation(.none) {
+                self.currentInterval = currentInterval
+                self.prevInterval = prevInterval
+            }
+        }
+    }
+    
+    func reloadIntervals() {
+        updateFilters()
+        fetchIntervals()
     }
     
 }
@@ -106,30 +135,6 @@ extension LogManager {
         }
         
         return LogInterval(days: days)
-    }
-    
-    func reloadCurrentInterval() {
-        // Current Interval
-        
-        let currentDateInterval = LogInterval.currentDateInterval()
-        let currentInterval = logInterval(for: currentDateInterval)
-        
-        let prevDateInterval = LogInterval.previousWeekDateInterval()
-        let prevInterval = logInterval(for: prevDateInterval)
-        
-        // Setup Variables
-        
-        DispatchQueue.main.async {
-            withAnimation(.none) {
-                self.currentInterval = currentInterval
-                self.prevInterval = prevInterval
-            }
-        }
-    }
-    
-    func reloadIntervals() {
-        updateFilters()
-        fetchIntervals()
     }
     
     private func fetchIntervals() {
@@ -302,4 +307,23 @@ private extension Date {
     }
     
 }
+
+// MARK: - Preview Class
+
+class LogManagerPreview: LogManager {
+    
+    static func manager(context: NSManagedObjectContext) -> LogManager {
+        LogManagerPreview(context: context) as LogManager
+    }
+    
+    override func reloadCurrentInterval() {
+        // no-op
+    }
+    
+    override func reloadIntervals() {
+        // no-op
+    }
+    
+}
+
 

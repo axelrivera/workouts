@@ -39,10 +39,6 @@ class StatsManager: ObservableObject {
     @Published var avgMonthlyElevation: Double = 0
     @Published var avgMonthlyCalories: Double = 0
     
-    @Published var isDirty = true
-    
-    private var refreshCancellable: Cancellable?
-        
     init(context: NSManagedObjectContext) {
         dataProvider = DataProvider(context: context)
         
@@ -50,9 +46,12 @@ class StatsManager: ObservableObject {
         monthStats = StatsSummary(sport: sport, timeframe: .month)
         yearStats = StatsSummary(sport: sport, timeframe: .year)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
-                
+    }
+    
+    // MARK: - Methods
+    
+    func refresh() {
         fetchSummaries()
-        addObservers()
     }
 }
 
@@ -60,17 +59,7 @@ class StatsManager: ObservableObject {
 
 extension StatsManager {
     
-    func refreshIfNeeded() {
-        guard isDirty else {
-            Log.debug("ignoring stats refresh")
-            return
-        }
-        
-        Log.debug("stats dirty -> trigger refresh")
-        fetchSummaries()
-    }
-    
-    func fetchSummaries() {
+    private func fetchSummaries() {
         Log.debug("fetching stats summaries for sport: \(String(describing: sport?.rawValue))")
         
         dataProvider.context.perform { [weak self] in
@@ -138,8 +127,6 @@ extension StatsManager {
                 
                 self.recentWeekly = recentWeekly
                 self.recentMonthly = recentMonthly
-                
-                self.isDirty = false
             }
         }
     }
@@ -186,15 +173,16 @@ extension StatsManager {
     
 }
 
-// MARK: - Observers
+// MARK: Previews
 
-extension StatsManager {
+class StatsManagerPreview: StatsManager {
     
-    func addObservers() {
-        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
-            .sink { _ in
-                self.isDirty = true
-            }
+    static func manager(context: NSManagedObjectContext) -> StatsManager {
+        StatsManagerPreview(context: context) as StatsManager
+    }
+    
+    override func refresh() {
+        // no-op
     }
     
 }

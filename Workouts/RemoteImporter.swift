@@ -24,16 +24,14 @@ class RemoteImporter {
         var responseAnchor: HKQueryAnchor? = newAnchor
         let totalWorkouts = remoteWorkouts.count
         
-        DispatchQueue.main.async {
-            let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
-            NotificationCenter.default.post(
-                name: .willBeginProcessingRemoteData,
-                object: nil,
-                userInfo: userInfo
-            )
-        }
+        let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
+        NotificationCenter.default.post(
+            name: .willBeginProcessingRemoteData,
+            object: nil,
+            userInfo: userInfo
+        )
         
-        deleteWorkouts(with: deleted)
+        deleteWorkouts(with: deleted, context: context)
         
         for remoteWorkout in remoteWorkouts {
             if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
@@ -50,9 +48,7 @@ class RemoteImporter {
                 Workout.insert(into: context, object: object, regenerate: regenerate)
             }
             
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
-            }
+            NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
         }
         
         do {
@@ -64,13 +60,11 @@ class RemoteImporter {
         
         context.refreshAllObjects()
         
-        DispatchQueue.main.async {
-            Log.debug("LOG - send finish processing remote data notification")
-            NotificationCenter.default.post(
-                name: .didFinishProcessingRemoteData,
-                object: nil
-            )
-        }
+        Log.debug("LOG - send finish processing remote data notification")
+        NotificationCenter.default.post(
+            name: .didFinishProcessingRemoteData,
+            object: nil
+        )
         
         return responseAnchor
     }
@@ -79,7 +73,7 @@ class RemoteImporter {
 
 extension RemoteImporter {
     
-    fileprivate func deleteWorkouts(with ids: [UUID]) {
+    fileprivate func deleteWorkouts(with ids: [UUID], context: NSManagedObjectContext) {
         if ids.isEmpty { return }
         
         let workouts = Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: context)

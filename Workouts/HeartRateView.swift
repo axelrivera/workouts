@@ -28,7 +28,7 @@ struct HeartRateView: View {
         
     var body: some View {
         Form {
-            Section(header: Color.clear.frame(height: 20)) {
+            Section {
                 HStack {
                     Label(
                         title: { Text("Max Heart Rate") },
@@ -111,12 +111,11 @@ extension HeartRateView {
 
 struct HeartRateView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static var purchaseManager = IAPManager.preview(isActive: true)
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         NavigationView {
             HeartRateView()
-                .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }
         .preferredColorScheme(.dark)

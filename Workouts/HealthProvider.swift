@@ -18,11 +18,14 @@ enum HealthError: Error {
 
 struct HealthProvider {
     static let shared = HealthProvider()
-    private let healthStore = HealthData.shared.healthStore
+    
+    let healthStore = HKHealthStore()
     
     private init() {
         // no-op
     }
+    
+    let isAvailable = HKHealthStore.isHealthDataAvailable()
     
 }
 

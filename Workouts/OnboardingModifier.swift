@@ -16,13 +16,14 @@ struct OnboardingModifier: ViewModifier {
     
     @ViewBuilder
     func overlay() -> some View {
-        if workoutManager.shouldRequestReadingAuthorization {
+        if workoutManager.isOnboardingVisible {
             ZStack {
                 Color.systemBackground
                     .ignoresSafeArea()
                 OnboardingView {
-                    workoutManager.requestReadingAuthorization { success in
-                        Log.debug("reading authorization succeeded: \(success)")
+                    Task(priority: .userInitiated) {
+                        Log.debug("requesting permission")
+                        await workoutManager.requestHealthAuthorization()
                     }
                 }
             }

@@ -80,7 +80,7 @@ struct PaywallView: View {
                 
                 ScrollView {
                     Text("Upgrade Better Workouts to unlock all these PRO features.")
-                        .padding(.all, 15.0)
+                        .padding(.all, CGFloat(15.0))
                     
                     ForEach(PaywallItem.items()) { item in
                         HStack(alignment: .top, spacing: 15.0) {
@@ -89,7 +89,7 @@ struct PaywallView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 28, height: 28, alignment: .center)
                                 .foregroundColor(item.imageColor)
-                                .padding(.top, 5.0)
+                                .padding(.top, CGFloat(5.0))
                             
                             VStack(alignment: .leading, spacing: 5.0) {
                                 Text(item.title)
@@ -142,15 +142,10 @@ extension PaywallView {
 }
 
 struct PaywallView_Previews: PreviewProvider {
-    static let purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = false
-        return manager
-    }()
     
     static var previews: some View {
         PaywallView()
-            .environmentObject(purchaseManager)
+            .environmentObject(IAPManagerPreview.manager(isActive: true))
             .colorScheme(.dark)
     }
 }

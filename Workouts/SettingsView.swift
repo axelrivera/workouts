@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
@@ -20,12 +19,10 @@ struct SettingsView: View {
     }
     
     @Environment(\.openURL) var openURL
-    @Environment(\.managedObjectContext) var viewContext
     @Environment(\.presentationMode) var presentationMode
     
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
-    @State private var weight: Double = AppSettings.weight
     
     @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
@@ -33,10 +30,10 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Color.clear.frame(height: 20.0)) {
+                Section {
                     PaywallBanner(isActive: purchaseManager.isActive, action: { activeSheet = .paywall })
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
-                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 
                 Section(header: Text("Application Preferences")) {
                     NavigationLink(destination: HeartRateView()) {
@@ -86,7 +83,7 @@ struct SettingsView: View {
                 switch sheet {
                 case .paywall:
                     PaywallView()
-                        .environmentObject(purchaseManager)
+//                        .environmentObject(purchaseManager)
                 case .tutorial:
                     SafariView(urlString: URLStrings.tutorial)
                 case .privacy:
@@ -147,13 +144,12 @@ extension SettingsView {
 
 struct SettingsView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let purchaseManager = IAPManager.preview(isActive: true)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         SettingsView()
-            .environment(\.managedObjectContext, viewContext)
-            .environmentObject(WorkoutManager(context: viewContext))
+            .environmentObject(WorkoutManagerPreview.manager(context: viewContext))
             .environmentObject(purchaseManager)
-            .colorScheme(.dark)
+            .preferredColorScheme(.dark)
     }
 }

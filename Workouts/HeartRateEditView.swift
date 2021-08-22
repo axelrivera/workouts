@@ -28,7 +28,7 @@ struct HeartRateEditView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Color.clear.frame(height: 20), footer: Text("Your maximum heart rate is about 220 minus your age. For example, if you're 30 years old, subtract 30 from 220 to get a maximum heart rate of 190 bpm.")) {
+                Section(footer: Text("Your maximum heart rate is about 220 minus your age. For example, if you're 30 years old, subtract 30 from 220 to get a maximum heart rate of 190 bpm.")) {
                     HStack {
                         Text("Max Heart Rate")
                         Spacer()

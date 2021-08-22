@@ -48,7 +48,7 @@ struct ImportView: View {
                     .opacity(purchaseManager.isActive ? 1.0 : 0.0)
             }
             .opacity(purchaseManager.isActive ? 1.0 : 0.5)
-            .paywallOverlay()
+            .paywallButtonOverlay()
             .onAppear { requestWritingAuthorizationIfNeeded() }
             .onChange(of: purchaseManager.isActive, perform: { isActive in
                 requestWritingAuthorizationIfNeeded()
@@ -134,7 +134,7 @@ struct ImportView_Previews: PreviewProvider {
         return manager
     }()
     
-    static let purchaseManager = IAPManager.preview(isActive: false)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         ImportView(importManager: importManager)

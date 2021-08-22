@@ -25,9 +25,12 @@ extension StatsSummary {
         
         var recentTitle: String {
             switch self {
-            case .week: return "Last 12 Weeks"
-            case .month: return "Last 12 Months"
-            default: return ""
+            case .week:
+                return "Last 12 Weeks"
+            case .month:
+                return "Last 12 Months"
+            default:
+                return ""
             }
         }
     }
@@ -151,10 +154,14 @@ extension StatsSummary {
     
     var sportTitle: String {
         switch sport {
-        case .cycling: return isCountSingular ? "Ride" : "Rides"
-        case .running: return isCountSingular ? "Run" : "Runs"
-        case .walking: return isCountSingular ? "Walk" : "Walks"
-        default: return isCountSingular ? "Workout" : "Workouts"
+        case .cycling:
+            return isCountSingular ? "Ride" : "Rides"
+        case .running:
+            return isCountSingular ? "Run" : "Runs"
+        case .walking:
+            return isCountSingular ? "Walk" : "Walks"
+        default:
+            return isCountSingular ? "Workout" : "Workouts"
         }
     }
     

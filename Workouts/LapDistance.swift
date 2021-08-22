@@ -49,37 +49,53 @@ extension LapDistance {
     
     private var cyclingDistanceForMiles: Double {
         switch self {
-        case .option1: return 1
-        case .option2: return 5
-        case .option3: return 10
-        case .option4: return 20
+        case .option1:
+            return 1
+        case .option2:
+            return 5
+        case .option3:
+            return 10
+        case .option4:
+            return 20
         }
     }
     
     private var cyclingDistanceForKilometers: Double {
         switch self {
-        case .option1: return 1
-        case .option2: return 5
-        case .option3: return 10
-        case .option4: return 20
+        case .option1:
+            return 1
+        case .option2:
+            return 5
+        case .option3:
+            return 10
+        case .option4:
+            return 20
         }
     }
     
     private var walkingRunningDistanceForMiles: Double {
         switch self {
-        case .option1: return 0.25
-        case .option2: return 0.5
-        case .option3: return 1
-        case .option4: return 2
+        case .option1:
+            return 0.25
+        case .option2:
+            return 0.5
+        case .option3:
+            return 1
+        case .option4:
+            return 2
         }
     }
     
     private var walkingRunningDistanceForKilometers: Double {
         switch self {
-        case .option1: return 0.5
-        case .option2: return 1
-        case .option3: return 2
-        case .option4: return 3
+        case .option1:
+            return 0.5
+        case .option2:
+            return 1
+        case .option3:
+            return 2
+        case .option4:
+            return 3
         }
     }
     

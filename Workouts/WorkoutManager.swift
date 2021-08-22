@@ -13,26 +13,19 @@ import MapKit
 import CoreData
 
 class WorkoutManager: ObservableObject {
-    let healthStore = HealthData.shared.healthStore
-    
-    enum State {
-        case ok, empty, notAvailable, permissionDenied, none
-        
-        static var disabledStates: [State] = [.notAvailable, .permissionDenied]
-    }
-    
     var context: NSManagedObjectContext
-        
-    @Published var shouldRequestReadingAuthorization = false
-    @Published var state = State.none
-    @Published var isLoading = false
-    
+            
     @Published var isProcessingRemoteData = false
     @Published var processingRemoteDataValue: Double = 0
     private var totalPendingWorkouts = 0
     private var totalCurrentWorkouts = 0
+        
+    @Published var isOnboardingVisible = false
     
-    @Published var didFetchWorkout = false
+    private let authProvider = HealthAuthProvider.shared
+    private let healthProvider = HealthProvider.shared
+    
+    @Published var isAuthorized = false
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -43,100 +36,57 @@ class WorkoutManager: ObservableObject {
         removeObservers()
     }
     
-    var isDisabled: Bool {
-        state != .ok
+    // MARK: - Methods
+    
+    func requestHealthaStatus() async {
+        let shouldRequestStatus = await authProvider.shouldRequestStatus()
+        if shouldRequestStatus {
+            DispatchQueue.main.async {
+                self.isOnboardingVisible = true
+            }
+        } else {
+            Log.debug("request status not required")
+            let isAuthorized = true
+            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: true)
+            
+            DispatchQueue.main.async {
+                self.isOnboardingVisible = !isAuthorized
+                self.isAuthorized = isAuthorized
+            }
+        }
     }
     
-    var totalWorkouts: Int {
-        let request = Workout.sortedFetchRequest
+    func requestHealthAuthorization() async {
+        guard healthProvider.isAvailable else { return }
+        
         do {
-            return try context.count(for: request)
-        } catch {
-            return 0
-        }
-    }
-    
-    var isDataAvailable: Bool {
-        !State.disabledStates.contains(state)
-    }
-    
-}
-
-// MARK: - Authorization Methods
-
-extension WorkoutManager {
-    
-    func fetchRequestStatusForReading(resetAnchor: Bool) {
-        Log.debug("request status for reading - reset anchor: \(resetAnchor)")
-        
-        HealthData.shared.requestStatusForReading { (result) in
-            switch result {
-            case .success(let shouldRequest):
-                Log.debug("should request permission: \(shouldRequest)")
+            Log.debug("getting authorization")
+            try await healthProvider.healthStore.requestAuthorization(toShare: HealthAuthProvider.writeSampleTypes(), read: HealthAuthProvider.readObjectTypes())
+            
+            let isAuthorized = true
+            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: true)
+            
+            DispatchQueue.main.async {
+                self.isOnboardingVisible = !isAuthorized
+                self.isAuthorized = isAuthorized
                 
-                if shouldRequest {
-                    self.postRefreshNotification(isAuthorized: false, resetAnchor: resetAnchor)
-                    DispatchQueue.main.async {
-                        self.shouldRequestReadingAuthorization = shouldRequest
-                    }
-                } else {
-                    self.validateWorkoutStatusForReading(resetAnchor: resetAnchor)
-                }
-            case .failure(let error):
-                Log.debug("read request failed: \(error)")
-                if case HealthData.DataError.dataNotAvailable = error {
-                    self.updateState(.notAvailable)
-                }
+            }
+        } catch {
+            Log.debug("unable to fetch health authorization: \(error.localizedDescription)")
+            // TODO: Show alert here
+            DispatchQueue.main.async {
+                self.isAuthorized = false
             }
         }
     }
     
-    private func validateWorkoutStatusForReading(resetAnchor: Bool) {
-        Log.debug("validate workout status for reading - reset anchor: \(resetAnchor)")
+    func refreshWorkouts(isAuthorized: Bool, resetAnchor: Bool) {
+        let userInfo: [String: Any] = [
+            Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized,
+            Notification.resetAnchorKey: resetAnchor
+        ]
         
-        WorkoutDataStore.shared.fetchTotalWorkouts { [unowned self] (result) in
-            do {
-                let _ = try result.get()
-                self.postRefreshNotification(isAuthorized: true, resetAnchor: resetAnchor)
-                self.updateState(.ok)
-            } catch {
-                Log.debug("failed to validate workout status for reading: \(error.localizedDescription)")
-                self.postRefreshNotification(isAuthorized: false)
-                self.updateState(.empty)
-            }
-        }
-    }
-    
-    func requestReadingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
-        func success() {
-            updateState(.ok)
-            updateShouldRequestReadingAuthorization(false)
-            postRefreshNotification(isAuthorized: true, resetAnchor: true)
-            completionHandler(true)
-        }
-
-        func failed(error: Error) {
-            Log.debug("request reading permissions failed: \(error)")
-
-            postRefreshNotification(isAuthorized: false)
-
-            if case HealthData.DataError.permissionDenied = error {
-                updateState(.permissionDenied)
-            } else {
-                updateState(.notAvailable)
-            }
-
-            completionHandler(false)
-        }
-
-        HealthData.shared.requestReadingAuthorization(for: HealthData.readObjectTypes()) { result in
-            switch result {
-            case .success:
-                success()
-            case .failure(let error):
-                failed(error: error)
-            }
-        }
+        NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
     }
     
 }
@@ -145,23 +95,7 @@ extension WorkoutManager {
 
 extension WorkoutManager {
     
-    func postRefreshNotification(isAuthorized: Bool? = nil, resetAnchor: Bool? = nil) {
-        var userInfo = [String: Any]()
-        
-        if let isAuthorized = isAuthorized {
-            userInfo[Notification.isAuthorizedToFetchRemoteDataKey] = isAuthorized
-        }
-        
-        if let resetAnchor = resetAnchor {
-            userInfo[Notification.resetAnchorKey] = resetAnchor
-        }
-        
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
-        }
-    }
-    
-    func addObservers() {
+    private func addObservers() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(willProcessWorkouts),
@@ -179,43 +113,38 @@ extension WorkoutManager {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(didProcessWorkouts),
-            name: .didFinishProcessingRemoteData,
+            name: .didRefreshWorkouts,
             object: nil
         )
     }
     
-    func removeObservers() {
+    private func removeObservers() {
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didRefreshWorkouts, object: nil)
     }
     
     @objc
-    func willProcessWorkouts(_ notification: Notification) {
-        let totalWorkouts = self.totalWorkouts
-        isLoading = totalWorkouts == 0
+    private func willProcessWorkouts(_ notification: Notification) {
+        Log.debug("will process workouts notification")
         
         totalPendingWorkouts = notification.userInfo?[Notification.totalRemoteWorkoutsKey] as? Int ?? 0
         totalCurrentWorkouts = 0
-                
         updateRemoteValues()
     }
     
     @objc
-    func didInsertWorkout(_ notification: Notification) {
+    private func didInsertWorkout(_ notification: Notification) {
+        Log.debug("did insert workout notification")
         totalCurrentWorkouts += 1
         updateRemoteValues()
     }
     
     @objc
-    func didProcessWorkouts(_ notification: Notification) {
-        didFetchWorkout = true
-        didFetchWorkout = false
-        
-        isLoading = false
+    private func didProcessWorkouts(_ notification: Notification) {
+        Log.debug("did process workout notification")
         totalPendingWorkouts = 0
         totalCurrentWorkouts = 0
-        
         updateRemoteValues()
     }
     
@@ -225,27 +154,27 @@ extension WorkoutManager {
 
 extension WorkoutManager {
     
-    func updateShouldRequestReadingAuthorization(_ shouldRequestReadingAuthorization: Bool) {
+    private func updateRemoteValues() {
         DispatchQueue.main.async {
-            self.shouldRequestReadingAuthorization = shouldRequestReadingAuthorization
+            if self.totalPendingWorkouts > 0 {
+                self.isProcessingRemoteData = true
+                self.processingRemoteDataValue = Double(self.totalCurrentWorkouts) / Double(self.totalPendingWorkouts)
+            } else {
+                Log.debug("finished updating values")
+                self.isProcessingRemoteData = false
+                self.processingRemoteDataValue = 0.0
+            }
         }
     }
     
-    func updateState(_ state: State) {
-        DispatchQueue.main.async {
-            self.state = state
-        }
-    }
+}
+
+// MARK: - Previews
+
+class WorkoutManagerPreview: WorkoutManager {
     
-    func updateRemoteValues() {
-        guard self.totalPendingWorkouts > 0 else {
-            self.isProcessingRemoteData = false
-            self.processingRemoteDataValue = 0.0
-            return
-        }
-        
-        self.isProcessingRemoteData = true
-        self.processingRemoteDataValue = Double(self.totalCurrentWorkouts) / Double(self.totalPendingWorkouts)
+    static func manager(context: NSManagedObjectContext) -> WorkoutManager {
+        WorkoutManager(context: context) as WorkoutManager
     }
     
 }

@@ -12,88 +12,70 @@ struct ContentView: View {
         case home, stats, goals
     }
     
+    private let memoryNotification = UIApplication.didReceiveMemoryWarningNotification
+    
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.managedObjectContext) var viewContext
+    
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
-    @EnvironmentObject var storageProvider: StorageProvider
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
+    
     @State private var selected = Tabs.home
-    @State private var imageCache = MapImageCache.getImageCache()
     
     var body: some View {
         TabView(selection: $selected) {
             HomeView()
-                .onAppear {
-                    if workoutManager.isProcessingRemoteData { return }
-                    workoutManager.fetchRequestStatusForReading(resetAnchor: true)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                    reloadData(resetAnchor: true)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                    viewContext.batchDeleteObjects()
-                    viewContext.refreshAllObjects()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-                    viewContext.refreshAllObjects()
-                }
                 .tabItem { Label("Home", systemImage: selected == .home ? "house.fill" : "house") }
                 .tag(Tabs.home)
             
             StatsView()
-                .onAppear { statsManager.refreshIfNeeded() }
                 .tabItem { Label("Progress", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
                 .tag(Tabs.stats)
-            
-//                GoalsView()
-//                    .tabItem { Label("Goals", systemImage: selected == .goals ? "flag.fill" : "flag") }
-//                    .tag(Tabs.goals)
-            
-//                WorkoutsView()
-//                    .tabItem { Label("Workouts", systemImage: selected == .workouts ? "flame.fill" : "flame") }
-//                    .tag(Tabs.workouts)
-//                    .onAppear { fetchWorkoutsIfNecessary(resetAnchor: false) }
-//                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-//                        fetchWorkoutsIfNecessary(resetAnchor: true)
-//                    }
-//                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-//                        viewContext.batchDeleteObjects()
-//                        viewContext.refreshAllObjects()
-//                    }
-//                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-//                        viewContext.refreshAllObjects()
-//                    }
         }
         .onboardingOverlay()
+        .onReceive(NotificationCenter.default.publisher(for: memoryNotification)) { _ in
+            viewContext.refreshAllObjects()
+        }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .active:
+                Log.debug("active")
+                Task {
+                    Log.debug("requesting status")
+                    await workoutManager.requestHealthaStatus()
+                }
+            case .background:
+                Log.debug("background")
+                viewContext.batchDeleteObjects()
+                viewContext.refreshAllObjects()
+            case .inactive:
+                Log.debug("inactive")
+            @unknown default:
+                Log.debug("unknown state")
+                assertionFailure()
+            }
+        }
+        .onChange(of: workoutManager.isProcessingRemoteData) { isProcessing in
+            if isProcessing { return }
+            
+            Log.debug("refreshing stats and current data")
+            logManager.reloadCurrentInterval()
+            statsManager.refresh()
+        }
     }
-}
-
-extension ContentView {
-    
-    func reloadData(resetAnchor: Bool) {
-        if workoutManager.isProcessingRemoteData { return }
-        workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
-        statsManager.refreshIfNeeded()
-    }
-    
 }
 
 struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workoutManager = WorkoutManager(context: viewContext)
-    static let logManager = LogManager(context: viewContext)
-    static let statsManager = StatsManager(context: viewContext)
-    static let purchaseManager = IAPManager.preview(isActive: true)
+    static let workoutManager = WorkoutManagerPreview.manager(context: viewContext)
+    static let logManager = LogManagerPreview.manager(context: viewContext)
+    static let statsManager = StatsManagerPreview.manager(context: viewContext)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         ContentView()
-            .onAppear(perform: {
-                workoutManager.state = .ok
-                workoutManager.isLoading = true
-                workoutManager.shouldRequestReadingAuthorization = false
-            })
-            .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(logManager)
             .environmentObject(statsManager)

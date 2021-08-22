@@ -61,7 +61,7 @@ class Workout: NSManagedObject {
     @NSManaged var locationState: String? // deprecated
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
-    @NSManaged fileprivate(set) var coordinatesValue: String
+    @NSManaged var coordinatesValue: String
     
     // Heart Rate Zones
     @NSManaged private(set) var zoneMaxHeartRate: Int
@@ -272,9 +272,11 @@ extension Workout {
     }
     
     static func find(using identifier: UUID, in context: NSManagedObjectContext) -> Workout? {
-        let request = defaultFetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
-        return try? context.fetch(request).first
+        context.performAndWait {
+            let request = defaultFetchRequest()
+            request.predicate = NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
+            return try? context.fetch(request).first
+        }
     }
     
 }
@@ -284,42 +286,46 @@ extension Workout {
     
     @discardableResult
     static func insert(into context: NSManagedObjectContext, object: WorkoutObject, regenerate: Bool) -> Workout {
-        let workout = Workout(context: context)
-        updateValues(for: workout, object: object, in: context)
-        return workout
+        context.performAndWait {
+            let workout = Workout(context: context)
+            updateValues(for: workout, object: object, in: context)
+            return workout
+        }
     }
     
     static func updateValues(for workout: Workout, object: WorkoutObject, in context: NSManagedObjectContext) {
-        workout.remoteIdentifier = object.identifier
-        workout.sport = object.sport
-        workout.indoor = object.indoor
-        workout.start = object.start
-        workout.end = object.end
-        workout.duration = object.duration
-        workout.movingTime = object.movingTime
-        workout.avgMovingSpeed = object.avgMovingSpeed
-        workout.distance = object.distance
-        workout.avgHeartRate = object.avgHeartRate
-        workout.maxHeartRate = object.maxHeartRate
-        workout.avgPace = object.avgPace
-        workout.avgMovingPace = object.avgMovingPace
-        workout.energyBurned = object.energyBurned
-        workout.avgSpeed = object.avgSpeed
-        workout.maxSpeed = object.maxSpeed
-        workout.avgCyclingCadence = object.avgCyclingCadence
-        workout.maxCyclingCadence = object.maxCyclingCadence
-        workout.elevationAscended = object.elevationAscended
-        workout.elevationDescended = object.elevationDescended
-        workout.minElevation = object.minElevation
-        workout.maxElevation = object.maxElevation
-        workout.source = object.source
-        workout.device = object.device
-        workout.coordinatesValue = object.coordinatesValue
-        
-        // Heart Rate Zones
-        let zoneHeartRate = AppSettings.maxHeartRate
-        let zoneValues = AppSettings.heartRateZones
-        workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
+        context.performAndWait {
+            workout.remoteIdentifier = object.identifier
+            workout.sport = object.sport
+            workout.indoor = object.indoor
+            workout.start = object.start
+            workout.end = object.end
+            workout.duration = object.duration
+            workout.movingTime = object.movingTime
+            workout.avgMovingSpeed = object.avgMovingSpeed
+            workout.distance = object.distance
+            workout.avgHeartRate = object.avgHeartRate
+            workout.maxHeartRate = object.maxHeartRate
+            workout.avgPace = object.avgPace
+            workout.avgMovingPace = object.avgMovingPace
+            workout.energyBurned = object.energyBurned
+            workout.avgSpeed = object.avgSpeed
+            workout.maxSpeed = object.maxSpeed
+            workout.avgCyclingCadence = object.avgCyclingCadence
+            workout.maxCyclingCadence = object.maxCyclingCadence
+            workout.elevationAscended = object.elevationAscended
+            workout.elevationDescended = object.elevationDescended
+            workout.minElevation = object.minElevation
+            workout.maxElevation = object.maxElevation
+            workout.source = object.source
+            workout.device = object.device
+            workout.coordinatesValue = object.coordinatesValue
+            
+            // Heart Rate Zones
+            let zoneHeartRate = AppSettings.maxHeartRate
+            let zoneValues = AppSettings.heartRateZones
+            workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
+        }
     }
     
     func updateHeartRateZones(with maxHeartRate: Int, values: [Int]) {

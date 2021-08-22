@@ -42,6 +42,6 @@ struct LoadingView_Previews: PreviewProvider {
     
     static var previews: some View {
         ProcessView(title: title, value: .constant(0.5))
-            .environment(\.colorScheme, .dark)
+            .preferredColorScheme(.dark)
     }
 }

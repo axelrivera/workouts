@@ -15,17 +15,23 @@ extension StatsRecentView {
         
         var title: String {
             switch self {
-            case .distance: return "Distance"
-            case .calories: return "Calories"
-            case .elevation: return "Elevation"
+            case .distance:
+                return "Distance"
+            case .calories:
+                return "Calories"
+            case .elevation:
+                return "Elevation"
             }
         }
         
         var color: Color {
             switch self {
-            case .distance: return .distance
-            case .calories: return .calories
-            case .elevation: return .elevation
+            case .distance:
+                return .distance
+            case .calories:
+                return .calories
+            case .elevation:
+                return .elevation
             }
         }
     }
@@ -100,7 +106,7 @@ struct StatsRecentView: View {
             .zIndex(0.0)
             .listStyle(PlainListStyle())
         }
-        .paywallOverlay()
+        .paywallButtonOverlay()
         .navigationBarTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -130,17 +136,23 @@ extension StatsRecentView {
     
     func valuesForSelectedOption() -> [ChartInterval] {
         switch option {
-        case .distance: return distanceChartIntervals
-        case .calories: return caloriesChartIntervals
-        case .elevation: return elevationChartIntervals
+        case .distance:
+            return distanceChartIntervals
+        case .calories:
+            return caloriesChartIntervals
+        case .elevation:
+            return elevationChartIntervals
         }
     }
     
     func stringForSelectedOption(in summary: StatsSummary) -> String {
         switch option {
-        case .distance: return summary.distanceString
-        case .calories: return summary.caloriesString
-        case .elevation: return summary.elevationString
+        case .distance:
+            return summary.distanceString
+        case .calories:
+            return summary.caloriesString
+        case .elevation:
+            return summary.elevationString
         }
     }
     
@@ -176,16 +188,10 @@ extension StatsRecentView {
 struct StatsRecentView_Previews: PreviewProvider {
     static var summaries = StatsSummary.weeklySamples()
     
-    static let purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = false
-        return manager
-    }()
-    
     static var previews: some View {
         NavigationView {
             StatsRecentView(timeframe: .week, summaries: summaries)
-                .environmentObject(purchaseManager)
+                .environmentObject(IAPManagerPreview.manager(isActive: true))
                 .preferredColorScheme(.dark)
         }
     }

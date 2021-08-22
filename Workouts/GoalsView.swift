@@ -16,7 +16,7 @@ struct GoalsView: View {
                 ForEach(statuses, id: \.self) { status in
                     NavigationLink(destination: Text("Goals View")) {
                         GoalView(status: status)
-                            .padding([.top, .bottom], 10.0)
+                            .padding([.top, .bottom], CGFloat(10.0))
                     }
                 }
             }

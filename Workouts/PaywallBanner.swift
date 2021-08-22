@@ -71,12 +71,15 @@ struct PaywallBanner_Previews: PreviewProvider {
             VStack(spacing: 20.0) {
                 PaywallBanner(isActive: true, action: {})
                 PaywallBanner(isActive: false, action: {})
+                PaywallLockButton(action: {})
             }
             .navigationBarTitleDisplayMode(.inline)
         }
         .preferredColorScheme(.dark)
     }
 }
+
+// MARK: Button
 
 struct PaywallButton: View {
     var action = {}
@@ -101,6 +104,40 @@ struct PaywallButtonStyle: ButtonStyle {
         .padding()
         .background(configuration.isPressed ? Color.lightGray : Color.yellow)
         .cornerRadius(Constants.cornerRadius)
+        .shadow(radius: 1)
+  }
+
+}
+
+// MARK: Lock Button
+
+struct PaywallLockButton: View {
+    var action = {}
+    
+    init(action: @escaping () -> Void) {
+        self.action = action
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "lock.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 92.0, height: 92.0, alignment: .center)
+        }
+        .buttonStyle(PaywallLockButtonStyle())
+    }
+    
+}
+
+struct PaywallLockButtonStyle: ButtonStyle {
+
+  func makeBody(configuration: Self.Configuration) -> some View {
+    configuration.label
+        .foregroundColor(.black)
+        .padding()
+        .background(configuration.isPressed ? Color.lightGray : Color.yellow)
+        .clipShape(Circle())
         .shadow(radius: 1)
   }
 
