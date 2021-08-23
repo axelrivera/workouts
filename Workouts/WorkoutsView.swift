@@ -34,15 +34,20 @@ struct WorkoutsView: View {
     }
             
     var body: some View {
-        List {
-            WorkoutFilter(sport: sport, interval: interval) { workout in
-                NavigationLink(destination: detailView(identifier: workout.remoteIdentifier!)) {
-                    WorkoutMapCell(workout: workout.workoutData())
+        ScrollView {
+            LazyVStack(spacing: 0.0) {
+                WorkoutFilter(sport: sport, interval: interval) { workout in
+                    Group {
+                        NavigationLink(destination: detailView(identifier: workout.remoteIdentifier!)) {
+                            WorkoutMapCell(workout: workout.workoutData())
+                                .padding()
+                        }
+                        .buttonStyle(WorkoutPlainButtonStyle())
+                        Divider()
+                    }
                 }
-                .buttonStyle(WorkoutPlainButtonStyle())
             }
         }
-        .listStyle(PlainListStyle())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {

@@ -123,9 +123,9 @@ struct AnalysisView: View {
                     }
                 }
 
-                if detailManager.altitudeValues.isPresent || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
+                if detailManager.points.isPresent || (showElevationAscended || showElevationDescended) {
                     Section(header: Text("Elevation")) {
-                        if detailManager.altitudeValues.isPresent {
+                        if detailManager.points.isPresent {
                             chartArea(
                                 valueType: .altitude,
                                 supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
@@ -135,16 +135,17 @@ struct AnalysisView: View {
                             )
                         }
                         
-                        if abs(workout.elevationAscended) > 0 {
+                        if showElevationAscended {
                             rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
                         }
                         
-                        if abs(workout.elevationDescended) > 0 {
+                        if showElevationDescended {
                             rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
                         }
                     }
                 }
             }
+            .loadingView(isVisible: detailManager.isProcessingAnalysis)
             .listStyle(GroupedListStyle())
             .navigationTitle(workout.analysisTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -167,6 +168,14 @@ struct AnalysisView: View {
 }
 
 extension AnalysisView {
+    
+    var showElevationAscended: Bool {
+        abs(workout.elevationAscended) > 0
+    }
+    
+    var showElevationDescended: Bool {
+        abs(workout.elevationDescended) > 0
+    }
     
     func saveZones(heartRate: Int, values: [Int]) {
         Task(priority: .userInitiated) {

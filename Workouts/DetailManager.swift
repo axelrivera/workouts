@@ -16,8 +16,9 @@ class DetailManager: ObservableObject {
         case lap
     }
     
-    let baseIntervalPoints : Int = 600
-    
+    @Published var isProcessingAnalysis: Bool = false
+    @Published var isProcessingLaps: Bool = false
+        
     @Published var points = [CLLocationCoordinate2D]()
     @Published var heartRateValues = [ChartInterval]()
     @Published var speedValues = [ChartInterval]()
@@ -30,15 +31,10 @@ class DetailManager: ObservableObject {
     @Published var zoneManager: HRZoneManager = HRZoneManager()
     
     @Published var detail = WorkoutDetail()
-    @Published var isMapDisabled = false
     
     @Published var showLaps = false
-    @Published var selectedLapDistance = LapDistance.option1 {
-        didSet {
-            reloadLaps()
-        }
-    }
-    @Published var laps = [WorkoutLap]()
+    @Published var selectedLapDistance = LapDistance.option1
+    @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
     
     var distanceSamples: [Quantity]?
     
@@ -92,16 +88,24 @@ extension DetailManager {
     var sport: Sport { workout.sport }
         
     func loadWorkout(with context: NSManagedObjectContext) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isProcessingAnalysis = true
+                self.isProcessingLaps = true
+            }
+        }
+        
         self.context = context
         self.detail = WorkoutDetail(workout: workout)
         self.points = workout.coordinates
         
         Task(priority: .userInitiated) {
-            await run()
+            await process()
+            await processLaps()
         }
     }
     
-    func run() async {
+    private func process() async {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { return }
 
@@ -137,28 +141,45 @@ extension DetailManager {
                 self.maxElevation = maxElevation
                 self.zoneManager = zoneManager
                 self.zones = zones
+                
+                withAnimation {
+                    self.isProcessingAnalysis = false
+                }
             }
         } catch {
             Log.debug("unable to process intervals")
         }
     }
     
-    func reloadLapsIfNeeded() {
-        guard laps.isEmpty else { return }
-        reloadLaps()
+    func selectedLaps() -> [WorkoutLap] {
+        guard let laps = lapsDictionary[selectedLapDistance] else {
+            return []
+        }
+        return laps
     }
     
-    func reloadLaps() {
-        Task(priority: .userInitiated) {
-            let laps = await currentLaps()
-            
-            DispatchQueue.main.async {
-                self.laps = laps
+    private func processLaps() async {
+        async let option1 = lapsForDistance(.option1)
+        async let option2 = lapsForDistance(.option2)
+        async let option3 = lapsForDistance(.option3)
+        async let option4 = lapsForDistance(.option4)
+        
+        let dictionary: [LapDistance: [WorkoutLap]] = [
+            .option1: await option1,
+            .option2: await option2,
+            .option3: await option3,
+            .option4: await option4
+        ]
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.lapsDictionary = dictionary
+                self.isProcessingLaps = false
             }
         }
     }
     
-    func currentLaps() async -> [WorkoutLap] {
+    private func lapsForDistance(_ lapDistance: LapDistance) async -> [WorkoutLap] {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { throw  DetailError.lap }
 
@@ -166,7 +187,7 @@ extension DetailManager {
             Log.debug("samples: \(samples.count)")
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
 
-            let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: selectedLapDistance.distanceInMeters(for: sport))
+            let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: lapDistance.distanceInMeters(for: sport))
             Log.debug("lap intervals: \(lapIntervals.count)")
             let laps = lapIntervals.map { interval in
                 WorkoutLap(

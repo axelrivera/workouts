@@ -17,7 +17,7 @@ struct HomeMapCell: View {
     var body: some View {
         HStack {
             if workout.indoor {
-                Image(systemName: "flame")
+                Image(systemName: "map")
                     .font(.title)
                     .foregroundColor(.secondary)
                     .frame(width: mapWidth, height: mapWidth, alignment: .center)

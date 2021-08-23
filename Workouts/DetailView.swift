@@ -10,8 +10,12 @@ import MapKit
 import CoreData
 
 struct DetailView: View {
-    enum ActiveSheet: Identifiable {
+    enum ActiveFullSheet: Identifiable {
         case map
+        var id: Int { hashValue }
+    }
+    
+    enum ActiveSheet: Identifiable {
         case analysis
         case laps
         var id: Int { hashValue }
@@ -26,7 +30,8 @@ struct DetailView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var detailManager: DetailManager
     
-    @State var activeSheet: ActiveSheet?
+    @State private var activeSheet: ActiveSheet?
+    @State private var activeFullSheet: ActiveFullSheet?
         
     var workout: WorkoutDetail { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
@@ -53,13 +58,13 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], CGFloat(5.0))
             
-            Button(action: { activeSheet = .map }) {
-                WorkoutMap(points: detailManager.points)
+            if detailManager.points.isPresent {
+                Button(action: { activeFullSheet = .map }) {
+                    WorkoutMap(points: detailManager.points)
+                }
+                .buttonStyle(WorkoutMapButtonStyle())
             }
-            .buttonStyle(WorkoutMapButtonStyle())
-            .disabled(detailManager.isMapDisabled)
-            .overlay(mapOverlay())
-            
+                        
             HStack {
                 Button(action: { activeSheet = .analysis }) {
                     Label("Analysis", systemImage: "flame")
@@ -101,10 +106,8 @@ struct DetailView: View {
         .navigationTitle(workout.detailTitle )
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
-        .fullScreenCover(item: $activeSheet) { (item) in
+        .sheet(item: $activeSheet) { item in
             switch item {
-            case .map:
-                DetailMapView(points: detailManager.points)
             case .analysis:
                 AnalysisView()
                     .environmentObject(detailManager)
@@ -113,6 +116,12 @@ struct DetailView: View {
                 LapsView()
                     .environmentObject(detailManager)
                     .environmentObject(purchaseManager)
+            }
+        }
+        .fullScreenCover(item: $activeFullSheet) { item in
+            switch item {
+            case .map:
+                DetailMapView(points: detailManager.points)
             }
         }
     }
@@ -143,21 +152,6 @@ extension DetailView {
             case .row4:
                 DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
                 DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
-            }
-        }
-    }
-    
-    @ViewBuilder
-    func mapOverlay() -> some View {
-        if detailManager.isMapDisabled {
-            if workout.indoor {
-                Text("Indoor Workout")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.opacity(0.5))
-            } else {
-                Text("No Map Data")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.opacity(0.5))
             }
         }
     }

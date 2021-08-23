@@ -228,6 +228,8 @@
 		1696424426041B3B00E68A45 /* ZipUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1696424226041B3B00E68A45 /* ZipUtils.swift */; };
 		1697607B25CB7BCC00CAF544 /* DetailMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697607A25CB7BCC00CAF544 /* DetailMap.swift */; };
 		1697608125CB7EFD00CAF544 /* DetailMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697608025CB7EFD00CAF544 /* DetailMapView.swift */; };
+		16A02AD126D1D48D009BD2E1 /* LoadingModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A02AD026D1D48D009BD2E1 /* LoadingModifier.swift */; };
+		16A02AD226D1D48D009BD2E1 /* LoadingModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A02AD026D1D48D009BD2E1 /* LoadingModifier.swift */; };
 		16A065E825C3679D00019096 /* WorkoutMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A065E725C3679D00019096 /* WorkoutMap.swift */; };
 		16A065EC25C3715300019096 /* MKCoordinateRegion+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A065EB25C3715300019096 /* MKCoordinateRegion+Additions.swift */; };
 		16A065F225C37F1500019096 /* DetailManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A065F125C37F1500019096 /* DetailManager.swift */; };
@@ -465,6 +467,7 @@
 		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
 		1697607A25CB7BCC00CAF544 /* DetailMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMap.swift; sourceTree = "<group>"; };
 		1697608025CB7EFD00CAF544 /* DetailMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMapView.swift; sourceTree = "<group>"; };
+		16A02AD026D1D48D009BD2E1 /* LoadingModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingModifier.swift; sourceTree = "<group>"; };
 		16A065E725C3679D00019096 /* WorkoutMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMap.swift; sourceTree = "<group>"; };
 		16A065EB25C3715300019096 /* MKCoordinateRegion+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MKCoordinateRegion+Additions.swift"; sourceTree = "<group>"; };
 		16A065F125C37F1500019096 /* DetailManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailManager.swift; sourceTree = "<group>"; };
@@ -919,6 +922,7 @@
 				1602AFA426C6F5870079A6E4 /* WorkoutMapCell.swift */,
 				16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */,
 				1665EAEC26CB154900700D1C /* HomeMapCell.swift */,
+				16A02AD026D1D48D009BD2E1 /* LoadingModifier.swift */,
 			);
 			name = Components;
 			sourceTree = "<group>";
@@ -1270,6 +1274,7 @@
 				168F3C9C26A5CDE60054AFD1 /* MigrationStep.swift in Sources */,
 				164D0ACF26609EBF000A56AD /* StorageProvider.swift in Sources */,
 				160BB06825DD61700059E493 /* ContentView.swift in Sources */,
+				16A02AD226D1D48D009BD2E1 /* LoadingModifier.swift in Sources */,
 				16825C8126682E4400C7895E /* ProcessView.swift in Sources */,
 				160BB06925DD61700059E493 /* Log.swift in Sources */,
 				160BB06A25DD61700059E493 /* TextRow.swift in Sources */,
@@ -1427,6 +1432,7 @@
 				168F3C9B26A5CDE60054AFD1 /* MigrationStep.swift in Sources */,
 				164D0ACE26609EBF000A56AD /* StorageProvider.swift in Sources */,
 				16682B6925CF416D00FC9317 /* ContentView.swift in Sources */,
+				16A02AD126D1D48D009BD2E1 /* LoadingModifier.swift in Sources */,
 				16825C8026682E4400C7895E /* ProcessView.swift in Sources */,
 				16A3A5EA25B8F477003D1AB2 /* Log.swift in Sources */,
 				1645B94325B35F6E00B04478 /* TextRow.swift in Sources */,

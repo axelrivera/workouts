@@ -53,7 +53,9 @@ struct PaywallModifier: ViewModifier {
 
 struct PaywallButtonModifier: ViewModifier {
     @EnvironmentObject var purchaseManager: IAPManager
-    @State var isPaywallShowing: Bool = false
+    
+    let sample: Bool
+    @State private var isPaywallShowing: Bool = false
     
     func body(content: Content) -> some View {
         ZStack(alignment: .center) {
@@ -62,8 +64,8 @@ struct PaywallButtonModifier: ViewModifier {
                 .disabled(!purchaseManager.isActive)
                 
             if !purchaseManager.isActive {
-                VStack {
-                    PaywallLockButton(action: { isPaywallShowing = true })
+                VStack(spacing: 20.0) {
+                    PaywallLockButton(sample: sample, action: { isPaywallShowing = true })
                 }
              }
         }
@@ -81,8 +83,8 @@ extension View {
         modifier(PaywallModifier(isBlurred: isBlurred))
     }
     
-    func paywallButtonOverlay() -> some View {
-        modifier(PaywallButtonModifier())
+    func paywallButtonOverlay(sample: Bool = true) -> some View {
+        modifier(PaywallButtonModifier(sample: sample))
     }
     
 }

@@ -86,18 +86,26 @@ extension DataProvider {
             distanceDesc, durationDesc, elevationDesc, energyDesc, maxDistanceDesc, maxElevationDesc
         ]
         
-        do {
-            let count = try context.count(for: request)
-            let results = try context.fetch(request)
-            guard let first = results.first, let dictionary = first as? [String: Double] else {
-                throw DataError.missingPropertyDictionary
+        var resultDictionary = [String: Any]()
+        context.performAndWait {
+            do {
+                let count = try context.count(for: request)
+                let results = try context.fetch(request)
+                guard let first = results.first, let dictionary = first as? [String: Double] else {
+                    throw DataError.missingPropertyDictionary
+                }
+                
+                resultDictionary = dictionary
+                resultDictionary[Name.count.key] = count
+            } catch {
+                resultDictionary = [String: Any]()
             }
-            
-            var newDictionary: [String: Any] = dictionary
-            newDictionary[Name.count.key] = count
-            return newDictionary
-        } catch {
-            throw error
+        }
+        
+        if resultDictionary.isEmpty {
+            throw DataError.missingPropertyDictionary
+        } else {
+            return resultDictionary
         }
     }
     
@@ -153,14 +161,5 @@ extension DataProvider {
         expressionDesc.expressionResultType = .doubleAttributeType
         return expressionDesc
     }
-    
-}
-
-// MARK: - Samples
-
-extension DataProvider {
-    
-    
-    
     
 }

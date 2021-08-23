@@ -28,7 +28,12 @@ extension MapImage {
     }
     
     func updateUIView(_ imageView: UIImageView, context: Context) {
+        Log.debug("identifier: \(workoutIdentifier)")
+        Log.debug("total coordinates: \(coordinates.count)")
+        Log.debug("image size: \(imageSize)")
+        
         if coordinates.isEmpty { return }
+        guard imageSize.width > 0 && imageSize.height > 0 else { return }
         
         let imageCache = MapImageCache.getImageCache()
         if let image = imageCache.get(forKey: workoutIdentifier.uuidString, prefix: cachePrefix, scheme: scheme) {

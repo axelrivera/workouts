@@ -50,7 +50,7 @@ struct HomeView: View {
                     }
 
                     Button(action: { activeSheet = .add }) {
-                        Label("Import Workouts", systemImage: "square.and.arrow.down")
+                        Label("Import FIT Files", systemImage: "square.and.arrow.down")
                     }
                     .disabled(isAddDisabled)
                 }
@@ -141,6 +141,7 @@ extension HomeView {
     
     func workoutsDestination() -> some View {
         WorkoutsView(sport: $sport, interval: nil, showFilter: true)
+            .navigationTitle("Workouts")
     }
     
     func detailDestination(remoteIdentifier: UUID) -> some View {

@@ -47,7 +47,7 @@ struct WorkoutMapCell: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if !workout.indoor {
+            if workout.coordinates.isPresent && !workout.indoor {
                 MapContainer(workout: workout, scheme: colorScheme)
                     .frame(minHeight: 200.0, maxHeight: 200.0)
                     .cornerRadius(12.0)

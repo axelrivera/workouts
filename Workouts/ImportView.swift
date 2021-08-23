@@ -48,7 +48,7 @@ struct ImportView: View {
                     .opacity(purchaseManager.isActive ? 1.0 : 0.0)
             }
             .opacity(purchaseManager.isActive ? 1.0 : 0.5)
-            .paywallButtonOverlay()
+            .paywallButtonOverlay(sample: false)
             .onAppear { requestWritingAuthorizationIfNeeded() }
             .onChange(of: purchaseManager.isActive, perform: { isActive in
                 requestWritingAuthorizationIfNeeded()

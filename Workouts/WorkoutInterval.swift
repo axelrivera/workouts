@@ -148,7 +148,8 @@ extension Sequence where Iterator.Element: WorkoutInterval {
 
         let hour: Double = 60 * 60
         let movingTimeInHours = ceil(movingTime / hour)
-        let resampleInterval = Float(movingTimeInHours) // divide moving time for every hour
+        var resampleInterval = Float(movingTimeInHours) // divide moving time for every hour
+        resampleInterval = Float.maximum(1.0, resampleInterval)
         
         let points = LinearInterpolator(points: values).resample(interval: resampleInterval)
         let xStep = movingTime / Double(points.count)

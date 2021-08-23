@@ -71,7 +71,7 @@ struct PaywallBanner_Previews: PreviewProvider {
             VStack(spacing: 20.0) {
                 PaywallBanner(isActive: true, action: {})
                 PaywallBanner(isActive: false, action: {})
-                PaywallLockButton(action: {})
+                PaywallLockButton(sample: true, action: {})
             }
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -112,18 +112,28 @@ struct PaywallButtonStyle: ButtonStyle {
 // MARK: Lock Button
 
 struct PaywallLockButton: View {
+    let sample: Bool
     var action = {}
     
-    init(action: @escaping () -> Void) {
+    init(sample: Bool = true, action: @escaping () -> Void) {
+        self.sample = sample
         self.action = action
     }
     
     var body: some View {
         Button(action: action) {
-            Image(systemName: "lock.fill")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 92.0, height: 92.0, alignment: .center)
+            VStack(spacing: 10.0) {
+                Image(systemName: "lock.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 64.0, height: 64.0, alignment: .center)
+                if sample {
+                    Text("SAMPLE DATA")
+                        .font(.fixedFootnote)
+                        .foregroundColor(.black.opacity(0.75))
+                }
+            }
+            .padding()
         }
         .buttonStyle(PaywallLockButtonStyle())
     }
