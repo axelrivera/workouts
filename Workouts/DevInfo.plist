@@ -92,5 +92,7 @@
 			</dict>
 		</dict>
 	</array>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>To save photos when whering a workout.</string>
 </dict>
 </plist>

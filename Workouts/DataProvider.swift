@@ -36,6 +36,7 @@ extension DataProvider {
         let request = Workout.defaultFetchRequest()
         request.predicate = Workout.activePredicate(sport: sport, interval: interval)
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 20
         
         return FetchRequest(fetchRequest: request, animation: .default)
     }

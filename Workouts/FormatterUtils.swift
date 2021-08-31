@@ -93,6 +93,16 @@ func formattedImportRelativeDateString(for date: Date?) -> String {
     return String(format: "%@ @ %@", dateStr, timeStr)
 }
 
+func formattedWorkoutShareDateString(for date: Date?) -> String? {
+    guard let date = date else { return nil }
+    
+    return String(
+        format: "%@ @ %@",
+        DateFormatter.medium.string(from: date),
+        DateFormatter.time.string(from: date)
+    )
+}
+
 func formattedTimeString(for date: Date?) -> String {
     guard let date = date else { return "n/a" }
     return DateFormatter.time.string(from: date)

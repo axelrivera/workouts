@@ -35,7 +35,7 @@ class DetailManager: ObservableObject {
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
     @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
-    
+        
     var distanceSamples: [Quantity]?
     
     private var context: NSManagedObjectContext?
@@ -235,6 +235,24 @@ extension DetailManager {
                 self.zones = zones
             }
         }
+    }
+    
+}
+
+extension DetailManager {
+    
+    var shareViewModel: WorkoutCardViewModel {
+        WorkoutCardViewModel(
+            sport: sport,
+            indoor: workout.indoor,
+            title: workout.title,
+            date: formattedWorkoutShareDateString(for: workout.start),
+            distance: workout.distance > 0 ? formattedDistanceString(for: workout.distance) : nil,
+            duration: formattedHoursMinutesPrettyString(for: workout.totalTime),
+            elevation: workout.elevationAscended > 0 ? formattedElevationString(for: workout.elevationAscended) : nil,
+            pace: workout.avgPace > 0 ? formattedRunningWalkingPaceString(for: workout.avgPace) : nil,
+            coordinates: points
+        )
     }
     
 }

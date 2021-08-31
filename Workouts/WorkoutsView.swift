@@ -24,9 +24,9 @@ struct WorkoutsView: View {
     var filterAction: FilterAction?
     
     init(sport: Binding<Sport?>, interval: DateInterval? = nil, showFilter: Bool = true) {
-        _sport = sport
-        self.interval = interval
-        self.showFilter = showFilter
+        _sport = .constant(nil)
+        self.interval = nil
+        self.showFilter = true
     }
     
     func detailView(identifier: UUID) -> some View {

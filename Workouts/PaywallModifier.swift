@@ -38,9 +38,6 @@ struct PaywallModifier: ViewModifier {
                     }
                     .background(Color.black.opacity(0.5))
                 }
-                
-                
-                
              }
         }
         .sheet(isPresented: $isPaywallShowing) {

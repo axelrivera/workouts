@@ -18,6 +18,7 @@ struct DetailView: View {
     enum ActiveSheet: Identifiable {
         case analysis
         case laps
+        case sharing
         var id: Int { hashValue }
     }
     
@@ -106,6 +107,13 @@ struct DetailView: View {
         .navigationTitle(workout.detailTitle )
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { activeSheet = .sharing }) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
         .sheet(item: $activeSheet) { item in
             switch item {
             case .analysis:
@@ -115,6 +123,9 @@ struct DetailView: View {
             case .laps:
                 LapsView()
                     .environmentObject(detailManager)
+                    .environmentObject(purchaseManager)
+            case .sharing:
+                ShareView(viewModel: detailManager.shareViewModel)
                     .environmentObject(purchaseManager)
             }
         }
