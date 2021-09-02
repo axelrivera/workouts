@@ -49,11 +49,6 @@ class Synchronizer {
         self.anchor = newAnchor
         self.regenerate = false
         self.isFetchingWorkouts = false
-        
-        DispatchQueue.main.async {
-            Log.debug("LOG - send did refresh notification")
-            NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
-        }
     }
     
     deinit {

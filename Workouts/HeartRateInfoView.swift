@@ -49,7 +49,7 @@ struct HeartRateInfoView: View {
                 }
                 .padding([.top, .bottom])
             }
-            .navigationBarTitle("HR Zones Explained")
+            .navigationTitle("HR Zones Explained")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 struct StatsView: View {
+    @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @EnvironmentObject var statsManager: StatsManager
         
@@ -37,8 +38,8 @@ struct StatsView: View {
     }
     
     func workoutsDestination(sport: Sport?, interval: DateInterval?, title: String) -> some View {
-        WorkoutsView(sport: $statsManager.sport, interval: interval, showFilter: false)
-            .navigationBarTitle(title)
+        WorkoutsView(sport: .constant(sport), interval: interval, showFilter: false)
+            .navigationTitle(title)
     }
     
     var weeklySummaries: [StatsSummary] {
@@ -97,9 +98,14 @@ struct StatsView: View {
                 }
                 .textCase(nil)
             }
+            .onChange(of: workoutManager.isProcessingRemoteData) { isProcessing in
+                if isProcessing { return }
+                
+                Log.debug("refreshing stats and current data")
+                statsManager.refresh()
+            }
             .listStyle(InsetGroupedListStyle())
-            .workoutStateOverlay()
-            .navigationBarTitle("Progress")
+            .navigationTitle("Progress")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {

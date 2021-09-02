@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import CoreData
 
 struct AnalysisView: View {
     enum ActiveSheet: Identifiable {
@@ -15,6 +16,7 @@ struct AnalysisView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var detailManager: DetailManager
     @EnvironmentObject var purchaseManager: IAPManager
     
@@ -24,7 +26,7 @@ struct AnalysisView: View {
         nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
     }
     
-    var workout: WorkoutDetail {
+    var workout: WorkoutDetailViewModel {
         detailManager.detail
     }
     
@@ -123,9 +125,9 @@ struct AnalysisView: View {
                     }
                 }
 
-                if detailManager.points.isPresent || (showElevationAscended || showElevationDescended) {
+                if detailManager.detail.coordinates.isPresent || (showElevationAscended || showElevationDescended) {
                     Section(header: Text("Elevation")) {
-                        if detailManager.points.isPresent {
+                        if detailManager.detail.coordinates.isPresent {
                             chartArea(
                                 valueType: .altitude,
                                 supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
@@ -179,7 +181,7 @@ extension AnalysisView {
     
     func saveZones(heartRate: Int, values: [Int]) {
         Task(priority: .userInitiated) {
-            await detailManager.updateZones(maxHeartRate: heartRate, values: values)
+            await detailManager.updateZones(maxHeartRate: heartRate, values: values, context: viewContext)
             activeSheet = nil
         }
     }
@@ -263,7 +265,8 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     
     static var previews: some View {
         AnalysisView()
-            .environmentObject(DetailManager(remoteIdentifier: workout.remoteIdentifier!))
+            .environment(\.managedObjectContext, viewContext)
+            .environmentObject(DetailManager(viewModel: workout.detailViewModel))
             .environmentObject(purchaseManager)
             .colorScheme(.dark)
         

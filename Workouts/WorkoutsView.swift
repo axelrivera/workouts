@@ -9,46 +9,44 @@ import SwiftUI
 import CoreData
 
 struct WorkoutsView: View {
-    typealias FilterAction = (_ sport: Sport?) -> Void
-    
     @EnvironmentObject var workoutManager: WorkoutManager
+    @Binding var sport: Sport?
     
-    @Binding var sport: Sport? {
-        didSet {
-            filterAction?(sport)
-        }
-    }
+    @State private var selectedWorkout: UUID?
+    
+    @FetchRequest(entity: Workout.entity(), sortDescriptors: [], predicate: nil, animation: .default)
+    private var workouts: FetchedResults<Workout>
     
     var interval: DateInterval?
-    var showFilter: Bool = true
-    var filterAction: FilterAction?
-    
-    init(sport: Binding<Sport?>, interval: DateInterval? = nil, showFilter: Bool = true) {
-        _sport = .constant(nil)
-        self.interval = nil
-        self.showFilter = true
+    var showFilter: Bool = false
+
+    init(sport: Binding<Sport?>, interval: DateInterval? = nil, showFilter: Bool = false) {
+        _sport = sport
+        self.interval = interval
+        self.showFilter = showFilter
     }
     
-    func detailView(identifier: UUID) -> some View {
-        DetailView(identifier: identifier)
+    func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
+        DetailView(detailManager: DetailManager(viewModel: viewModel))
     }
             
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0.0) {
                 WorkoutFilter(sport: sport, interval: interval) { workout in
-                    Group {
-                        NavigationLink(destination: detailView(identifier: workout.remoteIdentifier!)) {
-                            WorkoutMapCell(workout: workout.workoutData())
-                                .padding()
-                        }
-                        .buttonStyle(WorkoutPlainButtonStyle())
-                        Divider()
+                    NavigationLink(
+                        tag: workout.workoutIdentifier,
+                        selection: $selectedWorkout,
+                        destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                        WorkoutMapCell(workout: workout.workoutData())
+                            .padding()
                     }
+                    .buttonStyle(WorkoutPlainButtonStyle())
+                    Divider()
                 }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.automatic)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if showFilter {
@@ -58,9 +56,9 @@ struct WorkoutsView: View {
                         }, label: {
                             Text("All Workouts")
                         })
-                        
+
                         Divider()
-                        
+
                         ForEach(Sport.supportedSports) { sport in
                             Button(action: {
                                 self.sport = sport

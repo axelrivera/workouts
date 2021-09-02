@@ -107,7 +107,7 @@ struct StatsRecentView: View {
             .listStyle(PlainListStyle())
         }
         .paywallButtonOverlay()
-        .navigationBarTitle(timeframe.recentTitle)
+        .navigationTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -115,8 +115,8 @@ struct StatsRecentView: View {
 extension StatsRecentView {
     
     func destination(for summary: StatsSummary) -> some View {
-        WorkoutsView(sport: .constant(summary.sport), interval: summary.interval, showFilter: false)
-            .navigationBarTitle(summary.dateRangeHeader)
+        WorkoutsView(sport: .constant(summary.sport))
+            .navigationTitle(summary.dateRangeHeader)
     }
     
 }

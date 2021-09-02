@@ -13,7 +13,7 @@ struct WebContent: View {
     
     var body: some View {
         WebView(urlString: urlString)
-            .navigationBarTitle(title)
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
     }
 }

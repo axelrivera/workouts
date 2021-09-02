@@ -50,7 +50,7 @@ struct HeartRateEditView: View {
                         .accentColor(.red)
                 }
             }
-            .navigationBarTitle("Edit Zones")
+            .navigationTitle("Edit Zones")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

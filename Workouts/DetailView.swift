@@ -34,14 +34,8 @@ struct DetailView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var activeFullSheet: ActiveFullSheet?
         
-    var workout: WorkoutDetail { detailManager.detail }
+    var workout: WorkoutDetailViewModel { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
-        
-    init(identifier: UUID) {
-        let manager = DetailManager(remoteIdentifier: identifier)
-        _detailManager = StateObject(wrappedValue: manager)
-        activeSheet = nil
-    }
     
     var body: some View {
         List {
@@ -59,9 +53,9 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], CGFloat(5.0))
             
-            if detailManager.points.isPresent {
+            if detailManager.detail.coordinates.isPresent {
                 Button(action: { activeFullSheet = .map }) {
-                    WorkoutMap(points: detailManager.points)
+                    WorkoutMap(points: detailManager.detail.coordinates)
                 }
                 .buttonStyle(WorkoutMapButtonStyle())
             }
@@ -103,7 +97,7 @@ struct DetailView: View {
                 }
             }
         }
-        .onAppear { detailManager.loadWorkout(with: viewContext) }
+        .onAppear { detailManager.processWorkout() }
         .navigationTitle(workout.detailTitle )
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
@@ -132,7 +126,7 @@ struct DetailView: View {
         .fullScreenCover(item: $activeFullSheet) { item in
             switch item {
             case .map:
-                DetailMapView(points: detailManager.points)
+                DetailMapView(points: detailManager.detail.coordinates)
             }
         }
     }
@@ -249,7 +243,7 @@ struct DetailView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DetailView(identifier: workout.remoteIdentifier!)
+            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

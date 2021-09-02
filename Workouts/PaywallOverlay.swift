@@ -48,7 +48,7 @@ struct PaywallOverlay_Previews: PreviewProvider {
                     .padding()
                     .overlay(PaywallOverlay())
             }
-            .navigationBarTitle("Overlay Example")
+            .navigationTitle("Overlay Example")
             .background(Color.secondarySystemBackground)
             .navigationBarTitleDisplayMode(.inline)
         }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct TextCircleModifier: ViewModifier {
     let isToday: Bool
@@ -102,6 +103,8 @@ struct WorkoutLogIntervalRow: View {
 struct WorkoutLogItem: View {
     let maxWidth: CGFloat = 50
     
+    @Environment(\.managedObjectContext) var viewContext
+    
     @Binding var displayType: LogDisplayType
     var day: LogDay
     var hideBubble: Bool = false
@@ -145,17 +148,21 @@ struct WorkoutLogItem: View {
     @ViewBuilder
     func destinationView() -> some View {
         if let identifier = day.remoteIdentifiers.first, day.totalActivities == 1 {
-            DetailView(identifier: identifier)
+            if let workout = Workout.find(using: identifier, in: viewContext) {
+                DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
+            } else {
+                Text("No Workout")
+            }
         } else {
             List {
                 WorkoutFilter(identifiers: day.remoteIdentifiers) { workout in
-                    NavigationLink(destination: DetailView(identifier: workout.remoteIdentifier!)) {
+                    NavigationLink(destination: DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))) {
                         WorkoutPlainCell(workout: workout)
                     }
                 }
             }
             .listStyle(PlainListStyle())
-            .navigationBarTitle("Workouts")
+            .navigationTitle("Workouts")
             .navigationBarTitleDisplayMode(.inline)
         }
     }

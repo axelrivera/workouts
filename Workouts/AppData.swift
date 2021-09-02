@@ -52,6 +52,3 @@ struct Emails {
     static let support = "feedback@betterworkouts.app"
 }
 
-extension Notification.Name {
-    static let didRefreshWorkouts = Notification.Name("arn_did_refresh_workouts")
-}

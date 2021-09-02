@@ -24,47 +24,54 @@ class RemoteImporter {
         var responseAnchor: HKQueryAnchor? = newAnchor
         let totalWorkouts = remoteWorkouts.count
         
-        let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
-        NotificationCenter.default.post(
-            name: .willBeginProcessingRemoteData,
-            object: nil,
-            userInfo: userInfo
-        )
+        Log.debug("total workouts: \(totalWorkouts)")
         
-        deleteWorkouts(with: deleted, context: context)
+        if deleted.isPresent {
+            deleteWorkouts(with: deleted, context: context)
+            context.saveOrRollback()
+        }
         
-        for remoteWorkout in remoteWorkouts {
-            if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
-                if regenerate {
-                    Log.debug("regenerating existing workout: \(remoteWorkout.uuid)")
-                    let object = await WorkoutProcessor.object(for: remoteWorkout)
-                    Workout.updateValues(for: workout, object: object, in: context)
+        if totalWorkouts > 0 {
+            let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
+            NotificationCenter.default.post(
+                name: .willBeginProcessingRemoteData,
+                object: nil,
+                userInfo: userInfo
+            )
+            
+            for remoteWorkout in remoteWorkouts {
+                if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
+                    if regenerate {
+                        Log.debug("regenerating existing workout: \(remoteWorkout.uuid)")
+                        let object = await WorkoutProcessor.object(for: remoteWorkout)
+                        Workout.updateValues(for: workout, object: object, in: context)
+                    } else {
+                        Log.debug("skipping existing workout: \(remoteWorkout.uuid)")
+                    }
                 } else {
-                    Log.debug("skipping existing workout: \(remoteWorkout.uuid)")
+                    Log.debug("inserting workout: \(remoteWorkout.uuid)")
+                    let object = await WorkoutProcessor.object(for: remoteWorkout)
+                    Workout.insert(into: context, object: object, regenerate: regenerate)
                 }
-            } else {
-                Log.debug("inserting workout: \(remoteWorkout.uuid)")
-                let object = await WorkoutProcessor.object(for: remoteWorkout)
-                Workout.insert(into: context, object: object, regenerate: regenerate)
+                
+                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
             }
             
-            NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+                responseAnchor = nil
+            }
+            
+            context.refreshAllObjects()
+            
+            Log.debug("LOG - send finish processing remote data notification")
+            NotificationCenter.default.post(
+                name: .didFinishProcessingRemoteData,
+                object: nil
+            )
         }
-        
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-            responseAnchor = nil
-        }
-        
-        context.refreshAllObjects()
-        
-        Log.debug("LOG - send finish processing remote data notification")
-        NotificationCenter.default.post(
-            name: .didFinishProcessingRemoteData,
-            object: nil
-        )
         
         return responseAnchor
     }
@@ -74,8 +81,6 @@ class RemoteImporter {
 extension RemoteImporter {
     
     fileprivate func deleteWorkouts(with ids: [UUID], context: NSManagedObjectContext) {
-        if ids.isEmpty { return }
-        
         let workouts = Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: context)
         workouts.forEach { $0.markForLocalDeletion() }
     }

@@ -64,7 +64,7 @@ struct HeartRateView: View {
                 Button("Update All Workouts", action: { activeAlert = .allConfirmation })
             }
         }
-        .navigationBarTitle("Heart Rate Zones")
+        .navigationTitle("Heart Rate Zones")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $activeSheet) { sheet in
             switch sheet {

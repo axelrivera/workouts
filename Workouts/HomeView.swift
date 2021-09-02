@@ -17,7 +17,11 @@ extension HomeView {
     
 }
 
-struct HomeView: View {
+struct HomeView: View, Equatable {
+    static func == (lhs: HomeView, rhs: HomeView) -> Bool {
+        return true
+    }
+    
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
@@ -25,10 +29,10 @@ struct HomeView: View {
     @FetchRequest<Workout>
     var workouts: FetchedResults<Workout>
     
-    @State private var sport: Sport?
     @State private var activeSheet: ActiveSheet?
     
     init() {
+        Log.debug("redrawing home")
         _workouts = DataProvider.fetchRequest(sport: nil, interval: DateInterval.lastTwoWeeks())
     }
     
@@ -44,18 +48,6 @@ struct HomeView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: sectionHeader(text: "My Workouts")) {
-                    NavigationLink(destination: workoutsDestination()) {
-                        Label("All Workouts", systemImage: "flame")
-                    }
-
-                    Button(action: { activeSheet = .add }) {
-                        Label("Import FIT Files", systemImage: "square.and.arrow.down")
-                    }
-                    .disabled(isAddDisabled)
-                }
-                .textCase(nil)
-
                 Section(header: sectionHeader(text: "My Training")) {
                     Picker("Display", selection: $logManager.displayType.animation()) {
                         ForEach(LogDisplayType.allCases, id: \.self) { dataType in
@@ -64,22 +56,22 @@ struct HomeView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding([.top, .bottom], CGFloat(5.0))
-                    
+
                     HomeLogRow(
                         displayType: $logManager.displayType,
                         title: "Current Week",
                         supportText: logManager.currentIntervalDisplayLabel,
                         interval: logManager.currentInterval
                     )
-                                        
+
                     HomeLogRow(
                         displayType: $logManager.displayType,
                         title: "Last Week",
                         supportText: logManager.prevIntervalDisplayLabel,
                         interval: logManager.prevInterval
                     )
-                    
-                    NavigationLink(destination: logDestination()) {
+
+                    NavigationLink(destination: logDestination) {
                         Label("Workout Log", systemImage: "calendar")
                     }
                 }
@@ -95,7 +87,7 @@ struct HomeView: View {
                             .padding([.top, .bottom], CGFloat(20.0))
                     } else {
                         ForEach(workouts) { workout in
-                            NavigationLink(destination: detailDestination(remoteIdentifier: workout.workoutIdentifier)) {
+                            NavigationLink(destination: detailDestination(viewModel: workout.detailViewModel)) {
                                 HomeMapCell(workout: workout.workoutData())
                             }
                         }
@@ -104,13 +96,20 @@ struct HomeView: View {
                 .textCase(nil)
             }
             .listStyle(InsetGroupedListStyle())
-            .navigationBarTitle("Home")
+            .navigationTitle("Home")
             .navigationViewStyle(StackNavigationViewStyle())
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeSheet = .settings }) {
                        Image(systemName: "gearshape")
                     }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { activeSheet = .add}) {
+                        Text("Add Workout")
+                    }
+                    .disabled(isAddDisabled)
                 }
             }
             .fullScreenCover(item: $activeSheet) { item in
@@ -139,13 +138,8 @@ extension HomeView {
         WorkoutLogView()
     }
     
-    func workoutsDestination() -> some View {
-        WorkoutsView(sport: $sport, interval: nil, showFilter: true)
-            .navigationTitle("Workouts")
-    }
-    
-    func detailDestination(remoteIdentifier: UUID) -> some View {
-        DetailView(identifier: remoteIdentifier)
+    func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
+        DetailView(detailManager: DetailManager(viewModel: viewModel))
     }
     
 }

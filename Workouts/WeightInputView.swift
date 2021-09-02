@@ -41,7 +41,7 @@ struct WeightInputView: View {
                 .pickerStyle(WheelPickerStyle())
             }
         }
-        .navigationBarTitle("Weight")
+        .navigationTitle("Weight")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

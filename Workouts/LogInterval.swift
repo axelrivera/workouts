@@ -25,6 +25,10 @@ extension LogInterval: Hashable {
 
 extension LogInterval {
     
+    var isEmpty: Bool {
+        totalActivities == 0
+    }
+    
     var interval: DateInterval? {
         guard let start = start, let end = end else { return nil }
         return DateInterval(start: start, end: end)
@@ -174,8 +178,10 @@ extension LogDay {
     
 }
 
-struct LogActivity {
-    let remoteIdentifier: UUID?
+struct LogActivity: Identifiable {
+    var id: UUID { remoteIdentifier }
+    
+    let remoteIdentifier: UUID
     let sport: Sport
     let distance: Double
     let duration: Double
@@ -185,7 +191,7 @@ extension Workout {
     
     func logActivity() -> LogActivity {
         LogActivity(
-            remoteIdentifier: remoteIdentifier,
+            remoteIdentifier: workoutIdentifier,
             sport: sport,
             distance: distance,
             duration: movingTime

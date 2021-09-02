@@ -86,15 +86,13 @@ class LogManager: ObservableObject {
     
     func reloadCurrentInterval() {
         // Current Interval
-        
+
         let currentDateInterval = LogInterval.currentDateInterval()
         let currentInterval = logInterval(for: currentDateInterval)
-        
+
         let prevDateInterval = LogInterval.previousWeekDateInterval()
         let prevInterval = logInterval(for: prevDateInterval)
-        
-        // Setup Variables
-        
+
         DispatchQueue.main.async {
             withAnimation(.none) {
                 self.currentInterval = currentInterval
@@ -289,7 +287,7 @@ extension LogManager {
 extension LogManager {
     
     func addObservers() {
-        refreshCancellable = NotificationCenter.default.publisher(for: .didRefreshWorkouts)
+        refreshCancellable = NotificationCenter.default.publisher(for: .didFinishProcessingRemoteData)
             .sink { _ in
                 Log.debug("LOG - refreshing current interval")
                 self.reloadCurrentInterval()

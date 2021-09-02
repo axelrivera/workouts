@@ -21,6 +21,10 @@ struct WorkoutLogView: View {
     @EnvironmentObject var purchaseManager: IAPManager
 
     @State private var activeSheet: ActiveSheet?
+    
+    init() {
+        Log.debug("redrawing workout log")
+    }
 
     func headerView() -> some View {
         VStack(alignment: .center, spacing: 0) {
@@ -41,14 +45,11 @@ struct WorkoutLogView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                 Section(header: headerView()) {
-                    ForEach(manager.intervals, id: \.self) { interval in
+                    ForEach(manager.intervals, id: \.id) { interval in
                         WorkoutLogIntervalRow(displayType: $manager.displayType, interval: interval)
                         Divider()
                     }
                 }
-            }
-            .onAppear {
-                reloadIntervalsIfNeeded()
             }
             .onChange(of: purchaseManager.isActive, perform: { isActive in
                 reloadIntervalsIfNeeded()

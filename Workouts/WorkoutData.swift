@@ -9,7 +9,15 @@ import Foundation
 import CoreLocation
 import SwiftUI
 
-struct WorkoutData: Identifiable {
+struct WorkoutData: Identifiable, Hashable {
+    static func == (lhs: WorkoutData, rhs: WorkoutData) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
     let id: UUID
     let sport: Sport
     let indoor: Bool

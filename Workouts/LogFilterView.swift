@@ -48,7 +48,7 @@ struct LogFilterView: View {
                     }
                 }
             }
-            .navigationBarTitle("Filter")
+            .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

@@ -49,7 +49,7 @@ struct LapsView: View {
                 }
             }
             .paywallButtonOverlay(sample: false)
-            .navigationBarTitle("Laps")
+            .navigationTitle("Laps")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -81,7 +81,7 @@ struct LapsView: View {
             
             HStack {
                 detailView(text: "Distance", detail: selectedDistance, detailColor: .distance)
-                detailView(text: detailManager.workout.totalTimeLabel, detail: selectedTime, detailColor: .time)
+                detailView(text: detailManager.detail.totalTimeLabel, detail: selectedTime, detailColor: .time)
             }
 
             HStack {
@@ -170,43 +170,43 @@ extension LapsView {
     }
     
     var selectedDistance: String {
-        let value = selectedLap?.distance ?? detailManager.workout.distance
+        let value = selectedLap?.distance ?? detailManager.detail.distance
         guard value > 0 else { return "--" }
         return formattedLapDistanceString(for: value)
     }
     
     var selectedTime: String {
-        let value = selectedLap?.duration ?? detailManager.workout.totalTime
+        let value = selectedLap?.duration ?? detailManager.detail.totalTime
         guard value > 0 else { return "--" }
         return formattedHoursMinutesSecondsDurationString(for: value)
     }
     
     var selectedAvgSpeed: String {
-        let value = selectedLap?.avgSpeed ?? detailManager.workout.avgSpeed
+        let value = selectedLap?.avgSpeed ?? detailManager.detail.avgSpeed
         guard value > 0 else { return "--" }
         return formattedLapSpeedString(for: value)
     }
     
     var selectedAvgPace: String {
-        let value = selectedLap?.avgPace ?? detailManager.workout.avgPace
+        let value = selectedLap?.avgPace ?? detailManager.detail.avgPace
         guard value > 0 else { return "--" }
         return formattedRunningWalkingPaceString(for: value)
     }
     
     var selectedAvgCadence: String {
-        let value = selectedLap?.avgCadence ?? detailManager.workout.avgCyclingCadence
+        let value = selectedLap?.avgCadence ?? detailManager.detail.avgCyclingCadence
         guard value > 0 else { return "--" }
         return formattedCyclingCadenceString(for: value)
     }
     
     var selectedAvgHeartRate: String {
-        let value = selectedLap?.avgHeartRate ?? detailManager.workout.avgHeartRate
+        let value = selectedLap?.avgHeartRate ?? detailManager.detail.avgHeartRate
         guard value > 0 else { return "--" }
         return formattedHeartRateString(for: value)
     }
     
     var selectedMaxHeartRate: String {
-        let value = selectedLap?.maxHeartRate ?? detailManager.workout.maxHeartRate
+        let value = selectedLap?.maxHeartRate ?? detailManager.detail.maxHeartRate
         guard value > 0 else { return "--" }
         return formattedHeartRateString(for: value)
     }
@@ -218,8 +218,8 @@ struct LapsView_Previews: PreviewProvider {
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
     
     static let detailManager: DetailManager = {
-        let manager = DetailManager(remoteIdentifier: workout.remoteIdentifier!)
-        manager.loadWorkout(with: viewContext)
+        let manager = DetailManager(viewModel: workout.detailViewModel)
+        manager.processWorkout()
         manager.isProcessingLaps = false
         return manager
     }()

@@ -20,7 +20,7 @@ struct GoalsView: View {
                     }
                 }
             }
-            .navigationBarTitle("Goals")
+            .navigationTitle("Goals")
         }
     }
 }

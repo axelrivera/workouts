@@ -19,7 +19,6 @@ class DetailManager: ObservableObject {
     @Published var isProcessingAnalysis: Bool = false
     @Published var isProcessingLaps: Bool = false
         
-    @Published var points = [CLLocationCoordinate2D]()
     @Published var heartRateValues = [ChartInterval]()
     @Published var speedValues = [ChartInterval]()
     @Published var cyclingCadenceValues = [ChartInterval]()
@@ -30,8 +29,6 @@ class DetailManager: ObservableObject {
     @Published var zones = [HRZoneSummary]()
     @Published var zoneManager: HRZoneManager = HRZoneManager()
     
-    @Published var detail = WorkoutDetail()
-    
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
     @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
@@ -41,10 +38,10 @@ class DetailManager: ObservableObject {
     private var context: NSManagedObjectContext?
     private var _workout: Workout?
     
-    var remoteIdentifier: UUID
+    var detail: WorkoutDetailViewModel
             
-    init(remoteIdentifier: UUID) {
-        self.remoteIdentifier = remoteIdentifier
+    init(viewModel: WorkoutDetailViewModel) {
+        self.detail = viewModel
     }
     
     lazy var provider: HealthProvider = {
@@ -54,15 +51,8 @@ class DetailManager: ObservableObject {
 
 extension DetailManager {
     
-    var workout: Workout {
-        if _workout == nil {
-            _workout = Workout.find(using: remoteIdentifier, in: context!)
-        }
-        return _workout!
-    }
-    
     func remoteWorkout() async throws -> HKWorkout {
-        try await provider.fetchWorkout(uuid: workout.remoteIdentifier!)
+        try await provider.fetchWorkout(uuid: detail.id)
     }
     
     private func defaultDistanceSamples(remoteWorkout: HKWorkout) async -> [Quantity] {
@@ -85,20 +75,16 @@ extension DetailManager {
         return samples.normalizedByDistance(sport: sport)
     }
     
-    var sport: Sport { workout.sport }
+    var sport: Sport { detail.sport }
         
-    func loadWorkout(with context: NSManagedObjectContext) {
+    func processWorkout() {
         DispatchQueue.main.async {
             withAnimation {
                 self.isProcessingAnalysis = true
                 self.isProcessingLaps = true
             }
         }
-        
-        self.context = context
-        self.detail = WorkoutDetail(workout: workout)
-        self.points = workout.coordinates
-        
+                
         Task(priority: .userInitiated) {
             await process()
             await processLaps()
@@ -117,8 +103,8 @@ extension DetailManager {
 
             let (speed, heartRate, cadence, _, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
 
-            let zoneMaxHeartRate = workout.zoneMaxHeartRate
-            let zoneValues = workout.zoneValues
+            let zoneMaxHeartRate = detail.zoneMaxHeartRate
+            let zoneValues = detail.zoneValues
             let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
 
             let zones: [HRZoneSummary]
@@ -184,11 +170,9 @@ extension DetailManager {
             guard let remoteWorkout = try? await remoteWorkout() else { throw  DetailError.lap }
 
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
-            Log.debug("samples: \(samples.count)")
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
 
             let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: lapDistance.distanceInMeters(for: sport))
-            Log.debug("lap intervals: \(lapIntervals.count)")
             let laps = lapIntervals.map { interval in
                 WorkoutLap(
                     sport: interval.sport,
@@ -202,10 +186,6 @@ extension DetailManager {
                     maxHeartRate: interval.maxHeartRate
                 )
             }
-            
-            laps.forEach({ Log.debug(String(describing: $0))})
-            
-            Log.debug("laps: \(laps.count)")
             return laps
         } catch {
             Log.debug("unable to process intervals")
@@ -213,11 +193,10 @@ extension DetailManager {
         }
     }
     
-    func updateZones(maxHeartRate: Int, values: [Int]) async {
+    func updateZones(maxHeartRate: Int, values: [Int], context: NSManagedObjectContext) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
-        guard let context = context else { return }
-
-        let workout = self.workout
+        guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
+                
         workout.updateHeartRateZones(with: maxHeartRate, values: values)
         context.saveOrRollback()
 
@@ -244,14 +223,14 @@ extension DetailManager {
     var shareViewModel: WorkoutCardViewModel {
         WorkoutCardViewModel(
             sport: sport,
-            indoor: workout.indoor,
-            title: workout.title,
-            date: formattedWorkoutShareDateString(for: workout.start),
-            distance: workout.distance > 0 ? formattedDistanceString(for: workout.distance) : nil,
-            duration: formattedHoursMinutesPrettyString(for: workout.totalTime),
-            elevation: workout.elevationAscended > 0 ? formattedElevationString(for: workout.elevationAscended) : nil,
-            pace: workout.avgPace > 0 ? formattedRunningWalkingPaceString(for: workout.avgPace) : nil,
-            coordinates: points
+            indoor: detail.indoor,
+            title: detail.title,
+            date: formattedWorkoutShareDateString(for: detail.start),
+            distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
+            duration: formattedHoursMinutesPrettyString(for: detail.totalTime),
+            elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
+            pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
+            coordinates: detail.coordinates
         )
     }
     

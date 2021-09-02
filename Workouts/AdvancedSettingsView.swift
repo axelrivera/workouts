@@ -35,7 +35,7 @@ struct AdvancedSettingsView: View {
                 )
             }
         }
-        .navigationBarTitle("Advanced Settings")
+        .navigationTitle("Advanced Settings")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
             switch alert {

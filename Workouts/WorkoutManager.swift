@@ -14,7 +14,11 @@ import CoreData
 
 class WorkoutManager: ObservableObject {
     var context: NSManagedObjectContext
-            
+    
+    @Published var sport: Sport?
+    @Published var isWorkoutsVisible = false
+    @Published var selectedWorkout: UUID?
+    
     @Published var isProcessingRemoteData = false
     @Published var processingRemoteDataValue: Double = 0
     private var totalPendingWorkouts = 0
@@ -25,7 +29,7 @@ class WorkoutManager: ObservableObject {
     private let authProvider = HealthAuthProvider.shared
     private let healthProvider = HealthProvider.shared
     
-    @Published var isAuthorized = false
+    @Published var isAuthorized = true
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -42,17 +46,12 @@ class WorkoutManager: ObservableObject {
         let shouldRequestStatus = await authProvider.shouldRequestStatus()
         if shouldRequestStatus {
             DispatchQueue.main.async {
+                self.isAuthorized = false
                 self.isOnboardingVisible = true
             }
         } else {
             Log.debug("request status not required")
-            let isAuthorized = true
-            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: true)
-            
-            DispatchQueue.main.async {
-                self.isOnboardingVisible = !isAuthorized
-                self.isAuthorized = isAuthorized
-            }
+            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: false)
         }
     }
     
@@ -62,14 +61,14 @@ class WorkoutManager: ObservableObject {
         do {
             Log.debug("getting authorization")
             try await healthProvider.healthStore.requestAuthorization(toShare: HealthAuthProvider.writeSampleTypes(), read: HealthAuthProvider.readObjectTypes())
-            
+
             let isAuthorized = true
-            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: true)
-            
+            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: false)
+
             DispatchQueue.main.async {
                 self.isOnboardingVisible = !isAuthorized
                 self.isAuthorized = isAuthorized
-                
+
             }
         } catch {
             Log.debug("unable to fetch health authorization: \(error.localizedDescription)")
@@ -113,7 +112,7 @@ extension WorkoutManager {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(didProcessWorkouts),
-            name: .didRefreshWorkouts,
+            name: .didFinishProcessingRemoteData,
             object: nil
         )
     }
@@ -121,13 +120,11 @@ extension WorkoutManager {
     private func removeObservers() {
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didRefreshWorkouts, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
     }
     
     @objc
     private func willProcessWorkouts(_ notification: Notification) {
-        Log.debug("will process workouts notification")
-        
         totalPendingWorkouts = notification.userInfo?[Notification.totalRemoteWorkoutsKey] as? Int ?? 0
         totalCurrentWorkouts = 0
         updateRemoteValues()
@@ -135,14 +132,12 @@ extension WorkoutManager {
     
     @objc
     private func didInsertWorkout(_ notification: Notification) {
-        Log.debug("did insert workout notification")
         totalCurrentWorkouts += 1
         updateRemoteValues()
     }
     
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
-        Log.debug("did process workout notification")
         totalPendingWorkouts = 0
         totalCurrentWorkouts = 0
         updateRemoteValues()
@@ -160,7 +155,6 @@ extension WorkoutManager {
                 self.isProcessingRemoteData = true
                 self.processingRemoteDataValue = Double(self.totalCurrentWorkouts) / Double(self.totalPendingWorkouts)
             } else {
-                Log.debug("finished updating values")
                 self.isProcessingRemoteData = false
                 self.processingRemoteDataValue = 0.0
             }
