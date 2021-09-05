@@ -65,6 +65,8 @@ enum Sport: String, Identifiable, CaseIterable {
         }
     }
     
+    static let paceDistanceValue: Double = 100
+    
     var color: Color {
         switch self {
         case .cycling:

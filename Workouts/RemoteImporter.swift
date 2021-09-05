@@ -32,12 +32,14 @@ class RemoteImporter {
         }
         
         if totalWorkouts > 0 {
-            let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
-            NotificationCenter.default.post(
-                name: .willBeginProcessingRemoteData,
-                object: nil,
-                userInfo: userInfo
-            )
+            DispatchQueue.main.async {
+                let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
+                NotificationCenter.default.post(
+                    name: .willBeginProcessingRemoteData,
+                    object: nil,
+                    userInfo: userInfo
+                )
+            }
             
             for remoteWorkout in remoteWorkouts {
                 if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
@@ -54,7 +56,9 @@ class RemoteImporter {
                     Workout.insert(into: context, object: object, regenerate: regenerate)
                 }
                 
-                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+                }
             }
             
             do {
@@ -66,11 +70,13 @@ class RemoteImporter {
             
             context.refreshAllObjects()
             
-            Log.debug("LOG - send finish processing remote data notification")
-            NotificationCenter.default.post(
-                name: .didFinishProcessingRemoteData,
-                object: nil
-            )
+            DispatchQueue.main.async {
+                Log.debug("LOG - send finish processing remote data notification")
+                NotificationCenter.default.post(
+                    name: .didFinishProcessingRemoteData,
+                    object: nil
+                )
+            }
         }
         
         return responseAnchor

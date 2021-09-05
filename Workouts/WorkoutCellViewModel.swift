@@ -1,5 +1,5 @@
 //
-//  WorkoutData.swift
+//  WorkoutCellViewModel.swift
 //  WorkoutData
 //
 //  Created by Axel Rivera on 8/13/21.
@@ -9,8 +9,8 @@ import Foundation
 import CoreLocation
 import SwiftUI
 
-struct WorkoutData: Identifiable, Hashable {
-    static func == (lhs: WorkoutData, rhs: WorkoutData) -> Bool {
+struct WorkoutCellViewModel: Identifiable, Hashable {
+    static func == (lhs: WorkoutCellViewModel, rhs: WorkoutCellViewModel) -> Bool {
         lhs.id == rhs.id
     }
     
@@ -28,10 +28,11 @@ struct WorkoutData: Identifiable, Hashable {
     let duration: Double
     let avgSpeed: Double
     let avgPace: Double
+    let calories: Double
     let elevation: Double
 }
 
-extension WorkoutData {
+extension WorkoutCellViewModel {
     
     func dateString(shortDay: Bool = false) -> String {
         formattedRelativeDateString(for: date, shortDay: shortDay, showTime: true)
@@ -61,6 +62,10 @@ extension WorkoutData {
         }
     }
     
+    var calorieString: String {
+        formattedCaloriesString(for: calories, zeroPadding: true)
+    }
+    
     var elevationString: String {
         formattedElevationString(for: elevation, zeroPadding: true)
     }
@@ -69,8 +74,8 @@ extension WorkoutData {
 
 extension Workout {
     
-    func workoutData() -> WorkoutData {
-        WorkoutData(
+    var cellViewModel: WorkoutCellViewModel {
+        WorkoutCellViewModel(
             id: remoteIdentifier!,
             sport: sport,
             indoor: indoor,
@@ -78,9 +83,10 @@ extension Workout {
             title: title,
             date: start,
             distance: distance,
-            duration: duration,
+            duration: movingTime,
             avgSpeed: avgSpeed,
             avgPace: avgPace,
+            calories: energyBurned,
             elevation: elevationAscended
         )
     }

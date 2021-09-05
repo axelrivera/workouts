@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AdvancedSettingsView: View {
     enum ActiveAlert: Identifiable {
-        case regenerateWorkouts
+        case regenerateWorkouts, resetCachedImages
         var id: Int { hashValue }
     }
     
@@ -23,6 +23,12 @@ struct AdvancedSettingsView: View {
                 Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
                     Button(action: { activeAlert = .regenerateWorkouts }) {
                         Text("Reset Workout Data")
+                    }
+                }
+                
+                Section(footer: Text("Deletes all cached images for maps.")) {
+                    Button(action: { activeAlert = .resetCachedImages }) {
+                        Text("Reset Map Images")
                     }
                 }
             }
@@ -52,7 +58,17 @@ struct AdvancedSettingsView: View {
                     )
                 }
                 
-                return Alert.contineWithTitle(title, message: message, action: action)
+                return Alert.showAlertWithTitle(title, message: message, action: action)
+            case .resetCachedImages:
+                let title = "Reset Map Images"
+                let message = "This action will reset all cached images used in maps."
+                
+                let action = {
+                    let cache = MapImageCache.getImageCache()
+                    cache.resetAll()
+                }
+                
+                return Alert.showAlertWithTitle(title, message: message, action: action)
             }
         }
     }

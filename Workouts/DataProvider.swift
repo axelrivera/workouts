@@ -36,7 +36,7 @@ extension DataProvider {
         let request = Workout.defaultFetchRequest()
         request.predicate = Workout.activePredicate(sport: sport, interval: interval)
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
-        request.fetchBatchSize = 20
+        request.fetchBatchSize = 10
         
         return FetchRequest(fetchRequest: request, animation: .default)
     }
@@ -56,6 +56,25 @@ extension DataProvider {
         request.returnsObjectsAsFaults = false
         request.predicate = Workout.activePredicate(sport: sport, interval: interval)
         return request
+    }
+    
+}
+
+// MARK: - Recent Workouts
+
+extension DataProvider {
+    
+    func recentWorkouts() -> [Workout] {
+        let request = Workout.defaultFetchRequest()
+        request.returnsObjectsAsFaults = false
+        request.predicate = Workout.activePredicate(sport: nil, interval: DateInterval.lastTwoWeeks())
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
     }
     
 }

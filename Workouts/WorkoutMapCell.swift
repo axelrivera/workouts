@@ -10,35 +10,35 @@ import MapKit
 
 struct WorkoutMapCell: View {
     @Environment(\.colorScheme) var colorScheme
-    let workout: WorkoutData
+    let viewModel: WorkoutCellViewModel
     
     var body: some View {
         VStack {
             VStack(alignment: .leading, spacing: 2.0) {
-                Text(workout.dateString())
+                Text(viewModel.dateString())
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                Text(workout.title)
+                Text(viewModel.title)
                     .font(.title)
                     .padding(.bottom, 5.0)
                 HStack {
-                    Text(workout.distanceString)
+                    Text(viewModel.distanceString)
                         .font(.fixedBody)
                         .foregroundColor(.distance)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Text(workout.durationString)
+                    Text(viewModel.durationString)
                         .font(.fixedBody)
                         .foregroundColor(.time)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Text(workout.speedOrPaceString)
+                    Text(viewModel.speedOrPaceString)
                         .font(.fixedBody)
-                        .foregroundColor(workout.speedOrPaceColor)
+                        .foregroundColor(viewModel.speedOrPaceColor)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    if workout.sport == .cycling && !workout.indoor {
-                        Text(workout.elevationString)
+                    if viewModel.sport == .cycling && !viewModel.indoor {
+                        Text(viewModel.elevationString)
                             .font(.fixedBody)
                             .foregroundColor(.elevation)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,9 +47,10 @@ struct WorkoutMapCell: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if workout.coordinates.isPresent && !workout.indoor {
-                MapContainer(workout: workout, scheme: colorScheme)
+            if viewModel.coordinates.isPresent && !viewModel.indoor {
+                MapContainer(viewModel: viewModel, scheme: colorScheme)
                     .frame(minHeight: 200.0, maxHeight: 200.0)
+                    .background(Color.systemFill)
                     .cornerRadius(12.0)
             }
         }
@@ -57,8 +58,8 @@ struct WorkoutMapCell: View {
 }
 
 struct WorkoutMapCell_Previews: PreviewProvider {
-    static let workoutData: WorkoutData = {
-        WorkoutData(
+    static let viewModel: WorkoutCellViewModel = {
+        WorkoutCellViewModel(
             id: UUID(),
             sport: .cycling,
             indoor: false,
@@ -69,6 +70,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             duration: hoursToSeconds(for: 1),
             avgSpeed: 0,
             avgPace: 0,
+            calories: 0,
             elevation: 0
         )
     }()
@@ -76,7 +78,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             List(1 ..< 5, id: \.self) { _ in
-                WorkoutMapCell(workout: workoutData)
+                WorkoutMapCell(viewModel: viewModel)
             }
             .listStyle(PlainListStyle())
             .navigationTitle("Workouts")
@@ -86,18 +88,42 @@ struct WorkoutMapCell_Previews: PreviewProvider {
 }
 
 private struct MapContainer: View {
-    let workout: WorkoutData
+    let viewModel: WorkoutCellViewModel
     let scheme: ColorScheme
+    private let imageCache = MapImageCache.getImageCache()
+    
+    @State var cachedImage: UIImage?
     
     var body: some View {
         GeometryReader { proxy in
-            MapImage(
-                workoutIdentifier: workout.id,
-                coordinates: workout.coordinates,
-                imageSize: CGSize(width: proxy.size.width, height: 200),
-                cachePrefix: .feed,
-                scheme: scheme
-            )
+            if let image = cachedImage {
+                Image(uiImage: image)
+            } else {
+                Color.systemFill
+                    .onAppear { fetchCachedImage(for: proxy.size) }
+            }
         }
     }
+        
+    private func fetchCachedImage(for size: CGSize) {
+        let url = URL.cachedMapImageURL(id: viewModel.id, scheme: scheme)
+        if let image = imageCache.getMemory(url: url) {
+            cachedImage = image
+        } else if let image = imageCache.getDisk(url: url) {
+            imageCache.set(image: image, url: url, memoryOnly: true)
+            cachedImage = image
+        } else {
+            MKMapView.mapImage(coordinates: viewModel.coordinates, size: size, scheme: scheme) { image in
+                if let newImage = image {
+                    imageCache.set(image: newImage, url: url)
+                    
+                    withAnimation {
+                        self.cachedImage = newImage
+                    }
+                }
+            }
+        }
+    }
+    
+    
 }

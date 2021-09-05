@@ -13,9 +13,6 @@ struct ContentView: View {
         var id: String { rawValue }
     }
     
-    private let memoryNotification = UIApplication.didReceiveMemoryWarningNotification
-    private let refreshNotification = Notification.Name.didFinishProcessingRemoteData
-    
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.managedObjectContext) var viewContext
     
@@ -29,28 +26,23 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selected) {
             EquatableView(content: HomeView())
-                .tabItem { Label("Home", systemImage: selected == .home ? "house.fill" : "house") }
+                .tabItem { Label("Home", systemImage: "house") }
                 .tag(Tabs.home)
             
             StatsView()
-                .tabItem { Label("Progress", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
+                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
             
-            NavigationView {
-                WorkoutsView(sport: $workoutManager.sport, interval: nil, showFilter: true)
-                    .navigationTitle("Workouts")
-            }
-            .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
-            .tag(Tabs.history)
+            WorkoutsView(sport: $workoutManager.sport)
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+                .tag(Tabs.history)
         }
         .onboardingOverlay()
-        .onReceive(NotificationCenter.default.publisher(for: memoryNotification)) { _ in
+        .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
             viewContext.refreshAllObjects()
         }
-        .onReceive(NotificationCenter.default.publisher(for: refreshNotification)) { _ in
-            logManager.reloadCurrentInterval()
-            reloadIntervalsIfNeeded()
-            statsManager.refresh()
+        .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
+            reloadData()
         }
         .onChange(of: scenePhase) { phase in
             switch phase {
@@ -73,7 +65,20 @@ struct ContentView: View {
         }
     }
     
-    func reloadIntervalsIfNeeded() {
+}
+
+// MARK: - Methods
+
+extension ContentView {
+    
+    private func reloadData() {
+        logManager.reloadCurrentInterval()
+        workoutManager.fetchRecentWorkouts()
+        reloadIntervalsIfNeeded()
+        statsManager.refresh()
+    }
+    
+    private func reloadIntervalsIfNeeded() {
         if purchaseManager.isActive {
             logManager.reloadIntervals()
         } else {
@@ -82,6 +87,7 @@ struct ContentView: View {
             }
         }
     }
+    
 }
 
 struct ContentView_Previews: PreviewProvider {

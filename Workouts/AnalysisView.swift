@@ -41,10 +41,6 @@ struct AnalysisView: View {
                         
                         rowForText("Paused Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
                     }
-                    
-                    if workout.sport.isWalkingOrRunning && workout.avgPace > 0 {
-                        rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .cadence)
-                    }
                 }
                 
                 if workout.sport.isSpeedSport && workout.avgSpeed > 0 {
@@ -72,6 +68,23 @@ struct AnalysisView: View {
                                 detail: formattedSpeedString(for: workout.avgMovingSpeed),
                                 detailColor: .speed
                             )
+                        }
+                    }
+                }
+                
+                if workout.sport.isWalkingOrRunning && workout.avgPace > 0 {
+                    Section(header: Text("Pace")) {
+                        if detailManager.paceValues.isPresent {
+                            chartArea(
+                                valueType: .pace,
+                                supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+                                supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+                                values: detailManager.paceValues, avgValue: workout.avgPace,
+                                accentColor: .pace,
+                                yAxisFormatter: PaceValueFormatter()
+                            )
+                        } else {
+                            rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .pace)
                         }
                     }
                 }

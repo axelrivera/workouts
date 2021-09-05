@@ -25,16 +25,8 @@ struct HomeView: View, Equatable {
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
-    
-    @FetchRequest<Workout>
-    var workouts: FetchedResults<Workout>
-    
+        
     @State private var activeSheet: ActiveSheet?
-    
-    init() {
-        Log.debug("redrawing home")
-        _workouts = DataProvider.fetchRequest(sport: nil, interval: DateInterval.lastTwoWeeks())
-    }
     
     func sectionHeader(text: String) -> some View {
         Text(text)
@@ -79,16 +71,16 @@ struct HomeView: View, Equatable {
                 .textCase(nil)
                 
                 Section(header: sectionHeader(text: "Recent Workouts")) {
-                    if workouts.isEmpty {
+                    if workoutManager.recentWorkouts.isEmpty {
                         Text("You haven't completed any workouts in the past two weeks.")
                             .font(.title3)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding([.top, .bottom], CGFloat(20.0))
                     } else {
-                        ForEach(workouts) { workout in
+                        ForEach(workoutManager.recentWorkouts) { workout in
                             NavigationLink(destination: detailDestination(viewModel: workout.detailViewModel)) {
-                                HomeMapCell(workout: workout.workoutData())
+                                HomeWorkoutCell(viewModel: workout.cellViewModel)
                             }
                         }
                     }

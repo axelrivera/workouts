@@ -88,7 +88,7 @@ struct LapsView: View {
                 if detailManager.sport.isCycling {
                     detailView(text: "Avg Speed", detail: selectedAvgSpeed, detailColor: .speed)
                 } else if detailManager.sport.isWalkingOrRunning {
-                    detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .cadence)
+                    detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .pace)
                 }
 
                 if detailManager.sport.isCycling {
@@ -138,7 +138,7 @@ struct LapsView: View {
 
                 if detailManager.sport.isWalkingOrRunning {
                     Text(formattedRunningWalkingPaceString(for: lap.avgPace))
-                        .foregroundColor(.cadence)
+                        .foregroundColor(.pace)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 } else if detailManager.sport.isCycling {
                     Text(formattedLapSpeedString(for: lap.avgSpeed))

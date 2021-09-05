@@ -115,7 +115,7 @@ struct StatsRecentView: View {
 extension StatsRecentView {
     
     func destination(for summary: StatsSummary) -> some View {
-        WorkoutsView(sport: .constant(summary.sport))
+        StatsWorkoutsView(sport: summary.sport, interval: summary.interval)
             .navigationTitle(summary.dateRangeHeader)
     }
     

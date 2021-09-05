@@ -10,8 +10,7 @@ import CoreLocation
 
 typealias ChartIntervalArray = [ChartInterval]
 typealias WorkoutChartIntervals = (speed: ChartIntervalArray, heartRate: ChartIntervalArray,
-                                   cadence: ChartIntervalArray, pace: ChartIntervalArray,
-                                   elevation: ChartIntervalArray)
+                                   cadence: ChartIntervalArray, elevation: ChartIntervalArray)
 
 final class WorkoutInterval: Identifiable {
     var id: Int { number }
@@ -89,23 +88,37 @@ extension Sequence where Iterator.Element: WorkoutInterval {
         let speed = floatValues(keyPath: \.maxSpeed)
         let heartRate = floatValues(keyPath: \.maxHeartRate).compactMap({ $0 > 0 ? $0 : nil })
         let cadence = cadenceValues(avgCadence: avgCadence)
-        let pace = floatValues(keyPath: \.avgPace)
         let altitude = compactMap { interval -> Float? in
             guard let altitude = interval.maxAltitude else { return nil }
             return Float(altitude)
         }
-                
+        
         let duration = movingTime()
-        let speedChart = intervals(samples: speed, movingTime: duration, valueType: .speed)
-        let heartRateChart = intervals(samples: heartRate, movingTime: duration, valueType: .heartRate)
-        let cadenceChart = cadenceIntervals(samples: cadence, movingTime: duration)
-        let paceChart = intervals(samples: pace, movingTime: duration, valueType: .pace)
-        let altitudeChart = intervals(samples: altitude, movingTime: duration, valueType: .altitude)
+        let speedChart = ChartInterval.intervals(samples: speed, movingTime: duration, valueType: .speed)
+        let heartRateChart = ChartInterval.intervals(samples: heartRate, movingTime: duration, valueType: .heartRate)
+        let cadenceChart = ChartInterval.cadenceIntervals(samples: cadence, movingTime: duration)
+        let altitudeChart = ChartInterval.intervals(samples: altitude, movingTime: duration, valueType: .altitude)
                 
-        return (speedChart, heartRateChart, cadenceChart, paceChart, altitudeChart)
+        return (speedChart, heartRateChart, cadenceChart, altitudeChart)
     }
     
-    private func cadenceIntervals(samples: [Double], movingTime: Double) -> [ChartInterval] {
+}
+
+extension ChartInterval {
+    
+    static func paceChartIntervals(samples: [Double], movingTime: Double) -> [ChartInterval] {
+        let count = samples.count
+        let xStep = movingTime / Double(count)
+        
+        return Array(0 ..< count).compactMap { index -> ChartInterval? in
+            let value = samples[index]
+            let xValue = Double(index) * xStep
+            
+            return ChartInterval(xValue: xValue, yValue: value)
+        }
+    }
+    
+    static func cadenceIntervals(samples: [Double], movingTime: Double) -> [ChartInterval] {
         let interval: Double = 2.0
         let count = Int(floor(Double(samples.count) / interval))
         let xStep = movingTime / Double(count)
@@ -121,7 +134,7 @@ extension Sequence where Iterator.Element: WorkoutInterval {
         }
     }
     
-    private func intervals(samples: [Float], movingTime: Double, valueType: ChartInterval.ValueType) -> [ChartInterval] {
+    static func intervals(samples: [Float], movingTime: Double, valueType: ChartInterval.ValueType) -> [ChartInterval] {
         let (xStep, interpolatedSamples) = interpolatedValues(for: samples, movingTime: movingTime)
         
         return interpolatedSamples.enumerated().map { index, value in
@@ -143,7 +156,7 @@ extension Sequence where Iterator.Element: WorkoutInterval {
         }
     }
     
-    private func interpolatedValues(for values: [(Float)], movingTime: Double) -> (xStep: Double, points: [Float]) {
+    static func interpolatedValues(for values: [(Float)], movingTime: Double) -> (xStep: Double, points: [Float]) {
         guard values.isPresent else { return (0, []) }
 
         let hour: Double = 60 * 60

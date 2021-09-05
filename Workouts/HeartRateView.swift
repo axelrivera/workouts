@@ -83,7 +83,7 @@ struct HeartRateView: View {
                 let title = "Update All Workouts"
                 let message = "This action will update all your existing workouts with your current Max Heart Rate and Current Zones."
                 
-                return Alert.contineWithTitle(title, message: message, action: applyAllAction)
+                return Alert.showAlertWithTitle(title, message: message, action: applyAllAction)
             }
         }
     }

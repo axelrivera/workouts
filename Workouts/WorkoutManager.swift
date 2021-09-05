@@ -5,15 +5,17 @@
 //  Created by Axel Rivera on 12/28/20.
 //
 
-import Foundation
-import HealthKit
+import SwiftUI
 import Combine
-import FitFileParser
-import MapKit
 import CoreData
 
+
 class WorkoutManager: ObservableObject {
-    var context: NSManagedObjectContext
+    private(set) var context: NSManagedObjectContext
+    private(set) var dataProvider: DataProvider
+    
+    private let authProvider = HealthAuthProvider.shared
+    private let healthProvider = HealthProvider.shared
     
     @Published var sport: Sport?
     @Published var isWorkoutsVisible = false
@@ -25,14 +27,13 @@ class WorkoutManager: ObservableObject {
     private var totalCurrentWorkouts = 0
         
     @Published var isOnboardingVisible = false
-    
-    private let authProvider = HealthAuthProvider.shared
-    private let healthProvider = HealthProvider.shared
-    
     @Published var isAuthorized = true
+    @Published var recentWorkouts = [Workout]()
     
     init(context: NSManagedObjectContext) {
         self.context = context
+        dataProvider = DataProvider(context: context)
+        recentWorkouts = dataProvider.recentWorkouts()
         addObservers()
     }
     
@@ -86,6 +87,16 @@ class WorkoutManager: ObservableObject {
         ]
         
         NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
+    }
+    
+    func fetchRecentWorkouts() {
+        let workouts = dataProvider.recentWorkouts()
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.recentWorkouts = workouts
+            }
+        }
     }
     
 }

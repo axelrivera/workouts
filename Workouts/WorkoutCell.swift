@@ -8,38 +8,41 @@
 import SwiftUI
 
 struct WorkoutCell: View {
-    var workout: Workout
+    var viewModel: WorkoutDetailViewModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 5.0) {
+        VStack(alignment: .leading, spacing: 10.0) {
             HStack {
-                Text(workout.title)
+                Text(viewModel.title)
                     .font(.fixedTitle2)
                 Spacer()
-                Text(formattedRelativeDateString(for: workout.start))
+                Text(DateFormatter.medium.string(from: viewModel.start))
                      .font(.fixedBody)
                     .foregroundColor(.secondary)
             }
             
             HStack(alignment: .center, spacing: 5.0) {
-                Text(formattedDistanceString(for: workout.distance, zeroPadding: true))
+                Text(formattedDistanceString(for: viewModel.distance, zeroPadding: true))
                     .workoutCellLabelStyle(color: .distance)
                                     
-                Text(formattedHoursMinutesPrettyString(for: workout.movingTime))
+                Text(formattedHoursMinutesPrettyString(for: viewModel.movingTime))
                     .workoutCellLabelStyle(color: .time)
                                 
-                Text(formattedCaloriesString(for: workout.energyBurned, zeroPadding: true))
+                Text(formattedCaloriesString(for: viewModel.energyBurned, zeroPadding: true))
                     .workoutCellLabelStyle(color: .calories)
+                
+                Text(formattedElevationString(for: viewModel.elevationAscended, zeroPadding: true))
+                    .workoutCellLabelStyle(color: .elevation)
             }
         }
     }
 }
 
 struct WorkoutPlainCell: View {
-    var workout: Workout
+    var viewModel: WorkoutDetailViewModel
     
     var body: some View {
-        WorkoutCell(workout: workout)
+        WorkoutCell(viewModel: viewModel)
             .padding([.top, .bottom], 5)
     }
 }
@@ -50,8 +53,10 @@ struct WorkoutCell_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             List(1...10, id: \.self) { _ in
-                WorkoutCell(workout: workout)
+                WorkoutCell(viewModel: workout.detailViewModel)
             }
+            .listStyle(PlainListStyle())
+            .navigationTitle("Workouts")
         }
         .preferredColorScheme(.dark)
     }
@@ -64,7 +69,7 @@ private struct WorkoutCellLabel: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .font(.fixedTitle3)
+            .font(.fixedBody)
             .minimumScaleFactor(0.3)
             .foregroundColor(color)
             .frame(maxWidth: .infinity, alignment: .leading)

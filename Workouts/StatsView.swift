@@ -38,7 +38,7 @@ struct StatsView: View {
     }
     
     func workoutsDestination(sport: Sport?, interval: DateInterval?, title: String) -> some View {
-        WorkoutsView(sport: .constant(sport), interval: interval, showFilter: false)
+        StatsWorkoutsView(sport: sport, interval: interval)
             .navigationTitle(title)
     }
     

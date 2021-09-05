@@ -79,7 +79,7 @@ struct WorkoutLogIntervalRow: View {
                     .animation(.none)
                     .foregroundColor(displayType.color)
             }
-            .padding(.all, 10.0)
+            .padding([.top, .bottom], 10.0)
             
             HStack {
                 ForEach(interval.days) { day in
@@ -88,7 +88,7 @@ struct WorkoutLogIntervalRow: View {
             }
             .frame(height: 80)
         }
-        .padding([.leading, .trailing])
+        .padding([.leading, .trailing], 15.0)
     }
     
     func headerText(for interval: LogInterval) -> String {
@@ -157,7 +157,7 @@ struct WorkoutLogItem: View {
             List {
                 WorkoutFilter(identifiers: day.remoteIdentifiers) { workout in
                     NavigationLink(destination: DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))) {
-                        WorkoutPlainCell(workout: workout)
+                        WorkoutPlainCell(viewModel: workout.detailViewModel)
                     }
                 }
             }

@@ -37,6 +37,7 @@ extension Color {
     static let elevation = Color("ElevationColor")
     static let speed = Color("SpeedColor")
     static let cadence = Color("CadenceColor")
+    static let pace = Color("CadenceColor")
     static let chartBackground = Color("ChartBackgroundColor")
     
     // Sport

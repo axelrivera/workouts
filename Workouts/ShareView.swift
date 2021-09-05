@@ -9,6 +9,12 @@ import SwiftUI
 import MapKit
 
 struct ShareView: View {
+    enum ShareStyle: String, Identifiable, CaseIterable {
+        case map, color
+        var id: String { rawValue }
+        var title: String { rawValue.capitalized }
+    }
+    
     enum ActiveSheet: Identifiable {
         case activity, detail, paywall
         var id: Int { hashValue }
@@ -19,6 +25,7 @@ struct ShareView: View {
     
     @State private var currentSheet: ActiveSheet?
     
+    @State private var style = ShareStyle.map
     @State private var selectedColor: Color = .accentColor
     
     @State private var showLocation = true
@@ -55,7 +62,14 @@ struct ShareView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20.0) {
+            VStack(spacing: CGFloat(20.0)) {
+                Picker("Style", selection: $style.animation()) {
+                    ForEach(ShareStyle.allCases, id: \.self) { item in
+                        Text(item.title)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                
                 workoutCard(isScreen: true)
                     .aspectRatio(CGFloat(1.0), contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -64,53 +78,37 @@ struct ShareView: View {
                     .onAppear {
                         loadLocationStringIfNeeded()
                     }
-                                
-                VStack(alignment: .leading, spacing: 15.0) {
-                    VStack(alignment: .leading) {
-                        Text("Background Color")
-                        WorkoutColorPicker(selectedColor: $selectedColor.animation()) { newColor in
+                
+                HStack {
+                    Text("Remove Branding")
+                    Spacer()
+                    
+                    if purchaseManager.isActive {
+                        Toggle(isOn: $removeBranding.animation()) {
+                            EmptyView()
+                        }
+                        .onChange(of: removeBranding) { _ in
                             reloadImage()
                         }
-                    }
-                    
-                    Divider()
-                    
-                    HStack {
-                        Text("Remove Branding")
-                        Spacer()
-                        
-                        if purchaseManager.isActive {
-                            Toggle(isOn: $removeBranding.animation()) {
-                                EmptyView()
-                            }
-                            .onChange(of: removeBranding) { _ in
-                                reloadImage()
-                            }
-                        } else {
-                            Button(action: { currentSheet = .paywall }) {
-                                Image(systemName: "lock.fill")
-                            }
-                            .buttonStyle(PaywallLockButtonStyle())
+                    } else {
+                        Button(action: { currentSheet = .paywall }) {
+                            Image(systemName: "lock.fill")
                         }
+                        .buttonStyle(PaywallLockButtonStyle())
                     }
                 }
-                .padding()
                 
                 Spacer()
-                
-                Button(action: { currentSheet = .detail }) {
-                    Label("Details", systemImage: "slider.horizontal.3")
-                        .padding([.top, .bottom], CGFloat(10.0))
-                        .frame(maxWidth: .infinity)
+                                
+                if style == .color {
+                    Button(action: { currentSheet = .detail }) {
+                        Label("Details", systemImage: "slider.horizontal.3")
+                            .padding([.top, .bottom], CGFloat(10.0))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
             }
-            .onChange(of: showLocation, perform: { _ in
-                reloadImage()
-            })
-            .onChange(of: showRoute, perform: { _ in
-                reloadImage()
-            })
             .onAppear { loadLocationStringIfNeeded() }
             .padding()
             .navigationTitle("Sharing")
@@ -124,14 +122,15 @@ struct ShareView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Share", action: sheetAction)
+                        .disabled(sharedImage == nil)
                 }
             }
-            .sheet(item: $currentSheet, onDismiss: {}) { sheet in
+            .sheet(item: $currentSheet, onDismiss: { dismissAction() }) { sheet in
                 switch sheet {
                 case .activity:
                     sheetView()
                 case .detail:
-                    ShareDetailView(showLocation: $showLocation, showRoute: $showRoute)
+                    ShareDetailView(color: $selectedColor, showLocation: $showLocation, showRoute: $showRoute)
                 case .paywall:
                     PaywallView()
                         .environmentObject(purchaseManager)
@@ -143,7 +142,14 @@ struct ShareView: View {
 
 extension ShareView {
     
+    func dismissAction() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.reloadImage()
+        }
+    }
+    
     func reloadImage() {
+        sharedImage = nil
         let width = 540.0
         sharedImage = workoutCard(isScreen: false)
             .frame(width: width, height: width, alignment: .top)
@@ -164,7 +170,7 @@ extension ShareView {
     
     func loadLocationStringIfNeeded() {
         guard let coordinate = viewModel.coordinates.first else {
-            loadLocationImageIfNeeded()
+            reloadImage()
             return
         }
         
@@ -212,37 +218,5 @@ struct ShareView_Previews: PreviewProvider {
         ShareView(viewModel: WorkoutCardViewModel.preview())
             .environmentObject(purchaseManager)
             .preferredColorScheme(.dark)
-    }
-}
-
-struct WorkoutColorPicker: View {
-    private let data = Color.workoutColors
-
-    private let rows = [
-        GridItem(.fixed(50.0))
-    ]
-    
-    @Binding var selectedColor: Color
-    var selectedAction: (_ color: Color) -> Void
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHGrid(rows: rows, spacing: 20.0) {
-                ForEach(data, id: \.self) { color in
-                    Button(action: { selectColor(color) }) {
-                        Rectangle()
-                            .fill(color)
-                            .frame(width: CGFloat(50.0), height: CGFloat(50.0))
-                            .border(selectedColor == color ? .yellow : .white, width: 2.0)
-                    }
-                }
-            }
-        }
-        .frame(maxHeight: CGFloat(50.0))
-    }
-    
-    func selectColor(_ color: Color) {
-        selectedColor = color
-        selectedAction(color)
     }
 }

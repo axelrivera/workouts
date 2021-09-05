@@ -9,7 +9,7 @@ import SwiftUI
 
 extension Alert {
     
-    static func contineWithTitle(_ title: String, message: String, action: @escaping () -> Void) -> Alert {
+    static func showAlertWithTitle(_ title: String, message: String, action: @escaping () -> Void) -> Alert {
         let continueButton = Alert.Button.default(Text("Continue"), action: action)
         let cancelButton = Alert.Button.cancel()
                             

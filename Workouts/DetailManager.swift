@@ -22,6 +22,10 @@ class DetailManager: ObservableObject {
     @Published var heartRateValues = [ChartInterval]()
     @Published var speedValues = [ChartInterval]()
     @Published var cyclingCadenceValues = [ChartInterval]()
+    
+    @Published var paceValues = [ChartInterval]()
+    @Published var bestPace: Double = 0
+    
     @Published var altitudeValues = [ChartInterval]()
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
@@ -99,10 +103,25 @@ extension DetailManager {
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
             let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
+            
             let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
-
-            let (speed, heartRate, cadence, _, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
-
+            
+            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
+            
+            let paceValues: [ChartInterval]
+            let bestPace: Double
+            
+            if sport.isWalkingOrRunning {
+                let paceIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: Sport.paceDistanceValue)
+                
+                let paceSamples = paceIntervals.doubleValues(keyPath: \.avgPace)
+                paceValues = ChartInterval.paceChartIntervals(samples: paceSamples, movingTime: detail.movingTime)
+                bestPace = paceSamples.min() ?? 0
+            } else {
+                paceValues = []
+                bestPace = 0
+            }
+            
             let zoneMaxHeartRate = detail.zoneMaxHeartRate
             let zoneValues = detail.zoneValues
             let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
@@ -120,6 +139,8 @@ extension DetailManager {
 
             DispatchQueue.main.async {
                 self.speedValues = speed
+                self.paceValues = paceValues
+                self.bestPace = bestPace
                 self.heartRateValues = heartRate
                 self.cyclingCadenceValues = cadence
                 self.altitudeValues = altitude

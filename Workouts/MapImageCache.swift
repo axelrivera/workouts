@@ -13,30 +13,44 @@ class MapImageCache {
         case home, feed
     }
     
-    var cache = NSCache<NSString, UIImage>()
+    private let cache = NSCache<NSString, UIImage>()
+    private let lock = NSLock()
     
-    func get(forKey: String, prefix: Prefix, scheme: ColorScheme) -> UIImage? {
-        cache.object(forKey: NSString(string: keyFor(id: forKey, imagePrefix: prefix, scheme: scheme)))
+    init() {
+        cache.countLimit = 20
     }
     
-    func set(forKey: String, image: UIImage, prefix: Prefix, scheme: ColorScheme) {
-        cache.setObject(image, forKey: NSString(string: keyFor(id: forKey, imagePrefix: prefix, scheme: scheme)))
+    func getMemory(url: URL) -> UIImage? {
+        lock.lock(); defer { lock.unlock() }
+        return cache.object(forKey: url.path as NSString)
     }
     
-    private func keyFor(id: String, imagePrefix: Prefix, scheme: ColorScheme) -> String {
-        String(format: "%@_%@_%@", id, imagePrefix.rawValue, stringForColorScheme(scheme))
+    func getDisk(url: URL) -> UIImage? {
+        lock.lock(); defer { lock.unlock() }
+        return FileManager.localImage(at: url)
     }
     
-    private func stringForColorScheme(_ scheme: ColorScheme) -> String {
-        switch scheme {
-        case .light:
-            return "light"
-        case .dark:
-            return "dark"
-        @unknown default:
-            return "light"
+    func set(image: UIImage, url: URL, memoryOnly: Bool = false) {
+        lock.lock(); defer { lock.unlock() }
+        
+        cache.setObject(image, forKey: url.path as NSString)
+        
+        if !memoryOnly {
+            do {
+                try FileManager.createImagesCacheDirectoryIfNeeded()
+                try FileManager.writeLocalImage(image, at: url)
+            } catch {
+                Log.debug("failed to write cached image: \(error.localizedDescription)")
+            }
         }
     }
+    
+    func resetAll() {
+        lock.lock(); defer { lock.unlock() }
+        cache.removeAllObjects()
+        FileManager.deleteImageCacheDirectory()
+    }
+    
 }
 
 extension MapImageCache {

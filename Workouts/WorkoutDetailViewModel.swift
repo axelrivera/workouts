@@ -126,7 +126,7 @@ extension WorkoutDetailViewModel {
             zoneMaxHeartRate: workout.zoneMaxHeartRate,
             zoneValues: workout.zoneValues,
             source: workout.source,
-            device: workout.device,
+            device: workout.deviceString,
             appIdentifier: workout.appIdentifier
         )
     }
