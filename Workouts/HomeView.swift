@@ -88,6 +88,8 @@ struct HomeView: View, Equatable {
                 .textCase(nil)
             }
             .listStyle(InsetGroupedListStyle())
+            .disabled(workoutManager.showImportProgress)
+            .overlay(processOverlay())
             .navigationTitle("Home")
             .navigationViewStyle(StackNavigationViewStyle())
             .toolbar {
@@ -116,6 +118,22 @@ struct HomeView: View, Equatable {
             }
         }
     }
+    
+    @ViewBuilder
+    func processOverlay() -> some View {
+        if workoutManager.showImportProgress  {
+            ZStack {
+                Color.systemFill
+                    .background(.thinMaterial)
+                    .ignoresSafeArea()
+                
+                ProcessView(
+                    title: "Processing Workouts",
+                    value: $workoutManager.processingRemoteDataValue
+                )
+            }
+        }
+    }
 }
 
 // MARK: - Actions
@@ -123,7 +141,7 @@ struct HomeView: View, Equatable {
 extension HomeView {
     
     var isAddDisabled: Bool {
-        return !workoutManager.isAuthorized
+        !workoutManager.isAuthorized || workoutManager.showImportProgress
     }
     
     func logDestination() -> some View {
@@ -147,8 +165,8 @@ struct HomeView_Previews: PreviewProvider {
     
     static var logManager: LogManager = {
         let manager = LogManagerPreview.manager(context: viewContext)
-        manager.currentInterval = LogInterval.sampleInterval(moc: viewContext)
-        manager.prevInterval = LogInterval.sampleInterval(moc: viewContext)
+//        manager.currentInterval = LogInterval.sampleInterval(moc: viewContext)
+//        manager.prevInterval = LogInterval.sampleInterval(moc: viewContext)
         return manager
     }()
     

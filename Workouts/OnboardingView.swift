@@ -10,6 +10,8 @@ import SwiftUI
 struct OnboardingView: View {
     var action = {}
     
+    @State private var isSelected = false
+    
     var body: some View {
         VStack {
             Spacer()
@@ -35,12 +37,31 @@ struct OnboardingView: View {
             }
             
             Spacer()
-                            
-            RoundButton(text: "Request Permission", action: action)
+            
+            Button(action: onButtopnPress) {
+                if isSelected {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                } else {
+                    Text("Request Permission")
+                }
+            }
+            .buttonStyle(RoundButtonStyle())
+            .disabled(isSelected)
         }
         .padding()
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .center)
     }
+    
+}
+
+extension OnboardingView {
+    
+    func onButtopnPress() {
+        isSelected = true
+        action()
+    }
+    
 }
 
 struct OnboardingView_Previews: PreviewProvider {

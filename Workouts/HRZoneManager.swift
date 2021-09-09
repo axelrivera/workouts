@@ -254,12 +254,51 @@ extension HRZoneManager {
         let dateInterval = DateInterval(start: remoteWorkout.startDate, end: remoteWorkout.endDate)
         let source = remoteWorkout.sourceRevision.source
         
-        let total = try await provider.fetchHeartRateSamples(interval: dateInterval, range: nil, source: source).count
+        let samples = try await provider.fetchHeartRateSamples(interval: dateInterval, source: source)
+                
+        let startIndex = keyForTimestamp(remoteWorkout.startDate)
+        let endIndex = keyForTimestamp(remoteWorkout.endDate)
         
+        var dictionary = [Int: Quantity]()
+        for key in startIndex ... endIndex {
+            let timestamp = Date(timeIntervalSince1970: Double(key))
+            dictionary[key] = Quantity(start: timestamp, end: timestamp, value: 0)
+        }
+        
+        for sample in samples {
+            let key = keyForTimestamp(sample.timestamp)
+            guard let quantity = dictionary[key] else { continue }
+            
+            if sample.value > quantity.value {
+                let timestamp = Date(timeIntervalSince1970: Double(key))
+                dictionary[key] = Quantity(start: timestamp, end: timestamp, value: sample.value)
+            }
+        }
+        
+        // padding
+        let quantities = dictionary.values.sorted(by: { $0.timestamp < $1.timestamp })
+        
+        var currentValue: Double = quantities.first(where: { $0.value > 0 })?.value ?? 0
+        var paddedQuantities = [Quantity]()
+        
+        for quantity in quantities {
+            if quantity.value == 0 && currentValue > 0 {
+                let newQuantity = Quantity(start: quantity.start, end: quantity.end, value: currentValue)
+                paddedQuantities.append(newQuantity)
+            } else {
+                paddedQuantities.append(quantity)
+            }
+            
+            if quantity.value > 0 {
+                currentValue = quantity.value
+            }
+        }
+        
+        let total = paddedQuantities.count
         var summaries = [HRZoneSummary]()
         for zone in HRZone.allCases {
             let range = rangeForZone(zone)
-            let duration = try await provider.fetchHeartRateSamples(interval: dateInterval, range: range, source: source).count
+            let duration = paddedQuantities.filteredByZoneRange(range).count
             let text = Self.stringForRange(range)
             let summary = HRZoneSummary(name: zone.name, color: zone.color, text: text, duration: Double(duration), totalDuration: Double(total))
             summaries.append(summary)
@@ -267,6 +306,28 @@ extension HRZoneManager {
         
         guard summaries.count == HRZone.allCases.count else { throw DataError.missingZone }
         return summaries
+    }
+    
+    func keyForTimestamp(_ timestamp: Date) -> Int {
+        Int(truncating: timestamp.timeIntervalSince1970 as NSNumber)
+    }
+    
+}
+
+extension Sequence where Iterator.Element == Quantity {
+    
+    func filteredByZoneRange(_ range: HRZoneManager.ZoneRange?) -> [Quantity] {
+        if let range = range {
+            if range.low == 0 && range.high > 0 {
+                return filter({ $0.value > 0 && $0.value <= Double(range.high) })
+            } else if range.low > 0 && range.high == 0 {
+                return filter({ $0.value >= Double(range.low) })
+            } else {
+                return filter({ $0.value >= Double(range.low) && $0.value <= Double(range.high) })
+            }
+        } else {
+            return Array(self)
+        }
     }
     
 }

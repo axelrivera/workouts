@@ -53,7 +53,7 @@ struct DetailView: View {
             }
             .padding([.top, .bottom], CGFloat(5.0))
             
-            if detailManager.detail.coordinates.isPresent {
+            if detailManager.includesLocation {
                 Button(action: { activeFullSheet = .map }) {
                     WorkoutMap(points: detailManager.detail.coordinates)
                 }

@@ -20,6 +20,7 @@ class Synchronizer {
     init(context: NSManagedObjectContext) {
         self.context = context
         self.importer = RemoteImporter(context: context)
+        self.anchor = AppSettings.workoutsQueryAnchor
         addObservers()
     }
     
@@ -28,6 +29,7 @@ class Synchronizer {
         // request will be ignored but anchor will be respected on next fetch
         if resetAnchor {
             anchor = nil
+            AppSettings.workoutsQueryAnchor = anchor
         }
 
         self.regenerate = regenerate
@@ -45,7 +47,8 @@ class Synchronizer {
         Log.debug("importing workouts")
         self.isFetchingWorkouts = true
         let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
-
+        
+        AppSettings.workoutsQueryAnchor = newAnchor
         self.anchor = newAnchor
         self.regenerate = false
         self.isFetchingWorkouts = false
@@ -65,10 +68,9 @@ extension Synchronizer {
             isAuthorizedToFetchWorkouts = isAuthorized
         }
 
-        let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
-        
         // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
-        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? false
+        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? self.regenerate
+        let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
         
         let _ = context.performAndWait {
             Task {

@@ -47,7 +47,7 @@ struct WorkoutMapCell: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if viewModel.coordinates.isPresent && !viewModel.indoor {
+            if viewModel.includesLocation {
                 MapContainer(viewModel: viewModel, scheme: colorScheme)
                     .frame(minHeight: 200.0, maxHeight: 200.0)
                     .background(Color.systemFill)
@@ -113,7 +113,7 @@ private struct MapContainer: View {
             imageCache.set(image: image, url: url, memoryOnly: true)
             cachedImage = image
         } else {
-            MKMapView.mapImage(coordinates: viewModel.coordinates, size: size, scheme: scheme) { image in
+            MKMapView.mapImage(coordinates: viewModel.coordinates, size: size) { image in
                 if let newImage = image {
                     imageCache.set(image: newImage, url: url)
                     

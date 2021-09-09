@@ -31,52 +31,52 @@ class RemoteImporter {
             context.saveOrRollback()
         }
         
-        if totalWorkouts > 0 {
-            DispatchQueue.main.async {
-                let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
-                NotificationCenter.default.post(
-                    name: .willBeginProcessingRemoteData,
-                    object: nil,
-                    userInfo: userInfo
-                )
-            }
-            
-            for remoteWorkout in remoteWorkouts {
-                if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
-                    if regenerate {
-                        Log.debug("regenerating existing workout: \(remoteWorkout.uuid)")
-                        let object = await WorkoutProcessor.object(for: remoteWorkout)
-                        Workout.updateValues(for: workout, object: object, in: context)
-                    } else {
-                        Log.debug("skipping existing workout: \(remoteWorkout.uuid)")
-                    }
-                } else {
-                    Log.debug("inserting workout: \(remoteWorkout.uuid)")
+        DispatchQueue.main.async {
+            let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
+            NotificationCenter.default.post(
+                name: .willBeginProcessingRemoteData,
+                object: nil,
+                userInfo: userInfo
+            )
+        }
+        
+        for remoteWorkout in remoteWorkouts {
+            if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
+                if regenerate {
+                    Log.debug("regenerating existing workout: \(remoteWorkout.uuid)")
                     let object = await WorkoutProcessor.object(for: remoteWorkout)
-                    Workout.insert(into: context, object: object, regenerate: regenerate)
+                    Workout.updateValues(for: workout, object: object, in: context)
+                } else {
+                    Log.debug("skipping existing workout: \(remoteWorkout.uuid)")
                 }
-                
-                DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
-                }
+            } else {
+                Log.debug("inserting workout: \(remoteWorkout.uuid)")
+                let object = await WorkoutProcessor.object(for: remoteWorkout)
+                Workout.insert(into: context, object: object, regenerate: regenerate)
             }
-            
-            do {
-                try context.save()
-            } catch {
-                context.rollback()
-                responseAnchor = nil
-            }
-            
-            context.refreshAllObjects()
             
             DispatchQueue.main.async {
-                Log.debug("LOG - send finish processing remote data notification")
-                NotificationCenter.default.post(
-                    name: .didFinishProcessingRemoteData,
-                    object: nil
-                )
+                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
             }
+        }
+        
+        do {
+            if context.hasChanges {
+                try context.save()
+            }
+        } catch {
+            context.rollback()
+            responseAnchor = nil
+        }
+        
+        context.refreshAllObjects()
+        
+        DispatchQueue.main.async {
+            Log.debug("LOG - send finish processing remote data notification")
+            NotificationCenter.default.post(
+                name: .didFinishProcessingRemoteData,
+                object: nil
+            )
         }
         
         return responseAnchor

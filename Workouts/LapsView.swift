@@ -23,31 +23,14 @@ struct LapsView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section(header: headerView()) {
-                        if purchaseManager.isActive && detailManager.isProcessingLaps {
-                            VStack {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                        } else {
-                            if selectedLaps.isEmpty {
-                                VStack {
-                                    Text("No Data Available")
-                                        .foregroundColor(.secondary)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                            } else {
-                                ForEach(detailManager.selectedLaps(), id: \.self) { lap in
-                                    rowView(lap: lap)
-                                    Divider()
-                                }
-                            }
+                        ForEach(detailManager.selectedLaps(), id: \.self) { lap in
+                            rowView(lap: lap)
+                            Divider()
                         }
                     }
                 }
             }
+            .overlay(overlayView())
             .paywallButtonOverlay(sample: false)
             .navigationTitle("Laps")
             .navigationBarTitleDisplayMode(.inline)
@@ -55,19 +38,19 @@ struct LapsView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
-                
-                ToolbarItem(placement: .bottomBar) {
-                    Picker("Display", selection: $detailManager.selectedLapDistance) {
-                        ForEach(LapDistance.allCases, id: \.self) { distance in
-                            Text(distance.title(for: detailManager.sport))
-                        }
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .disabled(!purchaseManager.isActive || detailManager.isProcessingLaps)
-                    .onChange(of: detailManager.selectedLapDistance) { value in
-                        selectedLap = nil
-                    }
-                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func overlayView() -> some View {
+        if purchaseManager.isActive && detailManager.isProcessingLaps {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+        } else {
+            if selectedLaps.isEmpty {
+                Text("No Data Available")
+                    .foregroundColor(.secondary)
             }
         }
     }
@@ -99,6 +82,18 @@ struct LapsView: View {
             HStack {
                 detailView(text: "Avg Heart Rate", detail: selectedAvgHeartRate, detailColor: .calories)
                 detailView(text: "Max Heart Rate", detail: selectedMaxHeartRate, detailColor: .calories)
+            }
+                        
+            Picker("Display", selection: $detailManager.selectedLapDistance) {
+                ForEach(LapDistance.allCases, id: \.self) { distance in
+                    Text(distance.title(for: detailManager.sport))
+                }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.top, CGFloat(10.0))
+            .disabled(!purchaseManager.isActive || detailManager.isProcessingLaps)
+            .onChange(of: detailManager.selectedLapDistance) { value in
+                selectedLap = nil
             }
 
         }
@@ -220,11 +215,11 @@ struct LapsView_Previews: PreviewProvider {
     static let detailManager: DetailManager = {
         let manager = DetailManager(viewModel: workout.detailViewModel)
         manager.processWorkout()
-        manager.isProcessingLaps = false
+        manager.isProcessingLaps = true
         return manager
     }()
     
-    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         LapsView()

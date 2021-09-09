@@ -82,9 +82,7 @@ extension ContentView {
         if purchaseManager.isActive {
             logManager.reloadIntervals()
         } else {
-            withAnimation(.none) {
-                logManager.intervals = LogInterval.sampleLastTwelveMonths()
-            }
+            logManager.intervals = LogInterval.sampleLastTwelveMonths()
         }
     }
     

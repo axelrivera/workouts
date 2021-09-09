@@ -18,29 +18,21 @@ struct AdvancedSettingsView: View {
     @State private var activeAlert: ActiveAlert?
     
     var body: some View {
-        ZStack {
-            Form {
-                Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
-                    Button(action: { activeAlert = .regenerateWorkouts }) {
-                        Text("Reset Workout Data")
-                    }
-                }
-                
-                Section(footer: Text("Deletes all cached images for maps.")) {
-                    Button(action: { activeAlert = .resetCachedImages }) {
-                        Text("Reset Map Images")
-                    }
+        Form {
+            Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
+                Button(action: { activeAlert = .regenerateWorkouts }) {
+                    Text("Reset Workout Data")
                 }
             }
-            .disabled(workoutManager.isProcessingRemoteData)
             
-            if workoutManager.isProcessingRemoteData {
-                ProcessView(
-                    title: "Processing Workouts",
-                    value: $workoutManager.processingRemoteDataValue
-                )
+            Section(footer: Text("Deletes all cached images for maps.")) {
+                Button(action: { activeAlert = .resetCachedImages }) {
+                    Text("Reset Map Images")
+                }
             }
         }
+        .disabled(workoutManager.isProcessingRemoteData)
+        .overlay(processOverlay())
         .navigationTitle("Advanced Settings")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
@@ -50,18 +42,17 @@ struct AdvancedSettingsView: View {
                 let message = "This action will reset and regenerate your local workout data from Apple Health."
                 
                 let action = {
-                    let userInfo = [Notification.regenerateDataKey: true]
                     NotificationCenter.default.post(
                         name: .shouldFetchRemoteData,
                         object: nil,
-                        userInfo: userInfo
+                        userInfo: [ Notification.regenerateDataKey: true ]
                     )
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
             case .resetCachedImages:
                 let title = "Reset Map Images"
-                let message = "This action will reset all cached images used in maps."
+                let message = "This action will reset all cached map images used in the workouts feed."
                 
                 let action = {
                     let cache = MapImageCache.getImageCache()
@@ -70,6 +61,15 @@ struct AdvancedSettingsView: View {
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
             }
+        }
+    }
+    
+    @ViewBuilder func processOverlay() -> some View {
+        if workoutManager.isProcessingRemoteData {
+            ProcessView(
+                title: "Processing Workouts",
+                value: $workoutManager.processingRemoteDataValue
+            )
         }
     }
 }

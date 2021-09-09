@@ -22,7 +22,7 @@ struct WorkoutColorPicker: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHGrid(rows: rows, spacing: 20.0) {
+            LazyHGrid(rows: rows, alignment: .top, spacing: 20.0) {
                 ForEach(data, id: \.self) { color in
                     Button(action: { selectColor(color) }) {
                         Rectangle()
@@ -32,8 +32,9 @@ struct WorkoutColorPicker: View {
                     }
                 }
             }
+            .frame(height: CGFloat(width))
         }
-        .frame(maxHeight: CGFloat(width))
+        .padding([.top, .bottom], CGFloat(5.0))
     }
     
     func selectColor(_ color: Color) {

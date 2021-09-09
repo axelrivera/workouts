@@ -13,10 +13,8 @@ struct WorkoutsView: View {
     @Binding var sport: Sport?
     
     @State private var selectedWorkout: UUID?
-    
-    @FetchRequest(entity: Workout.entity(), sortDescriptors: [], predicate: nil, animation: .default)
-    private var workouts: FetchedResults<Workout>
-    
+    @State private var isEmpty = false
+        
     init(sport: Binding<Sport?>) {
         _sport = sport
     }
@@ -29,7 +27,7 @@ struct WorkoutsView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 0.0) {
-                    WorkoutFilter(sport: sport, interval: nil) { workout in
+                    WorkoutFilter(sport: sport, interval: nil, isEmpty: $isEmpty) { workout in
                         NavigationLink(
                             tag: workout.workoutIdentifier,
                             selection: $selectedWorkout,
@@ -42,6 +40,7 @@ struct WorkoutsView: View {
                     }
                 }
             }
+            .overlay(emptyOverlay())
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -68,6 +67,32 @@ struct WorkoutsView: View {
             }
         }
     }
+    
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if isEmpty {
+            VStack(spacing: 15.0) {
+                Image(systemName: "heart.slash.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 100, height: 100)
+                    .foregroundColor(.red)
+                
+                Text("No Workouts")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+                
+                Text("Better Workouts imports Health data stored by the Workout app on your Apple Watch.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.red)
+                
+                Text("Go to the Health app and give Better Workouts permission to read your workout data.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+        }
+    }
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
@@ -84,6 +109,6 @@ struct WorkoutsView_Previews: PreviewProvider {
         WorkoutsView(sport: $sport)
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.light)
     }
 }

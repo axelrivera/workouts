@@ -23,8 +23,8 @@ class WorkoutManager: ObservableObject {
     
     @Published var isProcessingRemoteData = false
     @Published var processingRemoteDataValue: Double = 0
+    @Published var totalProcessingWorkouts = 0
     private var totalPendingWorkouts = 0
-    private var totalCurrentWorkouts = 0
         
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
@@ -52,7 +52,7 @@ class WorkoutManager: ObservableObject {
             }
         } else {
             Log.debug("request status not required")
-            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: false)
+            refreshWorkouts(isAuthorized: isAuthorized)
         }
     }
     
@@ -64,7 +64,7 @@ class WorkoutManager: ObservableObject {
             try await healthProvider.healthStore.requestAuthorization(toShare: HealthAuthProvider.writeSampleTypes(), read: HealthAuthProvider.readObjectTypes())
 
             let isAuthorized = true
-            refreshWorkouts(isAuthorized: isAuthorized, resetAnchor: false)
+            refreshWorkouts(isAuthorized: isAuthorized)
 
             DispatchQueue.main.async {
                 self.isOnboardingVisible = !isAuthorized
@@ -80,10 +80,9 @@ class WorkoutManager: ObservableObject {
         }
     }
     
-    func refreshWorkouts(isAuthorized: Bool, resetAnchor: Bool) {
+    func refreshWorkouts(isAuthorized: Bool) {
         let userInfo: [String: Any] = [
             Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized,
-            Notification.resetAnchorKey: resetAnchor
         ]
         
         NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
@@ -97,6 +96,10 @@ class WorkoutManager: ObservableObject {
                 self.recentWorkouts = workouts
             }
         }
+    }
+    
+    var showImportProgress: Bool {
+        isProcessingRemoteData && totalProcessingWorkouts > 5
     }
     
 }
@@ -136,38 +139,37 @@ extension WorkoutManager {
     
     @objc
     private func willProcessWorkouts(_ notification: Notification) {
-        totalPendingWorkouts = notification.userInfo?[Notification.totalRemoteWorkoutsKey] as? Int ?? 0
-        totalCurrentWorkouts = 0
-        updateRemoteValues()
+        let processing = notification.userInfo?[Notification.totalRemoteWorkoutsKey] as? Int ?? 0
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.totalProcessingWorkouts = processing
+                self.totalPendingWorkouts = processing
+                self.processingRemoteDataValue = 0.0
+                self.isProcessingRemoteData = true
+            }
+        }
     }
     
     @objc
     private func didInsertWorkout(_ notification: Notification) {
-        totalCurrentWorkouts += 1
-        updateRemoteValues()
+        totalPendingWorkouts -= 1
+        let current = totalProcessingWorkouts - totalPendingWorkouts
+        let value = Double(current) / Double(totalProcessingWorkouts)
+        
+        DispatchQueue.main.async {
+            self.processingRemoteDataValue = value
+        }
     }
     
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
-        totalPendingWorkouts = 0
-        totalCurrentWorkouts = 0
-        updateRemoteValues()
-    }
-    
-}
-
-// MARK: - User Interface
-
-extension WorkoutManager {
-    
-    private func updateRemoteValues() {
         DispatchQueue.main.async {
-            if self.totalPendingWorkouts > 0 {
-                self.isProcessingRemoteData = true
-                self.processingRemoteDataValue = Double(self.totalCurrentWorkouts) / Double(self.totalPendingWorkouts)
-            } else {
-                self.isProcessingRemoteData = false
+            withAnimation {
+                self.totalProcessingWorkouts = 0
+                self.totalPendingWorkouts = 0
                 self.processingRemoteDataValue = 0.0
+                self.isProcessingRemoteData = false
             }
         }
     }

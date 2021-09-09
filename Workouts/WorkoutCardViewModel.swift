@@ -22,6 +22,26 @@ struct WorkoutCardViewModel {
 
 extension WorkoutCardViewModel {
     
+    var includesLocation: Bool { !coordinates.isEmpty }
+    
+    static func empty() -> WorkoutCardViewModel {
+        WorkoutCardViewModel(
+            sport: .other,
+            indoor: false,
+            title: "",
+            date: "",
+            distance: "",
+            duration: "",
+            elevation: "",
+            pace: nil,
+            coordinates: []
+        )
+    }
+    
+}
+
+extension WorkoutCardViewModel {
+    
     static func preview() -> WorkoutCardViewModel {
         WorkoutCardViewModel(
             sport: .cycling,

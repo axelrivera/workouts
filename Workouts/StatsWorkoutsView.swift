@@ -12,10 +12,8 @@ struct StatsWorkoutsView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     
     @State private var selectedWorkout: UUID?
-    
-    @FetchRequest(entity: Workout.entity(), sortDescriptors: [], predicate: nil, animation: .default)
-    private var workouts: FetchedResults<Workout>
-    
+    @State private var isEmpty = false
+        
     var sport: Sport?
     var interval: DateInterval?
 
@@ -30,7 +28,7 @@ struct StatsWorkoutsView: View {
             
     var body: some View {
         List {
-            WorkoutFilter(sport: sport, interval: interval) { workout in
+            WorkoutFilter(sport: sport, interval: interval, isEmpty: $isEmpty) { workout in
                 NavigationLink(
                     tag: workout.workoutIdentifier,
                     selection: $selectedWorkout,
@@ -39,8 +37,17 @@ struct StatsWorkoutsView: View {
                 }
             }
         }
+        .overlay(emptyOverlay())
         .listStyle(PlainListStyle())
         .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if isEmpty {
+            Text("No Workouts")
+                .foregroundColor(.secondary)
+        }
     }
 }
 

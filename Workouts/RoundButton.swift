@@ -7,6 +7,21 @@
 
 import SwiftUI
 
+struct RoundButtonStyle: ButtonStyle {
+    let foregroundColor = Color.white
+    let backgroundColor = Color.accentColor
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .padding()
+            .foregroundColor(foregroundColor)
+            .background(backgroundColor)
+            .cornerRadius(Constants.cornerRadius)
+    }
+    
+}
+
 struct RoundButton: View {
     var text: String
     var foregroundColor = Color.white
@@ -16,12 +31,8 @@ struct RoundButton: View {
     var body: some View {
         Button(action: action) {
             Text(text)
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .padding()
-                .foregroundColor(foregroundColor)
-                .background(backgroundColor)
-                .cornerRadius(Constants.cornerRadius)
         }
+        .buttonStyle(RoundButtonStyle())
     }
 }
 

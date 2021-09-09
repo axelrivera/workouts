@@ -58,6 +58,10 @@ struct WorkoutDetailViewModel {
 
 extension WorkoutDetailViewModel {
     
+    var includesLocation: Bool {
+        !coordinates.isEmpty
+    }
+    
     var shouldUseMovingTime: Bool {
         movingTime < duration
     }

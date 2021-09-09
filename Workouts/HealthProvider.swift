@@ -85,9 +85,9 @@ extension HealthProvider {
         }
     }
     
-    func fetchHeartRateSamples(interval: DateInterval, range: HRZoneManager.ZoneRange?, source: HKSource?) async throws -> [Quantity] {
+    func fetchHeartRateSamples(interval: DateInterval, source: HKSource?) async throws -> [Quantity] {
         return try await withCheckedThrowingContinuation { continuation in
-            fetchHeartRateSamples(interval: interval, range: range, source: source) { result in
+            fetchHeartRateSamples(interval: interval, source: source) { result in
                 switch result {
                 case .success(let samples):
                     continuation.resume(returning: samples)
@@ -250,44 +250,6 @@ extension HealthProvider {
         healthStore.execute(locationQuery)
     }
     
-//    private func fetchRoute(for workout: HKWorkout, completionHandler: @escaping (Result<[HKWorkoutRoute], Error>) -> Void) {
-//        let predicate = HKQuery.predicateForObjects(from: workout)
-//        let query = HKAnchoredObjectQuery(
-//            type: HKSeriesType.workoutRoute(),
-//            predicate: predicate,
-//            anchor: nil,
-//            limit: HKObjectQueryNoLimit) { (query, samples, deletedObjects, anchor, error) in
-//            self.healthStore.stop(query)
-//
-//            if let error = error {
-//                completionHandler(.failure(error))
-//                return
-//            }
-//
-//            guard let samples = samples as? [HKWorkoutRoute], !samples.isEmpty else {
-//                completionHandler(.failure(HealthError.failure))
-//                return
-//            }
-//
-//            completionHandler(.success(samples))
-//        }
-//
-//        healthStore.execute(query)
-//    }
-//
-//    private func fetchLocation(for route: HKWorkoutRoute, updateHandler: @escaping ([CLLocation]) -> Void, completionHandler: @escaping (Result<Bool, Error>) -> Void) {
-//        let query = HKWorkoutRouteQuery(route: route) { (query, locations, done, error) in
-//            let locations = locations ?? [CLLocation]()
-//            updateHandler(locations)
-//
-//            if done {
-//                self.healthStore.stop(query)
-//                completionHandler(.success(true))
-//            }
-//        }
-//        healthStore.execute(query)
-//    }
-    
 }
 
 // MARK: - Samples
@@ -391,36 +353,9 @@ extension HealthProvider {
         healthStore.execute(query)
     }
     
-    private func fetchHeartRateSamples(interval: DateInterval, range: HRZoneManager.ZoneRange?, source: HKSource?, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+    private func fetchHeartRateSamples(interval: DateInterval, source: HKSource?, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
         let intervalPredicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: [.strictStartDate, .strictEndDate])
         let queryInterval = intervalFor(start: interval.start, end: interval.end)
-        
-        var rangePredicate: NSPredicate
-        if let range = range {
-            if range.low == 0 && range.high > 0 {
-                let quantity1 = HKQuantity(unit: .bpm(), doubleValue: 0)
-                let predicate1 = HKQuery.predicateForQuantitySamples(with: .greaterThan, quantity: quantity1)
-                
-                let quantity2 = HKQuantity(unit: .bpm(), doubleValue: Double(range.high))
-                let predicate2 = HKQuery.predicateForQuantitySamples(with: .lessThanOrEqualTo, quantity: quantity2)
-                
-                rangePredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate1, predicate2])
-            } else if range.low > 0 && range.high == 0 {
-                let quantity = HKQuantity(unit: .bpm(), doubleValue: Double(range.low))
-                rangePredicate = HKQuery.predicateForQuantitySamples(with: .greaterThanOrEqualTo, quantity: quantity)
-            } else {
-                let quantity1 = HKQuantity(unit: .bpm(), doubleValue: Double(range.low))
-                let predicate1 = HKQuery.predicateForQuantitySamples(with: .greaterThanOrEqualTo, quantity: quantity1)
-                
-                let quantity2 = HKQuantity(unit: .bpm(), doubleValue: Double(range.high))
-                let predicate2 = HKQuery.predicateForQuantitySamples(with: .lessThanOrEqualTo, quantity: quantity2)
-                
-                rangePredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate1, predicate2])
-            }
-        } else {
-            let quantity = HKQuantity(unit: .bpm(), doubleValue: 0)
-            rangePredicate = HKQuery.predicateForQuantitySamples(with: .greaterThan, quantity: quantity)
-        }
         
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.day, .month, .year, .weekday], from: Date())
@@ -428,7 +363,7 @@ extension HealthProvider {
         
         let query = HKStatisticsCollectionQuery(
             quantityType: .heartRate(),
-            quantitySamplePredicate: NSCompoundPredicate(andPredicateWithSubpredicates: [intervalPredicate, rangePredicate]),
+            quantitySamplePredicate: intervalPredicate,
             options: [.discreteMax, .separateBySource],
             anchorDate: anchorDate,
             intervalComponents: queryInterval

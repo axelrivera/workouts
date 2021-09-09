@@ -70,7 +70,7 @@ extension WorkoutMap {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             let renderer = MKPolylineRenderer(overlay: overlay)
             renderer.strokeColor = UIColor(.distance)
-            renderer.lineWidth = 5.0
+            renderer.lineWidth = 4.0
             return renderer
         }
     }

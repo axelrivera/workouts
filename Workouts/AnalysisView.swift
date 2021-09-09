@@ -138,9 +138,9 @@ struct AnalysisView: View {
                     }
                 }
 
-                if detailManager.detail.coordinates.isPresent || (showElevationAscended || showElevationDescended) {
+                if detailManager.includesLocation || (showElevationAscended || showElevationDescended) {
                     Section(header: Text("Elevation")) {
-                        if detailManager.detail.coordinates.isPresent {
+                        if detailManager.includesLocation {
                             chartArea(
                                 valueType: .altitude,
                                 supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),

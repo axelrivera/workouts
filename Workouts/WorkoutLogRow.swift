@@ -155,7 +155,7 @@ struct WorkoutLogItem: View {
             }
         } else {
             List {
-                WorkoutFilter(identifiers: day.remoteIdentifiers) { workout in
+                WorkoutFilter(identifiers: day.remoteIdentifiers, isEmpty: .constant(false)) { workout in
                     NavigationLink(destination: DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))) {
                         WorkoutPlainCell(viewModel: workout.detailViewModel)
                     }

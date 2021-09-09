@@ -34,6 +34,10 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
 
 extension WorkoutCellViewModel {
     
+    var includesLocation: Bool {
+        !coordinates.isEmpty
+    }
+    
     func dateString(shortDay: Bool = false) -> String {
         formattedRelativeDateString(for: date, shortDay: shortDay, showTime: true)
     }

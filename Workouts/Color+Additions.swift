@@ -30,7 +30,7 @@ extension Color {
 
 // MARK: Asset Colors
 
-extension Color {
+extension Color {    
     static let distance = Color("DistanceColor")
     static let time = Color("TimeColor")
     static let calories = Color("CaloriesColor")

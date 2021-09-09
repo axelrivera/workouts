@@ -8,6 +8,10 @@
 import Foundation
 import HealthKit
 
+enum SettingsError: Error {
+    case dataNotFound
+}
+
 @propertyWrapper
 struct Settings<T> {
     let key: String
@@ -28,9 +32,11 @@ struct AppSettings {
     struct Keys {
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
+        static let shareSettings = "arn_share_settings"
         static let mockPurchaseActive = "arn_mock_purchase_active"
         static let maxHeartRate = "arn_max_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
+        static let workoutsQueryAnchor = "arn_workouts_query_anchor"
     }
 
     static func synchronize() {
@@ -68,6 +74,41 @@ struct AppSettings {
         
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
+    
+    static var shareSettings: ShareSettings {
+        get {
+            do {
+                guard let data = objectForKey(Keys.shareSettings) as? Data else { throw SettingsError.dataNotFound }
+                return try JSONDecoder().decode(ShareSettings.self, from: data)
+            } catch {
+                return ShareSettings.defaultValue()
+            }
+        }
+        set {
+            let data = try? JSONEncoder().encode(newValue)
+            setValue(data, for: Keys.shareSettings)
+        }
+    }
+    
+    static var workoutsQueryAnchor: HKQueryAnchor? {
+        get {
+            do {
+                guard let data = objectForKey(Keys.workoutsQueryAnchor) as? Data else { throw SettingsError.dataNotFound }
+                let anchor = try NSKeyedUnarchiver.unarchivedObject(ofClass: HKQueryAnchor.self, from: data)
+                return anchor
+            } catch {
+                return nil
+            }
+        }
+        set {
+            if let value = newValue {
+                let data = try? NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: true)
+                setValue(data, for: Keys.workoutsQueryAnchor)
+            } else {
+                setValue(nil, for: Keys.workoutsQueryAnchor)
+            }
+        }
+    }
     
     #if DEVELOPMENT_BUILD
     @Settings(Keys.mockPurchaseActive, defaultValue: false)

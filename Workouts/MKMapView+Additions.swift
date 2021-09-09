@@ -9,7 +9,7 @@ import MapKit
 import SwiftUI
 
 extension MKMapView {
-    
+        
     class func routeMapOutline(coordinates: [CLLocationCoordinate2D], size: CGSize? = nil, completionHandler: @escaping (_ image: UIImage?) -> Void) {
         if coordinates.isEmpty {
             completionHandler(nil)
@@ -64,7 +64,7 @@ extension MKMapView {
         }
     }
     
-    class func mapImage(coordinates: [CLLocationCoordinate2D], size: CGSize, scheme: ColorScheme, completionHandler: @escaping (_ image: UIImage?) -> Void) {
+    class func mapImage(coordinates: [CLLocationCoordinate2D], size: CGSize, completionHandler: @escaping (_ image: UIImage?) -> Void) {
         if coordinates.isEmpty {
             completionHandler(nil)
             return

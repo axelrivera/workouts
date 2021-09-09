@@ -55,6 +55,8 @@ class DetailManager: ObservableObject {
 
 extension DetailManager {
     
+    var includesLocation: Bool { detail.includesLocation }
+    
     func remoteWorkout() async throws -> HKWorkout {
         try await provider.fetchWorkout(uuid: detail.id)
     }

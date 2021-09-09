@@ -21,10 +21,6 @@ struct WorkoutLogView: View {
     @EnvironmentObject var purchaseManager: IAPManager
 
     @State private var activeSheet: ActiveSheet?
-    
-    init() {
-        Log.debug("redrawing workout log")
-    }
 
     func headerView() -> some View {
         VStack(alignment: .center, spacing: 0) {
@@ -52,9 +48,10 @@ struct WorkoutLogView: View {
                 }
             }
             .onChange(of: purchaseManager.isActive, perform: { isActive in
-                reloadIntervalsIfNeeded()
+                manager.reloadIntervals()
             })
         }
+        .overlay(emptyOverlay())
         .paywallButtonOverlay()
         .navigationTitle("Workout Log")
         .navigationBarTitleDisplayMode(.inline)
@@ -89,20 +86,14 @@ struct WorkoutLogView: View {
             }
         }
     }
-}
-
-extension WorkoutLogView {
     
-    func reloadIntervalsIfNeeded() {
-        if purchaseManager.isActive {
-            manager.reloadIntervals()
-        } else {
-            withAnimation(.none) {
-                manager.intervals = LogInterval.sampleLastTwelveMonths()
-            }
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if purchaseManager.isActive && manager.intervals.isEmpty {
+            Text("No Workouts")
+                .foregroundColor(.secondary)
         }
     }
-    
 }
 
 struct WorkoutLogView_Previews: PreviewProvider {
@@ -112,7 +103,7 @@ struct WorkoutLogView_Previews: PreviewProvider {
     
     static var manager: LogManager = {
         let manager = LogManagerPreview.manager(context: viewContext)
-        manager.intervals = LogInterval.sampleLastTwelveMonths()
+        //manager.intervals = LogInterval.sampleLastTwelveMonths()
         return manager
     }()
     
@@ -122,6 +113,7 @@ struct WorkoutLogView_Previews: PreviewProvider {
         NavigationView {
             WorkoutLogView()
         }
+        .environment(\.managedObjectContext, viewContext)
         .environmentObject(workoutManager)
         .environmentObject(manager)
         .environmentObject(purchaseManager)
