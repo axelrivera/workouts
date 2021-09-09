@@ -43,6 +43,8 @@
 	<string>Review your workout activity.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Write new or imported workouts.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>To save photos when whering a workout.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -92,7 +94,5 @@
 			</dict>
 		</dict>
 	</array>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>To save photos when whering a workout.</string>
 </dict>
 </plist>
