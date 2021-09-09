@@ -47,8 +47,9 @@ struct WorkoutLogView: View {
                     }
                 }
             }
+            .onAppear { reloadIfNeeded() }
             .onChange(of: purchaseManager.isActive, perform: { isActive in
-                manager.reloadIntervals()
+                reloadIfNeeded()
             })
         }
         .overlay(emptyOverlay())
@@ -94,6 +95,18 @@ struct WorkoutLogView: View {
                 .foregroundColor(.secondary)
         }
     }
+}
+
+extension WorkoutLogView {
+    
+    func reloadIfNeeded() {
+        if purchaseManager.isActive {
+            manager.reloadIntervals()
+        } else {
+            manager.intervals = LogInterval.sampleLastTwelveMonths()
+        }
+    }
+    
 }
 
 struct WorkoutLogView_Previews: PreviewProvider {
