@@ -249,10 +249,12 @@ extension DetailManager {
             indoor: detail.indoor,
             title: detail.title,
             date: formattedWorkoutShareDateString(for: detail.start),
-            distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
             duration: formattedHoursMinutesPrettyString(for: detail.totalTime),
-            elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
+            distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
+            speed: detail.avgSpeed > 0 ? formattedSpeedString(for: detail.avgSpeed) : nil,
             pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
+            heartRate: detail.avgHeartRate > 0 ? formattedHeartRateString(for: detail.avgHeartRate) : nil,
+            elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
             coordinates: detail.coordinates
         )
     }

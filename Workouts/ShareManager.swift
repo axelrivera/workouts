@@ -61,6 +61,7 @@ class ShareManager: ObservableObject {
         }
     }
     
+    @Published var selectedMetric: WorkoutCardViewModel.Metric
     @Published var sharedImage: UIImage?
     
     // Map
@@ -70,47 +71,28 @@ class ShareManager: ObservableObject {
         }
     }
     
-    @Published var showTitle = true {
-        didSet {
-            reloadImage()
-        }
-    }
-    
-    @Published var showDate = true {
-        didSet {
-            reloadImage()
-        }
-    }
+    @Published var showTitle = true
+    @Published var showDate = true
     
     // Color
-    @Published var backgroundColor: Color = .accentColor {
-        didSet {
-            reloadImage()
-        }
-    }
-    
-    @Published var showLocation = true {
-        didSet {
-            reloadImage()
-        }
-    }
-    
-    @Published var showRoute = true {
-        didSet {
-            reloadImage()
-        }
-    }
+    @Published var backgroundColor: Color = .accentColor
+    @Published var showLocation = true
+    @Published var showRoute = true
     
     private(set) var mapImage: UIImage?
     private var cachedLocationString: String?
     private var cachedRouteImage: UIImage?
     
+    private let settings: ShareSettings
     private let geocoder = CLGeocoder()
     private var coordinates: [CLLocationCoordinate2D] { viewModel.coordinates }
     
     init() {
         let settings = AppSettings.shareSettings
+        
+        self.settings = settings
         style = settings.style
+        selectedMetric = .none
         removeBranding = settings.removeBranding
         mapColor = settings.mapColor
         showTitle = settings.showTitle
@@ -127,7 +109,12 @@ class ShareManager: ObservableObject {
         let locationString = try? await fetchLocationString(for: viewModel.coordinates)
         let routeImage = try? await generateMapOutline(for: viewModel.coordinates)
         
+        let selectedMetric = settings.metric(for: viewModel.sport)
+        
+        Log.debug("selected metric: \(String(describing: selectedMetric))")
+        
         DispatchQueue.main.async {
+            self.selectedMetric = selectedMetric ?? Self.defaultMetric(for: viewModel.sport)
             self.viewModel = viewModel
             self.colorScheme = colorScheme
             
@@ -137,6 +124,16 @@ class ShareManager: ObservableObject {
             self.cachedRouteImage = routeImage
             
             self.reloadImage()
+        }
+    }
+    
+    static func defaultMetric(for sport: Sport) -> WorkoutCardViewModel.Metric {
+        if sport.isCycling {
+            return .speed
+        } else if sport.isWalkingOrRunning {
+            return .pace
+        } else {
+            return .none
         }
     }
     
@@ -173,8 +170,6 @@ extension ShareManager {
     func reloadImage() {
         guard shouldRefreshImages else { return }
         
-        updateSettings()
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let view = WorkoutCard(shareManager: self)
             let image = view.takeScreenshot(origin: .zero, size: CGSize(width: WORKOUT_CARD_WIDTH, height: WORKOUT_CARD_WIDTH))
@@ -182,12 +177,16 @@ extension ShareManager {
             withAnimation(.linear) {
                 self.sharedImage = image
             }
+            
+            self.updateSettings()
         }
     }
     
     func updateSettings() {
-        let settings = ShareSettings(
+        let newSettings = ShareSettings(
             styleValue: style.rawValue,
+            cyclingMetricValue: viewModel.sport.isCycling ? selectedMetric.rawValue : settings.cyclingMetricValue,
+            runningMetricValue: viewModel.sport.isWalkingOrRunning ? selectedMetric.rawValue : settings.runningMetricValue,
             removeBranding: removeBranding,
             mapColorValue: mapColor.rawValue,
             showTitle: showTitle,
@@ -198,7 +197,7 @@ extension ShareManager {
         )
         
         DispatchQueue.global(qos: .background).async {
-            AppSettings.shareSettings = settings
+            AppSettings.shareSettings = newSettings
         }
     }
     

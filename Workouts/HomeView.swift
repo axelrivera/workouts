@@ -128,7 +128,7 @@ struct HomeView: View, Equatable {
                     .ignoresSafeArea()
                 
                 ProcessView(
-                    title: "Processing Workouts",
+                    title: "Importing Workouts",
                     value: $workoutManager.processingRemoteDataValue
                 )
             }

@@ -19,7 +19,6 @@ extension RecentChart {
     
     func makeUIView(context: Context) -> LineChartView {
         let chartView = LineChartView()
-        chartView.delegate = context.coordinator
         chartView.chartDescription.enabled = false
         chartView.dragEnabled = false
         chartView.setScaleEnabled(false)
@@ -88,32 +87,32 @@ extension RecentChart {
         view.data = data
     }
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
+//    func makeCoordinator() -> Coordinator {
+//        Coordinator(self)
+//    }
     
 }
 
-extension RecentChart {
-    
-    class Coordinator: NSObject, ChartViewDelegate {
-        var parent: RecentChart
-        
-        init(_ parent: RecentChart) {
-            self.parent = parent
-        }
-        
-        func chartValueNothingSelected(_ chartView: ChartViewBase) {
-            Log.debug("nothing selected")
-        }
-        
-        func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
-            Log.debug("entry: \(highlight.dataIndex)")
-        }
-        
-    }
-    
-}
+//extension RecentChart {
+//
+//    class Coordinator: NSObject, ChartViewDelegate {
+//        var parent: RecentChart
+//
+//        init(_ parent: RecentChart) {
+//            self.parent = parent
+//        }
+//
+//        func chartValueNothingSelected(_ chartView: ChartViewBase) {
+//            Log.debug("nothing selected")
+//        }
+//
+//        func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
+//            Log.debug("entry: \(highlight.dataIndex)")
+//        }
+//
+//    }
+//
+//}
 
 struct RecentChart_Previews: PreviewProvider {
     static var values: [ChartInterval] = {

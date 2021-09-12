@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ShareDetailView: View {
+    typealias Metric = WorkoutCardViewModel.Metric
     typealias MapColor = ShareManager.MapColor
     
     @Environment(\.presentationMode) var presentationMode
@@ -17,6 +18,14 @@ struct ShareDetailView: View {
     var body: some View {
         NavigationView {
             Form {
+                Section {
+                    Picker("Display Metric", selection: $shareManager.selectedMetric) {
+                        ForEach(allMetrics(), id: \.self) { metric in
+                            Text(metric.title)
+                        }
+                    }
+                }
+                
                 if shareManager.style == .map && shareManager.viewModel.includesLocation {
                     Section(header: Text("Map Color")) {
                         Picker("Map Background", selection: $shareManager.mapColor) {
@@ -56,6 +65,33 @@ struct ShareDetailView: View {
             }
         }
     }
+}
+
+extension ShareDetailView {
+    
+    var sport: Sport {
+        shareManager.viewModel.sport
+    }
+    
+    var isIndoor: Bool {
+        shareManager.viewModel.indoor
+    }
+    
+    func allMetrics() -> [Metric] {
+        let sport = self.sport
+        if sport.isCycling {
+            if isIndoor {
+                return Metric.indoorMetrics
+            } else {
+                return Metric.cyclingMetrics
+            }
+        } else if sport.isWalkingOrRunning {
+            return Metric.runningMetrics
+        } else {
+            return []
+        }
+    }
+    
 }
 
 struct ShareDetailView_Previews: PreviewProvider {

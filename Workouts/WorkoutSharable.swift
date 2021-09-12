@@ -41,14 +41,4 @@ extension WorkoutSharable {
     
     var defaultOpacity: Double { 0.75 }
     
-    var elevationString: String? {
-        guard viewModel.sport == .cycling else { return nil }
-        return viewModel.elevation
-    }
-    
-    var paceString: String? {
-        guard viewModel.sport == .running || viewModel.sport == .walking else { return nil }
-        return viewModel.pace
-    }
-    
 }

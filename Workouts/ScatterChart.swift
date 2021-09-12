@@ -93,7 +93,7 @@ struct ScatterChart: UIViewRepresentable {
 struct ScatterChart_Previews: PreviewProvider {
     
     static var previews: some View {
-        LineChart(values: [], avgValue: 140.0)
+        ScatterChart(values: [], avgValue: 140.0)
             .frame(maxWidth: .infinity, maxHeight: 200.0)
             .colorScheme(.dark)
     }

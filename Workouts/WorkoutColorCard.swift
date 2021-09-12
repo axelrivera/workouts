@@ -14,13 +14,15 @@ import MapKit
 
 struct WorkoutColorCard: View, WorkoutSharable {
     let viewModel: WorkoutCardViewModel
+    var metric: WorkoutCardViewModel.Metric = .none
     var color: Color = .accentColor
     var location: String? = "Orlando, FL"
     var routeImage: UIImage? = nil
     var showBranding = true
     
-    init(viewModel: WorkoutCardViewModel, color: Color, location: String?, routeImage: UIImage?, showBranding: Bool) {
+    init(viewModel: WorkoutCardViewModel, metric: WorkoutCardViewModel.Metric, color: Color, location: String?, routeImage: UIImage?, showBranding: Bool) {
         self.viewModel = viewModel
+        self.metric = metric
         self.color = color
         self.location = location
         self.routeImage = routeImage
@@ -63,13 +65,9 @@ struct WorkoutColorCard: View, WorkoutSharable {
                         }
 
                         metricView(text: "Time", detail: viewModel.duration)
-
-                        if let elevation = elevationString {
-                            metricView(text: "Elevation", detail: elevation)
-                        }
-
-                        if let pace = paceString  {
-                            metricView(text: "Pace", detail: pace)
+                        
+                        if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
+                            metricView(text: text, detail: detail)
                         }
                     }
 
@@ -141,10 +139,12 @@ struct WorkoutColorCard_Previews: PreviewProvider {
             indoor: false,
             title: "Outdoor Cycle",
             date: "Jan 1, 2021 @ 7:00 AM",
-            distance: "30 mi",
             duration: "2h 30m",
-            elevation: "1,000 ft",
+            distance: "30 mi",
+            speed: "15.0 mph",
             pace: nil,
+            heartRate: "145 bpm",
+            elevation: "1,000 ft",
             coordinates: sampleCoordinates()
         )
         return preview
@@ -153,6 +153,7 @@ struct WorkoutColorCard_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutColorCard(
             viewModel: viewModel,
+            metric: .none,
             color: .accentColor,
             location: "Orlando, FL",
             routeImage: nil,

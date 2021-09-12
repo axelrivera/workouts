@@ -117,7 +117,7 @@ struct ShareView: View {
 extension ShareView {
     
     func dismissAction() {
-        
+        shareManager.reloadImage()
     }
     
     func sheetAction() {

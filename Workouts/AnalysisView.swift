@@ -80,8 +80,7 @@ struct AnalysisView: View {
                                 supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
                                 supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
                                 values: detailManager.paceValues, avgValue: workout.avgPace,
-                                accentColor: .pace,
-                                yAxisFormatter: PaceValueFormatter()
+                                accentColor: .pace
                             )
                         } else {
                             rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .pace)
@@ -208,7 +207,7 @@ extension AnalysisView {
         }
     }
     
-    func chartArea(valueType: ChartInterval.ValueType, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    func chartArea(valueType: ChartInterval.ValueType, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color) -> some View {
         VStack(alignment: .leading) {
             if supportValue1.isPresent || supportValue2.isPresent {
                 HStack {
@@ -242,20 +241,18 @@ extension AnalysisView {
             chart(
                 valueType: valueType,
                 values: values,
-                avg: avgValue,
-                color: accentColor,
-                yAxisFormatter: yAxisFormatter
+                avg: avgValue
             )
         }
     }
 
     @ViewBuilder
-    func chart(valueType: ChartInterval.ValueType, values: [ChartInterval], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    func chart(valueType: ChartInterval.ValueType, values: [ChartInterval], avg: Double?) -> some View {
         if valueType == .cadence {
-            ScatterChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
+            ScatterChart(values: values, avgValue: avg, lineColor: .cadence, yAxisFormatter: nil)
                 .frame(maxWidth: .infinity, minHeight: 200.0)
         } else {
-            LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
+            LineChart(valueType: valueType, values: values, avg: avg)
                 .frame(maxWidth: .infinity, minHeight: 200.0)
         }
     }

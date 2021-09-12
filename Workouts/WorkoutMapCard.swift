@@ -16,7 +16,7 @@ struct WorkoutMapCard: View, WorkoutSharable {
     )
     
     let viewModel: WorkoutCardViewModel
-    
+    var metric: WorkoutCardViewModel.Metric = .none
     var backgroundImage: UIImage?
     var showTitle = true
     var showDate = true
@@ -57,12 +57,8 @@ struct WorkoutMapCard: View, WorkoutSharable {
 
                     metricView(text: "Time", detail: viewModel.duration)
 
-                    if let elevation = elevationString {
-                        metricView(text: "Elevation", detail: elevation)
-                    }
-
-                    if let pace = paceString  {
-                        metricView(text: "Pace", detail: pace)
+                    if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
+                        metricView(text: text, detail: detail)
                     }
                 }
             }
@@ -118,10 +114,12 @@ struct WorkoutMapCard_Previews: PreviewProvider {
             indoor: false,
             title: "Outdoor Cycle",
             date: "Jan 1, 2021 @ 7:00 AM",
-            distance: "30 mi",
             duration: "2h 30m",
-            elevation: "1,000 ft",
+            distance: "30 mi",
+            speed: "15.0 mph",
             pace: nil,
+            heartRate: "145 bpm",
+            elevation: "1,000 ft",
             coordinates: sampleCoordinates()
         )
         return preview
