@@ -9,7 +9,6 @@ import SwiftUI
 import Combine
 import CoreData
 
-
 class WorkoutManager: ObservableObject {
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
