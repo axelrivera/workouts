@@ -20,7 +20,6 @@ struct HeartRateInfoView: View {
                     
                     Text("Heart rate training uses heart rate to measure workout intensity while aiming for different heart rate zones depending on your fitness goals.")
                 }
-                .padding([.top, .bottom])
                 
                 ForEach(HRZone.allCases) { zone in
                     VStack(alignment: .leading, spacing: 10.0) {
@@ -37,7 +36,6 @@ struct HeartRateInfoView: View {
                         
                         Text(zone.explanation)
                     }
-                    .padding([.top, .bottom])
                 }
                 
                 VStack(alignment: .leading, spacing: 10.0) {
@@ -47,12 +45,12 @@ struct HeartRateInfoView: View {
                     
                     Text("A training plan will designate precisely how much time you spend in each training zone. Research indicates that you should spend 80% of your time training at low intensity (Zones 1 and 2). You can spend the other 20% between moderate to high intensity training depending on your fitness goals.")
                 }
-                .padding([.top, .bottom])
             }
+            .listStyle(.plain)
             .navigationTitle("HR Zones Explained")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
             }

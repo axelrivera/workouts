@@ -19,6 +19,8 @@
 		1602AFB226C7FBDA0079A6E4 /* ScatterChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1602AFB026C7FBDA0079A6E4 /* ScatterChart.swift */; };
 		1602AFB426CA847C0079A6E4 /* MapImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1602AFB326CA847C0079A6E4 /* MapImage.swift */; };
 		1602AFB526CA847C0079A6E4 /* MapImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1602AFB326CA847C0079A6E4 /* MapImage.swift */; };
+		16054C0226EF7DAD007FFD6C /* PaywallItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16054C0126EF7DAD007FFD6C /* PaywallItem.swift */; };
+		16054C0326EF7DAD007FFD6C /* PaywallItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16054C0126EF7DAD007FFD6C /* PaywallItem.swift */; };
 		160BB05325DC2C2C0059E493 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160BB05225DC2C2C0059E493 /* StatsView.swift */; };
 		160BB06525DD61700059E493 /* TimeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91725B350BA00B04478 /* TimeSelectView.swift */; };
 		160BB06625DD61700059E493 /* ProfileDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8323D25D4C0F100382545 /* ProfileDataStore.swift */; };
@@ -406,6 +408,7 @@
 		1602AFAA26C7DE8A0079A6E4 /* CLLocation+Array.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CLLocation+Array.swift"; sourceTree = "<group>"; };
 		1602AFB026C7FBDA0079A6E4 /* ScatterChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScatterChart.swift; sourceTree = "<group>"; };
 		1602AFB326CA847C0079A6E4 /* MapImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapImage.swift; sourceTree = "<group>"; };
+		16054C0126EF7DAD007FFD6C /* PaywallItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallItem.swift; sourceTree = "<group>"; };
 		160BB05225DC2C2C0059E493 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		160BB0A225DD61700059E493 /* Workouts Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Workouts Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		160BB0A325DD61700059E493 /* DevInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = DevInfo.plist; sourceTree = "<group>"; };
@@ -1057,6 +1060,7 @@
 				168F3C8F26A200020054AFD1 /* PaywallBanner.swift */,
 				166A39B92696893E00413F71 /* PaywallOverlay.swift */,
 				1620B03126982BA60037004A /* PaywallModifier.swift */,
+				16054C0126EF7DAD007FFD6C /* PaywallItem.swift */,
 			);
 			name = Paywall;
 			sourceTree = "<group>";
@@ -1441,6 +1445,7 @@
 				160BB07F25DD61700059E493 /* RoundButton.swift in Sources */,
 				164D0AD92661075A000A56AD /* SampleProcessor.swift in Sources */,
 				1624C95526BC2F7200373D7E /* OnboardingModifier.swift in Sources */,
+				16054C0326EF7DAD007FFD6C /* PaywallItem.swift in Sources */,
 				168F3C7726A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16FB84EA25F8321F00CF22ED /* Charts+Additions.swift in Sources */,
 				167D0BA726E25D5000055D54 /* StatsWorkoutsView.swift in Sources */,
@@ -1616,6 +1621,7 @@
 				16682B6525CF3E1900FC9317 /* RoundButton.swift in Sources */,
 				164D0AD82661075A000A56AD /* SampleProcessor.swift in Sources */,
 				1624C95426BC2F7200373D7E /* OnboardingModifier.swift in Sources */,
+				16054C0226EF7DAD007FFD6C /* PaywallItem.swift in Sources */,
 				168F3C7626A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */,
 				167D0BA626E25D4F00055D54 /* StatsWorkoutsView.swift in Sources */,

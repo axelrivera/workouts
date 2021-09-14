@@ -88,13 +88,11 @@ struct ShareView: View {
             .navigationTitle("Sharing Preview")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done", action: {
-                        presentationMode.wrappedValue.dismiss()
-                    })
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Share", action: sheetAction)
                 }
             }

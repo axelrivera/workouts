@@ -51,7 +51,7 @@ struct LogFilterView: View {
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
             }

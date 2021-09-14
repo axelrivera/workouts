@@ -25,7 +25,7 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selected) {
-            EquatableView(content: HomeView())
+            HomeView()
                 .tabItem { Label("Home", systemImage: "house") }
                 .tag(Tabs.home)
             

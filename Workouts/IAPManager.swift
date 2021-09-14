@@ -54,7 +54,7 @@ extension IAPManager {
     
     private func registerPurchasesManager() {
         #if PRODUCTION_BUILD
-        Purchases.debugLogsEnabled = true
+        Purchases.logLevel = .info
         Purchases.configure(withAPIKey: Constants.apiKey)
         Purchases.shared.delegate = self
         #else

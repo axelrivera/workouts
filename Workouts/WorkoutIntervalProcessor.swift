@@ -93,7 +93,8 @@ class WorkoutIntervalProcessor {
             interval.cummulativeDistance = totalDistance
             interval.distance = distance
             
-            let movingTime = dateInterval.duration
+            let totalTime = dateInterval.duration
+            let movingTime = chunk.map({ $0.duration }).reduce(0, +)
             
             let maxHeartRate = partialHeartRateSamples.maxValue()
             let avgHeartRate = partialHeartRateSamples.avgValue()
@@ -118,6 +119,7 @@ class WorkoutIntervalProcessor {
             let altitudeValues = partialLocations.altitudeValues()
             let maxAltitude = altitudeValues.max() ?? 0
             
+            interval.totalTime = totalTime
             interval.movingTime = movingTime
             interval.avgSpeed = avgSpeed
             interval.maxSpeed = maxSpeed

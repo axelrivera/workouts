@@ -10,29 +10,31 @@ import CoreLocation
 
 extension WorkoutCardViewModel {
     enum Metric: String, Identifiable, CaseIterable {
-        case none, speed, pace, heartRate, elevation
+        case none, speed, pace, heartRate, elevation, calories
         var id: String { rawValue }
         
         var title: String { Self.titleDictionary[self]! }
         var displayTitle: String? { Self.displayDictionary[self] }
         
-        static let cyclingMetrics: [Metric] = [.none, .speed, .heartRate, .elevation]
-        static let runningMetrics: [Metric] = [.none, .pace, .heartRate]
-        static let indoorMetrics: [Metric] = [.none, .heartRate]
+        static let cyclingMetrics: [Metric] = [.none, .speed, .heartRate, .elevation, .calories]
+        static let runningMetrics: [Metric] = [.none, .pace, .heartRate, .calories]
+        static let indoorMetrics: [Metric] = [.none, .heartRate, .calories]
         
         private static let titleDictionary: [Metric: String] = [
             .none: "No Metric",
             .speed: "Speed",
             .pace: "Pace",
             .heartRate: "Heart Rate",
-            .elevation: "Elevation"
+            .elevation: "Elevation",
+            .calories: "Calories"
         ]
         
         private static let displayDictionary: [Metric: String] = [
             .speed: "Avg Speed",
             .pace: "Avg Pace",
             .heartRate: "Avg HR",
-            .elevation: "Elevation"
+            .elevation: "Elevation",
+            .calories: "Calories"
         ]
     }
 }
@@ -48,6 +50,7 @@ struct WorkoutCardViewModel {
     let pace: String?
     let heartRate: String?
     let elevation: String?
+    let calories: String?
     let coordinates: [CLLocationCoordinate2D]
 }
 
@@ -65,6 +68,8 @@ extension WorkoutCardViewModel {
             return heartRate
         case .elevation:
             return elevation
+        case .calories:
+            return calories
         default:
             return nil
         }
@@ -82,6 +87,7 @@ extension WorkoutCardViewModel {
             pace: nil,
             heartRate: nil,
             elevation: nil,
+            calories: nil,
             coordinates: []
         )
     }
@@ -102,6 +108,7 @@ extension WorkoutCardViewModel {
             pace: nil,
             heartRate: nil,
             elevation: "800 ft",
+            calories: nil,
             coordinates: sampleCoordinates()
         )
     }

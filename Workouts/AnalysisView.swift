@@ -164,7 +164,7 @@ struct AnalysisView: View {
             .navigationTitle(workout.analysisTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Text("Done")
                     }

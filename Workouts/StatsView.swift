@@ -9,9 +9,16 @@ import SwiftUI
 import CoreData
 
 struct StatsView: View {
+    enum ActiveSheet: Identifiable {
+        case settings
+        var id: Int { hashValue }
+    }
+    
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @EnvironmentObject var statsManager: StatsManager
+    
+    @State var activeSheet: ActiveSheet?
         
     var weeklySectionTitle: String {
         statsManager.weekStats.dateRangeHeader
@@ -107,7 +114,13 @@ struct StatsView: View {
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("Progress")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { activeSheet = .settings }) {
+                       Image(systemName: "gearshape")
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button(action: {
                             statsManager.sport = nil
@@ -131,6 +144,13 @@ struct StatsView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+        .fullScreenCover(item: $activeSheet) { item in
+            switch item {
+            case .settings:
+                SettingsView()
+                    .environmentObject(purchaseManager)
+            }
+        }
     }
 }
 

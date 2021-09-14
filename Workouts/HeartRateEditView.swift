@@ -53,15 +53,12 @@ struct HeartRateEditView: View {
             .navigationTitle("Edit Zones")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { presentationMode.wrappedValue.dismiss() }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: save) {
-                        Text("Save")
-                            .bold()
-                    }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save", action: save)
                 }
             }
         }

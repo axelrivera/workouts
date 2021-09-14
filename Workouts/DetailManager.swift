@@ -201,7 +201,7 @@ extension DetailManager {
                     sport: interval.sport,
                     lapNumber: interval.number,
                     distance: interval.distance,
-                    duration: interval.duration,
+                    duration: interval.movingTime,
                     avgSpeed: interval.avgSpeed,
                     avgPace: interval.avgPace,
                     avgCadence: interval.avgCadence,
@@ -255,6 +255,7 @@ extension DetailManager {
             pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
             heartRate: detail.avgHeartRate > 0 ? formattedHeartRateString(for: detail.avgHeartRate) : nil,
             elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
+            calories: detail.energyBurned > 0 ? formattedCaloriesString(for: detail.energyBurned) : nil,
             coordinates: detail.coordinates
         )
     }

@@ -32,10 +32,10 @@ struct LapsView: View {
             }
             .overlay(overlayView())
             .paywallButtonOverlay(sample: false)
-            .navigationTitle("Laps")
+            .navigationTitle("Splits")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
             }

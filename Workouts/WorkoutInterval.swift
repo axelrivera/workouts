@@ -22,6 +22,7 @@ final class WorkoutInterval: Identifiable {
     
     var distance: Double = 0
     var cummulativeDistance: Double = 0
+    var totalTime: Double = 0
     var movingTime: Double = 0
     var avgSpeed: Double = 0
     var maxSpeed: Double = 0

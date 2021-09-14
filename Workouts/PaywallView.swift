@@ -97,6 +97,7 @@ struct PaywallView: View {
                                     .foregroundColor(.secondary)
                                 
                                 Text(item.description)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                         .padding(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
@@ -148,56 +149,4 @@ struct PaywallView_Previews: PreviewProvider {
             .environmentObject(IAPManagerPreview.manager(isActive: true))
             .colorScheme(.dark)
     }
-}
-
-struct PaywallItem: Identifiable {
-    let id = UUID().uuidString
-    let imageName: String
-    let imageColor: Color
-    let title: String
-    let description: String
-}
-
-extension PaywallItem {
-    
-    static func items() -> [PaywallItem] {
-        [heartRate, progress, files, more]
-    }
-    
-    static var heartRate: PaywallItem {
-        PaywallItem(
-            imageName: "heart.fill",
-            imageColor: .red,
-            title: "Heart Rate Zones",
-            description: "Train smarter not harder! Use heart rate zones to monitor your effort on individual workouts."
-        )
-    }
-    
-    static var progress: PaywallItem {
-        PaywallItem(
-            imageName: "chart.bar.fill",
-            imageColor: .green,
-            title: "Progress Charts",
-            description: "Keep track of your progress using weekly and monthly charts."
-        )
-    }
-    
-    static var files: PaywallItem {
-        PaywallItem(
-            imageName: "square.and.arrow.down",
-            imageColor: .purple,
-            title: "File Imports",
-            description: "Manually import FIT files recorded from your cycling computer or smartwatch."
-        )
-    }
-    
-    static var more: PaywallItem {
-        PaywallItem(
-            imageName: "star.fill",
-            imageColor: .orange,
-            title: "Support Indie Work",
-            description: "Purchasing supports current and future development of Better Workouts."
-        )
-    }
-    
 }

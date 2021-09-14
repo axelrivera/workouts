@@ -56,7 +56,7 @@ struct ImportView: View {
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(action: dismissAction) {
                         Text("Done")
                     }

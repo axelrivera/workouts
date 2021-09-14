@@ -9,9 +9,16 @@ import SwiftUI
 import CoreData
 
 struct WorkoutsView: View {
+    enum ActiveSheet: Identifiable {
+        case settings
+        var id: Int { hashValue }
+    }
+    
     @EnvironmentObject var workoutManager: WorkoutManager
+    @EnvironmentObject var purchaseManager: IAPManager
     @Binding var sport: Sport?
     
+    @State private var activeSheet: ActiveSheet?
     @State private var selectedWorkout: UUID?
     @State private var isEmpty = false
         
@@ -43,7 +50,13 @@ struct WorkoutsView: View {
             .overlay(emptyOverlay())
             .navigationTitle("Workouts")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { activeSheet = .settings }) {
+                       Image(systemName: "gearshape")
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button(action: {
                             self.sport = nil
@@ -63,6 +76,13 @@ struct WorkoutsView: View {
                     } label: {
                         Text(sport?.title ?? "All Workouts")
                     }
+                }
+            }
+            .fullScreenCover(item: $activeSheet) { item in
+                switch item {
+                case .settings:
+                    SettingsView()
+                        .environmentObject(purchaseManager)
                 }
             }
         }
@@ -103,12 +123,15 @@ struct WorkoutsView_Previews: PreviewProvider {
         return manager
     }()
     
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
+    
     @State static var sport: Sport?
     
     static var previews: some View {
         WorkoutsView(sport: $sport)
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
+            .environmentObject(purchaseManager)
             .preferredColorScheme(.light)
     }
 }

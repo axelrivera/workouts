@@ -145,6 +145,7 @@ struct WorkoutColorCard_Previews: PreviewProvider {
             pace: nil,
             heartRate: "145 bpm",
             elevation: "1,000 ft",
+            calories: "500 cal",
             coordinates: sampleCoordinates()
         )
         return preview

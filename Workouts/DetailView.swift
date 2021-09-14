@@ -69,7 +69,7 @@ struct DetailView: View {
                 .buttonStyle(.bordered)
                 
                 Button(action: { activeSheet = .laps }) {
-                    Label("Laps", systemImage: "arrow.2.squarepath")
+                    Label("Splits", systemImage: "arrow.2.squarepath")
                         .padding([.top, .bottom], CGFloat(10.0))
                         .frame(maxWidth: .infinity)
                     
@@ -102,7 +102,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button(action: { activeSheet = .sharing }) {
                     Image(systemName: "square.and.arrow.up")
                 }

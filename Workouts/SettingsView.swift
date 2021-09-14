@@ -65,10 +65,8 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Text("Done").bold()
-                    }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 #if DEVELOPMENT_BUILD
@@ -83,7 +81,7 @@ struct SettingsView: View {
                 switch sheet {
                 case .paywall:
                     PaywallView()
-//                        .environmentObject(purchaseManager)
+                        .environmentObject(purchaseManager)
                 case .tutorial:
                     SafariView(urlString: URLStrings.tutorial)
                 case .privacy:

@@ -17,11 +17,7 @@ extension HomeView {
     
 }
 
-struct HomeView: View, Equatable {
-    static func == (lhs: HomeView, rhs: HomeView) -> Bool {
-        return true
-    }
-    
+struct HomeView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
@@ -99,7 +95,7 @@ struct HomeView: View, Equatable {
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: { activeSheet = .add}) {
                         Text("Add Workout")
                     }
