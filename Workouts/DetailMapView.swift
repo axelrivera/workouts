@@ -49,53 +49,48 @@ struct DetailMapView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
-    @State var points: [CLLocationCoordinate2D]
-    @State var selectedMapType: MKMapType = .standard
+    var title: String
+    var points: [CLLocationCoordinate2D]
+    
+    @State private var selectedMapType: MKMapType = .standard
     
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            DetailMap(points: $points, mapType: $selectedMapType)
-                .ignoresSafeArea()
-            
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "xmark")
-                        .foregroundColor(.red)
-                        .frame(width: 28, height: 28)
-                        .background(Circle().scale(1.3).fill(Color.primary))
-                        .shadow(radius: 5.0)
-                }
-                
-                Spacer()
-                
-                Menu {
-                    ForEach(MapType.allCases) { mapType in
-                        Button(action: { selectedMapType = mapType.systemType }) {
-                            HStack {
-                                Text(mapType.title)
-                                
-                                if selectedMapType == mapType.systemType {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
+        NavigationView {
+            DetailMap(points: .constant(points), mapType: $selectedMapType)
+                .ignoresSafeArea(.all, edges: [.bottom])
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    }
+                    
+                    ToolbarItem(placement: .primaryAction) {
+                        Menu {
+                            ForEach(MapType.allCases) { mapType in
+                                Button(action: { selectedMapType = mapType.systemType }) {
+                                    HStack {
+                                        Text(mapType.title)
+                                        
+                                        if selectedMapType == mapType.systemType {
+                                            Spacer()
+                                            Image(systemName: "checkmark")
+                                        }
+                                    }
                                 }
                             }
+                        } label: {
+                            Image(systemName: "map")
                         }
                     }
-                } label: {
-                    Image(systemName: "map")
-                        .frame(width: 28.0, height: 28.0)
-                        .background(Circle().scale(1.3).fill(Color.primary))
-                        .shadow(radius: 5.0)
                 }
-            }
-            .padding()
         }
     }
 }
 
 struct DetailMapView_Previews: PreviewProvider {
     static var previews: some View {
-        DetailMapView(points: [])
+        DetailMapView(title: "Map", points: [])
             .colorScheme(.dark)
     }
 }

@@ -47,8 +47,15 @@ struct HeartRateView: View {
                 }
             }
             
-            Button("Edit Heart Rate and Zones") { activeSheet = .edit }
-                .foregroundColor(.red)
+            Section {
+                Button(action: { activeSheet = .edit }) {
+                    Label("Edit Heart Rate and Zones", systemImage: "slider.horizontal.3")
+                }
+                
+                Button(action: { activeAlert = .allConfirmation }) {
+                    Label("Apply to All Workouts", systemImage: "calendar.badge.clock")
+                }
+            }
             
             Section(header: Text("Help")) {
                 Button(action: { activeSheet = .info }) {
@@ -58,10 +65,6 @@ struct HeartRateView: View {
                 Button(action: { activeSheet = .explanation }) {
                     Label("Heart Rate Zones Explained", systemImage: "lightbulb")
                 }
-            }
-            
-            Section(footer: Text("Updates Max Heart Rate and Current Zones for all workouts.")) {
-                Button("Update All Workouts", action: { activeAlert = .allConfirmation })
             }
         }
         .navigationTitle("Heart Rate Zones")
@@ -80,7 +83,7 @@ struct HeartRateView: View {
         .alert(item: $activeAlert) { alert in
             switch alert {
             case .allConfirmation:
-                let title = "Update All Workouts"
+                let title = "Update All Workouts?"
                 let message = "This action will update all your existing workouts with your current Max Heart Rate and Current Zones."
                 
                 return Alert.showAlertWithTitle(title, message: message, action: applyAllAction)

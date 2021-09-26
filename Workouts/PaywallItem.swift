@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PaywallItem: Identifiable {
+struct PaywallItem: Identifiable, Hashable {
     let id = UUID().uuidString
     let imageName: String
     let imageColor: Color

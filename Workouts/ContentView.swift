@@ -74,16 +74,7 @@ extension ContentView {
     private func reloadData() {
         logManager.reloadCurrentInterval()
         workoutManager.fetchRecentWorkouts()
-        reloadIntervalsIfNeeded()
         statsManager.refresh()
-    }
-    
-    private func reloadIntervalsIfNeeded() {
-        if purchaseManager.isActive {
-            logManager.reloadIntervals()
-        } else {
-            logManager.intervals = LogInterval.sampleLastTwelveMonths()
-        }
     }
     
 }

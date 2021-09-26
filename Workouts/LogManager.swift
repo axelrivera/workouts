@@ -287,11 +287,11 @@ extension LogManager {
 extension LogManager {
     
     func addObservers() {
-        refreshCancellable = NotificationCenter.default.publisher(for: .didFinishProcessingRemoteData)
-            .sink { _ in
-                Log.debug("LOG - refreshing current interval")
-                self.reloadCurrentInterval()
-            }
+//        refreshCancellable = NotificationCenter.default.publisher(for: .didFinishProcessingRemoteData)
+//            .sink { _ in
+//                Log.debug("LOG - refreshing current interval")
+//                self.reloadCurrentInterval()
+//            }
     }
     
 }

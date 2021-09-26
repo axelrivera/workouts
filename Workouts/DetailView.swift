@@ -10,12 +10,8 @@ import MapKit
 import CoreData
 
 struct DetailView: View {
-    enum ActiveFullSheet: Identifiable {
-        case map
-        var id: Int { hashValue }
-    }
-    
     enum ActiveSheet: Identifiable {
+        case map
         case analysis
         case laps
         case sharing
@@ -32,7 +28,6 @@ struct DetailView: View {
     @StateObject var detailManager: DetailManager
     
     @State private var activeSheet: ActiveSheet?
-    @State private var activeFullSheet: ActiveFullSheet?
         
     var workout: WorkoutDetailViewModel { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
@@ -54,7 +49,7 @@ struct DetailView: View {
             .padding([.top, .bottom], CGFloat(5.0))
             
             if detailManager.includesLocation {
-                Button(action: { activeFullSheet = .map }) {
+                Button(action: { activeSheet = .map }) {
                     WorkoutMap(points: detailManager.detail.coordinates)
                 }
                 .buttonStyle(WorkoutMapButtonStyle())
@@ -110,6 +105,8 @@ struct DetailView: View {
         }
         .sheet(item: $activeSheet) { item in
             switch item {
+            case .map:
+                DetailMapView(title: workout.analysisTitle, points: detailManager.detail.coordinates)
             case .analysis:
                 AnalysisView()
                     .environmentObject(detailManager)
@@ -121,12 +118,6 @@ struct DetailView: View {
             case .sharing:
                 ShareView(viewModel: detailManager.shareViewModel)
                     .environmentObject(purchaseManager)
-            }
-        }
-        .fullScreenCover(item: $activeFullSheet) { item in
-            switch item {
-            case .map:
-                DetailMapView(points: detailManager.detail.coordinates)
             }
         }
     }

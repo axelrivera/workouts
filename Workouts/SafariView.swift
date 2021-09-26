@@ -10,6 +10,7 @@ import SafariServices
 
 struct SafariView: UIViewControllerRepresentable {
     let urlString: String
+    var entersReaderIfAvailable: Bool? = nil
     
     var url: URL {
         URL(string: urlString)!
@@ -17,7 +18,7 @@ struct SafariView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
         let configuration = SFSafariViewController.Configuration()
-        configuration.entersReaderIfAvailable = true
+        configuration.entersReaderIfAvailable = entersReaderIfAvailable ?? true
         return SFSafariViewController(url: url, configuration: configuration)
     }
 

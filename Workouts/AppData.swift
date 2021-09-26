@@ -42,8 +42,8 @@ struct WorkoutConstants {
 
 struct URLStrings {
     static let faq = "https://mobile.betterworkouts.app"
-    static let tutorial = "https://mobile.betterworkouts.app/tutorial/"
-    static let privacy = "https://mobile.betterworkouts.app/privacy/"
+    static let about = "https://betterworkouts.app/about/"
+    static let privacy = "https://betterworkouts.app/privacy/"
     static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"
     static let heartRateInfo = "https://www.heart.org/en/healthy-living/fitness/fitness-basics/target-heart-rates"
 }

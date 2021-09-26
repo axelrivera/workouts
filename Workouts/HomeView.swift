@@ -11,7 +11,7 @@ import CoreData
 extension HomeView {
     
     enum ActiveSheet: Identifiable {
-        case settings, add
+        case settings, add, log
         var id: Int { hashValue }
     }
     
@@ -58,8 +58,8 @@ struct HomeView: View {
                         supportText: logManager.prevIntervalDisplayLabel,
                         interval: logManager.prevInterval
                     )
-
-                    NavigationLink(destination: logDestination) {
+                    
+                    Button(action: { activeSheet = .log }) {
                         Label("Workout Log", systemImage: "calendar")
                     }
                 }
@@ -110,6 +110,11 @@ struct HomeView: View {
                 case .add:
                     ImportView()
                         .environmentObject(ImportManager())
+                case .log:
+                    WorkoutLogView()
+                        .environmentObject(purchaseManager)
+                        .environmentObject(logManager)
+                        .environmentObject(workoutManager)
                 }
             }
         }

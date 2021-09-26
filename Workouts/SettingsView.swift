@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable {
-        case paywall, feedback, faq, tutorial, privacy
+        case paywall, feedback, about, privacy
         var id: Int { hashValue }
     }
     
@@ -46,12 +46,11 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
-                    //Button("Import Workout Tutorial", action: { activeSheet = .tutorial })
-                    //Button("Frequently Asked Questions", action: { activeSheet = .faq })
                     Button("Send Feedback", action: feedbackAction)
                 }
                 
-                Section(header: Text("Better Workouts")) {
+                Section(header: Text("Better Workouts"), footer: footerView()) {
+                    Button("About Rivera Labs", action: { activeSheet = .about })
                     Button("Review on the App Store", action: reviewAction)
                     Button("Privacy Policy", action: { activeSheet = .privacy })
                     HStack {
@@ -82,12 +81,10 @@ struct SettingsView: View {
                 case .paywall:
                     PaywallView()
                         .environmentObject(purchaseManager)
-                case .tutorial:
-                    SafariView(urlString: URLStrings.tutorial)
+                case .about:
+                    SafariView(urlString: URLStrings.about, entersReaderIfAvailable: false)
                 case .privacy:
                     SafariView(urlString: URLStrings.privacy)
-                case .faq:
-                    SafariView(urlString: URLStrings.faq)
                 case .feedback:
                     MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
                         .navigationBarTitleDisplayMode(.inline)
@@ -106,6 +103,23 @@ struct SettingsView: View {
             }
         }
     }
+}
+
+extension SettingsView {
+    
+    @ViewBuilder
+    func footerView() -> some View {
+        VStack(spacing: 5.0) {
+            Text("© 2021 Rivera Labs LLC")
+                .frame(maxWidth: .infinity, alignment: .center)
+            Text("Made with ❤️ in Orlando, FL")
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .font(.subheadline)
+        .padding(.top, CGFloat(15.0))
+        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+    }
+    
 }
 
 extension SettingsView {
@@ -142,7 +156,7 @@ extension SettingsView {
 
 struct SettingsView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         SettingsView()

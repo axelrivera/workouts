@@ -17,6 +17,7 @@ extension WorkoutLogView {
 }
 
 struct WorkoutLogView: View {
+    @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var manager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
 
@@ -38,52 +39,58 @@ struct WorkoutLogView: View {
     }
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section(header: headerView()) {
-                    ForEach(manager.intervals, id: \.id) { interval in
-                        WorkoutLogIntervalRow(displayType: $manager.displayType, interval: interval)
-                        Divider()
+        NavigationView {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: headerView()) {
+                        ForEach(manager.intervals, id: \.id) { interval in
+                            WorkoutLogIntervalRow(displayType: $manager.displayType, interval: interval)
+                            Divider()
+                        }
                     }
                 }
+                .onAppear { reloadIfNeeded() }
+                .onChange(of: purchaseManager.isActive, perform: { isActive in
+                    reloadIfNeeded()
+                })
             }
-            .onAppear { reloadIfNeeded() }
-            .onChange(of: purchaseManager.isActive, perform: { isActive in
-                reloadIfNeeded()
-            })
-        }
-        .overlay(emptyOverlay())
-        .paywallButtonOverlay()
-        .navigationTitle("Workout Log")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack {
-                    Text(manager.filterTitleString)
-                        .font(.footnote)
-                        .foregroundColor(.primary)
-                    Text(manager.filterSportString)
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
+            .overlay(emptyOverlay())
+            .paywallButtonOverlay()
+            .navigationTitle("Workout Log")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
                 }
-            }
+                
+                ToolbarItem(placement: .principal) {
+                    VStack {
+                        Text(manager.filterTitleString)
+                            .font(.footnote)
+                            .foregroundColor(.primary)
+                        Text(manager.filterSportString)
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                }
 
-            ToolbarItem(placement: .navigationBarTrailing)  {
-                Button(action: { activeSheet = .filter }) {
-                    Image(systemName: "line.horizontal.3.decrease.circle")
+                ToolbarItem(placement: .navigationBarTrailing)  {
+                    Button(action: { activeSheet = .filter }) {
+                        Image(systemName: "line.horizontal.3.decrease.circle")
+                    }
+                    .disabled(!purchaseManager.isActive)
                 }
-                .disabled(!purchaseManager.isActive)
             }
-        }
-        .sheet(item: $activeSheet) { item in
-            switch item {
-            case .filter:
-                LogFilterView(
-                    dateFilter: $manager.dateFilter,
-                    filterYear: $manager.displayYear,
-                    years: $manager.filterYears,
-                    sports: $manager.sports
-                )
+            .sheet(item: $activeSheet) { item in
+                switch item {
+                case .filter:
+                    LogFilterView(
+                        dateFilter: $manager.dateFilter,
+                        filterYear: $manager.displayYear,
+                        years: $manager.filterYears,
+                        sports: $manager.sports
+                    )
+                }
             }
         }
     }
@@ -123,13 +130,11 @@ struct WorkoutLogView_Previews: PreviewProvider {
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
-        NavigationView {
-            WorkoutLogView()
-        }
-        .environment(\.managedObjectContext, viewContext)
-        .environmentObject(workoutManager)
-        .environmentObject(manager)
-        .environmentObject(purchaseManager)
+        WorkoutLogView()
+            .environment(\.managedObjectContext, viewContext)
+            .environmentObject(workoutManager)
+            .environmentObject(manager)
+            .environmentObject(purchaseManager)
     }
 }
 

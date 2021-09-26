@@ -25,9 +25,9 @@ struct AdvancedSettingsView: View {
                 }
             }
             
-            Section(footer: Text("Deletes all cached images for maps.")) {
+            Section(footer: Text("Regenerates all cached maps in Workouts feed.")) {
                 Button(action: { activeAlert = .resetCachedImages }) {
-                    Text("Reset Map Images")
+                    Text("Reset Maps")
                 }
             }
         }

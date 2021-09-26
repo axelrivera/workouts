@@ -46,13 +46,15 @@ struct PaywallBanner: View {
                         .multilineTextAlignment(.center)
                 }
                
-                VStack {
+                VStack(alignment: .center) {
                     PaywallButton(action: action)
+                        .buttonStyle(PlainButtonStyle())
                     Text("Purchasing helps support future development.")
                         .font(.fixedSubheadline)
-                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        
                 }
-                .buttonStyle(PlainButtonStyle())
             }
         }
         .foregroundColor(isActive ? .primary : .white)
@@ -68,10 +70,15 @@ struct PaywallBanner_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            VStack(spacing: 20.0) {
-                PaywallBanner(isActive: true, action: {})
-                PaywallBanner(isActive: false, action: {})
-                PaywallLockButton(sample: true, action: {})
+            Form {
+                Section {
+                    PaywallBanner(isActive: true, action: {})
+                }
+                
+                Section {
+                    PaywallBanner(isActive: false, action: {})
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
         }
