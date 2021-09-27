@@ -24,7 +24,7 @@ struct PaywallView: View {
         }
     }
     
-    let items = PaywallItem.items()
+    @State private var items = PaywallItem.items()
     
     @ViewBuilder
     func headerView() -> some View {
