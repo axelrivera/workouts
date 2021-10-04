@@ -13,7 +13,7 @@ import Combine
 class StatsManager: ObservableObject {
     typealias Timeframe = StatsSummary.Timeframe
     
-    var sport: Sport? {
+    @Published var sport: Sport? {
         didSet {
             fetchSummaries()
         }
@@ -40,6 +40,8 @@ class StatsManager: ObservableObject {
     @Published var avgMonthlyCalories: Double = 0
     
     init(context: NSManagedObjectContext) {
+        let sport: Sport? = nil
+        self.sport = sport
         dataProvider = DataProvider(context: context)
         
         weekStats = StatsSummary(sport: sport, timeframe: .week)
