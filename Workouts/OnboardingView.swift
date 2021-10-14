@@ -8,58 +8,36 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    var action = {}
+    enum Tabs: String, Identifiable {
+        case watch, health
+        var id: String { rawValue }
+    }
     
-    @State private var isSelected = false
+    @Environment(\.colorScheme) var colorScheme
+        
+    var action = {}    
+    @State private var selected = Tabs.watch
     
     var body: some View {
-        VStack {
-            Spacer()
+        TabView(selection: $selected) {
+            WatchOnboarding(action: nextAction)
+                .tag(Tabs.watch)
             
-            VStack(spacing: 0.0) {
-                VStack(spacing: 0.0) {
-                    Text("Welcome to")
-                        .font(.title)
-                    Text("Better Workouts")
-                        .font(.largeTitle)
-                }
-                .padding(.bottom, 50.0)
-                
-                Image(systemName: "heart.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100, alignment: .center)
-                    .foregroundColor(.red)
-                
-                Text("The app needs your permission to read your workout data from the Apple Health app.")
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 40.0)
-            }
-            
-            Spacer()
-            
-            Button(action: onButtopnPress) {
-                if isSelected {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                } else {
-                    Text("Request Permission")
-                }
-            }
-            .buttonStyle(RoundButtonStyle())
-            .disabled(isSelected)
+            HealthOnboarding(action: action)
+                .tag(Tabs.health)
         }
-        .padding()
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .center)
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: colorScheme == .dark ? .never : .always))
     }
     
 }
 
 extension OnboardingView {
     
-    func onButtopnPress() {
-        isSelected = true
-        action()
+    func nextAction() {
+        withAnimation {
+            selected = .health
+        }
     }
     
 }

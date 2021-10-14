@@ -352,6 +352,10 @@
 		16D154F825D6ED9700E2AC7C /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8321C25D2096100382545 /* AppSettings.swift */; };
 		16D380FB26CFFD1500DB8F0C /* HealthAuthProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D380FA26CFFD1500DB8F0C /* HealthAuthProvider.swift */; };
 		16D380FC26CFFD1500DB8F0C /* HealthAuthProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D380FA26CFFD1500DB8F0C /* HealthAuthProvider.swift */; };
+		16D861E92715CCB200C09AC5 /* WatchOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D861E82715CCB200C09AC5 /* WatchOnboarding.swift */; };
+		16D861EA2715CCB200C09AC5 /* WatchOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D861E82715CCB200C09AC5 /* WatchOnboarding.swift */; };
+		16D861EC2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D861EB2715D6D800C09AC5 /* HealthOnboarding.swift */; };
+		16D861ED2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D861EB2715D6D800C09AC5 /* HealthOnboarding.swift */; };
 		16E37B4C26E82D0D0075178E /* ShareSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E37B4B26E82D0D0075178E /* ShareSettings.swift */; };
 		16E37B4D26E82D0D0075178E /* ShareSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E37B4B26E82D0D0075178E /* ShareSettings.swift */; };
 		16E4C7D626C1FC6B00A4C0E6 /* Polyline in Frameworks */ = {isa = PBXBuildFile; productRef = 16E4C7D526C1FC6B00A4C0E6 /* Polyline */; };
@@ -566,6 +570,8 @@
 		16CA68E826B10A3C0056C1BA /* LogFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFilterView.swift; sourceTree = "<group>"; };
 		16CA68F526B36C670056C1BA /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
 		16D380FA26CFFD1500DB8F0C /* HealthAuthProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthProvider.swift; sourceTree = "<group>"; };
+		16D861E82715CCB200C09AC5 /* WatchOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOnboarding.swift; sourceTree = "<group>"; };
+		16D861EB2715D6D800C09AC5 /* HealthOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthOnboarding.swift; sourceTree = "<group>"; };
 		16E37B4B26E82D0D0075178E /* ShareSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSettings.swift; sourceTree = "<group>"; };
 		16E4C7D926C2042A00A4C0E6 /* WorkoutInterval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutInterval.swift; sourceTree = "<group>"; };
 		16E4C7DC26C204CA00A4C0E6 /* HealthProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthProvider.swift; sourceTree = "<group>"; };
@@ -1137,6 +1143,8 @@
 		16B321C526C02C18007CCE70 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				16D861E82715CCB200C09AC5 /* WatchOnboarding.swift */,
+				16D861EB2715D6D800C09AC5 /* HealthOnboarding.swift */,
 				16682B6E25CFF54F00FC9317 /* OnboardingView.swift */,
 				1624C95326BC2F7200373D7E /* OnboardingModifier.swift */,
 			);
@@ -1448,6 +1456,7 @@
 				16054C0326EF7DAD007FFD6C /* PaywallItem.swift in Sources */,
 				168F3C7726A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16FB84EA25F8321F00CF22ED /* Charts+Additions.swift in Sources */,
+				16D861ED2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */,
 				167D0BA726E25D5000055D54 /* StatsWorkoutsView.swift in Sources */,
 				160BB08025DD61700059E493 /* WorkoutMap.swift in Sources */,
 				160BB08125DD61700059E493 /* Date+Additions.swift in Sources */,
@@ -1525,6 +1534,7 @@
 				160BB09725DD61700059E493 /* NotAvailableView.swift in Sources */,
 				168EE47C25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */,
 				167D2E692605428200A4A299 /* SyncOperation.swift in Sources */,
+				16D861EA2715CCB200C09AC5 /* WatchOnboarding.swift in Sources */,
 				160BB09825DD61700059E493 /* WorkoutImport+Metadata.swift in Sources */,
 				1668F99E26DE4F5800393322 /* ShareDetailView.swift in Sources */,
 				16A5451F26BADE7900CB6160 /* Font+Additions.swift in Sources */,
@@ -1624,6 +1634,7 @@
 				16054C0226EF7DAD007FFD6C /* PaywallItem.swift in Sources */,
 				168F3C7626A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */,
+				16D861EC2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */,
 				167D0BA626E25D4F00055D54 /* StatsWorkoutsView.swift in Sources */,
 				16A065E825C3679D00019096 /* WorkoutMap.swift in Sources */,
 				16A0663325C751FD00019096 /* Date+Additions.swift in Sources */,
@@ -1701,6 +1712,7 @@
 				16AB3DA325D096A10082A610 /* NotAvailableView.swift in Sources */,
 				168EE47B25FFDBBD00D4788D /* RunWalkUtils.swift in Sources */,
 				167D2E682605428200A4A299 /* SyncOperation.swift in Sources */,
+				16D861E92715CCB200C09AC5 /* WatchOnboarding.swift in Sources */,
 				16A0661525C4A60D00019096 /* WorkoutImport+Metadata.swift in Sources */,
 				1668F99D26DE4F5800393322 /* ShareDetailView.swift in Sources */,
 				16A5451E26BADE7900CB6160 /* Font+Additions.swift in Sources */,
