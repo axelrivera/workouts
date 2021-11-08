@@ -13,7 +13,7 @@ import CoreData
 
 class DetailManager: ObservableObject {
     enum DetailError: Error {
-        case lap
+        case lap, metadata
     }
     
     @Published var isProcessingAnalysis: Bool = false
@@ -36,16 +36,20 @@ class DetailManager: ObservableObject {
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
     @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
+    
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
         
     var distanceSamples: [Quantity]?
-    
-    private var context: NSManagedObjectContext?
-    private var _workout: Workout?
-    
+        
     var detail: WorkoutDetailViewModel
-            
-    init(viewModel: WorkoutDetailViewModel) {
+    var context: NSManagedObjectContext
+    private let metaProvider: MetadataProvider
+    
+    init(viewModel: WorkoutDetailViewModel, context: NSManagedObjectContext) {
         self.detail = viewModel
+        self.context = context
+        metaProvider = MetadataProvider(context: context)
     }
     
     lazy var provider: HealthProvider = {
@@ -84,6 +88,8 @@ extension DetailManager {
     var sport: Sport { detail.sport }
         
     func processWorkout() {
+        preProcess()
+        
         DispatchQueue.main.async {
             withAnimation {
                 self.isProcessingAnalysis = true
@@ -94,6 +100,16 @@ extension DetailManager {
         Task(priority: .userInitiated) {
             await process()
             await processLaps()
+        }
+    }
+    
+    private func preProcess() {
+        let isFavorite = metaProvider.isFavorite(detail.id)
+        let tags = fetchTags()
+        
+        DispatchQueue.main.async {
+            self.isFavorite = isFavorite
+            self.tags = tags
         }
     }
     
@@ -216,7 +232,7 @@ extension DetailManager {
         }
     }
     
-    func updateZones(maxHeartRate: Int, values: [Int], context: NSManagedObjectContext) async {
+    func updateZones(maxHeartRate: Int, values: [Int]) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
         guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
                 
@@ -238,6 +254,48 @@ extension DetailManager {
             }
         }
     }
+    
+    func fetchWorkout() throws -> WorkoutMetadata {
+        return try metaProvider.fetchWorkout(identifier: detail.id)
+    }
+    
+    func fetchTags() -> [TagLabelViewModel] {
+        do {
+            let workout = try fetchWorkout()
+            return workout.tags.map { $0.viewModel() }
+        } catch {
+            return []
+        }
+    }
+    
+    func reloadTags() {
+        let tags = fetchTags()
+        DispatchQueue.main.async {
+            withAnimation {
+                self.tags = tags
+            }
+        }
+    }
+    
+    func toggleFavorite() throws {
+        let identifier = detail.id
+        
+        var isFavorite = self.isFavorite
+        if isFavorite {
+            try metaProvider.unfavoriteWorkout(for: identifier)
+            isFavorite = false
+        } else {
+            try metaProvider.favoriteWorkout(for: identifier)
+            isFavorite = true
+        }
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isFavorite = isFavorite
+            }
+        }
+    }
+    
     
 }
 

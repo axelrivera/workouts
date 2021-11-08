@@ -14,6 +14,8 @@ import SwiftUI
 #error("preventing debug version from overriding production release")
 #endif
 
+let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
+
 @main
 struct WorkoutsApp: App {
     
@@ -25,6 +27,7 @@ struct WorkoutsApp: App {
     let workoutDataStore: WorkoutDataStore
     let storageProvider = StorageProvider()
     let workoutManager: WorkoutManager
+    let tagManager: TagManager
     let synchronizer: Synchronizer
     
     init() {
@@ -32,9 +35,12 @@ struct WorkoutsApp: App {
         logManager = LogManager(context: storageProvider.persistentContainer.viewContext)
         statsManager = StatsManager(context: storageProvider.persistentContainer.viewContext)
         workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
+        tagManager = TagManager(context: storageProvider.persistentContainer.viewContext)
         
         let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
         backgroundContext.automaticallyMergesChangesFromParent = true
+        backgroundContext.transactionAuthor = APP_TRANSACTION_AUTHOR_NAME
+        
         synchronizer = Synchronizer(context: backgroundContext)
     }
     
@@ -46,6 +52,7 @@ struct WorkoutsApp: App {
                 .environmentObject(logManager)
                 .environmentObject(statsManager)
                 .environmentObject(purchaseManager)
+                .environmentObject(tagManager)
         }
     }
 }

@@ -57,13 +57,13 @@ struct StatsSummary {
         self.sport = sport
         self.timeframe = timeframe
         self.interval = interval ?? Self.currentInterval(for: timeframe)
-        count = dictionary["count"] as? Int ?? 0
-        distance = dictionary["distance"] as? Double ?? 0
-        duration = dictionary["movingTime"] as? Double ?? 0
-        elevation = dictionary["elevation"] as? Double ?? 0
-        energyBurned = dictionary["energyBurned"] as? Double ?? 0
-        longestDistance = dictionary["longestDistance"] as? Double ?? 0
-        highestElevation = dictionary["highestElevation"] as? Double ?? 0
+        count = dictionary[StatsProperties.count.key] as? Int ?? 0
+        distance = dictionary[StatsProperties.distance.key] as? Double ?? 0
+        duration = dictionary[StatsProperties.duration.key] as? Double ?? 0
+        elevation = dictionary[StatsProperties.elevation.key] as? Double ?? 0
+        energyBurned = dictionary[StatsProperties.energyBurned.key] as? Double ?? 0
+        longestDistance = dictionary[StatsProperties.longestDistance.key] as? Double ?? 0
+        highestElevation = dictionary[StatsProperties.highestElevation.key] as? Double ?? 0
     }
 }
 

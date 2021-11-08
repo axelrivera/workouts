@@ -24,7 +24,6 @@ struct HomeWorkoutCell: View {
             Text(viewModel.title)
                 .font(.title3)
                 .padding(.bottom, 5.0)
-            
             HStack {
                 Text(viewModel.distanceString)
                     .font(.fixedTitle2)
@@ -51,6 +50,7 @@ struct HomeWorkoutCell_Previews: PreviewProvider {
     static let viewModel: WorkoutCellViewModel = {
         WorkoutCellViewModel(
             id: UUID(),
+            isFavorite: false,
             sport: .cycling,
             indoor: true,
             coordinates: [],
@@ -61,7 +61,8 @@ struct HomeWorkoutCell_Previews: PreviewProvider {
             avgSpeed: 0,
             avgPace: 0,
             calories: 500,
-            elevation: 0
+            elevation: 0,
+            tags: []
         )
     }()
     

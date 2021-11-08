@@ -19,6 +19,7 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     }
     
     let id: UUID
+    let isFavorite: Bool
     let sport: Sport
     let indoor: Bool
     let coordinates: [CLLocationCoordinate2D]
@@ -30,6 +31,7 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     let avgPace: Double
     let calories: Double
     let elevation: Double
+    let tags: [TagLabelViewModel]
 }
 
 extension WorkoutCellViewModel {
@@ -81,6 +83,7 @@ extension Workout {
     var cellViewModel: WorkoutCellViewModel {
         WorkoutCellViewModel(
             id: remoteIdentifier!,
+            isFavorite: isFavorite,
             sport: sport,
             indoor: indoor,
             coordinates: coordinates,
@@ -91,7 +94,8 @@ extension Workout {
             avgSpeed: avgSpeed,
             avgPace: avgPace,
             calories: energyBurned,
-            elevation: elevationAscended
+            elevation: elevationAscended,
+            tags: tags.map({ $0.viewModel() })
         )
     }
     

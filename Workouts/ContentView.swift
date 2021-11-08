@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case home, history, stats, goals
+        case home, history, stats, tags, goals
         var id: String { rawValue }
     }
     
@@ -36,6 +36,11 @@ struct ContentView: View {
             WorkoutsView(sport: $workoutManager.sport)
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(Tabs.history)
+            
+            TagsView()
+                .tabItem { Label("Tags", systemImage: "tag") }
+                .tag(Tabs.tags)
+            
         }
         .onboardingOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in

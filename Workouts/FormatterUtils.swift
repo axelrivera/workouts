@@ -194,7 +194,7 @@ func formattedRunningWalkingPaceUnitString() -> String {
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
-    let duration = duration ?? 0
+    guard let duration = duration else { return "0 \(formattedRunningWalkingPaceUnitString())"}
     let pace = formattedPaceString(for: duration)
     return String(format: "%@ %@", pace, formattedRunningWalkingPaceUnitString())
 }

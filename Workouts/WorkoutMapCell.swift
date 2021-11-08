@@ -10,17 +10,34 @@ import MapKit
 
 struct WorkoutMapCell: View {
     @Environment(\.colorScheme) var colorScheme
+    
+    let isFavorite: Bool
     let viewModel: WorkoutCellViewModel
     
     var body: some View {
         VStack {
             VStack(alignment: .leading, spacing: 2.0) {
-                Text(viewModel.dateString())
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                HStack {
+                    Text(viewModel.dateString())
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    if isFavorite {
+                        Spacer()
+                        Image(systemName: "heart.fill")
+                            .font(.subheadline)
+                            .foregroundColor(.red)
+                    }
+                }
+                
                 Text(viewModel.title)
                     .font(.title)
                     .padding(.bottom, 5.0)
+                
+                if viewModel.tags.isPresent {
+                    TagGrid(tags: viewModel.tags)
+                }
+                
                 HStack {
                     Text(viewModel.distanceString)
                         .font(.fixedBody)
@@ -61,6 +78,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
     static let viewModel: WorkoutCellViewModel = {
         WorkoutCellViewModel(
             id: UUID(),
+            isFavorite: false,
             sport: .cycling,
             indoor: false,
             coordinates: [],
@@ -71,14 +89,16 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             avgSpeed: 0,
             avgPace: 0,
             calories: 0,
-            elevation: 0
+            elevation: 0,
+            tags: []
         )
     }()
     
     static var previews: some View {
         NavigationView {
             List(1 ..< 5, id: \.self) { _ in
-                WorkoutMapCell(viewModel: viewModel)
+                let isFavorite = [true, false].randomElement()!
+                WorkoutMapCell(isFavorite: isFavorite, viewModel: viewModel)
             }
             .listStyle(PlainListStyle())
             .navigationTitle("Workouts")

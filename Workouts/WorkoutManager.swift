@@ -101,6 +101,10 @@ class WorkoutManager: ObservableObject {
         isProcessingRemoteData && totalProcessingWorkouts > 5
     }
     
+    var totalWorkouts: Int {
+        dataProvider.totalWorkouts(sport: sport, interval: nil)
+    }
+    
 }
 
 // MARK: - Notifications and Observers

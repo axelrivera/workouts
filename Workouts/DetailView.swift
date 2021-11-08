@@ -15,7 +15,13 @@ struct DetailView: View {
         case analysis
         case laps
         case sharing
+        case tags
         var id: Int { hashValue }
+    }
+    
+    enum ActiveAlert: Hashable, Identifiable {
+        case error(message: String)
+        var id: Self { self }
     }
     
     enum RowType: Identifiable, CaseIterable {
@@ -28,6 +34,7 @@ struct DetailView: View {
     @StateObject var detailManager: DetailManager
     
     @State private var activeSheet: ActiveSheet?
+    @State private var activeAlert: ActiveAlert?
         
     var workout: WorkoutDetailViewModel { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
@@ -76,6 +83,32 @@ struct DetailView: View {
                 viewForRow(rowType)
             }
             
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("Tags")
+                        .font(.body)
+                    
+                    if !detailManager.tags.isEmpty {
+                        Spacer()
+                        Button("Edit", action: { activeSheet = .tags })
+                            .buttonStyle(.borderless)
+                    }
+                }
+                
+                if detailManager.tags.isEmpty {
+                    Button(action: { activeSheet = .tags }) {
+                        Label("Add Tags", systemImage: "tag")
+                            .padding([.top, .bottom], CGFloat(10.0))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                        
+                } else {
+                    TagGrid(tags: detailManager.tags)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
             HStack {
                 Text("Source")
                 Spacer()
@@ -97,7 +130,12 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button(action: toggleFavorite) {
+                    Image(systemName: detailManager.isFavorite ? "heart.fill" : "heart")
+                }
+                
                 Button(action: { activeSheet = .sharing }) {
                     Image(systemName: "square.and.arrow.up")
                 }
@@ -118,7 +156,37 @@ struct DetailView: View {
             case .sharing:
                 ShareView(viewModel: detailManager.shareViewModel)
                     .environmentObject(purchaseManager)
+            case .tags:
+                TagSelectorView(tagManager: tagManager()) {
+                    detailManager.reloadTags()
+                }
             }
+        }
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .error(let message):
+                return Alert(
+                    title: Text("Workout Error"),
+                    message: Text(message),
+                    dismissButton: Alert.Button.default(Text("Ok"))
+                )
+            }
+        }
+    }
+    
+    func tagManager() -> TagManager {
+        TagManager(
+            context: viewContext,
+            sport: detailManager.sport,
+            workoutIdentifier: detailManager.detail.id
+        )
+    }
+    
+    func toggleFavorite() {
+        do {
+            try detailManager.toggleFavorite()
+        } catch {
+            activeAlert = .error(message: "Unable to update favorite status.")
         }
     }
 }
@@ -234,7 +302,7 @@ struct DetailView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
+            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel, context: viewContext))
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

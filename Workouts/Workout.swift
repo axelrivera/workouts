@@ -76,7 +76,7 @@ class Workout: NSManagedObject {
     
     // MARK: Relationships
     @NSManaged var samples: Set<Sample>
-    
+        
     // MARK: Enums
     @nonobjc
     var sport: Sport {
@@ -177,6 +177,29 @@ extension Workout {
     
 }
 
+// MARK: - Metadata References
+
+extension Workout {
+    
+    var metadata: WorkoutMetadata? {
+        guard let metadata = value(forKey: "metadata") as? [WorkoutMetadata] else { return nil }
+        return metadata.first
+    }
+    
+    var isFavorite: Bool {
+        guard let metadata = metadata else { return false }
+        return metadata.isFavorite
+    }
+    
+    var tags: [Tag] {
+        guard let metadata = metadata else { return [] }
+        return Array(metadata.tags).sorted(by: {$0.positionValue < $1.positionValue })
+    }
+    
+}
+
+// MARK: - Helpers
+
 extension Workout {
     
     // MARK: Predicates
@@ -259,10 +282,14 @@ extension Workout {
         return request
     }
     
-    static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext) -> [Workout] {
+    static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext, sorted: Bool = false) -> [Workout] {
         let request = defaultFetchRequest()
         request.predicate = predicateForIdentifiers(ids)
         request.returnsObjectsAsFaults = false
+        
+        if sorted {
+            request.sortDescriptors = [sortedByDateDescriptor()]
+        }
         
         do {
             return try context.fetch(request)

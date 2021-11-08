@@ -18,6 +18,7 @@ extension HomeView {
 }
 
 struct HomeView: View {
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
@@ -150,7 +151,7 @@ extension HomeView {
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel))
+        DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
     }
     
 }

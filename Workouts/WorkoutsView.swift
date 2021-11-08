@@ -14,6 +14,7 @@ struct WorkoutsView: View {
         var id: Int { hashValue }
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @Binding var sport: Sport?
@@ -27,26 +28,30 @@ struct WorkoutsView: View {
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel))
+        DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
     }
             
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 0.0) {
-                    WorkoutFilter(sport: sport, interval: nil, isEmpty: $isEmpty) { workout in
+                    WorkoutFilter(sport: sport, interval: nil) { workout in
                         NavigationLink(
                             tag: workout.workoutIdentifier,
                             selection: $selectedWorkout,
                             destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                            WorkoutMapCell(viewModel: workout.cellViewModel)
-                                .padding()
+                                WorkoutMapCell(
+                                    isFavorite: workout.isFavorite,
+                                    viewModel: workout.cellViewModel
+                                )
+                                    .padding()
                         }
                         .buttonStyle(WorkoutPlainButtonStyle())
                         Divider()
                     }
                 }
             }
+            .onAppear { validateStatus() }
             .overlay(emptyOverlay())
             .navigationTitle("Workouts")
             .toolbar {
@@ -86,6 +91,10 @@ struct WorkoutsView: View {
                 }
             }
         }
+    }
+    
+    func validateStatus() {
+        isEmpty = workoutManager.totalWorkouts == 0
     }
     
     @ViewBuilder
