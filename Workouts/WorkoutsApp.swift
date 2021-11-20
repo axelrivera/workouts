@@ -27,15 +27,18 @@ struct WorkoutsApp: App {
     let workoutDataStore: WorkoutDataStore
     let storageProvider = StorageProvider()
     let workoutManager: WorkoutManager
+    let workoutCache = WorkoutCache.shared
     let tagManager: TagManager
     let synchronizer: Synchronizer
     
     init() {
+        let context = storageProvider.persistentContainer.viewContext
+        workoutCache.loadProviders(withContext: context)
         workoutDataStore = WorkoutDataStore.shared
-        logManager = LogManager(context: storageProvider.persistentContainer.viewContext)
-        statsManager = StatsManager(context: storageProvider.persistentContainer.viewContext)
-        workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
-        tagManager = TagManager(context: storageProvider.persistentContainer.viewContext)
+        logManager = LogManager(context: context)
+        statsManager = StatsManager(context: context)
+        workoutManager = WorkoutManager(context: context)
+        tagManager = TagManager(context: context)
         
         let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
         backgroundContext.automaticallyMergesChangesFromParent = true

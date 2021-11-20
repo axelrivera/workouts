@@ -12,13 +12,21 @@ import CoreData
 class WorkoutManager: ObservableObject {
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
+    private(set) var metaProvider: MetadataProvider
     
     private let authProvider = HealthAuthProvider.shared
     private let healthProvider = HealthProvider.shared
-    
+        
     @Published var sport: Sport?
-    @Published var isWorkoutsVisible = false
-    @Published var selectedWorkout: UUID?
+
+    @Published var showDateFilter = false
+    @Published var filterByfavorites = false
+    @Published var filterBySports = Set<Sport>()
+    @Published var filterByStartDate = Date()
+    @Published var filterByEndDate = Date()
+    @Published var filterByMinDistance: Double = 0
+    @Published var filterByMaxDistance: Double = 0
+    
     
     @Published var isProcessingRemoteData = false
     @Published var processingRemoteDataValue: Double = 0
@@ -28,10 +36,11 @@ class WorkoutManager: ObservableObject {
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
     @Published var recentWorkouts = [Workout]()
-    
+        
     init(context: NSManagedObjectContext) {
         self.context = context
         dataProvider = DataProvider(context: context)
+        metaProvider = MetadataProvider(context: context)
         recentWorkouts = dataProvider.recentWorkouts()
         addObservers()
     }
@@ -103,6 +112,30 @@ class WorkoutManager: ObservableObject {
     
     var totalWorkouts: Int {
         dataProvider.totalWorkouts(sport: sport, interval: nil)
+    }
+    
+}
+
+// MARK: - Metadata
+
+extension WorkoutManager {
+    
+    func toggleFavorite(_ identifier: UUID) {
+        var isFavorite = WorkoutCache.shared.isFavorite(identifier: identifier)
+        
+        do {
+            if isFavorite {
+                try metaProvider.unfavoriteWorkout(for: identifier)
+                isFavorite = false
+            } else {
+                try metaProvider.favoriteWorkout(for: identifier)
+                isFavorite = true
+            }
+            
+            WorkoutCache.shared.set(isFavorite: isFavorite, identifier: identifier)
+        } catch {
+            Log.debug("favorite toggle error for id - \(identifier): \(error.localizedDescription)")
+        }
     }
     
 }

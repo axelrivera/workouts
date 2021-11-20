@@ -19,7 +19,6 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     }
     
     let id: UUID
-    let isFavorite: Bool
     let sport: Sport
     let indoor: Bool
     let coordinates: [CLLocationCoordinate2D]
@@ -31,14 +30,10 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     let avgPace: Double
     let calories: Double
     let elevation: Double
-    let tags: [TagLabelViewModel]
+    let includesLocation: Bool
 }
 
 extension WorkoutCellViewModel {
-    
-    var includesLocation: Bool {
-        !coordinates.isEmpty
-    }
     
     func dateString(shortDay: Bool = false) -> String {
         formattedRelativeDateString(for: date, shortDay: shortDay, showTime: true)
@@ -83,7 +78,6 @@ extension Workout {
     var cellViewModel: WorkoutCellViewModel {
         WorkoutCellViewModel(
             id: remoteIdentifier!,
-            isFavorite: isFavorite,
             sport: sport,
             indoor: indoor,
             coordinates: coordinates,
@@ -95,7 +89,7 @@ extension Workout {
             avgPace: avgPace,
             calories: energyBurned,
             elevation: elevationAscended,
-            tags: tags.map({ $0.viewModel() })
+            includesLocation: coordinates.isPresent
         )
     }
     

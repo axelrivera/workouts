@@ -32,51 +32,33 @@ extension TagManagerError: LocalizedError {
 class TagManager: ObservableObject {
     private(set) var context: NSManagedObjectContext
     private(set) var provider: TagProvider
-    private(set) var metaProvider: MetadataProvider
+    private(set) var workoutTagProvider: WorkoutTagProvider
     
     @Published var tags = [Tag]()
     @Published var selectedTags = [Tag]()
     @Published var archived = [Tag]()
-    @Published var showSegmentedControl = false
     
     private(set) var sport: Sport?
     private(set) var workoutIdentifier: UUID?
-    
-    private var workout: WorkoutMetadata?
-    
+        
     init(context: NSManagedObjectContext, sport: Sport? = nil, workoutIdentifier: UUID? = nil) {
         self.context = context
         self.sport = sport
         self.workoutIdentifier = workoutIdentifier
         provider = TagProvider(context: context)
-        metaProvider = MetadataProvider(context: context)
+        workoutTagProvider = WorkoutTagProvider(context: context)
     }
 }
 
 extension TagManager {
     
-    func fetchWorkout() throws -> WorkoutMetadata {
-        guard let identifier = workoutIdentifier else { throw TagManagerError.missingIdentifier }
-        return try metaProvider.fetchWorkout(identifier: identifier)
-    }
-    
     func reloadData() {
-        let tags = provider.activeTags(sport: sport)
-        self.tags = tags
+        tags = provider.activeTags(sport: sport)
         
-        if let _ = workoutIdentifier {
-            do {
-                let workout = try fetchWorkout()
-                self.workout = workout
-                self.selectedTags = Array(workout.tags)
-                self.showSegmentedControl = false
-            } catch {
-                Log.debug("failed to create metadata object: \(error.localizedDescription)")
-            }
+        if let identifier = workoutIdentifier {
+            selectedTags = workoutTagProvider.visibleTags(forWorkout: identifier)
         } else {
-            let archived = provider.archivedTags()
-            self.archived = archived
-            self.showSegmentedControl = archived.isPresent
+            archived = provider.archivedTags()
         }
     }
     
@@ -105,7 +87,7 @@ extension TagManager {
         guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
         
         try context.performAndWait {
-            tag.archivedDate = Date()
+            tag.archiveTag()
             try context.save()
         }
     }
@@ -126,7 +108,7 @@ extension TagManager {
                 tag.name = newName
             }
             
-            tag.archivedDate = nil
+            tag.restoreTag()
             try context.save()
         }
     }
@@ -135,7 +117,7 @@ extension TagManager {
         guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
         
         try context.performAndWait {
-            tag.deletedDate = Date()
+            tag.deleteTag()
             try context.save()
         }
     }
@@ -150,21 +132,13 @@ extension TagManager {
     }
     
     func addTagToWorkout(_ tag: Tag) throws {
-        guard let workout = workout else { throw TagManagerError.missingIdentifier }
-        
-        try context.performAndWait {
-            workout.tags.insert(tag)
-            try context.save()
-        }
+        guard let workoutId = workoutIdentifier else { throw TagManagerError.missingIdentifier }
+        try workoutTagProvider.addWorkoutTag(for: workoutId, tag: tag.uuid)
     }
     
     func removeTagFromWorkout(_ tag: Tag) throws {
-        guard let workout = workout else { throw TagManagerError.missingIdentifier }
-        
-        try context.performAndWait {
-            workout.tags.remove(tag)
-            try context.save()
-        }
+        guard let workoutId = workoutIdentifier else { throw TagManagerError.missingIdentifier }
+        try workoutTagProvider.deleteWorkoutTag(for: workoutId, tag: tag.uuid)
     }
     
 }

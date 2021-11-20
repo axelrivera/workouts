@@ -39,10 +39,13 @@ struct TagSelectorView: View {
                     ForEach(tagManager.tags, id: \.self) { tag in
                         Button(action: { toggleTag(tag) }) {
                             HStack {
-                                Image(systemName: tagManager.isSelected(tag: tag) ? "checkmark.circle.fill" : "circle")
+                                GearImage(gearType: tag.gearType)
                                     .foregroundColor(tag.colorValue)
                                 Text(tag.name)
                                     .foregroundColor(.primary)
+                                Spacer()
+                                Image(systemName: tagManager.isSelected(tag: tag) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(tag.colorValue)
                             }
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,15 +57,20 @@ struct TagSelectorView: View {
                 .padding()
                 .onAppear { tagManager.reloadData() }
             }
-            .navigationTitle("Tags")
+            .navigationTitle("Select Tags")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button("New Tag", action: { activeSheet = .add })
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                ToolbarItemGroup(placement: .bottomBar) {
+                    Spacer()
+                    
+                    Button(action: { activeSheet = .add }) {
+                        Label("New Tag", systemImage: "plus.circle.fill")
+                            .labelStyle(TitleAndIconLabelStyle())
+                    }
                 }
             }
             .sheet(item: $activeSheet) { item in

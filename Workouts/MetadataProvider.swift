@@ -23,6 +23,12 @@ extension MetadataProvider {
         try WorkoutMetadata.findOrCreate(using: identifier, in: context)
     }
     
+}
+
+// MARK: - Favorites
+
+extension MetadataProvider {
+    
     func isFavorite(_ identifier: UUID) -> Bool {
         guard let workout = try? fetchWorkout(identifier: identifier) else { return false }
         return workout.isFavorite

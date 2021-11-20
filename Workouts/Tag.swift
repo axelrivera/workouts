@@ -20,12 +20,23 @@ extension Tag {
         case none, bike, shoes
         var id: String { rawValue }
         
+        var sports: [Sport] {
+            switch self {
+            case .bike:
+                return [.cycling]
+            case .shoes:
+                return [.walking, .cycling]
+            default:
+                return []
+            }
+        }
+        
         static func displayValues(for sport: Sport) -> [GearType] {
             switch sport {
             case .cycling:
-                return [.bike, .none]
+                return [.none, .bike]
             case .running, .walking:
-                return [.shoes, .none]
+                return [.none, .shoes]
             default:
                 return []
             }
@@ -45,13 +56,11 @@ class Tag: NSManagedObject {
     @NSManaged var isFavorite: Bool
     @NSManaged var isDefault: Bool
     
-    @NSManaged var archivedDate: Date?
-    @NSManaged var deletedDate: Date?
+    @NSManaged private(set) var archivedDate: Date?
+    @NSManaged private(set) var deletedDate: Date?
     
     @NSManaged var position: NSNumber
-    
-    @NSManaged var workouts: Set<WorkoutMetadata>
-    
+        
     @nonobjc
     var gearType: GearType {
         get { GearType(rawValue: gearTypeValue ?? "") ?? .none }
@@ -70,18 +79,50 @@ extension Tag {
     
     var positionValue: Int { position.intValue }
     
+    func archiveTag() {
+        archivedDate = Date()
+    }
+    
+    func restoreTag() {
+        archivedDate = nil
+    }
+    
+    func deleteTag() {
+        deletedDate = Date()
+        archivedDate = nil
+    }
+    
 }
 
 // MARK: Fetching
 
 extension Tag {
     
+    static func request() -> NSFetchRequest<Tag> {
+        NSFetchRequest<Tag>(entityName: entityName)
+    }
+    
+    static func predicate(for uuid: UUID) -> NSPredicate {
+        NSPredicate(format: "%K == %@", UUIDKey, uuid as NSUUID)
+    }
+    
     static func find(using uuid: UUID, in context: NSManagedObjectContext) -> Tag? {
-        context.performAndWait {
-            let request = NSFetchRequest<Tag>(entityName: Tag.entityName)
-            request.returnsObjectsAsFaults = false
-            request.predicate = NSPredicate(format: "%K == %@", UUIDKey, uuid as NSUUID)
-            return try? context.fetch(request).first
+        let request = request()
+        request.returnsObjectsAsFaults = false
+        request.predicate = predicate(for: uuid)
+        return try? context.fetch(request).first
+    }
+    
+    static func find(uuids: [UUID], in context: NSManagedObjectContext) -> [Tag] {
+        let request = request()
+        request.returnsObjectsAsFaults = false
+        request.predicate = NSPredicate(format: "%K IN %@", UUIDKey, uuids)
+        request.sortDescriptors = [sortedByPositionDescriptor()]
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
         }
     }
     
@@ -110,6 +151,22 @@ extension Tag {
 // MARK: - Predicates
 
 extension Tag {
+    
+    static func visiblePredicate(using uuids: [UUID]) -> NSPredicate {
+        NSCompoundPredicate(andPredicateWithSubpredicates: [
+            notDeletedPredicate(), notArchivedPredicate(), predicate(using: uuids)
+        ])
+    }
+
+    static func activePredicate(using uuids: [UUID]) -> NSPredicate {
+        NSCompoundPredicate(andPredicateWithSubpredicates: [
+            notDeletedPredicate(), predicate(using: uuids)
+        ])
+    }
+    
+    static func predicate(using uuids: [UUID]) -> NSPredicate {
+        NSPredicate(format: "%K IN %@", UUIDKey, uuids)
+    }
     
     static func activePredicate(name: String? = nil, sport: Sport? = nil) -> NSPredicate {
         var predicates = [notArchivedPredicate(), notDeletedPredicate()]
@@ -156,7 +213,7 @@ extension Tag {
             gearTypes = [.none]
         }
         
-        return NSPredicate(format: "%K IN %@", gearTypes.map({ $0.rawValue }))
+        return NSPredicate(format: "%K IN %@", GearTypeKey, gearTypes.map({ $0.rawValue }))
     }
     
 }

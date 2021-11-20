@@ -27,7 +27,6 @@ struct TagsManageContentView: View {
         var id: Self { self }
     }
         
-    @Environment(\.presentationMode) var presentationMode
     @StateObject var manager: TagManager
     
     @State var editMode = EditMode.inactive
@@ -37,89 +36,81 @@ struct TagsManageContentView: View {
     @State var selectedSegment = TagPickerSegments.active
         
     var body: some View {
-        NavigationView {
-            List {
-                Section(header: header(), footer: editFooter()) {
-                    switch selectedSegment {
-                    case .active:
-                        if manager.tags.isEmpty {
-                            Text("No Active Tags")
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        } else {
-                            activeTags()
-                        }
-                    case .archived:
-                        if manager.archived.isEmpty {
-                            Text("No Archived Tags")
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        } else {
-                            archivedTags()
-                        }
+        List {
+            Section(header: header(), footer: editFooter()) {
+                switch selectedSegment {
+                case .active:
+                    if manager.tags.isEmpty {
+                        Text("No Active Tags")
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    } else {
+                        activeTags()
+                    }
+                case .archived:
+                    if manager.archived.isEmpty {
+                        Text("No Archived Tags")
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    } else {
+                        archivedTags()
                     }
                 }
-                .textCase(nil)
             }
-            .onAppear { manager.reloadData() }
-            .navigationViewStyle(StackNavigationViewStyle())
-            .listStyle(InsetGroupedListStyle())
-            .navigationTitle("Tags")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                   EditButton()
+            .textCase(nil)
+        }
+        .onAppear { manager.reloadData() }
+        .listStyle(InsetGroupedListStyle())
+        .navigationTitle("Tags")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+               EditButton()
+                    .disabled(selectedSegment == .archived)
+            }
+            
+            ToolbarItemGroup(placement: .bottomBar) {
+                Spacer()
+                
+                Button(action: { activeSheet = .add }) {
+                    Label("New Tag", systemImage: "plus.circle.fill")
+                        .labelStyle(TitleAndIconLabelStyle())
                         .disabled(selectedSegment == .archived)
                 }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
-                        .opacity(editMode.isEditing ? 0.0 : 1.0)
-                }
-                
-                ToolbarItemGroup(placement: .bottomBar) {
-                    Spacer()
-                    
-                    Button(action: { activeSheet = .add }) {
-                        Label("New Tag", systemImage: "plus.circle.fill")
-                            .labelStyle(TitleAndIconLabelStyle())
-                            .disabled(selectedSegment == .archived)
-                    }
-                    .disabled(editMode.isEditing)
-                }
+                .disabled(editMode.isEditing)
             }
-            .environment(\.editMode, $editMode)
-            .sheet(item: $activeSheet, onDismiss: reload) { sheet in
-                switch sheet {
-                case .add:
-                    TagsAddView(viewModel: Tag.addViewModel())
-                        .environmentObject(manager)
-                case .edit(let tag):
-                    TagsAddView(viewModel: tag.editViewModel())
-                        .environmentObject(manager)
-                }
+        }
+        .environment(\.editMode, $editMode)
+        .sheet(item: $activeSheet, onDismiss: reload) { sheet in
+            switch sheet {
+            case .add:
+                TagsAddView(viewModel: Tag.addViewModel())
+                    .environmentObject(manager)
+            case .edit(let tag):
+                TagsAddView(viewModel: tag.editViewModel())
+                    .environmentObject(manager)
             }
-            .alert(item: $activeAlert) { alert in
-                switch alert {
-                case .delete(let message, let offsets):
-                    let deleteButton = Alert.Button.destructive(
-                        Text("Delete"),
-                        action: { delete(at: offsets) }
-                    )
-                    
-                    return Alert(
-                        title: Text("Confirmation"),
-                        message: Text(message),
-                        primaryButton: deleteButton,
-                        secondaryButton: Alert.Button.cancel()
-                    )
-                case .error(let message):
-                    return Alert(
-                        title: Text("Tag Error"),
-                        message: Text(message),
-                        dismissButton: Alert.Button.default(Text("Ok"))
-                    )
-                }
+        }
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .delete(let message, let offsets):
+                let deleteButton = Alert.Button.destructive(
+                    Text("Delete"),
+                    action: { delete(at: offsets) }
+                )
+                
+                return Alert(
+                    title: Text("Confirmation"),
+                    message: Text(message),
+                    primaryButton: deleteButton,
+                    secondaryButton: Alert.Button.cancel()
+                )
+            case .error(let message):
+                return Alert(
+                    title: Text("Tag Error"),
+                    message: Text(message),
+                    dismissButton: Alert.Button.default(Text("Ok"))
+                )
             }
         }
     }
@@ -129,7 +120,7 @@ struct TagsManageContentView: View {
         ForEach(manager.tags, id: \.self) { tag in
             HStack {
                 HStack {
-                    gearImage(for: tag)
+                    GearImage(gearType: tag.gearType)
                         .foregroundColor(tag.color == nil ? .accentColor : Color(tag.color!))
                     Text(tag.name)
                 }
@@ -153,7 +144,7 @@ struct TagsManageContentView: View {
         ForEach(manager.archived, id: \.self) { tag in
             HStack {
                 HStack {
-                    gearImage(for: tag)
+                    GearImage(gearType: tag.gearType)
                         .foregroundColor(tag.color == nil ? .accentColor : Color(tag.color!))
                     Text(tag.name)
                 }
@@ -184,21 +175,6 @@ struct TagsManageContentView: View {
     func editFooter() -> some View {
         if editMode == .active {
             Text("Deleted tags cannot be restored.")
-        }
-    }
-    
-    @ViewBuilder
-    func gearImage(for tag: Tag) -> some View {
-        switch tag.gearType {
-        case .bike:
-            Image(systemName: "bicycle")
-        case .shoes:
-            Image(uiImage: UIImage(named: "shoe-prints-solid")!)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 22.0)
-        case .none:
-            Image(systemName: "tag")
         }
     }
     
@@ -234,7 +210,9 @@ struct TagsManageView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     
     static var previews: some View {
-        TagsManageView()
-            .environment(\.managedObjectContext, viewContext)
+        NavigationView {
+            TagsManageView()
+        }
+        .environment(\.managedObjectContext, viewContext)
     }
 }

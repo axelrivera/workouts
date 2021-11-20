@@ -45,11 +45,13 @@ class DetailManager: ObservableObject {
     var detail: WorkoutDetailViewModel
     var context: NSManagedObjectContext
     private let metaProvider: MetadataProvider
+    private let workoutTagProvider: WorkoutTagProvider
     
     init(viewModel: WorkoutDetailViewModel, context: NSManagedObjectContext) {
         self.detail = viewModel
         self.context = context
         metaProvider = MetadataProvider(context: context)
+        workoutTagProvider = WorkoutTagProvider(context: context)
     }
     
     lazy var provider: HealthProvider = {
@@ -260,15 +262,12 @@ extension DetailManager {
     }
     
     func fetchTags() -> [TagLabelViewModel] {
-        do {
-            let workout = try fetchWorkout()
-            return workout.tags.map { $0.viewModel() }
-        } catch {
-            return []
-        }
+        workoutTagProvider.visibleTags(forWorkout: detail.id).map({ $0.viewModel() })
     }
     
     func reloadTags() {
+        WorkoutCache.shared.purgeObject(with: detail.id)
+        
         let tags = fetchTags()
         DispatchQueue.main.async {
             withAnimation {
@@ -289,13 +288,13 @@ extension DetailManager {
             isFavorite = true
         }
         
+        WorkoutCache.shared.set(isFavorite: isFavorite, identifier: identifier)
         DispatchQueue.main.async {
             withAnimation {
                 self.isFavorite = isFavorite
             }
         }
     }
-    
     
 }
 

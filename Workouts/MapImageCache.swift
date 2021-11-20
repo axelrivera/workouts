@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-class MapImageCache {
+final class MapImageCache {
     enum Prefix: String {
         case home, feed
     }

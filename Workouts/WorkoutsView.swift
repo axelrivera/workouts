@@ -9,81 +9,119 @@ import SwiftUI
 import CoreData
 
 struct WorkoutsView: View {
-    enum ActiveSheet: Identifiable {
+    @Environment(\.managedObjectContext) var viewContext
+    
+    var body: some View {
+        WorkoutsContentView(filterManager: WorkoutsFilterManager(context: viewContext))
+    }
+}
+
+struct WorkoutsContentView: View {
+    enum ActiveCoverSheet: Identifiable {
         case settings
         var id: Int { hashValue }
     }
     
+    enum ActiveSheet: Hashable, Identifiable {
+        case filter
+        case tags(identifier: UUID, sport: Sport)
+        var id: Self { self }
+    }
+    
     @Environment(\.managedObjectContext) var viewContext
+    @StateObject var filterManager: WorkoutsFilterManager
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
-    @Binding var sport: Sport?
+    
+    var fetchRequest: FetchRequest<Workout>
+    var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
     
     @State private var activeSheet: ActiveSheet?
+    @State private var activeCoverSheet: ActiveCoverSheet?
     @State private var selectedWorkout: UUID?
-    @State private var isEmpty = false
         
-    init(sport: Binding<Sport?>) {
-        _sport = sport
+    init(filterManager: WorkoutsFilterManager) {
+        _filterManager = StateObject(wrappedValue: filterManager)
+        fetchRequest = DataProvider.fetchFetquest(for: filterManager.filterPredicate())
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
         DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
     }
+    
+    var filterImageName: String {
+        filterManager.isFilterActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
+    }
+    
+    func isFavorite(_ identifier: UUID) -> Bool {
+        WorkoutCache.shared.isFavorite(identifier: identifier)
+    }
             
     var body: some View {
         NavigationView {
             ScrollView {
-                LazyVStack(spacing: 0.0) {
-                    WorkoutFilter(sport: sport, interval: nil) { workout in
-                        NavigationLink(
-                            tag: workout.workoutIdentifier,
-                            selection: $selectedWorkout,
-                            destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                                WorkoutMapCell(
-                                    isFavorite: workout.isFavorite,
-                                    viewModel: workout.cellViewModel
-                                )
-                                    .padding()
+                LazyVStack(spacing: 0.0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: sectionHeader()) {
+                        ForEach(workouts, id: \.objectID) { workout in
+                            NavigationLink(
+                                tag: workout.workoutIdentifier,
+                                selection: $selectedWorkout,
+                                destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                                    WorkoutMapCell(viewModel: workout.cellViewModel)
+                            }
+                            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.workoutCacheUpdated)) { notification in
+                                if let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID, remoteIdentifier == workout.workoutIdentifier {
+                                    viewContext.refresh(workout, mergeChanges: true)
+                                }
+                            }
+                            .contextMenu {
+                                if isFavorite(workout.workoutIdentifier) {
+                                    Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
+                                        Label("Unfavorite", systemImage: "heart.slash")
+                                    }
+                                } else {
+                                    Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
+                                        Label("Favorite", systemImage: "heart")
+                                    }
+                                }
+                                
+                                Button(action: { activeSheet = .tags(identifier: workout.workoutIdentifier, sport: workout.sport) }) {
+                                    Label("Tags", systemImage: "tag")
+                                }
+                            }
+                            .buttonStyle(WorkoutPlainButtonStyle())
+                            Divider()
                         }
-                        .buttonStyle(WorkoutPlainButtonStyle())
-                        Divider()
                     }
                 }
             }
-            .onAppear { validateStatus() }
             .overlay(emptyOverlay())
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { activeSheet = .settings }) {
+                    Button(action: { activeCoverSheet = .settings }) {
                        Image(systemName: "gearshape")
                     }
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button(action: {
-                            self.sport = nil
-                        }, label: {
-                            Text("All Workouts")
-                        })
-
-                        Divider()
-
-                        ForEach(Sport.supportedSports) { sport in
-                            Button(action: {
-                                self.sport = sport
-                            }, label: {
-                                Text(sport.title)
-                            })
-                        }
-                    } label: {
-                        Text(sport?.title ?? "All Workouts")
+                    Button(action: { activeSheet = .filter }) {
+                        Image(systemName: filterImageName)
                     }
                 }
             }
-            .fullScreenCover(item: $activeSheet) { item in
+            .sheet(item: $activeSheet, onDismiss: refreshFilter) { item in
+                switch item {
+                case .filter:
+                    WorkoutsFilterView()
+                        .environmentObject(filterManager)
+                case .tags(let identifier, let sport):
+                    TagSelectorView(tagManager: TagManager(context: viewContext, sport: sport, workoutIdentifier: identifier)) {
+                        WorkoutCache.shared.purgeObject(with: identifier)
+                    }
+                }
+            }
+            .fullScreenCover(item: $activeCoverSheet) { item in
                 switch item {
                 case .settings:
                     SettingsView()
@@ -93,35 +131,60 @@ struct WorkoutsView: View {
         }
     }
     
-    func validateStatus() {
-        isEmpty = workoutManager.totalWorkouts == 0
+    @ViewBuilder
+    func sectionHeader() -> some View {
+        if filterManager.isFilterActive {
+            VStack(alignment: .leading, spacing: 10.0) {
+                HStack {
+                    Button("Reset Filter", action: resetFilter)
+                    Spacer()
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundColor(.accentColor)
+                }
+                
+                HStack(spacing: 20.0) {
+                    Text("\(workouts.count.formatted()) Workouts")
+                    Spacer()
+                    Text(filterManager.distanceString)
+                        .foregroundColor(.distance)
+                    Text(filterManager.durationString)
+                        .foregroundColor(.time)
+                }
+                .font(.fixedBody)
+                .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.regularMaterial)
+        }
     }
     
     @ViewBuilder
     func emptyOverlay() -> some View {
-        if isEmpty {
-            VStack(spacing: 15.0) {
-                Image(systemName: "heart.slash.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.red)
-                
-                Text("No Workouts")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Better Workouts imports Health data stored by the Workout app on your Apple Watch.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.red)
-                
-                Text("Go to the Health app and give Better Workouts permission to read your workout data.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
+        if workouts.isEmpty {
+            Text("No Workouts")
+                .font(.title2)
+                .foregroundColor(.secondary)
         }
     }
+}
+
+extension WorkoutsContentView {
+        
+    func refreshFilter() {
+        DispatchQueue.main.async {
+            withAnimation {
+                filterManager.updateTotals()
+            }
+            workouts.nsPredicate = filterManager.filterPredicate()
+        }
+    }
+    
+    func resetFilter() {
+        filterManager.reset()
+        refreshFilter()
+    }
+    
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
@@ -137,10 +200,10 @@ struct WorkoutsView_Previews: PreviewProvider {
     @State static var sport: Sport?
     
     static var previews: some View {
-        WorkoutsView(sport: $sport)
+        WorkoutsView()
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(purchaseManager)
-            .preferredColorScheme(.light)
+            .preferredColorScheme(.dark)
     }
 }

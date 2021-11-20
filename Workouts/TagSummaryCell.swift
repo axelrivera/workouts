@@ -28,7 +28,7 @@ struct TagSummaryCell: View {
                 Text(viewModel.name)
                     .font(.title2)
                 Spacer()
-                gearImage()
+                GearImage(gearType: viewModel.gearType)
             }
             .foregroundColor(viewModel.color)
             
@@ -44,25 +44,6 @@ struct TagSummaryCell: View {
             }
         }
     }
-}
-
-extension TagSummaryCell {
-    
-    @ViewBuilder
-    func gearImage() -> some View {
-        switch viewModel.gearType {
-        case .bike:
-            Image(systemName: "bicycle")
-        case .shoes:
-            Image(uiImage: UIImage(named: "shoe-prints-solid")!)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 22.0)
-        case .none:
-            Image(systemName: "tag")
-        }
-    }
-    
 }
 
 struct TagSummaryCell_Previews: PreviewProvider {    

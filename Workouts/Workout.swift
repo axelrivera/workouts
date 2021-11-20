@@ -13,6 +13,7 @@ import CoreLocation
 private let MarkedForDeletionDateKey = "markedForDeletionDate"
 private let SportKey = "sportValue"
 private let RemoteIdentifierKey = "remoteIdentifier"
+private let DistanceKey = "distance"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
@@ -186,16 +187,6 @@ extension Workout {
         return metadata.first
     }
     
-    var isFavorite: Bool {
-        guard let metadata = metadata else { return false }
-        return metadata.isFavorite
-    }
-    
-    var tags: [Tag] {
-        guard let metadata = metadata else { return [] }
-        return Array(metadata.tags).sorted(by: {$0.positionValue < $1.positionValue })
-    }
-    
 }
 
 // MARK: - Helpers
@@ -266,6 +257,18 @@ extension Workout {
     
     static func predicateForIdentifiers(_ identifiers: [UUID]) -> NSPredicate {
         NSPredicate(format: "%K IN %@", RemoteIdentifierKey, identifiers)
+    }
+    
+    static func predicateForMinDistance(_ distance: Double) -> NSPredicate {
+        NSPredicate(format: "%K >= %@", DistanceKey, distance as NSNumber)
+    }
+    
+    static func predicateForMaxDistance(_ distance: Double) -> NSPredicate {
+        NSPredicate(format: "%K <= %@", DistanceKey, distance as NSNumber)
+    }
+    
+    static func distantFuturePredicate() -> NSPredicate {
+        NSPredicate(format: "%K > %@", Date.distantFuture as NSDate)
     }
     
     // MARK: Reqeusts

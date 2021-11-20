@@ -34,7 +34,7 @@ struct TagView: View {
     
     var body: some View {
         Text(name)
-            .font(.subheadline)
+            .font(.fixedSubheadline)
             .foregroundColor(.primary)
             .padding(CGFloat(5.0))
             .background(color.opacity(0.3))

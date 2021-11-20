@@ -33,7 +33,7 @@ struct ContentView: View {
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
             
-            WorkoutsView(sport: $workoutManager.sport)
+            WorkoutsView()
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
                 .tag(Tabs.history)
             

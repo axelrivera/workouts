@@ -75,15 +75,29 @@ struct TagsAddView: View {
                         }
                     }
                     
-                    Section(header: Text("Options"), footer: gearFooter()) {
+                    
+                    if viewModel.mode == .add {
                         if viewModel.availableGearTypes.isPresent {
-                            Picker("Gear Type", selection: $viewModel.gearType) {
-                                ForEach(viewModel.availableGearTypes, id: \.self) { gear in
-                                    Text(gear.rawValue.capitalized)
+                            Section(footer: Text("Gear Type cannot be edited later.")) {
+                                Picker("Gear Type", selection: $viewModel.gearType) {
+                                    ForEach(viewModel.availableGearTypes, id: \.self) { gear in
+                                        Text(gear.rawValue.capitalized)
+                                    }
                                 }
                             }
                         }
-                        
+                    } else {
+                        Section {
+                            HStack {
+                                Text("Gear Type")
+                                Spacer()
+                                Text(viewModel.gearType.rawValue.capitalized)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    
+                    Section(footer: defaultValueFooter()) {
                         Toggle("Default", isOn: $viewModel.isDefault)
                             .foregroundColor(isDisabled ? .secondary : .primary)
                     }
@@ -153,7 +167,7 @@ struct TagsAddView: View {
     }
     
     @ViewBuilder
-    func gearFooter() -> some View {
+    func defaultValueFooter() -> some View {
         switch viewModel.gearType {
         case .none:
             Text("Default tags will be applied to all new workouts.")

@@ -15,7 +15,6 @@ class WorkoutMetadata: NSManagedObject {
     @NSManaged var identifier: UUID
     @NSManaged var isFavorite: Bool
     @NSManaged var favoriteDate: Date?
-    @NSManaged var tags: Set<Tag>
 }
 
 extension WorkoutMetadata {
@@ -27,7 +26,7 @@ extension WorkoutMetadata {
     static func find(using identifier: UUID, in context: NSManagedObjectContext) -> WorkoutMetadata? {
         context.performAndWait {
             let request = NSFetchRequest<WorkoutMetadata>(entityName: WorkoutMetadata.entityName)
-            request.predicate = NSPredicate(format: "%K == %@", IdentifierKey, identifier as NSUUID)
+            request.predicate = predicate(for: identifier)
             return try? context.fetch(request).first
         }
     }
@@ -35,7 +34,7 @@ extension WorkoutMetadata {
     static func findOrCreate(using identifier: UUID, in context: NSManagedObjectContext) throws -> WorkoutMetadata {
         try context.performAndWait {
             let request = NSFetchRequest<WorkoutMetadata>(entityName: WorkoutMetadata.entityName)
-            request.predicate = NSPredicate(format: "%K == %@", IdentifierKey, identifier as NSUUID)
+            request.predicate = predicate(for: identifier)
             
             if let workout = try context.fetch(request).first {
                 return workout
@@ -49,20 +48,28 @@ extension WorkoutMetadata {
     
     static func favorites(in context: NSManagedObjectContext) -> [UUID] {
         do {
-            let request = self.request()
+            let request = NSFetchRequest<NSDictionary>(entityName: WorkoutMetadata.entityName)
             request.predicate = favoritesPredicate()
-            
-            return try context.fetch(request).map { $0.identifier }
+            request.resultType = .dictionaryResultType
+            request.propertiesToFetch = ["identifier"]
+                        
+            return try context.fetch(request).compactMap { dictionary in
+                dictionary["identifier"] as? UUID
+            }
         } catch {
             return []
         }
     }
-    
+        
 }
 
 // MARK: - Predicates
 
 extension WorkoutMetadata {
+    
+    static func predicate(for identifier: UUID) -> NSPredicate {
+        NSPredicate(format: "%K == %@", IdentifierKey, identifier as NSUUID)
+    }
     
     static func favoritesPredicate() -> NSPredicate {
         NSPredicate(format: "%K == %@", FavoriteKey, NSNumber(value: true))

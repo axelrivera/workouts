@@ -32,9 +32,26 @@ extension DataProvider {
         
     }
     
+    static func fetchRequest(sports: [Sport]) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.activePredicate(sports: sports, interval: nil)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 10
+        return FetchRequest(fetchRequest: request, animation: .default)
+    }
+    
     static func fetchRequest(sport: Sport?, interval: DateInterval?) -> FetchRequest<Workout> {
         let request = Workout.defaultFetchRequest()
         request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 10
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
+    }
+    
+    static func fetchFetquest(for predicate: NSPredicate) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = predicate
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
         request.fetchBatchSize = 10
         
@@ -106,6 +123,32 @@ extension DataProvider {
             return try context.count(for: request)
         } catch {
             return 0
+        }
+    }
+    
+    
+    func fetchTotalDistanceAndDuration(for predicate: NSPredicate) -> (total: Int, distance: Double, duration: Double) {
+        let distance = expressionDescription(for: .distance, function: .sum)
+        let duration = expressionDescription(for: .duration, function: .sum)
+
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
+        request.returnsObjectsAsFaults = false
+        request.resultType = .dictionaryResultType
+        request.predicate = predicate
+        request.propertiesToFetch = [distance, duration]
+        
+        do {
+            let count = try context.count(for: request)
+            let results = try context.fetch(request)
+            guard let first = results.first, let dictionary = first as? [String: Double] else {
+                throw DataError.missingPropertyDictionary
+            }
+            
+            let distance: Double = dictionary[Name.distance.key] ?? 0
+            let duration: Double = dictionary[Name.duration.key] ?? 0
+            return (count, distance, duration)
+        } catch {
+            return (0, 0, 0)
         }
     }
     

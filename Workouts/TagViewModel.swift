@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-protocol TagViewModel: Identifiable {
+protocol TagViewModel: Hashable, Identifiable {
     typealias GearType = Tag.GearType
     
     var id: UUID { get }

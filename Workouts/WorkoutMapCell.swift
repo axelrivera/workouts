@@ -7,12 +7,54 @@
 
 import SwiftUI
 import MapKit
+import Combine
+
+final class WorkoutMapCellManager: ObservableObject {
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
+    
+    var cancellable: Cancellable?
+    
+    let workout: UUID
+    let isPreview: Bool
+    
+    init(workout: UUID, isPreview: Bool = false) {
+        self.workout = workout
+        self.isPreview = isPreview
+        isFavorite = WorkoutCache.shared.isFavorite(identifier: workout)
+        tags = WorkoutCache.shared.tags(for: workout)
+    }
+    
+    func reload() {
+        // ignore in SwiftUI preview
+        if isPreview { return }
+        
+        isFavorite = WorkoutCache.shared.isFavorite(identifier: workout)
+        tags = WorkoutCache.shared.tags(for: workout)
+    }
+    
+}
 
 struct WorkoutMapCell: View {
+    let viewModel: WorkoutCellViewModel
+    
+    init(viewModel: WorkoutCellViewModel) {
+        self.viewModel = viewModel
+    }
+    
+    var body: some View {
+        WorkoutMapCellContainer(
+            viewModel: viewModel,
+            manager: WorkoutMapCellManager(workout: viewModel.id)
+        )
+    }
+}
+
+struct WorkoutMapCellContainer: View {
     @Environment(\.colorScheme) var colorScheme
     
-    let isFavorite: Bool
     let viewModel: WorkoutCellViewModel
+    @StateObject var manager: WorkoutMapCellManager
     
     var body: some View {
         VStack {
@@ -22,10 +64,9 @@ struct WorkoutMapCell: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
-                    if isFavorite {
+                    if manager.isFavorite {
                         Spacer()
                         Image(systemName: "heart.fill")
-                            .font(.subheadline)
                             .foregroundColor(.red)
                     }
                 }
@@ -34,35 +75,17 @@ struct WorkoutMapCell: View {
                     .font(.title)
                     .padding(.bottom, 5.0)
                 
-                if viewModel.tags.isPresent {
-                    TagGrid(tags: viewModel.tags)
+                if manager.tags.isPresent {
+                    TagGrid(tags: manager.tags)
                 }
                 
-                HStack {
-                    Text(viewModel.distanceString)
-                        .font(.fixedBody)
-                        .foregroundColor(.distance)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(viewModel.durationString)
-                        .font(.fixedBody)
-                        .foregroundColor(.time)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(viewModel.speedOrPaceString)
-                        .font(.fixedBody)
-                        .foregroundColor(viewModel.speedOrPaceColor)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    if viewModel.sport == .cycling && !viewModel.indoor {
-                        Text(viewModel.elevationString)
-                            .font(.fixedBody)
-                            .foregroundColor(.elevation)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
+                WorkoutCellStatsView(viewModel: viewModel)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .onAppear { manager.reload() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.workoutCacheUpdated)) { notification in
+                processNotification(notification)
+            }
             
             if viewModel.includesLocation {
                 MapContainer(viewModel: viewModel, scheme: colorScheme)
@@ -71,6 +94,13 @@ struct WorkoutMapCell: View {
                     .cornerRadius(12.0)
             }
         }
+        .padding()
+    }
+    
+    func processNotification(_ notification: Notification) {
+        if let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID, remoteIdentifier == viewModel.id {
+            manager.reload()
+        }
     }
 }
 
@@ -78,7 +108,6 @@ struct WorkoutMapCell_Previews: PreviewProvider {
     static let viewModel: WorkoutCellViewModel = {
         WorkoutCellViewModel(
             id: UUID(),
-            isFavorite: false,
             sport: .cycling,
             indoor: false,
             coordinates: [],
@@ -90,15 +119,32 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             avgPace: 0,
             calories: 0,
             elevation: 0,
-            tags: []
+            includesLocation: true
         )
+    }()
+    
+    static let manager: WorkoutMapCellManager = {
+        let manager = WorkoutMapCellManager(workout: viewModel.id, isPreview: true)
+        manager.isFavorite = true
+        manager.tags = [
+            TagLabelViewModel(id: UUID(), name: "Sample Tag", color: .red, gearType: .none)
+        ]
+        
+        return manager
     }()
     
     static var previews: some View {
         NavigationView {
-            List(1 ..< 5, id: \.self) { _ in
-                let isFavorite = [true, false].randomElement()!
-                WorkoutMapCell(isFavorite: isFavorite, viewModel: viewModel)
+            ScrollView {
+                LazyVStack(spacing: 0.0) {
+                    ForEach(1...5, id: \.self) { _ in
+                        WorkoutMapCellContainer(
+                            viewModel: viewModel,
+                            manager: manager
+                        )
+                        Divider()
+                    }
+                }
             }
             .listStyle(PlainListStyle())
             .navigationTitle("Workouts")

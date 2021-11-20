@@ -7,6 +7,10 @@
 
 import CoreData
 
+enum TagProviderError: Error {
+    case notFound
+}
+
 final class TagProvider {
     let context: NSManagedObjectContext
     
@@ -21,7 +25,7 @@ extension TagProvider {
     
     func activeTags(sport: Sport? = nil) -> [Tag] {
         do {
-            return try context.fetch(activeFetchRequest())
+            return try context.fetch(activeFetchRequest(sport: sport))
         } catch {
             return []
         }
@@ -63,13 +67,6 @@ extension TagProvider {
     func addTag(viewModel: TagEditViewModel) throws {
         Tag.insert(into: context, viewModel: viewModel)
     }
-    
-}
-
-// MARK: Tag Summary
-
-extension TagProvider {
-    
     
 }
 

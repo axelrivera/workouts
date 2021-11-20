@@ -50,7 +50,6 @@ struct HomeWorkoutCell_Previews: PreviewProvider {
     static let viewModel: WorkoutCellViewModel = {
         WorkoutCellViewModel(
             id: UUID(),
-            isFavorite: false,
             sport: .cycling,
             indoor: true,
             coordinates: [],
@@ -62,7 +61,7 @@ struct HomeWorkoutCell_Previews: PreviewProvider {
             avgPace: 0,
             calories: 500,
             elevation: 0,
-            tags: []
+            includesLocation: false
         )
     }()
     

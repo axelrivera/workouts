@@ -16,37 +16,61 @@ enum TagPickerSegments: String, Identifiable, CaseIterable {
 
 final class TagsDisplayManager: ObservableObject {
     
-    let context: NSManagedObjectContext
     let dataProvider: DataProvider
     let tagProvider: TagProvider
+    let workoutTagProvider: WorkoutTagProvider
     
-    init(context: NSManagedObjectContext) {
-        self.context = context
-        self.dataProvider = DataProvider(context: context)
-        self.tagProvider = TagProvider(context: context)
+    @Published var currentSegment = TagPickerSegments.active
+    @Published var active = [TagSummaryViewModel]()
+    @Published var archived = [TagSummaryViewModel]()
+    
+    var tags: [TagSummaryViewModel] {
+        if currentSegment == .active || archived.isEmpty {
+            return active
+        } else {
+            return archived
+        }
     }
     
-    @Published var tags = [TagSummaryViewModel]()
+    init(context: NSManagedObjectContext) {
+        self.dataProvider = DataProvider(context: context)
+        self.tagProvider = TagProvider(context: context)
+        self.workoutTagProvider = WorkoutTagProvider(context: context)
+    }
+}
+
+extension TagsDisplayManager {
     
-    func reload() {
-        let tags = tagProvider.activeTags()
-        
-        let viewModels: [TagSummaryViewModel] = tags.compactMap { tag -> TagSummaryViewModel? in
-            let identifiers = tag.workouts.map({ $0.identifier })
-            if identifiers.isEmpty { return nil }
+    var showPicker: Bool {
+        archived.isPresent
+    }
+    
+    func summaryViewModels(for tags: [Tag]) -> [TagSummaryViewModel] {
+        tags.map { tag -> TagSummaryViewModel in
+            let identifiers = workoutTagProvider.workoutIdentifiers(forTag: tag.uuid)
             
             var viewModel: TagSummaryViewModel = tag.viewModel()
             if let  dictionary = try? dataProvider.fetchStatsSummary(for: identifiers) {
                 viewModel.updateValues(dictionary)
             }
-            
+
             return viewModel
         }
+    }
+    
+    func reload() {
+        let activeTags = tagProvider.activeTags()
+        let archivedTags = tagProvider.archivedTags()
         
+        let active = summaryViewModels(for: activeTags)
+        let archived = summaryViewModels(for: archivedTags)
+
         DispatchQueue.main.async {
             withAnimation {
-                self.tags = viewModels
+                self.active = active
+                self.archived = archived
             }
         }
     }
+    
 }
