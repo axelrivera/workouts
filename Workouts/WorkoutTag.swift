@@ -71,6 +71,13 @@ extension WorkoutTag {
         ])
     }
     
+    static func activePredicate(forTags tags: [UUID]) -> NSPredicate {
+        NSCompoundPredicate(andPredicateWithSubpredicates: [
+            activePredicate(),
+            predicate(forTags: tags)
+        ])
+    }
+    
     static func predicate(forWorkout workout: UUID, andTag tag: UUID) -> NSPredicate {
         NSCompoundPredicate(andPredicateWithSubpredicates: [
             predicate(forWorkout: workout),
@@ -84,6 +91,10 @@ extension WorkoutTag {
     
     static func predicate(forTag tag: UUID) -> NSPredicate {
         NSPredicate(format: "%K == %@", TagKey, tag as NSUUID)
+    }
+    
+    static func predicate(forTags tags: [UUID]) -> NSPredicate {
+        NSPredicate(format: "%K IN %@", TagKey, tags as [NSUUID])
     }
     
     static func activePredicate() -> NSPredicate {

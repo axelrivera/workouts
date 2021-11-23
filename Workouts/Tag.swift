@@ -168,15 +168,15 @@ extension Tag {
         NSPredicate(format: "%K IN %@", UUIDKey, uuids)
     }
     
-    static func activePredicate(name: String? = nil, sport: Sport? = nil) -> NSPredicate {
+    static func activePredicate(name: String? = nil, gearTypes: [GearType] = []) -> NSPredicate {
         var predicates = [notArchivedPredicate(), notDeletedPredicate()]
         
         if let name = name {
             predicates.append(namePredicate(name))
         }
         
-        if let sport = sport {
-            predicates.append(gearPredicate(sport: sport))
+        if gearTypes.isPresent {
+            predicates.append(gearTypesPredicate(gearTypes))
         }
         
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
@@ -202,18 +202,8 @@ extension Tag {
         NSPredicate(format: "%K == NULL", DeletedKey)
     }
     
-    static func gearPredicate(sport: Sport) -> NSPredicate {
-        let gearTypes: [GearType]
-        switch sport {
-        case .cycling:
-            gearTypes = [.bike, .none]
-        case .running, .walking:
-            gearTypes = [.shoes, .none]
-        default:
-            gearTypes = [.none]
-        }
-        
-        return NSPredicate(format: "%K IN %@", GearTypeKey, gearTypes.map({ $0.rawValue }))
+    static func gearTypesPredicate(_ gearTypes: [GearType]) -> NSPredicate {
+        NSPredicate(format: "%K IN %@", GearTypeKey, gearTypes.map({ $0.rawValue }))
     }
     
 }

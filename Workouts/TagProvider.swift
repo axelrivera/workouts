@@ -24,8 +24,13 @@ final class TagProvider {
 extension TagProvider {
     
     func activeTags(sport: Sport? = nil) -> [Tag] {
+        let gearTypes = gearTypes(for: sport)
+        return activeTags(gearTypes: gearTypes)
+    }
+    
+    func activeTags(gearTypes: [Tag.GearType]) -> [Tag] {
         do {
-            return try context.fetch(activeFetchRequest(sport: sport))
+            return try context.fetch(activeFetchRequest(gearTypes: gearTypes))
         } catch {
             return []
         }
@@ -74,10 +79,25 @@ extension TagProvider {
 
 extension TagProvider {
     
-    func activeFetchRequest(name: String? = nil, sport: Sport? = nil) -> NSFetchRequest<Tag> {
+    func gearTypes(for sport: Sport?) -> [Tag.GearType] {
+        guard let sport = sport else { return [] }
+        
+        let gearTypes: [Tag.GearType]
+        switch sport {
+        case .cycling:
+            gearTypes = [.bike, .none]
+        case .running, .walking:
+            gearTypes = [.shoes, .none]
+        default:
+            gearTypes = [.none]
+        }
+        return gearTypes
+    }
+    
+    func activeFetchRequest(name: String? = nil, gearTypes: [Tag.GearType] = []) -> NSFetchRequest<Tag> {
         let request = NSFetchRequest<Tag>(entityName: Tag.entityName)
         request.returnsObjectsAsFaults = false
-        request.predicate = Tag.activePredicate(name: name, sport: sport)
+        request.predicate = Tag.activePredicate(name: name, gearTypes: gearTypes)
         request.sortDescriptors = [Tag.sortedByPositionDescriptor()]
         return request
     }

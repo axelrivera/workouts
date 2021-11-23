@@ -33,12 +33,12 @@ struct WorkoutsFilterView: View {
                 
                 Section {
                     Button(action: { manager.showFavorites.toggle() }) {
-                        HStack {
-                            Image(systemName: "heart.fill")
+                        HStack(spacing: CGFloat(15.0)) {
+                            Image(systemName: manager.showFavorites ? "checkmark.circle" : "circle")
                                 .foregroundColor(.accentColor)
                             Text("Favorites")
                             Spacer()
-                            Image(systemName: manager.showFavorites ? "checkmark.circle" : "circle")
+                            Image(systemName: "heart.fill")
                                 .foregroundColor(.accentColor)
                         }
                         .foregroundColor(.primary)
@@ -74,7 +74,28 @@ struct WorkoutsFilterView: View {
                     }
                 }
                 .textCase(nil)
+                
+                if manager.tags.isPresent {
+                    Section(header: header("Tags")) {
+                        ForEach(manager.tags) { tag in
+                            Button(action: { manager.toggleTag(tag) }) {
+                                HStack(spacing: CGFloat(15.0)) {
+                                    Image(systemName: manager.isTagSelected(tag) ? "checkmark.circle" : "circle")
+                                        .foregroundColor(tag.color)
+                                    Text(tag.name)
+                                    Spacer()
+                                    GearImage(gearType: tag.gearType)
+                                        .foregroundColor(tag.color)
+                                }
+                                .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                    .textCase(nil)
+                }
             }
+            .interactiveDismissDisabled()
+            .onAppear { manager.reloadTags() }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -85,7 +106,10 @@ struct WorkoutsFilterView: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button("Done") {
+                        NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+                        presentationMode.wrappedValue.dismiss()
+                    }
                 }
                 
                 ToolbarItemGroup(placement: .keyboard) {

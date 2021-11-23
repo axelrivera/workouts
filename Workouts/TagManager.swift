@@ -35,7 +35,7 @@ class TagManager: ObservableObject {
     private(set) var workoutTagProvider: WorkoutTagProvider
     
     @Published var tags = [Tag]()
-    @Published var selectedTags = [Tag]()
+    @Published var selectedTags = Set<Tag>()
     @Published var archived = [Tag]()
     
     private(set) var sport: Sport?
@@ -56,7 +56,8 @@ extension TagManager {
         tags = provider.activeTags(sport: sport)
         
         if let identifier = workoutIdentifier {
-            selectedTags = workoutTagProvider.visibleTags(forWorkout: identifier)
+            let selectedTags = workoutTagProvider.visibleTags(forWorkout: identifier)
+            self.selectedTags = Set<Tag>(selectedTags)
         } else {
             archived = provider.archivedTags()
         }
@@ -151,13 +152,13 @@ extension TagManager {
         selectedTags.contains(tag)
     }
     
-    func toggle(tag: Tag) throws {        
-        if let index = selectedTags.firstIndex(of: tag) {
+    func toggle(tag: Tag) throws {
+        if isSelected(tag: tag) {
             try removeTagFromWorkout(tag)
-            selectedTags.remove(at: index)
+            selectedTags.remove(tag)
         } else {
             try addTagToWorkout(tag)
-            selectedTags.append(tag)
+            selectedTags.insert(tag)
         }
     }
     

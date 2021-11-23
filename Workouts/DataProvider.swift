@@ -70,6 +70,27 @@ extension DataProvider {
     
 }
 
+// MARK: - Workouts
+
+extension DataProvider {
+    
+    func workoutIdentifiers(for predicate: NSPredicate) -> [UUID] {
+        do {
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = predicate
+            request.resultType = .dictionaryResultType
+            request.propertiesToFetch = ["remoteIdentifier"]
+            
+            return try context.fetch(request).compactMap { dictionary in
+                dictionary["remoteIdentifier"] as? UUID
+            }
+        } catch {
+            return []
+        }
+    }
+    
+}
+
 // MARK: - Predicates
 
 extension DataProvider {

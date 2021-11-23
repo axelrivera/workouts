@@ -24,8 +24,14 @@ struct WorkoutsContentView: View {
     
     enum ActiveSheet: Hashable, Identifiable {
         case filter
+        case tagsToAll
         case tags(identifier: UUID, sport: Sport)
         var id: Self { self }
+    }
+    
+    enum ActiveAlert: Identifiable {
+        case tagConfirmation
+        var id: Int { hashValue }
     }
     
     @Environment(\.managedObjectContext) var viewContext
@@ -38,6 +44,7 @@ struct WorkoutsContentView: View {
     
     @State private var activeSheet: ActiveSheet?
     @State private var activeCoverSheet: ActiveCoverSheet?
+    @State private var activeAlert: ActiveAlert?
     @State private var selectedWorkout: UUID?
         
     init(filterManager: WorkoutsFilterManager) {
@@ -96,6 +103,10 @@ struct WorkoutsContentView: View {
                 }
             }
             .overlay(emptyOverlay())
+            .overlay(processOverlay())
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)) { _ in
+                refreshFilter()
+            }
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -110,11 +121,13 @@ struct WorkoutsContentView: View {
                     }
                 }
             }
-            .sheet(item: $activeSheet, onDismiss: refreshFilter) { item in
+            .sheet(item: $activeSheet) { item in
                 switch item {
                 case .filter:
                     WorkoutsFilterView()
                         .environmentObject(filterManager)
+                case .tagsToAll:
+                    WorkoutsTagSelectorView()
                 case .tags(let identifier, let sport):
                     TagSelectorView(tagManager: TagManager(context: viewContext, sport: sport, workoutIdentifier: identifier)) {
                         WorkoutCache.shared.purgeObject(with: identifier)
@@ -128,20 +141,24 @@ struct WorkoutsContentView: View {
                         .environmentObject(purchaseManager)
                 }
             }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .tagConfirmation:
+                    return Alert(
+                        title: Text("Apply Tags"),
+                        message: Text("Apply tags to all \(workouts.count.formatted()) results in filter? Some tags may be ignored based on gear type."),
+                        primaryButton: Alert.Button.default(Text("Continue"), action: { activeSheet = .tagsToAll }),
+                        secondaryButton: Alert.Button.cancel(Text("Cancel"))
+                    )
+                }
+            }
         }
     }
     
     @ViewBuilder
     func sectionHeader() -> some View {
         if filterManager.isFilterActive {
-            VStack(alignment: .leading, spacing: 10.0) {
-                HStack {
-                    Button("Reset Filter", action: resetFilter)
-                    Spacer()
-                    Image(systemName: "ellipsis.circle")
-                        .foregroundColor(.accentColor)
-                }
-                
+            VStack(alignment: .leading) {
                 HStack(spacing: 20.0) {
                     Text("\(workouts.count.formatted()) Workouts")
                     Spacer()
@@ -152,9 +169,31 @@ struct WorkoutsContentView: View {
                 }
                 .font(.fixedBody)
                 .foregroundColor(.secondary)
+                
+                HStack {
+                    Button("Reset Filter", role: .destructive, action: resetFilter)
+                    Spacer()
+                    
+                    Menu {
+                        Button(action: filterManager.favoriteAll) {
+                            Label("Favorite All", systemImage: "heart")
+                        }
+                        
+                        Button(action: filterManager.unfavoriteAll) {
+                            Label("Unfavorite All", systemImage: "heart.slash")
+                        }
+                        
+                        Button(action: { activeAlert = .tagConfirmation }) {
+                            Label("Tag All", systemImage: "tag")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding([.leading, .trailing])
+            .padding([.top, .bottom], CGFloat(10.0))
             .background(.regularMaterial)
         }
     }
@@ -165,6 +204,19 @@ struct WorkoutsContentView: View {
             Text("No Workouts")
                 .font(.title2)
                 .foregroundColor(.secondary)
+        }
+    }
+    
+    @ViewBuilder
+    func processOverlay() -> some View {
+        if filterManager.isProcessingActions {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+                .scaleEffect(x: 2.0, y: 2.0, anchor: .center)
+                .padding()
+                .frame(width: 100.0, height: 100, alignment: .center)
+                .background(Material.regularMaterial)
+                .cornerRadius(12.0)
         }
     }
 }

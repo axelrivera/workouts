@@ -160,6 +160,7 @@ class StorageProvider: ObservableObject {
         
         for index in 0 ..< 5 {
             let tag = sampleTag(name: "Sample Tag \(index)", color: .accentColor, gear: .none, moc: viewContext)
+            tag.position = NSNumber(value: index)
             try! viewContext.save()
         }
         
@@ -226,6 +227,20 @@ class StorageProvider: ObservableObject {
         
         let tag = Tag.insert(into: viewContext, viewModel: viewModel)
         return tag
+    }
+    
+    static func previewTags(in context: NSManagedObjectContext? = nil) -> [Tag] {
+        let context = context ?? sampleContext
+        
+        let request = NSFetchRequest<Tag>(entityName: Tag.entityName)
+        request.predicate = Tag.activePredicate()
+        request.sortDescriptors = [Tag.sortedByPositionDescriptor()]
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
     }
 }
 

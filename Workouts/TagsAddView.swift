@@ -43,10 +43,12 @@ struct TagsAddView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var viewContext
     
-    @EnvironmentObject var tagManager: TagManager
-    @StateObject var viewModel: TagEditViewModel
+    @EnvironmentObject private var tagManager: TagManager
     @State private var activeAlert: ActiveAlert?
+    
+    @StateObject var viewModel: TagEditViewModel
     
     var isDisabled: Bool {
         viewModel.isArchived

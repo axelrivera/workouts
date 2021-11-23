@@ -34,29 +34,10 @@ struct TagSelectorView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 5.0) {
-                    ForEach(tagManager.tags, id: \.self) { tag in
-                        Button(action: { toggleTag(tag) }) {
-                            HStack {
-                                GearImage(gearType: tag.gearType)
-                                    .foregroundColor(tag.colorValue)
-                                Text(tag.name)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Image(systemName: tagManager.isSelected(tag: tag) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(tag.colorValue)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(backgroundForTag(tag))
-                            .cornerRadius(12.0)
-                        }
-                    }
-                }
-                .padding()
-                .onAppear { tagManager.reloadData() }
+            TagSelector(tags: $tagManager.tags, selectedTags: $tagManager.selectedTags) { tag in
+                toggleTag(tag)
             }
+            .onAppear { tagManager.reloadData() }
             .navigationTitle("Select Tags")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -75,7 +56,7 @@ struct TagSelectorView: View {
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
-                case .add: 
+                case .add:
                     TagsAddView(viewModel: Tag.addViewModel(sport: tagManager.sport))
                         .environmentObject(tagManager)
                 }
@@ -95,14 +76,6 @@ struct TagSelectorView: View {
 }
 
 extension TagSelectorView {
-    
-    func backgroundForTag(_ tag: Tag) -> Color {
-        if tagManager.isSelected(tag: tag) {
-            return tag.colorValue.opacity(0.25)
-        } else {
-            return Color.systemFill
-        }
-    }
     
     func toggleTag(_ tag: Tag) {
         do {

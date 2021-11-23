@@ -11,7 +11,7 @@ import CoreData
 import SwiftUI
 
 final class WorkoutsFilterManager: ObservableObject {
-    static private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
+    private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
     
     @Published var sports = Set<Sport>()
     
@@ -26,15 +26,33 @@ final class WorkoutsFilterManager: ObservableObject {
     @Published var total: Int = 0
     @Published var distance: Double = 0
     @Published var duration: Double = 0
+    
+    @Published var tags = [TagLabelViewModel]()
+    @Published var selectedTags = Set<TagLabelViewModel>()
+    
+    @Published var isProcessingActions = false
         
     private let context: NSManagedObjectContext
+    private let backgroundContext: NSManagedObjectContext
     private let dataProvider: DataProvider
+    private let metaProvider: MetadataProvider
+    private let tagProvider: TagProvider
+    private let workoutTagProvider: WorkoutTagProvider
+    
+    private var tagsCancellable: Cancellable?
     
     init(context: NSManagedObjectContext) {
 //        sports = [.cycling]
         
         self.context = context
+        self.backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        self.backgroundContext.parent = context
+        
         self.dataProvider = DataProvider(context: context)
+        self.metaProvider = MetadataProvider(context: context)
+        self.tagProvider = TagProvider(context: context)
+        self.workoutTagProvider = WorkoutTagProvider(context: context)
+        addObservers()
     }
     
 }
@@ -67,6 +85,7 @@ extension WorkoutsFilterManager {
         if showDateRange { return true }
         if let _ = minDistanceValue { return true }
         if let _ = maxdistanceValue { return true }
+        if selectedTags.isPresent { return true }
         return false
     }
     
@@ -78,6 +97,8 @@ extension WorkoutsFilterManager {
         endDate = Date()
         maxDistance = ""
         minDistance = ""
+        tags = fetchTags()
+        selectedTags = Set<TagLabelViewModel>()
     }
     
     func isSportSelected(_ sport: Sport) -> Bool {
@@ -91,6 +112,7 @@ extension WorkoutsFilterManager {
             } else {
                 sports.insert(sport)
             }
+            reloadTags()
         }
     }
     
@@ -112,12 +134,178 @@ extension WorkoutsFilterManager {
     
 }
 
+// MARK: - Tags
+
+extension WorkoutsFilterManager {
+    typealias GearType = Tag.GearType
+    
+    var isBikeGearType: Bool {
+        sports.contains(.cycling) && sports.count == 1
+    }
+    
+    var isShoesGearType: Bool {
+        let isCycling = sports.contains(.cycling)
+        let isRunning = sports.contains(.running)
+        let isWalking = sports.contains(.walking)
+        
+        return !isCycling && (isRunning || isWalking)
+    }
+    
+    func availableSetGearTypes() -> [GearType] {
+        if isBikeGearType {
+            return [.bike, .none]
+        } else if isShoesGearType {
+            return [.shoes, .none]
+        } else {
+            return [.none]
+        }
+    }
+    
+    func availableFilterGearTypes() -> [GearType] {
+        if sports.isEmpty { return GearType.allCases }
+        
+        var gearTypes: [GearType] = [.none]
+        
+        if sports.contains(.cycling) {
+            gearTypes.append(.bike)
+        }
+        
+        if sports.contains(.running) || sports.contains(.walking) {
+            gearTypes.append(.shoes)
+        }
+        
+        return gearTypes
+    }
+    
+    func fetchTags() -> [TagLabelViewModel] {
+        tagProvider.activeTags(gearTypes: availableFilterGearTypes()).map { $0.viewModel() }
+    }
+    
+    func reloadTags() {
+        let tags = fetchTags()
+        let tagSet = Set<TagLabelViewModel>(tags)
+        
+        self.tags = tags
+        selectedTags.formIntersection(tagSet)
+    }
+    
+    func isTagSelected(_ tag: TagLabelViewModel) -> Bool {
+        selectedTags.contains(tag)
+    }
+    
+    func toggleTag(_ tag: TagLabelViewModel) {
+        withAnimation {
+            if isTagSelected(tag) {
+                selectedTags.remove(tag)
+            } else {
+                selectedTags.insert(tag)
+            }
+        }
+    }
+    
+}
+
+// MARK: - Actions
+
+extension WorkoutsFilterManager {
+    
+    func favoriteAll() {
+        if isProcessingActions { return }
+        
+        isProcessingActions = true
+        let predicate = filterPredicate()
+        
+        context.perform { [unowned self] in
+            let ids = self.dataProvider.workoutIdentifiers(for: predicate)
+            ids.forEach { uuid in
+                do {
+                    try self.metaProvider.favoriteWorkout(for: uuid)
+                    WorkoutCache.shared.set(isFavorite: true, identifier: uuid)
+                } catch {
+                    Log.debug("failed to add favorite: \(error.localizedDescription)")
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.isProcessingActions = false
+                NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+            }
+        }
+    }
+    
+    func unfavoriteAll() {
+        if isProcessingActions { return }
+        
+        isProcessingActions = true
+        let predicate = filterPredicate()
+        
+        context.perform { [unowned self] in
+            let ids = self.dataProvider.workoutIdentifiers(for: predicate)
+            ids.forEach { uuid in
+                do {
+                    try self.metaProvider.unfavoriteWorkout(for: uuid)
+                    WorkoutCache.shared.set(isFavorite: false, identifier: uuid)
+                } catch {
+                    Log.debug("failed to remove favorite: \(error.localizedDescription)")
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.isProcessingActions = false
+                NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+            }
+        }
+    }
+    
+    func addTags(_ uuids: [UUID]) {
+        if isProcessingActions { return }
+        
+        let predicate = filterPredicate()
+        isProcessingActions = true
+        
+        backgroundContext.perform { [unowned self] in
+            let workouts = self.dataProvider.workoutIdentifiers(for: predicate)
+            for workoutId in workouts {
+                guard let workout = Workout.find(using: workoutId, in: self.backgroundContext) else { continue }
+                
+                Log.debug("adding tags for workout: \(workoutId)")
+                
+                for tagId in uuids {
+                    guard let tag = Tag.find(using: tagId, in: self.backgroundContext) else { continue }
+                    guard workout.sport.supportsGearType(tag.gearType) else { continue }
+                    Log.debug("adding tag: \(tag.name)")
+                    
+                    if let workoutTag = WorkoutTag.find(workout: workoutId, tag: tagId, context: self.backgroundContext) {
+                        workoutTag.restore()
+                    } else {
+                        WorkoutTag.insert(into: self.backgroundContext, workout: workoutId, tag: tagId)
+                    }
+                }
+                
+                do {
+                    try backgroundContext.save()
+                    try context.save()
+                } catch {
+                    Log.debug("failed to save adding tags: \(error.localizedDescription)")
+                }
+            }
+            
+            DispatchQueue.main.async {
+                WorkoutCache.shared.resetAll()
+                self.isProcessingActions = false
+                NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+            }
+        }
+    }
+    
+}
+
 // MARK: - Core Data
 
 extension WorkoutsFilterManager {
     
     var isUsingIdentifiers: Bool {
-        showFavorites
+        showFavorites || selectedTags.isPresent
     }
     
     func filterPredicate() -> NSPredicate {
@@ -130,9 +318,20 @@ extension WorkoutsFilterManager {
             ids.formUnion(favorites)
         }
         
+        if selectedTags.isPresent {
+            let tagIds = selectedTags.map { $0.id }
+            let workouts = workoutTagProvider.workoutIdentifiers(forTags: tagIds)
+            
+            if ids.isEmpty {
+                ids.formUnion(workouts)
+            } else {
+                ids.formIntersection(workouts)
+            }
+        }
+        
         // query should be false if validating by identifiers and there are no identifiers present
         if isUsingIdentifiers && ids.isEmpty {
-            return Workout.distantFuturePredicate()
+            return NSPredicate(value: false)
         }
         
         if ids.isPresent {
@@ -163,13 +362,52 @@ extension WorkoutsFilterManager {
     }
     
     private var minDistanceValue: Double? {
-        guard let distance = Double(minDistance.removingCharacters(in: Self.nonDecimalCharacters)) else { return nil }
+        guard let distance = Double(minDistance.removingCharacters(in: nonDecimalCharacters)) else { return nil }
         return localizedDistanceToMeters(for: distance)
     }
     
     private var maxdistanceValue: Double? {
-        guard let distance = Double(maxDistance.removingCharacters(in: Self.nonDecimalCharacters)) else { return nil }
+        guard let distance = Double(maxDistance.removingCharacters(in: nonDecimalCharacters)) else { return nil }
         return localizedDistanceToMeters(for: distance)
+    }
+    
+}
+
+// MARK: - Observers
+
+extension Notification.Name {
+    
+    static var addTagsToAll = Notification.Name("arn_add_tags_to_all")
+    static var refreshWorkoutsFilter = Notification.Name("arn_refresh_workouts_filter")
+    
+}
+
+extension Notification {
+    static var tagsKey = "tags"
+}
+
+extension WorkoutsFilterManager {
+    
+    func addObservers() {
+        tagsCancellable = NotificationCenter.default.publisher(for: Notification.Name.addTagsToAll).sink { [unowned self] notification in
+            guard let tags = notification.userInfo?[Notification.tagsKey] as? [UUID] else { return }
+            self.addTags(tags)
+        }
+    }
+    
+}
+
+extension Sport {
+    
+    func supportsGearType(_ gearType: Tag.GearType) -> Bool {
+        switch self {
+        case .cycling:
+            return [.bike, .none].contains(gearType)
+        case .running, .walking:
+            return [.shoes, .none].contains(gearType)
+        default:
+            return gearType == .none
+        }
     }
     
 }

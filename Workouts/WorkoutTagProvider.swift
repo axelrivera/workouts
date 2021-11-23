@@ -53,12 +53,37 @@ extension WorkoutTagProvider {
     }
     
     func workoutIdentifiers(forTag tag: UUID) -> [UUID] {
-        let request = WorkoutTag.request()
+        let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
         request.predicate = WorkoutTag.activePredicate(forTag: tag)
         request.returnsObjectsAsFaults = false
+        request.resultType = .dictionaryResultType
+        request.propertiesToFetch = ["workoutId"]
         
-        let workoutTags: [WorkoutTag] = (try? context.fetch(request)) ?? []
-        return workoutTags.map { $0.workoutId }
+        do {
+            let dictionaries = try context.fetch(request)
+            return dictionaries.compactMap { (dictionary) -> UUID? in
+                return dictionary["workoutId"] as? UUID
+            }
+        } catch {
+            return []
+        }
+    }
+    
+    func workoutIdentifiers(forTags tags: [UUID]) -> [UUID] {
+        let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
+        request.predicate = WorkoutTag.activePredicate(forTags: tags)
+        request.returnsObjectsAsFaults = false
+        request.resultType = .dictionaryResultType
+        request.propertiesToFetch = ["workoutId"]
+        
+        do {
+            let dictionaries = try context.fetch(request)
+            return dictionaries.compactMap { (dictionary) -> UUID? in
+                return dictionary["workoutId"] as? UUID
+            }
+        } catch {
+            return []
+        }
     }
     
     func workouts(forTag tag: UUID) -> [Workout] {
