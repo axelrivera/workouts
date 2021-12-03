@@ -72,8 +72,6 @@ class LogManager: ObservableObject {
     
     // Data
     @Published var intervals = [LogInterval]()
-    @Published var currentInterval = LogInterval.currentInterval()
-    @Published var prevInterval = LogInterval.previousInterval()
     
     private var refreshCancellable: Cancellable?
     
@@ -82,23 +80,6 @@ class LogManager: ObservableObject {
     init(context: NSManagedObjectContext) {
         self.context = context
         addObservers()
-    }
-    
-    func reloadCurrentInterval() {
-        // Current Interval
-
-        let currentDateInterval = LogInterval.currentDateInterval()
-        let currentInterval = logInterval(for: currentDateInterval)
-
-        let prevDateInterval = LogInterval.previousWeekDateInterval()
-        let prevInterval = logInterval(for: prevDateInterval)
-
-        DispatchQueue.main.async {
-            withAnimation(.none) {
-                self.currentInterval = currentInterval
-                self.prevInterval = prevInterval
-            }
-        }
     }
     
     func reloadIntervals() {
@@ -247,40 +228,6 @@ extension LogManager {
         return sports.map({ $0.altName }).sorted().joined(separator: ", ")
     }
     
-    var currentIntervalDateLabel: String {
-        let start = currentInterval.start ?? Date().workoutWeekStart
-        let end = currentInterval.end ?? Date().workoutWeekEnd
-        
-        let formatter = DateFormatter.monthDay
-        return String(format: "%@ - %@", formatter.string(from: start), formatter.string(from: end))
-    }
-    
-    var currentIntervalDisplayLabel: String {
-        switch displayType {
-        case .distance:
-            return formattedDistanceString(for: currentInterval.distance, zeroPadding: true)
-        case .time:
-            return formattedHoursMinutesPrettyString(for: currentInterval.duration)
-        }
-    }
-    
-    var prevIntervalDateLabel: String {
-        let start = prevInterval.start ?? Date().workoutWeekStart
-        let end = prevInterval.end ?? Date().workoutWeekEnd
-        
-        let formatter = DateFormatter.monthDay
-        return String(format: "%@ - %@", formatter.string(from: start), formatter.string(from: end))
-    }
-    
-    var prevIntervalDisplayLabel: String {
-        switch displayType {
-        case .distance:
-            return formattedDistanceString(for: prevInterval.distance, zeroPadding: true)
-        case .time:
-            return formattedHoursMinutesPrettyString(for: prevInterval.duration)
-        }
-    }
-    
 }
 
 // MARK: - Observers
@@ -313,10 +260,6 @@ class LogManagerPreview: LogManager {
     
     static func manager(context: NSManagedObjectContext) -> LogManager {
         LogManagerPreview(context: context) as LogManager
-    }
-    
-    override func reloadCurrentInterval() {
-        // no-op
     }
     
     override func reloadIntervals() {

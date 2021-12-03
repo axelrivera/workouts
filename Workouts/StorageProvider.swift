@@ -153,16 +153,16 @@ class StorageProvider: ObservableObject {
         let result = StorageProvider(inMemory: true)
         let viewContext = result.persistentContainer.viewContext
         
-        for _ in 0 ..< 10 {
-            let _ = sampleWorkout(moc: viewContext)
-            try! viewContext.save()
-        }
-        
-        for index in 0 ..< 5 {
-            let tag = sampleTag(name: "Sample Tag \(index)", color: .accentColor, gear: .none, moc: viewContext)
-            tag.position = NSNumber(value: index)
-            try! viewContext.save()
-        }
+//        for _ in 0 ..< 10 {
+//            let _ = sampleWorkout(moc: viewContext)
+//            try! viewContext.save()
+//        }
+//        
+//        for index in 0 ..< 5 {
+//            let tag = sampleTag(name: "Sample Tag \(index)", color: .accentColor, gear: .none, moc: viewContext)
+//            tag.position = NSNumber(value: index)
+//            try! viewContext.save()
+//        }
         
         return result
     }()

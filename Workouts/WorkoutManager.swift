@@ -35,13 +35,13 @@ class WorkoutManager: ObservableObject {
         
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
-    @Published var recentWorkouts = [Workout]()
-        
+
+    @Published var showNoWorkoutsOverlay = false
+    
     init(context: NSManagedObjectContext) {
         self.context = context
         dataProvider = DataProvider(context: context)
         metaProvider = MetadataProvider(context: context)
-        recentWorkouts = dataProvider.recentWorkouts()
         addObservers()
     }
     
@@ -61,6 +61,7 @@ class WorkoutManager: ObservableObject {
         } else {
             Log.debug("request status not required")
             refreshWorkouts(isAuthorized: isAuthorized)
+            validateHealthPermissions()
         }
     }
     
@@ -96,22 +97,27 @@ class WorkoutManager: ObservableObject {
         NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
     }
     
-    func fetchRecentWorkouts() {
-        let workouts = dataProvider.recentWorkouts()
-        
-        DispatchQueue.main.async {
-            withAnimation {
-                self.recentWorkouts = workouts
-            }
-        }
-    }
-    
     var showImportProgress: Bool {
         isProcessingRemoteData && totalProcessingWorkouts > 5
     }
     
     var totalWorkouts: Int {
         dataProvider.totalWorkouts(sport: sport, interval: nil)
+    }
+    
+    func validateHealthPermissions() {
+        Task(priority: .userInitiated) {
+            do {
+                let total = try await healthProvider.totalWorkouts()
+                DispatchQueue.main.async {
+                    self.showNoWorkoutsOverlay = total == 0
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showNoWorkoutsOverlay = true
+                }
+            }
+        }
     }
     
 }

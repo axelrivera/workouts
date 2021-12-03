@@ -25,30 +25,25 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selected) {
-//            HomeView()
-//                .tabItem { Label("Home", systemImage: "house") }
-//                .tag(Tabs.home)
-            
             WorkoutsView()
                 .tabItem { Label("Workouts", systemImage: "flame") }
                 .tag(Tabs.workouts)
-            
+
             WorkoutLogView()
                 .tabItem { Label("Training", systemImage: "calendar") }
                 .tag(Tabs.log)
-            
+
             StatsView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
-            
-            
-            
+
             TagsView()
                 .tabItem { Label("Tags", systemImage: "tag") }
                 .tag(Tabs.tags)
             
         }
         .onboardingOverlay()
+        .noWorkoutsOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
             viewContext.refreshAllObjects()
         }
@@ -83,22 +78,28 @@ struct ContentView: View {
 extension ContentView {
     
     private func reloadData() {
-        logManager.reloadCurrentInterval()
-        workoutManager.fetchRecentWorkouts()
         statsManager.refresh()
+        logManager.reloadIntervals()
     }
     
 }
 
 struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workoutManager = WorkoutManagerPreview.manager(context: viewContext)
+    
+    static var workoutManager: WorkoutManager = {
+        let manager = WorkoutManagerPreview.manager(context: viewContext)
+        //manager.state = .notAvailable
+        return manager
+    }()
+    
     static let logManager = LogManagerPreview.manager(context: viewContext)
     static let statsManager = StatsManagerPreview.manager(context: viewContext)
     static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         ContentView()
+            .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(logManager)
             .environmentObject(statsManager)

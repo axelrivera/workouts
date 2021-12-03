@@ -115,25 +115,6 @@ extension DataProvider {
     
 }
 
-// MARK: - Recent Workouts
-
-extension DataProvider {
-    
-    func recentWorkouts() -> [Workout] {
-        let request = Workout.defaultFetchRequest()
-        request.returnsObjectsAsFaults = false
-        request.predicate = Workout.activePredicate(sport: nil, interval: DateInterval.lastTwoWeeks())
-        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
-        }
-    }
-    
-}
-
 // MARK: - Summary
 
 extension DataProvider {

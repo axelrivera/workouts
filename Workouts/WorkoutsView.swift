@@ -36,9 +36,9 @@ struct WorkoutsContentView: View {
     }
     
     @Environment(\.managedObjectContext) var viewContext
-    @StateObject var filterManager: WorkoutsFilterManager
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
+    @StateObject var filterManager: WorkoutsFilterManager
     
     var fetchRequest: FetchRequest<Workout>
     var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
