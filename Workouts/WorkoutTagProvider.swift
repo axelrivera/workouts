@@ -18,9 +18,33 @@ final class WorkoutTagProvider {
 
 extension WorkoutTagProvider {
     
+    func allWorkoutTags() -> [WorkoutTag] {
+        let request = WorkoutTag.request()
+        request.predicate = WorkoutTag.activePredicate()
+        request.returnsObjectsAsFaults = false
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
+    }
+    
     func workoutTags(forWorkout workout: UUID) -> [WorkoutTag] {
         let request = WorkoutTag.request()
         request.predicate = WorkoutTag.activePredicate(forWorkout: workout)
+        request.returnsObjectsAsFaults = false
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
+    }
+    
+    func workoutTags(forTag tag: UUID) -> [WorkoutTag] {
+        let request = WorkoutTag.request()
+        request.predicate = WorkoutTag.activePredicate(forTag: tag)
         request.returnsObjectsAsFaults = false
         
         do {

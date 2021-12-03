@@ -30,6 +30,10 @@ struct AdvancedSettingsView: View {
                     Text("Reset Maps")
                 }
             }
+            
+            Section(footer: Text("Clear tags from existing workouts.")) {
+                NavigationLink("Tags", destination: TagsResetView())
+            }
         }
         .disabled(workoutManager.isProcessingRemoteData)
         .overlay(processOverlay())

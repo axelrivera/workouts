@@ -14,8 +14,9 @@ protocol TagViewModel: Hashable, Identifiable {
     var name: String { get }
     var color: Color { get }
     var gearType: GearType { get }
+    var archived: Bool { get }
     
-    init(id: UUID, name: String, color: Color, gearType: GearType)
+    init(id: UUID, name: String, color: Color, gearType: GearType, archived: Bool)
 }
 
 extension TagViewModel {
@@ -25,7 +26,7 @@ extension TagViewModel {
         let color = Color.tagColors.randomElement() ?? .accentColor
         let gearType = GearType.allCases.randomElement() ?? .none
         
-        return T(id: UUID(), name: tagName, color: color, gearType: gearType)
+        return T(id: UUID(), name: tagName, color: color, gearType: gearType, archived: false)
     }
     
 }
@@ -37,6 +38,7 @@ struct TagSummaryViewModel: TagViewModel {
     let name: String
     let color: Color
     let gearType: GearType
+    let archived: Bool
     
     private(set) var total: Int = 0
     private(set) var distance: Double = 0
@@ -48,11 +50,12 @@ struct TagSummaryViewModel: TagViewModel {
     private(set) var elevation: Double = 0
     private(set) var avgElevation: Double = 0
     
-    init(id: UUID, name: String, color: Color, gearType: GearType) {
+    init(id: UUID, name: String, color: Color, gearType: GearType, archived: Bool) {
         self.id = id
         self.name = name
         self.color = color
         self.gearType = gearType
+        self.archived = archived
     }
     
     mutating func updateValues(_ dictionary: [String: Any]) {
@@ -81,11 +84,11 @@ struct TagSummaryViewModel: TagViewModel {
 extension TagSummaryViewModel {
     
     var distanceString: String {
-        formattedDistanceString(for: distance, zeroPadding: true)
+        formattedDistanceStringInTags(for: distance)
     }
     
     var avgDistanceString: String {
-        formattedDistanceString(for: avgDistance, zeroPadding: true)
+        formattedDistanceStringInTags(for: avgDistance)
     }
     
     var durationString: String {
@@ -133,17 +136,19 @@ struct TagLabelViewModel: TagViewModel {
     let name: String
     let color: Color
     let gearType: GearType
+    let archived: Bool
     
-    init(id: UUID, name: String, color: Color, gearType: GearType) {
+    init(id: UUID, name: String, color: Color, gearType: GearType, archived: Bool) {
         self.id = id
         self.name = name
         self.color = color
         self.gearType = gearType
+        self.archived = archived
     }
 }
 
 extension Tag {
     func viewModel<VM: TagViewModel>() -> VM {
-        VM(id: uuid, name: name, color: colorValue, gearType: gearType)
+        VM(id: uuid, name: name, color: colorValue, gearType: gearType, archived: archivedDate == nil)
     }
 }

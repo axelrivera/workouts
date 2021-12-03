@@ -100,14 +100,14 @@ struct TagWorkoutsSelectButtoon_Previews: PreviewProvider {
     static let workout = StorageProvider.sampleWorkout(sport: .cycling, date: Date(), moc: viewContext)
     
     static let viewModel = workout.cellViewModel
-    static let tagViewModel = TagSummaryViewModel(id: UUID(), name: "Sample Tag", color: .accentColor, gearType: .bike)
+    static let tagViewModel = TagSummaryViewModel(id: UUID(), name: "Sample Tag", color: .accentColor, gearType: .bike, archived: false)
     
     static let selectManager = TagWorkoutsSelectManager(viewModel: tagViewModel, context: viewContext)
     
     static let tags = [
-        TagLabelViewModel(id: UUID(), name: "Sample Tag", color: .red, gearType: .none),
-        TagLabelViewModel(id: UUID(), name: "Sample Tag 2", color: .orange, gearType: .none),
-        TagLabelViewModel(id: UUID(), name: "Sample Tag 3", color: .purple, gearType: .none),
+        TagLabelViewModel(id: UUID(), name: "Sample Tag", color: .red, gearType: .none, archived: false),
+        TagLabelViewModel(id: UUID(), name: "Sample Tag 2", color: .orange, gearType: .none, archived: false),
+        TagLabelViewModel(id: UUID(), name: "Sample Tag 3", color: .purple, gearType: .none, archived: false),
     ]
     
     static var previews: some View {

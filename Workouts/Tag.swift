@@ -85,6 +85,7 @@ extension Tag {
     
     func restoreTag() {
         archivedDate = nil
+        position = NSNumber(value: Int.max)
     }
     
     func deleteTag() {
@@ -127,22 +128,25 @@ extension Tag {
     }
     
     @discardableResult
-    static func insert(into context: NSManagedObjectContext, viewModel: TagEditViewModel) -> Tag {
+    static func insert(into context: NSManagedObjectContext, viewModel: TagEditViewModel, position: Int?) -> Tag {
         context.performAndWait {
             let tag = Tag(context: context)
             tag.uuid = UUID()
-            updateValues(for: tag, viewModel: viewModel, in: context)
-            
+            updateValues(for: tag, viewModel: viewModel, position: position ?? 0, in: context)
             return tag
         }
     }
     
-    static func updateValues(for tag: Tag, viewModel: TagEditViewModel, in context: NSManagedObjectContext) {
+    static func updateValues(for tag: Tag, viewModel: TagEditViewModel, position: Int?, in context: NSManagedObjectContext) {
         context.performAndWait {
             tag.name = viewModel.name
             tag.color = UIColor(viewModel.color)
             tag.gearType = viewModel.gearType
             tag.isDefault = viewModel.isDefault
+            
+            if let position = position {
+                tag.position = NSNumber(value: position)
+            }
         }
     }
     

@@ -8,17 +8,15 @@
 import SwiftUI
 
 struct WorkoutColorPicker: View {
-    
-    private let data = Color.workoutColors
-
     private let columns = Array(repeating: GridItem(.adaptive(minimum: 50.0, maximum: 75.0)), count: 6)
     
+    var colors = Color.workoutColors
     @Binding var selectedColor: Color
     var selectedAction: (_ color: Color) -> Void
 
     var body: some View {
         LazyVGrid(columns: columns, alignment: .center, spacing: 20.0) {
-            ForEach(data, id: \.self) { color in
+            ForEach(colors, id: \.self) { color in
                 Button(action: { selectColor(color) }) {
                     Circle()
                         .stroke(color == selectedColor ? Color.yellow : Color.colorPickerBorder, lineWidth: 3.0)
@@ -47,6 +45,6 @@ struct WorkoutColorPicker_Previews: PreviewProvider {
             }
             .buttonStyle(PlainButtonStyle())
         }
-        .preferredColorScheme(.light)
+        .preferredColorScheme(.dark)
     }
 }

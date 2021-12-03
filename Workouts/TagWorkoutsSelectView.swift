@@ -82,7 +82,8 @@ struct TagWorkoutsSelectView_Previews: PreviewProvider {
         id: UUID(),
         name: "Sample Tag",
         color: .red,
-        gearType: .none
+        gearType: .none,
+        archived: false
     )
     
     static var selectManager = TagWorkoutsSelectManager(viewModel: viewModel, context: viewContext)

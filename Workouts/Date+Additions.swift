@@ -160,6 +160,12 @@ extension DateInterval {
         return DateInterval(start: start, end: end)
     }
     
+    static func lastSixMonths() -> DateInterval {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .month, value: -5, to: end)!.startOfMonth
+        return DateInterval(start: start, end: end)
+    }
+    
     static func lastFiveYears() -> DateInterval {
         let now = Date()
         let endYear = now.year()

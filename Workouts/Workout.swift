@@ -18,6 +18,7 @@ private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
 private let EndDateKey = "end"
+private let IndoorKey = "indoor"
 
 private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
 private let ZoneValue1Key = "zoneValue1"
@@ -245,6 +246,10 @@ extension Workout {
     
     static func predicateForSports(_ sports: [Sport]) -> NSPredicate {
         NSPredicate(format: "%K IN %@", SportKey, sports.map({ $0.rawValue }))
+    }
+    
+    static func predicateForIndoor(_ indoor: Bool) -> NSPredicate {
+        NSPredicate(format: "%K == %@", IndoorKey, NSNumber(booleanLiteral: indoor))
     }
     
     static func sortedByDateDescriptor(ascending: Bool = false) -> NSSortDescriptor {

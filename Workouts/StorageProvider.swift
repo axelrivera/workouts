@@ -225,7 +225,7 @@ class StorageProvider: ObservableObject {
         viewModel.color = color
         viewModel.gearType = gear
         
-        let tag = Tag.insert(into: viewContext, viewModel: viewModel)
+        let tag = Tag.insert(into: viewContext, viewModel: viewModel, position: nil)
         return tag
     }
     

@@ -20,6 +20,7 @@ struct TagSelectorView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
+    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var tagManager: TagManager
     
     @State private var activeSheet: ActiveSheet?
@@ -52,12 +53,13 @@ struct TagSelectorView: View {
                         Label("New Tag", systemImage: "plus.circle.fill")
                             .labelStyle(TitleAndIconLabelStyle())
                     }
+                    .disabled(!purchaseManager.isActive)
                 }
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
                 case .add:
-                    TagsAddView(viewModel: Tag.addViewModel(sport: tagManager.sport))
+                    TagsAddView(viewModel: Tag.addViewModel(sport: tagManager.sport), isInsert: true)
                         .environmentObject(tagManager)
                 }
             }
@@ -91,8 +93,10 @@ extension TagSelectorView {
 struct TagSelectorView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static var purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         TagSelectorView(tagManager: workout.tagManager())
+            .environmentObject(purchaseManager)
     }
 }

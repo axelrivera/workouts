@@ -160,6 +160,7 @@ struct DetailView: View {
                 TagSelectorView(tagManager: tagManager()) {
                     detailManager.reloadTags()
                 }
+                .environmentObject(purchaseManager)
             }
         }
         .alert(item: $activeAlert) { alert in

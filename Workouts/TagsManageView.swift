@@ -17,7 +17,7 @@ struct TagsManageView: View {
 
 struct TagsManageContentView: View {
     enum ActiveSheet: Hashable, Identifiable {
-        case add, edit(tag: Tag)
+        case add, edit(tag: Tag), paywall
         var id: Self { self }
     }
     
@@ -28,12 +28,13 @@ struct TagsManageContentView: View {
     }
         
     @StateObject var manager: TagManager
+    @EnvironmentObject var purchaseManager: IAPManager
     
     @State var editMode = EditMode.inactive
     @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
     
-    @State var selectedSegment = TagPickerSegments.active
+    @State var selectedSegment = TagPickerSegment.active
         
     var body: some View {
         List {
@@ -58,6 +59,21 @@ struct TagsManageContentView: View {
                 }
             }
             .textCase(nil)
+            
+            if !purchaseManager.isActive {
+                Section {
+                    Button(action: { activeSheet = .paywall }) {
+                        VStack(spacing: CGFloat(5.0)) {
+                            Label("Upgrade to Pro Now", systemImage: "lock.fill")
+                            Text("Managing Tags requires Pro version")
+                                .font(.subheadline)
+                                .foregroundColor(.black.opacity(0.4))
+                        }
+                    }
+                    .buttonStyle(PaywallButtonStyle())
+                }
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            }
         }
         .onAppear { manager.reloadData() }
         .listStyle(InsetGroupedListStyle())
@@ -66,7 +82,7 @@ struct TagsManageContentView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                EditButton()
-                    .disabled(selectedSegment == .archived)
+                    .disabled(!purchaseManager.isActive || selectedSegment == .archived)
             }
             
             ToolbarItemGroup(placement: .bottomBar) {
@@ -75,20 +91,22 @@ struct TagsManageContentView: View {
                 Button(action: { activeSheet = .add }) {
                     Label("New Tag", systemImage: "plus.circle.fill")
                         .labelStyle(TitleAndIconLabelStyle())
-                        .disabled(selectedSegment == .archived)
                 }
-                .disabled(editMode.isEditing)
+                .disabled(isNewButtonDisabled)
             }
         }
         .environment(\.editMode, $editMode)
         .sheet(item: $activeSheet, onDismiss: reload) { sheet in
             switch sheet {
             case .add:
-                TagsAddView(viewModel: Tag.addViewModel())
+                TagsAddView(viewModel: Tag.addViewModel(), isInsert: false)
                     .environmentObject(manager)
             case .edit(let tag):
-                TagsAddView(viewModel: tag.editViewModel())
+                TagsAddView(viewModel: tag.editViewModel(), isInsert: false)
                     .environmentObject(manager)
+            case .paywall:
+                PaywallView()
+                    .environmentObject(purchaseManager)
             }
         }
         .alert(item: $activeAlert) { alert in
@@ -137,6 +155,7 @@ struct TagsManageContentView: View {
         }
         .onMove(perform: move)
         .onDelete(perform: editMode == .active ? delete : nil)
+        .disabled(!purchaseManager.isActive)
     }
     
     @ViewBuilder
@@ -156,16 +175,17 @@ struct TagsManageContentView: View {
                 .buttonStyle(.borderless)
             }
         }
+        .disabled(!purchaseManager.isActive)
     }
     
     @ViewBuilder
     func header() -> some View {
         Picker("Tags", selection: $selectedSegment) {
-            ForEach(TagPickerSegments.allCases, id: \.self) { segment in
+            ForEach(TagPickerSegment.allCases, id: \.self) { segment in
                 Text(segment.title)
             }
         }
-        .disabled(editMode == .active)
+        .disabled(isManagingDisabled)
         .pickerStyle(SegmentedPickerStyle())
         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         .padding([.top, .bottom], CGFloat(20.0))
@@ -184,6 +204,16 @@ struct TagsManageContentView: View {
 
 extension TagsManageContentView {
     
+    var isManagingDisabled: Bool {
+        !purchaseManager.isActive || editMode == .active
+    }
+    
+    var isNewButtonDisabled: Bool {
+        if selectedSegment == .archived { return true }
+        if editMode.isEditing { return true}
+        return isManagingDisabled
+    }
+    
     func reload() {
         manager.reloadData()
         if selectedSegment == .archived && manager.archived.isEmpty {
@@ -193,6 +223,7 @@ extension TagsManageContentView {
     
     func move(from source: IndexSet, to destination: Int) {
         manager.tags.move(fromOffsets: source, toOffset: destination)
+        manager.updatePositions()
     }
     
     func delete(at offsets: IndexSet) {
@@ -208,11 +239,13 @@ extension TagsManageContentView {
 
 struct TagsManageView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         NavigationView {
             TagsManageView()
         }
         .environment(\.managedObjectContext, viewContext)
+        .environmentObject(purchaseManager)
     }
 }

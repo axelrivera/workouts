@@ -43,6 +43,8 @@ struct TagSummaryCell: View {
                 }
             }
         }
+        .padding([.leading, .trailing])
+        .padding([.top, .bottom], CGFloat(10.0))
     }
 }
 

@@ -7,11 +7,20 @@
 
 import SwiftUI
 
-class TagEditViewModel: ObservableObject {
+class TagEditViewModel: ObservableObject, Hashable, Identifiable {
+    static func == (lhs: TagEditViewModel, rhs: TagEditViewModel) -> Bool {
+        lhs.uuid == rhs.uuid
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
     enum Mode {
         case add, edit
     }
     
+    let id: String
     let uuid: UUID
     let mode: Mode
     let sport: Sport?
@@ -24,6 +33,7 @@ class TagEditViewModel: ObservableObject {
     @Published var isArchived: Bool = false
     
     init(uuid: UUID, mode: Mode, sport: Sport? = nil) {
+        self.id = uuid.uuidString
         self.uuid = uuid
         self.mode = mode
         self.sport = sport

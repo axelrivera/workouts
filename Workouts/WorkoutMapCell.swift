@@ -94,7 +94,8 @@ struct WorkoutMapCellContainer: View {
                     .cornerRadius(12.0)
             }
         }
-        .padding()
+        .padding([.leading, .trailing])
+        .padding([.top, .bottom], CGFloat(10.0))
     }
     
     func processNotification(_ notification: Notification) {
@@ -127,7 +128,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
         let manager = WorkoutMapCellManager(workout: viewModel.id, isPreview: true)
         manager.isFavorite = true
         manager.tags = [
-            TagLabelViewModel(id: UUID(), name: "Sample Tag", color: .red, gearType: .none)
+            TagLabelViewModel(id: UUID(), name: "Sample Tag", color: .red, gearType: .none, archived: false)
         ]
         
         return manager

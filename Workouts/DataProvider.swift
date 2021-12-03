@@ -147,6 +147,21 @@ extension DataProvider {
         }
     }
     
+    func dateRageForActiveWorkouts() -> ClosedRange<Date> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.activePredicate(sport: nil, interval: nil)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor(ascending: true)]
+        
+        do {
+            let workouts = try context.fetch(request)
+            let start = workouts.first?.start ?? Date()
+            let end = workouts.last?.start ?? start
+            return start...end
+        } catch {
+            let date = Date()
+            return date...date
+        }
+    }
     
     func fetchTotalDistanceAndDuration(for predicate: NSPredicate) -> (total: Int, distance: Double, duration: Double) {
         let distance = expressionDescription(for: .distance, function: .sum)

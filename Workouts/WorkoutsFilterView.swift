@@ -32,44 +32,63 @@ struct WorkoutsFilterView: View {
                 .textCase(nil)
                 
                 Section {
-                    Button(action: { manager.showFavorites.toggle() }) {
-                        HStack(spacing: CGFloat(15.0)) {
-                            Image(systemName: manager.showFavorites ? "checkmark.circle" : "circle")
-                                .foregroundColor(.accentColor)
-                            Text("Favorites")
-                            Spacer()
-                            Image(systemName: "heart.fill")
-                                .foregroundColor(.accentColor)
+                    Button(action: { manager.updateWorkoutLocation(for: .indoor) }) {
+                        HStack {
+                            Text("Indoor")
+                                .foregroundColor(.primary)
+                            
+                            if manager.workoutLocation == .indoor {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
                         }
-                        .foregroundColor(.primary)
+                    }
+                    Button(action: { manager.updateWorkoutLocation(for: .outdoor) }) {
+                        HStack {
+                            Text("Outdoor")
+                                .foregroundColor(.primary)
+                            
+                            if manager.workoutLocation == .outdoor {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
                     }
                 }
                 
                 Section {
+                    Toggle(isOn: $manager.showFavorites) {
+                        Label("Favorites", systemImage: "heart.fill")
+                    }
+                    
                     Toggle(isOn: $manager.showDateRange.animation()) {
                         Label("Date Range", systemImage: "calendar")
                     }
                     
                     if manager.showDateRange {
-                        DatePicker("Start", selection: $manager.startDate, displayedComponents: .date)
-                        DatePicker("End", selection: $manager.endDate, displayedComponents: .date)
+                        DatePicker("Start", selection: $manager.startDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker("End", selection: $manager.endDate, in: manager.dateRange, displayedComponents: .date)
                     }
-                }
-                
-                Section(header: header("Distance")) {
-                    HStack {
-                        HStack(spacing: CGFloat(15.0)) {
-                            Text("Min")
-                            TextField(distanceUnitString(), text: $manager.minDistance)
-                                .focused($isMinDistanceShowing)
-                                .keyboardType(.numberPad)
-                        }
-                        
-                        HStack(spacing: CGFloat(15.0)) {
-                            Text("Max")
-                            TextField(distanceUnitString(), text: $manager.maxDistance)
-                                .focused($isMaxDistanceShowing)
-                                .keyboardType(.numberPad)
+                    
+                    VStack(alignment: .leading) {
+                        Text("Distance")
+                            .foregroundColor(.secondary)
+                        HStack {
+                            HStack(spacing: CGFloat(15.0)) {
+                                Text("Min")
+                                TextField(distanceUnitString(), text: $manager.minDistance)
+                                    .focused($isMinDistanceShowing)
+                                    .keyboardType(.numberPad)
+                            }
+                            
+                            HStack(spacing: CGFloat(15.0)) {
+                                Text("Max")
+                                TextField(distanceUnitString(), text: $manager.maxDistance)
+                                    .focused($isMaxDistanceShowing)
+                                    .keyboardType(.numberPad)
+                            }
                         }
                     }
                 }

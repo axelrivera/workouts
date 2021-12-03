@@ -17,60 +17,150 @@ struct TagsView: View {
 }
 
 struct TagsContentView: View {
-    enum ActiveSheet: Identifiable {
+    enum ActiveSheet: Hashable, Identifiable {
+        case edit(viewModel: TagEditViewModel)
+        var id: Self { self }
+    }
+    
+    enum ActiveCover: Hashable, Identifiable {
         case settings
+        var id: Self { self }
+    }
+    
+    enum ActiveAlert: Identifiable {
+        case error
         var id: Int { hashValue }
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var manager: TagsDisplayManager
+    
+    @State private var currentSegment = TagPickerSegment.active
+    @State private var tags = [TagSummaryViewModel]()
+    
+    @State private var activeCover: ActiveCover?
     @State private var activeSheet: ActiveSheet?
-                
+    @State private var activeAlert: ActiveAlert?
+    
     var body: some View {
         NavigationView {
-            List {
-                Section(header: header()) {
-                    ForEach(manager.tags, id: \.id) { viewModel in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(tags, id: \.id) { viewModel in
                         NavigationLink(destination: TagWorkoutsView(viewModel: viewModel)) {
                             TagSummaryCell(viewModel: viewModel)
-                                .padding([.top, .bottom], CGFloat(5.0))
+                                .tag("\(currentSegment)::\(viewModel.id.uuidString)")
                         }
+                        .contextMenu {
+                            Button(action: { editTag(viewModel.id) }) {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                        }
+                        .buttonStyle(WorkoutPlainButtonStyle())
+                        Divider()
                     }
                 }
-                .textCase(nil)
             }
-            .transition(.move(edge: .top))
-            .onAppear(perform: { manager.reload() })
             .listStyle(PlainListStyle())
+            .onAppear { reload() }
+            .overlay(emptyView())
             .navigationTitle("Tags")
-            .environment(\.defaultMinListHeaderHeight, 20.0)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { activeSheet = .settings }) {
+                    Button(action: { activeCover = .settings }) {
                        Image(systemName: "gearshape")
                     }
                 }
+                
+                ToolbarItem(placement: .principal) {
+                    Picker("Tags", selection: $currentSegment.animation()) {
+                        ForEach(TagPickerSegment.allCases, id: \.self) { segment in
+                            Text(segment.title)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .fixedSize()
+                    .onChange(of: currentSegment, perform: { _ in reload() })
+                }
             }
-            .fullScreenCover(item: $activeSheet, onDismiss: { manager.reload() }) { item in
+            .fullScreenCover(item: $activeCover, onDismiss: { reload() }) { item in
                 switch item {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
                 }
             }
+            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
+                switch item {
+                case .edit(let viewModel):
+                    TagsAddView(viewModel: viewModel, isInsert: false)
+                        .environmentObject(TagManager(context: viewContext))
+                }
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .error:
+                    return Alert(
+                        title: Text("Tag Error"),
+                        message: Text("Error processing action."),
+                        dismissButton: Alert.Button.cancel(Text("Ok"))
+                    )
+                }
+            }
         }
     }
     
     @ViewBuilder
-    func header() -> some View {
-        if manager.showPicker {
-            Picker("Tags", selection: $manager.currentSegment) {
-                ForEach(TagPickerSegments.allCases, id: \.self) { segment in
-                    Text(segment.title)
+    func emptyView() -> some View {
+        if tags.isEmpty {
+            Text("No Tags")
+                .foregroundColor(.secondary)
+        }
+    }
+    
+}
+
+extension TagsContentView {
+    
+    func reload() {
+        let tags = manager.tags(forSegment: currentSegment)
+        self.tags = tags
+    }
+    
+    func editTag(_ tag: UUID) {
+        do {
+            let viewModel = try manager.viewModel(forTag: tag)
+            activeSheet = .edit(viewModel: viewModel)
+        } catch {
+            activeAlert = .error
+        }
+    }
+    
+    func archive(tag uuid: UUID) {
+        do {
+            try manager.archiveTag(for: uuid)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.linear) {
+                    reload()
                 }
             }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding([.top, .bottom], 5.0)
+        } catch {
+            activeAlert = .error
+        }
+    }
+    
+    func restore(tag uuid: UUID) {
+        do {
+            try manager.restoreTag(for: uuid)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.linear) {
+                    reload()
+                }
+            }
+        } catch {
+            activeAlert = .error
         }
     }
     

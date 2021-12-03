@@ -69,8 +69,8 @@ extension TagProvider {
 
 extension TagProvider {
     
-    func addTag(viewModel: TagEditViewModel) throws {
-        Tag.insert(into: context, viewModel: viewModel)
+    func addTag(viewModel: TagEditViewModel, position: Int?) throws {
+        Tag.insert(into: context, viewModel: viewModel, position: position)
     }
     
 }

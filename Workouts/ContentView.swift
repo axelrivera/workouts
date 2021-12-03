@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case home, history, stats, tags, goals
+        case workouts, log, stats, tags
         var id: String { rawValue }
     }
     
@@ -21,21 +21,27 @@ struct ContentView: View {
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
     
-    @State private var selected = Tabs.home
+    @State private var selected = Tabs.workouts
     
     var body: some View {
         TabView(selection: $selected) {
-            HomeView()
-                .tabItem { Label("Home", systemImage: "house") }
-                .tag(Tabs.home)
+//            HomeView()
+//                .tabItem { Label("Home", systemImage: "house") }
+//                .tag(Tabs.home)
+            
+            WorkoutsView()
+                .tabItem { Label("Workouts", systemImage: "flame") }
+                .tag(Tabs.workouts)
+            
+            WorkoutLogView()
+                .tabItem { Label("Training", systemImage: "calendar") }
+                .tag(Tabs.log)
             
             StatsView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
             
-            WorkoutsView()
-                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
-                .tag(Tabs.history)
+            
             
             TagsView()
                 .tabItem { Label("Tags", systemImage: "tag") }

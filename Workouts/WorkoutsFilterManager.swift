@@ -11,15 +11,34 @@ import CoreData
 import SwiftUI
 
 final class WorkoutsFilterManager: ObservableObject {
+    enum WorkoutLocation: Identifiable {
+        case `default`, indoor, outdoor
+        var id: Int { hashValue }
+        
+        var isActive: Bool {
+            self != .default
+        }
+    }
+    
     private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
     
     @Published var sports = Set<Sport>()
+    @Published var workoutLocation = WorkoutLocation.default
     
     @Published var showFavorites = false
     @Published var showDateRange = false
     
-    @Published var startDate: Date = Date()
+    @Published var dateRange: ClosedRange<Date>
+    
+    @Published var startDate: Date = Date() {
+        willSet {
+            if newValue > endDate {
+                
+            }
+        }
+    }
     @Published var endDate: Date = Date()
+    
     @Published var minDistance: String = ""
     @Published var maxDistance: String = ""
     
@@ -52,6 +71,13 @@ final class WorkoutsFilterManager: ObservableObject {
         self.metaProvider = MetadataProvider(context: context)
         self.tagProvider = TagProvider(context: context)
         self.workoutTagProvider = WorkoutTagProvider(context: context)
+        
+        // Dates
+        dateRange = dataProvider.dateRageForActiveWorkouts()
+        let interval = DateInterval.lastSixMonths()
+        startDate = interval.start
+        endDate = interval.end
+        
         addObservers()
     }
     
@@ -81,6 +107,7 @@ extension WorkoutsFilterManager {
     
     var isFilterActive: Bool {
         if sports.isPresent { return true }
+        if workoutLocation.isActive { return true }
         if showFavorites { return true }
         if showDateRange { return true }
         if let _ = minDistanceValue { return true }
@@ -90,11 +117,14 @@ extension WorkoutsFilterManager {
     }
     
     func reset() {
+        let interval = DateInterval.lastSixMonths()
+        
         sports = Set<Sport>()
+        workoutLocation = .default
         showFavorites = false
         showDateRange = false
-        startDate = Date()
-        endDate = Date()
+        startDate = interval.start
+        endDate = interval.end
         maxDistance = ""
         minDistance = ""
         tags = fetchTags()
@@ -199,6 +229,16 @@ extension WorkoutsFilterManager {
                 selectedTags.remove(tag)
             } else {
                 selectedTags.insert(tag)
+            }
+        }
+    }
+    
+    func updateWorkoutLocation(for location: WorkoutLocation) {
+        withAnimation {
+            if location == workoutLocation {
+                workoutLocation = .default
+            } else {
+                workoutLocation = location
             }
         }
     }
@@ -309,6 +349,10 @@ extension WorkoutsFilterManager {
     }
     
     func filterPredicate() -> NSPredicate {
+        if endDate < startDate {
+            endDate = startDate
+        }
+        
         var predicates = [Workout.notMarkedForLocalDeletionPredicate]
         
         var ids = Set<UUID>()
@@ -348,6 +392,10 @@ extension WorkoutsFilterManager {
         
         if sports.isPresent {
             predicates.append(Workout.predicateForSports(Array(sports)))
+        }
+        
+        if workoutLocation.isActive {
+            predicates.append(Workout.predicateForIndoor(workoutLocation == .indoor))
         }
         
         if let distance = minDistanceValue {

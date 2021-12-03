@@ -31,6 +31,7 @@ extension TagManagerError: LocalizedError {
 
 class TagManager: ObservableObject {
     private(set) var context: NSManagedObjectContext
+    private(set) var backgroundContext: NSManagedObjectContext
     private(set) var provider: TagProvider
     private(set) var workoutTagProvider: WorkoutTagProvider
     
@@ -43,6 +44,9 @@ class TagManager: ObservableObject {
         
     init(context: NSManagedObjectContext, sport: Sport? = nil, workoutIdentifier: UUID? = nil) {
         self.context = context
+        self.backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+        self.backgroundContext.parent = context
+        
         self.sport = sport
         self.workoutIdentifier = workoutIdentifier
         provider = TagProvider(context: context)
@@ -51,6 +55,14 @@ class TagManager: ObservableObject {
 }
 
 extension TagManager {
+    
+    func resetCache() {
+        WorkoutCache.shared.resetAll()
+        NotificationCenter.default.post(
+            name: .refreshWorkoutsFilter,
+            object: nil
+        )
+    }
     
     func reloadData() {
         tags = provider.activeTags(sport: sport)
@@ -63,7 +75,27 @@ extension TagManager {
         }
     }
     
-    func addTag(viewModel: TagEditViewModel) throws {
+    func updatePositions() {
+        backgroundContext.perform { [unowned self] in
+            for index in 0 ..< tags.count {
+                let tag = tags[index]
+                tag.position = NSNumber(value: index + 1)
+            }
+            
+            do {
+                try backgroundContext.save()
+                try context.save()
+                
+                DispatchQueue.main.async {
+                    resetCache()
+                }
+            } catch {
+                Log.debug("failed to update position for tags")
+            }
+        }
+    }
+    
+    func addTag(viewModel: TagEditViewModel, isInsert: Bool) throws {
         if viewModel.mode == .add && provider.numberOfTags(with: viewModel.name) > 0 {
             throw TagManagerError.notUnique
         }
@@ -71,10 +103,15 @@ extension TagManager {
         context.performAndWait {
             do {
                 if let tag = Tag.find(using: viewModel.uuid, in: context) {
-                    Tag.updateValues(for: tag, viewModel: viewModel, in: context)
+                    Tag.updateValues(for: tag, viewModel: viewModel, position: nil, in: context)
                 } else {
-                    let newTag = Tag.insert(into: context, viewModel: viewModel)
-                    self.tags.append(newTag)
+                    let position: Int = isInsert ? 0 : self.tags.count + 1
+                    let newTag = Tag.insert(into: context, viewModel: viewModel, position: position)
+                    if isInsert {
+                        self.tags.insert(newTag, at: 0)
+                    } else {
+                        self.tags.append(newTag)
+                    }
                 }
                 
                 try context.save()
@@ -82,6 +119,8 @@ extension TagManager {
                 Log.debug("failed to add tag: \(error.localizedDescription)")
             }
         }
+        
+        resetCache()
     }
     
     func archiveTag(for uuid: UUID) throws {
@@ -91,6 +130,8 @@ extension TagManager {
             tag.archiveTag()
             try context.save()
         }
+        
+        resetCache()
     }
     
     func restoreTag(for uuid: UUID) throws {
@@ -110,8 +151,11 @@ extension TagManager {
             }
             
             tag.restoreTag()
+            tag.position = NSNumber(value: tags.count + 1)
             try context.save()
         }
+        
+        resetCache()
     }
     
     func deleteTag(for uuid: UUID) throws {
@@ -121,6 +165,8 @@ extension TagManager {
             tag.deleteTag()
             try context.save()
         }
+        
+        resetCache()
     }
     
     func deleteTags(atOffsets offsets: IndexSet) throws {

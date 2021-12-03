@@ -23,6 +23,7 @@ struct WorkoutsContentView: View {
     }
     
     enum ActiveSheet: Hashable, Identifiable {
+        case add
         case filter
         case tagsToAll
         case tags(identifier: UUID, sport: Sport)
@@ -115,7 +116,12 @@ struct WorkoutsContentView: View {
                     }
                 }
                 
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button(action: { activeSheet = .add}) {
+                        Image(systemName: "plus")
+                    }
+                    .disabled(isAddDisabled)
+                    
                     Button(action: { activeSheet = .filter }) {
                         Image(systemName: filterImageName)
                     }
@@ -123,6 +129,9 @@ struct WorkoutsContentView: View {
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
+                case .add:
+                    ImportView()
+                        .environmentObject(ImportManager())
                 case .filter:
                     WorkoutsFilterView()
                         .environmentObject(filterManager)
@@ -210,18 +219,16 @@ struct WorkoutsContentView: View {
     @ViewBuilder
     func processOverlay() -> some View {
         if filterManager.isProcessingActions {
-            ProgressView()
-                .progressViewStyle(CircularProgressViewStyle())
-                .scaleEffect(x: 2.0, y: 2.0, anchor: .center)
-                .padding()
-                .frame(width: 100.0, height: 100, alignment: .center)
-                .background(Material.regularMaterial)
-                .cornerRadius(12.0)
+            HUDView()
         }
     }
 }
 
 extension WorkoutsContentView {
+    
+    var isAddDisabled: Bool {
+        !workoutManager.isAuthorized || workoutManager.showImportProgress
+    }
         
     func refreshFilter() {
         DispatchQueue.main.async {
@@ -248,9 +255,7 @@ struct WorkoutsView_Previews: PreviewProvider {
     }()
     
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
-    
-    @State static var sport: Sport?
-    
+        
     static var previews: some View {
         WorkoutsView()
             .environment(\.managedObjectContext, viewContext)

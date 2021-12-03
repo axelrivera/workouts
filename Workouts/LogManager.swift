@@ -236,7 +236,8 @@ extension LogManager {
         case .recentMonths, .recentYears:
             string = dateFilter.title
         case .byYear:
-            string = displayYear.isEmpty ? "\(Date().year())" : displayYear
+            let yearString = displayYear.isEmpty ? "\(Date().year())" : displayYear
+            string = String(format: "Year %@", yearString)
         }
         return string
     }

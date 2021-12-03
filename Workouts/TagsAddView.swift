@@ -36,6 +36,11 @@ struct TagsAddView: View {
         }
     }
     
+    enum ActiveSheet: Identifiable {
+        case paywall
+        var id: Int { hashValue }
+    }
+    
     enum ActiveAlert: Hashable, Identifiable {
         case error(message: String)
         case confirmation(confirmationType: ConfirmationType)
@@ -46,9 +51,13 @@ struct TagsAddView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @EnvironmentObject private var tagManager: TagManager
+    @EnvironmentObject private var purchaseManager: IAPManager
+    
+    @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
     
     @StateObject var viewModel: TagEditViewModel
+    var isInsert: Bool
     
     var isDisabled: Bool {
         viewModel.isArchived
@@ -69,7 +78,7 @@ struct TagsAddView: View {
                     
                     if !isDisabled {
                         Section {
-                            WorkoutColorPicker(selectedColor: $viewModel.color) { color in
+                            WorkoutColorPicker(colors: Color.tagColors, selectedColor: $viewModel.color) { color in
                                 
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -105,32 +114,50 @@ struct TagsAddView: View {
                     }
                     .disabled(viewModel.isArchived)
                 }
+                .disabled(!purchaseManager.isActive)
                 
                 if viewModel.mode == .edit {
-                    HStack {
-                        if viewModel.isArchived {
-                            Button(action: toggleRestore) {
-                                Label("Restore", systemImage: "gobackward")
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.all, CGFloat(5.0))
+                    VStack {
+                        if !purchaseManager.isActive {
+                            Button(action: { activeSheet = .paywall }) {
+                                VStack(spacing: CGFloat(5.0)) {
+                                    Label("Upgrade to Pro Now", systemImage: "lock.fill")
+                                    Text("Editing Tags requires Pro version")
+                                        .font(.subheadline)
+                                        .foregroundColor(.black.opacity(0.4))
+                                }
                             }
-                            .buttonStyle(.bordered)
-                        } else {
-                            Button(action: toggleArchive) {
-                                Label("Archive", systemImage: "archivebox")
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.all, CGFloat(5.0))
-                            }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(PaywallButtonStyle())
                         }
                         
-                        Button(action: toggleDelete) {
-                            Label("Delete", systemImage: "trash")
-                                .frame(maxWidth: .infinity)
-                                .padding(.all, CGFloat(5.0))
+                        HStack {
+                            if viewModel.isArchived {
+                                Button(action: toggleRestore) {
+                                    Label("Restore", systemImage: "arrow.uturn.backward")
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.all, CGFloat(5.0))
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(!purchaseManager.isActive)
+                            } else {
+                                Button(action: toggleArchive) {
+                                    Label("Archive", systemImage: "archivebox")
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.all, CGFloat(5.0))
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(!purchaseManager.isActive)
+                            }
+                            
+                            Button(action: toggleDelete) {
+                                Label("Delete", systemImage: "trash")
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.all, CGFloat(5.0))
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.red)
+                            .disabled(!purchaseManager.isActive)
                         }
-                        .buttonStyle(.bordered)
-                        .tint(.red)
                     }
                     .padding()
                 }
@@ -144,8 +171,15 @@ struct TagsAddView: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: addTag)
-                        .disabled(viewModel.isArchived)
+                    Button("Save", action: saveTag)
+                        .disabled(!purchaseManager.isActive || viewModel.isArchived)
+                }
+            }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .paywall:
+                    PaywallView()
+                        .environmentObject(purchaseManager)
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -181,9 +215,9 @@ struct TagsAddView: View {
 
 extension TagsAddView {
     
-    func addTag() {
+    func saveTag() {
         do {
-            try tagManager.addTag(viewModel: viewModel)
+            try tagManager.addTag(viewModel: viewModel, isInsert: isInsert)
             presentationMode.wrappedValue.dismiss()
         } catch {
             activeAlert = .error(message: error.localizedDescription)
@@ -243,6 +277,7 @@ extension TagsAddView {
 struct TagsAddView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var tagManager = TagManager(context: viewContext)
+    static var purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var viewModel: TagEditViewModel = {
         var model = TagEditViewModel(uuid: UUID(), mode: .edit)
@@ -251,8 +286,9 @@ struct TagsAddView_Previews: PreviewProvider {
     }()
     
     static var previews: some View {
-        TagsAddView(viewModel: viewModel)
+        TagsAddView(viewModel: viewModel, isInsert: false)
             .environmentObject(tagManager)
-            .preferredColorScheme(.light)
+            .environmentObject(purchaseManager)
+            .preferredColorScheme(.dark)
     }
 }

@@ -52,8 +52,17 @@ struct TagWorkoutsContentView: View {
             }
         }
         .onAppear { reload() }
+        .overlay(emptyView())
         .navigationTitle(manager.viewModel.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    @ViewBuilder
+    func emptyView() -> some View {
+        if workouts.isEmpty {
+            Text("No Workouts")
+                .foregroundColor(.secondary)
+        }
     }
 }
 
@@ -68,17 +77,11 @@ extension TagWorkoutsContentView {
 
 struct TagWorkoutsContentView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    
-    static var viewModel = TagSummaryViewModel(
-        id: UUID(),
-        name: "Sample Tag",
-        color: .red,
-        gearType: .none
-    )
+    static var tag = StorageProvider.sampleTag(name: "Sample Tag", color: .red, gear: .none, moc: viewContext)
     
     static var previews: some View {
         NavigationView {
-            TagWorkoutsView(viewModel: viewModel)
+            TagWorkoutsView(viewModel: tag.viewModel())
         }
         .environment(\.managedObjectContext, viewContext)
         .preferredColorScheme(.light)
