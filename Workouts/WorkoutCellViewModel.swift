@@ -31,6 +31,7 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     let calories: Double
     let elevation: Double
     let includesLocation: Bool
+    let isLocationPending: Bool
 }
 
 extension WorkoutCellViewModel {
@@ -89,7 +90,8 @@ extension Workout {
             avgPace: avgPace,
             calories: energyBurned,
             elevation: elevationAscended,
-            includesLocation: coordinates.isPresent
+            includesLocation: coordinates.isPresent,
+            isLocationPending: isLocationPending
         )
     }
     

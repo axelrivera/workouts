@@ -70,10 +70,7 @@ struct AdvancedSettingsView: View {
     
     @ViewBuilder func processOverlay() -> some View {
         if workoutManager.isProcessingRemoteData {
-            ProcessView(
-                title: "Processing Workouts",
-                value: $workoutManager.processingRemoteDataValue
-            )
+            HUDView()
         }
     }
 }

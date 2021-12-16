@@ -22,7 +22,7 @@ final class WorkoutsDownloader {
     private func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
-            predicate: WorkoutDataStore.shared.defaultActivitiesPredicate(),
+            predicate: HealthProvider.shared.defaultActivitiesPredicate(),
             anchor: anchor, limit: HKObjectQueryNoLimit) { [weak self] query, samples, deleted, newAnchor, error in
             guard let self = self else { return }
             self.healthStore.stop(query)

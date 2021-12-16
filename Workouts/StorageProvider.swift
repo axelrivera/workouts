@@ -153,16 +153,16 @@ class StorageProvider: ObservableObject {
         let result = StorageProvider(inMemory: true)
         let viewContext = result.persistentContainer.viewContext
         
-//        for _ in 0 ..< 10 {
-//            let _ = sampleWorkout(moc: viewContext)
-//            try! viewContext.save()
-//        }
-//        
-//        for index in 0 ..< 5 {
-//            let tag = sampleTag(name: "Sample Tag \(index)", color: .accentColor, gear: .none, moc: viewContext)
-//            tag.position = NSNumber(value: index)
-//            try! viewContext.save()
-//        }
+        for _ in 0 ..< 10 {
+            let _ = sampleWorkout(moc: viewContext)
+            try! viewContext.save()
+        }
+        
+        for index in 0 ..< 5 {
+            let tag = sampleTag(name: "Sample Tag \(index)", color: .accentColor, gear: .none, moc: viewContext)
+            tag.position = NSNumber(value: index)
+            try! viewContext.save()
+        }
         
         return result
     }()
@@ -183,7 +183,7 @@ class StorageProvider: ObservableObject {
         let duration = end.timeIntervalSince(start)
         let avgSpeed = 6.7056
         
-        let object = WorkoutProcessor.Object(
+        let object = WorkoutProcessor.InsertObject(
             identifier: UUID(),
             sport: sport ?? .cycling,
             indoor: false,
@@ -200,19 +200,16 @@ class StorageProvider: ObservableObject {
             avgCyclingCadence: 80.0,
             maxCyclingCadence: 90.0,
             energyBurned: 500.0,
-            avgHeartRate: 140.0,
-            maxHeartRate: 170.0,
-            coordinatesValue: "",
+            avgHeartRate: 0.0,
+            maxHeartRate: 0.0,
             elevationAscended: 0.0,
             elevationDescended: 0.0,
-            maxElevation: 0.0,
-            minElevation: 0.0,
             source: "Workouts Preview",
             device: nil
         )
         
         let workout = Workout(context: viewContext)
-        Workout.updateValues(for: workout, object: object, in: viewContext)
+        Workout.updateValues(for: workout, object: object, isLocationPending: false, in: viewContext)
         
         return workout
     }

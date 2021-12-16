@@ -160,7 +160,7 @@ final class TagsResetManager: ObservableObject {
             }
             
             DispatchQueue.main.async {
-                WorkoutCache.shared.resetAll()
+                WorkoutStorage.resetAll()
                 NotificationCenter.default.post(
                     name: .refreshWorkoutsFilter,
                     object: nil

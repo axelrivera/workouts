@@ -44,7 +44,7 @@ struct TagWorkoutsContentView: View {
                         tag: workout.workoutIdentifier,
                         selection: $selectedWorkout,
                         destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                            WorkoutMapCell(viewModel: workout.cellViewModel)
+                            WorkoutPlainCell(viewModel: workout.detailViewModel)
                     }
                     .buttonStyle(WorkoutPlainButtonStyle())
                     Divider()

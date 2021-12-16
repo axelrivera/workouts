@@ -57,7 +57,7 @@ class TagManager: ObservableObject {
 extension TagManager {
     
     func resetCache() {
-        WorkoutCache.shared.resetAll()
+        WorkoutStorage.resetAll()
         NotificationCenter.default.post(
             name: .refreshWorkoutsFilter,
             object: nil

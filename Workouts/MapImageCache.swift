@@ -45,6 +45,17 @@ final class MapImageCache {
         }
     }
     
+    func resetImage(at url: URL) {
+        lock.lock(); defer { lock.unlock() }
+        cache.removeObject(forKey: url.path as NSString)
+        do {
+            try FileManager.deleteLocalImage(at: url)
+        } catch {
+            Log.debug("failed to delete image: \(error.localizedDescription)")
+        }
+        
+    }
+    
     func resetAll() {
         lock.lock(); defer { lock.unlock() }
         cache.removeAllObjects()

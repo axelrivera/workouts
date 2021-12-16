@@ -97,6 +97,7 @@ extension DataProvider {
     
     enum DataError: Error {
         case missingPropertyDictionary
+        case failure
     }
     
     static func fetchRequest(for identifiers: [UUID]) -> NSFetchRequest<NSFetchRequestResult> {

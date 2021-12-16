@@ -62,7 +62,7 @@ struct WorkoutsContentView: View {
     }
     
     func isFavorite(_ identifier: UUID) -> Bool {
-        WorkoutCache.shared.isFavorite(identifier: identifier)
+        workoutManager.storage.isWorkoutFavorite(identifier)
     }
             
     var body: some View {
@@ -75,12 +75,12 @@ struct WorkoutsContentView: View {
                                 tag: workout.workoutIdentifier,
                                 selection: $selectedWorkout,
                                 destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                                    WorkoutMapCell(viewModel: workout.cellViewModel)
+                                    WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
                             }
-                            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.workoutCacheUpdated)) { notification in
-                                if let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID, remoteIdentifier == workout.workoutIdentifier {
+                                .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
+                                    guard let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
+                                          viewModel.id == workout.workoutIdentifier else { return }
                                     viewContext.refresh(workout, mergeChanges: true)
-                                }
                             }
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {
@@ -139,7 +139,7 @@ struct WorkoutsContentView: View {
                     WorkoutsTagSelectorView()
                 case .tags(let identifier, let sport):
                     TagSelectorView(tagManager: TagManager(context: viewContext, sport: sport, workoutIdentifier: identifier)) {
-                        WorkoutCache.shared.purgeObject(with: identifier)
+                        WorkoutStorage.resetTags(forID: identifier)
                     }
                 }
             }
@@ -166,44 +166,64 @@ struct WorkoutsContentView: View {
     
     @ViewBuilder
     func sectionHeader() -> some View {
-        if filterManager.isFilterActive {
-            VStack(alignment: .leading) {
-                HStack(spacing: 20.0) {
-                    Text("\(workouts.count.formatted()) Workouts")
-                    Spacer()
-                    Text(filterManager.distanceString)
-                        .foregroundColor(.distance)
-                    Text(filterManager.durationString)
-                        .foregroundColor(.time)
-                }
-                .font(.fixedBody)
-                .foregroundColor(.secondary)
-                
-                HStack {
-                    Button("Reset Filter", role: .destructive, action: resetFilter)
-                    Spacer()
-                    
-                    Menu {
-                        Button(action: filterManager.favoriteAll) {
-                            Label("Favorite All", systemImage: "heart")
-                        }
-                        
-                        Button(action: filterManager.unfavoriteAll) {
-                            Label("Unfavorite All", systemImage: "heart.slash")
-                        }
-                        
-                        Button(action: { activeAlert = .tagConfirmation }) {
-                            Label("Tag All", systemImage: "tag")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading {
+            VStack(spacing: 0) {
+                if workoutManager.showUpdatingRemoteLocationDataLoading {
+                    VStack(spacing: 5.0) {
+                        Text("Processing Location Data...")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                        Text("Some data may be missing until the process is finished.")
+                            .font(.footnote)
+                            .foregroundColor(.white.opacity(0.7))
+                            .multilineTextAlignment(.center)
                     }
+                    .padding([.top, .bottom], CGFloat(10.0))
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red.opacity(0.5))
+                    .background(.regularMaterial)
+                }
+                
+                if filterManager.isFilterActive {
+                    VStack(alignment: .leading) {
+                        HStack(spacing: 20.0) {
+                            Text("\(workouts.count.formatted()) Workouts")
+                            Spacer()
+                            Text(filterManager.distanceString)
+                                .foregroundColor(.distance)
+                            Text(filterManager.durationString)
+                                .foregroundColor(.time)
+                        }
+                        .font(.fixedBody)
+                        .foregroundColor(.secondary)
+                        
+                        HStack {
+                            Button("Reset Filter", role: .destructive, action: resetFilter)
+                            Spacer()
+                            
+                            Menu {
+                                Button(action: filterManager.favoriteAll) {
+                                    Label("Favorite All", systemImage: "heart")
+                                }
+                                
+                                Button(action: filterManager.unfavoriteAll) {
+                                    Label("Unfavorite All", systemImage: "heart.slash")
+                                }
+                                
+                                Button(action: { activeAlert = .tagConfirmation }) {
+                                    Label("Tag All", systemImage: "tag")
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis.circle")
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding([.leading, .trailing])
+                    .padding([.top, .bottom], CGFloat(10.0))
+                    .background(.regularMaterial)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding([.leading, .trailing])
-            .padding([.top, .bottom], CGFloat(10.0))
-            .background(.regularMaterial)
         }
     }
     
@@ -218,7 +238,7 @@ struct WorkoutsContentView: View {
     
     @ViewBuilder
     func processOverlay() -> some View {
-        if filterManager.isProcessingActions {
+        if workoutManager.showProcessingRemoteDataLoading || filterManager.isProcessingActions {
             HUDView()
         }
     }
@@ -227,7 +247,7 @@ struct WorkoutsContentView: View {
 extension WorkoutsContentView {
     
     var isAddDisabled: Bool {
-        !workoutManager.isAuthorized || workoutManager.showImportProgress
+        !workoutManager.isAuthorized || workoutManager.isProcessing
     }
         
     func refreshFilter() {

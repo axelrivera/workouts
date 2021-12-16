@@ -46,6 +46,7 @@ struct ContentView: View {
         .noWorkoutsOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
             viewContext.refreshAllObjects()
+            workoutManager.storage.resetAll()
         }
         .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
             reloadData()
@@ -61,7 +62,7 @@ struct ContentView: View {
             case .background:
                 Log.debug("background")
                 viewContext.batchDeleteObjects()
-                viewContext.refreshAllObjects()
+                viewContext.saveOrRollback()
             case .inactive:
                 Log.debug("inactive")
             @unknown default:

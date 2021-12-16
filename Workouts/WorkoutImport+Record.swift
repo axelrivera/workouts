@@ -12,6 +12,7 @@ import CoreLocation
 extension WorkoutImport {
     
     struct Record {
+        let date: Date
         let timestamp: Value
         let position: Value
         let altitude: Value
@@ -22,7 +23,10 @@ extension WorkoutImport {
         let fractionalCadence: Value
         let temperature: Value
         
-        init(message: FitMessage) {
+        init?(message: FitMessage) {
+            guard let date = message.interpretedField(key: "timestamp")?.time else { return nil }
+            
+            self.date = date
             timestamp = Value(valueType: .date, field: message.interpretedField(key: "timestamp"))
             position = Value(valueType: .location, field: message.interpretedField(key: "position"))
             altitude = Value(valueType: .altitude, field: message.interpretedField(key: "altitude"))

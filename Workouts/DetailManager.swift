@@ -266,7 +266,7 @@ extension DetailManager {
     }
     
     func reloadTags() {
-        WorkoutCache.shared.purgeObject(with: detail.id)
+        WorkoutStorage.resetTags(forID: detail.id)
         
         let tags = fetchTags()
         DispatchQueue.main.async {
@@ -288,7 +288,7 @@ extension DetailManager {
             isFavorite = true
         }
         
-        WorkoutCache.shared.set(isFavorite: isFavorite, identifier: identifier)
+        WorkoutStorage.updateFavorite(isFavorite, forID: identifier)
         DispatchQueue.main.async {
             withAnimation {
                 self.isFavorite = isFavorite

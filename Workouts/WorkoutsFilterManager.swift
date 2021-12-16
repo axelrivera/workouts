@@ -155,11 +155,11 @@ extension WorkoutsFilterManager {
     }
     
     var distanceString: String {
-        formattedDistanceString(for: distance, zeroPadding: true)
+        formattedDistanceStringInTags(for: distance)
     }
     
     var durationString: String {
-        formattedHoursMinutesPrettyString(for: duration)
+        formattedHoursMinutesPrettyStringInTags(for: duration)
     }
     
 }
@@ -260,7 +260,7 @@ extension WorkoutsFilterManager {
             ids.forEach { uuid in
                 do {
                     try self.metaProvider.favoriteWorkout(for: uuid)
-                    WorkoutCache.shared.set(isFavorite: true, identifier: uuid)
+                    WorkoutStorage.updateFavorite(true, forID: uuid)
                 } catch {
                     Log.debug("failed to add favorite: \(error.localizedDescription)")
                 }
@@ -284,7 +284,7 @@ extension WorkoutsFilterManager {
             ids.forEach { uuid in
                 do {
                     try self.metaProvider.unfavoriteWorkout(for: uuid)
-                    WorkoutCache.shared.set(isFavorite: false, identifier: uuid)
+                    WorkoutStorage.updateFavorite(false, forID: uuid)
                 } catch {
                     Log.debug("failed to remove favorite: \(error.localizedDescription)")
                 }
@@ -331,7 +331,7 @@ extension WorkoutsFilterManager {
             }
             
             DispatchQueue.main.async {
-                WorkoutCache.shared.resetAll()
+                WorkoutStorage.resetAll()
                 self.isProcessingActions = false
                 NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
             }

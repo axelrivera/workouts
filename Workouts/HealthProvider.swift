@@ -29,6 +29,8 @@ struct HealthProvider {
     
 }
 
+// MARK: - Predicates
+
 // MARK: - Async/Await Methods
 
 extension HealthProvider {

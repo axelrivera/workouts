@@ -114,7 +114,6 @@ class WorkoutImport: ObservableObject, Identifiable {
         minAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "min_altitude"))
         maxAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "max_altitude"))
         
-        
         totalDistance = .init(valueType: .distance, field: session.interpretedField(key: "total_distance"))
         avgSpeed = .init(valueType: .speed, field: session.interpretedField(key: "avg_speed"))
         maxSpeed = .init(valueType: .speed, field: session.interpretedField(key: "max_speed"))
@@ -133,7 +132,7 @@ class WorkoutImport: ObservableObject, Identifiable {
         maxTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "max_temperature"))
         
         // Records
-        records = fit.messages(forMessageType: .record).map { .init(message: $0) }
+        records = fit.messages(forMessageType: .record).compactMap { .init(message: $0) }
         
         // Events
         events = fit.messages(forMessageType: .event).compactMap { (message) -> Event? in
@@ -143,6 +142,21 @@ class WorkoutImport: ObservableObject, Identifiable {
 }
 
 extension WorkoutImport {
+    
+    var normalizedRecords: [Record] {
+        var dictionary = [Int: Record]()
+
+        for record in records {
+            let key = keyForTimestamp(record.date)
+            dictionary[key] = record
+        }
+
+        return dictionary.sorted(by: {$0.value.date < $1.value.date }).map({ $0.value })
+    }
+    
+    func keyForTimestamp(_ timestamp: Date) -> Int {
+        Int(truncating: timestamp.timeIntervalSince1970 as NSNumber)
+    }
     
     var startDate: Date? {
         start.dateValue
