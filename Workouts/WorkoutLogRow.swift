@@ -172,12 +172,22 @@ extension WorkoutLogItem {
     
     @ViewBuilder
     func bubbleOverlay() -> some View {
-        if day.hasActivities {
-            Text(text)
-                .font(.system(size: 10))
-                .foregroundColor(.white)
-                .minimumScaleFactor(0.9)
-                .padding(3)
+        if displayType == .distance {
+            if day.distance > 0 {
+                Text(text)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.9)
+                    .padding(3)
+            }
+        } else {
+            if day.hasActivities {
+                Text(text)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.9)
+                    .padding(3)
+            }
         }
     }
     
@@ -205,6 +215,10 @@ extension WorkoutLogItem {
     
     var scaleFactor: CGFloat {
         guard day.hasActivities else { return 0.1 }
+        
+        if displayType == .distance && day.distance == 0 {
+            return 0.3
+        }
         
         let preferredSport = day.distancePreferredSport
         switch displayType {

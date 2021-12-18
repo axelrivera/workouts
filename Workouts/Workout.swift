@@ -323,6 +323,27 @@ extension Workout {
         }
     }
     
+    static func availableSports(in context: NSManagedObjectContext) -> [Sport] {
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = notMarkedForLocalDeletionPredicate
+            request.resultType = .dictionaryResultType
+            request.returnsObjectsAsFaults = false
+            request.returnsDistinctResults = true
+            request.propertiesToFetch = [SportKey]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> Sport? in
+                    let string = dictionary[SportKey] as? String
+                    return Sport(string: string ?? "")
+                }.sorted(by: { $0.activityName < $1.activityName })
+            } catch {
+                return []
+            }
+        }
+    }
+    
 }
 
 extension Workout {

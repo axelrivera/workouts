@@ -29,7 +29,7 @@ struct TagWorkoutsContentView: View {
         
     init(manager: TagWorkoutsManager) {
         _manager = StateObject(wrappedValue: manager)
-        fetchRequest = TagWorkoutsManager.fetchRequest()
+        fetchRequest = TagWorkoutsManager.fetchRequest(predicate: manager.predicate())
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
@@ -37,20 +37,15 @@ struct TagWorkoutsContentView: View {
     }
             
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 0.0) {
-                ForEach(workouts, id: \.objectID) { workout in
-                    NavigationLink(
-                        tag: workout.workoutIdentifier,
-                        selection: $selectedWorkout,
-                        destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                            WorkoutPlainCell(viewModel: workout.detailViewModel)
-                    }
-                    .buttonStyle(WorkoutPlainButtonStyle())
-                    Divider()
-                }
+        List(workouts, id: \.objectID) { workout in
+            NavigationLink(
+                tag: workout.workoutIdentifier,
+                selection: $selectedWorkout,
+                destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                    WorkoutPlainCell(viewModel: workout.detailViewModel)
             }
         }
+        .listStyle(PlainListStyle())
         .onAppear { reload() }
         .overlay(emptyView())
         .navigationTitle(manager.viewModel.name)

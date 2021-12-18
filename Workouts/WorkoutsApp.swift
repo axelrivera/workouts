@@ -18,7 +18,7 @@ let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
 
 @main
 struct WorkoutsApp: App {
-    
+    let remoteData = CloudKitRemote()
     let purchaseManager = IAPManager()
     // Instanciate LogManager and StatsManager first because they have observers that may depend from other singletons
     let logManager: LogManager
@@ -32,6 +32,7 @@ struct WorkoutsApp: App {
     
     init() {
         let context = storageProvider.persistentContainer.viewContext
+        remoteData.load(context: context)
         workoutDataStore = WorkoutDataStore.shared
         logManager = LogManager(context: context)
         statsManager = StatsManager(context: context)

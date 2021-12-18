@@ -14,6 +14,7 @@ private let DeletedKey = "deletedDate"
 private let FavoriteKey = "isFavorite"
 private let UUIDKey = "uuid"
 private let GearTypeKey = "gearTypeValue"
+private let DefaultKey = "isDefault"
 
 extension Tag {
     enum GearType: String, Identifiable, CaseIterable {
@@ -127,6 +128,25 @@ extension Tag {
         }
     }
     
+    static func defaultTags(sport: Sport, in context: NSManagedObjectContext) -> [UUID] {
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: Tag.entityName)
+            request.predicate = defaultTagsPredicate(sport: sport)
+            request.resultType = .dictionaryResultType
+            request.returnsObjectsAsFaults = false
+            request.propertiesToFetch = ["uuid"]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> UUID? in
+                    return dictionary["uuid"] as? UUID
+                }
+            } catch {
+                return []
+            }
+        }
+    }
+    
     @discardableResult
     static func insert(into context: NSManagedObjectContext, viewModel: TagEditViewModel, position: Int?) -> Tag {
         context.performAndWait {
@@ -182,6 +202,14 @@ extension Tag {
         if gearTypes.isPresent {
             predicates.append(gearTypesPredicate(gearTypes))
         }
+        
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    static func defaultTagsPredicate(sport: Sport) -> NSPredicate {
+        var predicates = [notArchivedPredicate(), notDeletedPredicate()]
+        predicates.append(NSPredicate(format: "%K == %@", DefaultKey, NSNumber(booleanLiteral: true)))
+        predicates.append(gearTypesPredicate(sport.defaultGearTypes))
         
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }

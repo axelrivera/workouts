@@ -254,13 +254,15 @@ extension WorkoutsContentView {
         DispatchQueue.main.async {
             withAnimation {
                 filterManager.updateTotals()
+                workouts.nsPredicate = filterManager.filterPredicate()
             }
-            workouts.nsPredicate = filterManager.filterPredicate()
         }
     }
     
     func resetFilter() {
-        filterManager.reset()
+        withAnimation {
+            filterManager.reset()
+        }
         refreshFilter()
     }
     

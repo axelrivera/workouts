@@ -75,6 +75,40 @@ extension TagProvider {
     
 }
 
+// MARK: - Initial Values
+
+extension TagProvider {
+    
+    func createInitialTagsIfNeeded() {
+        if AppSettings.initialTagsReady {
+            Log.debug("skip initial tag creation")
+            return
+        }
+        
+        let viewModels = [
+            Tag.addViewModel(name: "My Bike", gearType: .bike, color: .accentColor),
+            Tag.addViewModel(name: "My Shoes", gearType: .shoes, color: .ruby),
+            Tag.addViewModel(name: "Workout", gearType: .none, color: .amber),
+            Tag.addViewModel(name: "Commute", gearType: .none, color: .citrine),
+            Tag.addViewModel(name: "Long Run", gearType: .shoes, color: .emerald)
+        ]
+        
+        viewModels.enumerated().forEach { (index, viewModel) in
+            try? addTag(viewModel: viewModel, position: index)
+        }
+        
+        do {
+            try context.save()
+            AppSettings.initialTagsReady = true
+            Log.debug("created initial tags")
+        } catch {
+            Log.debug("failed to save tags")
+        }
+    }
+    
+}
+
+
 // MARK: - Requests
 
 extension TagProvider {

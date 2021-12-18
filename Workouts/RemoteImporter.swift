@@ -45,6 +45,11 @@ class RemoteImporter {
                 Log.debug("inserting workout: \(remoteWorkout.uuid)")
                 let object = await WorkoutProcessor.insertObject(for: remoteWorkout)
                 Workout.insert(into: context, object: object)
+                
+                let tags = Tag.defaultTags(sport: object.sport, in: context)
+                tags.forEach { tag in
+                    WorkoutTag.insert(into: context, workout: object.identifier, tag: tag)
+                }
             }
             
             DispatchQueue.main.async {

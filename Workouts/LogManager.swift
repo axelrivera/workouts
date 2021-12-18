@@ -46,6 +46,8 @@ extension LogManager {
 
 class LogManager: ObservableObject {
     typealias DisplayType = LogDisplayType
+    
+    @Published var availableSports = [Sport]()
         
     // Filter Related
     @Published var sports = [Sport]() {
@@ -196,6 +198,7 @@ extension LogManager {
             return
         }
         
+        let availableSports = Workout.availableSports(in: context)
         let startYear = date.year()
         let endYear = Date().year()
         
@@ -203,6 +206,7 @@ extension LogManager {
         let displayYear = filters.first ?? ""
         
         DispatchQueue.main.async {
+            self.availableSports = availableSports
             self.filterYears = filters
             self.displayYear = displayYear
         }

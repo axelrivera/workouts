@@ -125,8 +125,7 @@ extension DetailManager {
             let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
             let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
-            
-            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
+            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(duration: detail.movingTime, avgCadence: avgCadence)
             
             let paceValues: [ChartInterval]
             let bestPace: Double

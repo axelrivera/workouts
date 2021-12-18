@@ -21,6 +21,7 @@ class StatsManager: ObservableObject {
     
     private let dataProvider: DataProvider
         
+    @Published var availableSports = [Sport]()
     @Published var weekStats: StatsSummary
     @Published var monthStats: StatsSummary
     @Published var yearStats: StatsSummary
@@ -67,6 +68,8 @@ extension StatsManager {
         dataProvider.context.perform { [weak self] in
             guard let self = self else { return }
             
+            let availableSports = Workout.availableSports(in: self.dataProvider.context)
+            
             // Screenshot Values
             
 //            let weekly = StatsSummary.weeklySample()
@@ -112,6 +115,7 @@ extension StatsManager {
             let all = self.fetchSummary(for: .allTime)
             
             DispatchQueue.main.async {
+                self.availableSports = availableSports
                 self.weekStats = weekly
                 self.monthStats = monthly
                 self.yearStats = yearly

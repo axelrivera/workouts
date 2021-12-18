@@ -130,15 +130,15 @@ struct StatsView: View {
                         
                         Divider()
                          
-                        ForEach(Sport.supportedSports) { sport in
+                        ForEach(statsManager.availableSports) { sport in
                             Button(action: {
                                 statsManager.sport = sport
                             }, label: {
-                                Text(sport.title)
+                                Text(sport.activityName)
                             })
                         }
                     } label: {
-                        Text(statsManager.sport?.title ?? "All Workouts")
+                        Text(statsManager.sport?.activityName ?? "All Workouts")
                     }
                 }
             }

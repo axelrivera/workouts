@@ -99,6 +99,7 @@ struct WorkoutLogView: View {
                 switch item {
                 case .filter:
                     LogFilterView(
+                        availableSports: $manager.availableSports,
                         dateFilter: $manager.dateFilter,
                         filterYear: $manager.displayYear,
                         years: $manager.filterYears,

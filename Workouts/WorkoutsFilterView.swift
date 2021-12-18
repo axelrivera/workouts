@@ -19,7 +19,7 @@ struct WorkoutsFilterView: View {
         NavigationView {
             Form {
                 Section(header: header("Workout")) {
-                    ForEach(Sport.supportedSports) { sport in
+                    ForEach(manager.supportedSports) { sport in
                         Button(action: { manager.togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
                                 Image(systemName: manager.isSportSelected(sport) ? "checkmark.circle.fill" : "circle")

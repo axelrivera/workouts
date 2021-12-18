@@ -22,6 +22,7 @@ final class WorkoutsFilterManager: ObservableObject {
     
     private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
     
+    @Published var supportedSports = [Sport]()
     @Published var sports = Set<Sport>()
     @Published var workoutLocation = WorkoutLocation.default
     
@@ -71,6 +72,8 @@ final class WorkoutsFilterManager: ObservableObject {
         self.metaProvider = MetadataProvider(context: context)
         self.tagProvider = TagProvider(context: context)
         self.workoutTagProvider = WorkoutTagProvider(context: context)
+        
+        self.supportedSports = Workout.availableSports(in: context)
         
         // Dates
         dateRange = dataProvider.dateRageForActiveWorkouts()

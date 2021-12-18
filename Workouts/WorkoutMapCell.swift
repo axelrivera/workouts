@@ -108,20 +108,24 @@ struct WorkoutMapCell: View {
     @ViewBuilder
     func statsView() -> some View {
         HStack {
-            Text(manager.viewModel.distanceString)
-                .font(.fixedBody)
-                .foregroundColor(.distance)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if manager.viewModel.distance > 0 {
+                Text(manager.viewModel.distanceString)
+                    .font(.fixedBody)
+                    .foregroundColor(.distance)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             
             Text(manager.viewModel.durationString)
                 .font(.fixedBody)
                 .foregroundColor(.time)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            Text(manager.viewModel.speedOrPaceString)
-                .font(.fixedBody)
-                .foregroundColor(manager.viewModel.speedOrPaceColor)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if manager.viewModel.sport.supportsSplits {
+                Text(manager.viewModel.speedOrPaceString)
+                    .font(.fixedBody)
+                    .foregroundColor(manager.viewModel.speedOrPaceColor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             
             if manager.viewModel.sport == .cycling && !manager.viewModel.indoor {
                 Text(manager.viewModel.elevationString)

@@ -38,6 +38,10 @@ struct AppSettings {
         static let heartRateZones = "arn_heart_rate_zones"
         static let workoutsQueryAnchor = "arn_workouts_query_anchor"
     }
+    
+    struct RemoteKeys {
+        static let initialTagsReady = "arn_app_initial_tags_ready"
+    }
 
     static func synchronize() {
         UserDefaults.standard.synchronize()
@@ -50,7 +54,7 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
-    
+        
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int
     
@@ -107,6 +111,24 @@ struct AppSettings {
             } else {
                 setValue(nil, for: Keys.workoutsQueryAnchor)
             }
+        }
+    }
+    
+    static var initialTagsReady: Bool {
+        get {
+            if CloudKitRemote.isAvailable {
+                if let value = NSUbiquitousKeyValueStore.default.object(forKey: RemoteKeys.initialTagsReady) as? Bool {
+                    return value
+                } else {
+                    return objectForKey(RemoteKeys.initialTagsReady) as? Bool ?? false
+                }
+            } else {
+                return objectForKey(RemoteKeys.initialTagsReady) as? Bool ?? false
+            }
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: RemoteKeys.initialTagsReady)
+            setValue(newValue, for: RemoteKeys.initialTagsReady)
         }
     }
     

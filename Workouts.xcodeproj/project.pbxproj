@@ -79,6 +79,9 @@
 		16124C0A26E302EB00A21709 /* WorkoutColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16124C0826E302EB00A21709 /* WorkoutColorPicker.swift */; };
 		16195A19274B387600EFE81A /* TagSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16195A18274B387600EFE81A /* TagSelector.swift */; };
 		16195A1A274B387600EFE81A /* TagSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16195A18274B387600EFE81A /* TagSelector.swift */; };
+		161AF5E3276B646600148C63 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16CA62802720518B002A2D92 /* CloudKit.framework */; };
+		161AF5E5276B6AA900148C63 /* CloudKitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */; };
+		161AF5E6276B6AA900148C63 /* CloudKitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */; };
 		161F20CC26CB3A9300A3CF13 /* MapImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */; };
 		161F20CD26CB3A9300A3CF13 /* MapImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */; };
 		161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FDB6525B34D4B00929433 /* WorkoutsApp.swift */; };
@@ -466,6 +469,7 @@
 		16124C0526E2BCCE00A21709 /* NotificationCenter+Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationCenter+Publisher.swift"; sourceTree = "<group>"; };
 		16124C0826E302EB00A21709 /* WorkoutColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutColorPicker.swift; sourceTree = "<group>"; };
 		16195A18274B387600EFE81A /* TagSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelector.swift; sourceTree = "<group>"; };
+		161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitRemote.swift; sourceTree = "<group>"; };
 		161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapImageCache.swift; sourceTree = "<group>"; };
 		161FDB6225B34D4B00929433 /* Better Workouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Better Workouts.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		161FDB6525B34D4B00929433 /* WorkoutsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsApp.swift; sourceTree = "<group>"; };
@@ -677,6 +681,7 @@
 				16FB84C425F699EB00CF22ED /* Charts in Frameworks */,
 				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
+				161AF5E3276B646600148C63 /* CloudKit.framework in Frameworks */,
 				1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */,
 				167D2EEA2611103200A4A299 /* Purchases in Frameworks */,
 			);
@@ -894,6 +899,7 @@
 				161FDB6525B34D4B00929433 /* WorkoutsApp.swift */,
 				1645B91A25B350BB00B04478 /* AppData.swift */,
 				16E8321C25D2096100382545 /* AppSettings.swift */,
+				161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */,
 			);
 			name = "App + Constants";
 			sourceTree = "<group>";
@@ -1540,6 +1546,7 @@
 				16FB84F625F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CF273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
 				16208BFD26D4253600693530 /* View+Snapshot.swift in Sources */,
+				161AF5E6276B6AA900148C63 /* CloudKitRemote.swift in Sources */,
 				1624055F2739F3BA00FC4864 /* WorkoutCache.swift in Sources */,
 				16E588DC2665420600CD0273 /* DataProvider.swift in Sources */,
 				16A17D0126039B9700273321 /* Quantity.swift in Sources */,
@@ -1741,6 +1748,7 @@
 				16FB84F525F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CE273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
 				16208BFC26D4253600693530 /* View+Snapshot.swift in Sources */,
+				161AF5E5276B6AA900148C63 /* CloudKitRemote.swift in Sources */,
 				1624055E2739F3BA00FC4864 /* WorkoutCache.swift in Sources */,
 				16E588DB2665420600CD0273 /* DataProvider.swift in Sources */,
 				16A17D0026039B9700273321 /* Quantity.swift in Sources */,

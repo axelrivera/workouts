@@ -100,7 +100,7 @@ class WorkoutImport: ObservableObject, Identifiable {
         
         self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
-        status = self.sport.isSupported ? .new : .notSupported
+        status = self.sport.isImportSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
                 
         timestamp = .init(valueType: .date, field: session.interpretedField(key: "timestamp"))
@@ -300,7 +300,7 @@ extension WorkoutImport {
     
     static func isFileSupported(fit: FitFile) -> Bool {
         guard let field = fit.messages(forMessageType: .sport).first?.interpretedField(key: "sport") else { return false }
-        return Sport(string: field.name ?? "").isSupported
+        return Sport(string: field.name ?? "").isImportSupported
     }
     
 }

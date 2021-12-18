@@ -62,7 +62,6 @@ struct TagsContentView: View {
                     }
                 }
             }
-            .listStyle(PlainListStyle())
             .onAppear { reload() }
             .overlay(emptyView())
             .navigationTitle("Tags")

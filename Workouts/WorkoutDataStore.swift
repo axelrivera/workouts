@@ -48,7 +48,7 @@ extension WorkoutDataStore {
             fatalError("missing dates")
         }
         
-        guard workoutImport.sport.isSupported else {
+        guard workoutImport.sport.isImportSupported else {
             completionHandler(.failure(.sportNotSupported))
             return
         }

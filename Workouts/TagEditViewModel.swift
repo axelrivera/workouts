@@ -48,6 +48,15 @@ class TagEditViewModel: ObservableObject, Hashable, Identifiable {
 
 extension Tag {
     
+    static func addViewModel(name: String, gearType: Tag.GearType, color: Color) -> TagEditViewModel{
+        let viewModel = addViewModel(sport: nil)
+        viewModel.name = name
+        viewModel.color = color
+        viewModel.gearType = gearType
+        
+        return viewModel
+    }
+    
     static func addViewModel(sport: Sport? = nil) -> TagEditViewModel {
         TagEditViewModel(uuid: UUID(), mode: .add, sport: sport)
     }

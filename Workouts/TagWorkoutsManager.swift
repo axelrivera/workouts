@@ -39,7 +39,7 @@ extension TagWorkoutsManager {
         let request = Workout.defaultFetchRequest()
         request.predicate = predicate ?? Workout.predicateForIdentifiers([])
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
-        return FetchRequest(fetchRequest: request, animation: .linear)
+        return FetchRequest(fetchRequest: request, animation: .none)
     }
     
     static func fetchRequestPredicate(using uuids: [UUID]) -> NSPredicate {

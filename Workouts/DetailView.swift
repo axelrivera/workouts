@@ -63,25 +63,18 @@ struct DetailView: View {
             }
                         
             HStack {
-                Button(action: { activeSheet = .analysis }) {
-                    Label("Analysis", systemImage: "flame")
-                        .padding([.top, .bottom], CGFloat(10.0))
-                        .frame(maxWidth: .infinity)
+                analysisButton()
+                if workout.sport.supportsSplits {
+                    splitsButton()
                 }
-                .buttonStyle(.bordered)
-                
-                Button(action: { activeSheet = .laps }) {
-                    Label("Splits", systemImage: "arrow.2.squarepath")
-                        .padding([.top, .bottom], CGFloat(10.0))
-                        .frame(maxWidth: .infinity)
-                    
-                }
-                .buttonStyle(.bordered)
             }
             
-            ForEach(RowType.allCases) { rowType in
-                viewForRow(rowType)
+            row1View()
+            if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
+                row2View()
             }
+            row3View()
+            row4View()
             
             VStack(alignment: .leading) {
                 HStack {
@@ -195,34 +188,71 @@ struct DetailView: View {
 extension DetailView {
     
     @ViewBuilder
-    func viewForRow(_ rowType: RowType) -> some View {
+    func analysisButton() -> some View {
+        Button(action: { activeSheet = .analysis }) {
+            Label("Analysis", systemImage: "flame")
+                .padding([.top, .bottom], CGFloat(10.0))
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+    }
+    
+    @ViewBuilder
+    func splitsButton() -> some View {
+        Button(action: { activeSheet = .laps }) {
+            Label("Splits", systemImage: "arrow.2.squarepath")
+                .padding([.top, .bottom], CGFloat(10.0))
+                .frame(maxWidth: .infinity)
+            
+        }
+        .buttonStyle(.bordered)
+    }
+    
+    @ViewBuilder
+    func row1View() -> some View {
         HStack {
-            switch rowType {
-            case .row1:
+            if workout.distance > 0 {
                 DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
-                DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
-            case .row2:
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
-                } else if sport.isWalkingOrRunning {
-                    DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
-                }
-                
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
-                }
-            case .row3:
-                DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
-                DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
-            case .row4:
-                DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+            }
+            DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
+        }
+    }
+    
+    @ViewBuilder
+    func row2View() -> some View {
+        HStack {
+            if sport.isCycling {
+                DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
+            } else if sport.isWalkingOrRunning {
+                DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+            }
+            
+            if sport.isCycling {
+                DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func row3View() -> some View {
+        HStack {
+            DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
+            DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
+        }
+    }
+    
+    @ViewBuilder
+    func row4View() -> some View {
+        HStack {
+            DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+            if workout.coordinates.isPresent {
                 DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
         }
     }
     
     var distanceString: String {
-        formattedDistanceString(for: workout.distance)
+        formattedDistanceString(for: workout.distance, zeroPadding: true)
     }
     
     var timeLabel: String {
