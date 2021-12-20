@@ -100,7 +100,7 @@ class WorkoutImport: ObservableObject, Identifiable {
         
         self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
-        status = self.sport.isSupported ? .new : .notSupported
+        status = self.sport.isImportSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
                 
         timestamp = .init(valueType: .date, field: session.interpretedField(key: "timestamp"))
@@ -113,7 +113,6 @@ class WorkoutImport: ObservableObject, Identifiable {
         totalDescent = .init(valueType: .altitude, field: session.interpretedField(key: "total_descent"))
         minAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "min_altitude"))
         maxAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "max_altitude"))
-        
         
         totalDistance = .init(valueType: .distance, field: session.interpretedField(key: "total_distance"))
         avgSpeed = .init(valueType: .speed, field: session.interpretedField(key: "avg_speed"))
@@ -133,7 +132,7 @@ class WorkoutImport: ObservableObject, Identifiable {
         maxTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "max_temperature"))
         
         // Records
-        records = fit.messages(forMessageType: .record).map { .init(message: $0) }
+        records = fit.messages(forMessageType: .record).compactMap { .init(message: $0) }
         
         // Events
         events = fit.messages(forMessageType: .event).compactMap { (message) -> Event? in
@@ -143,6 +142,21 @@ class WorkoutImport: ObservableObject, Identifiable {
 }
 
 extension WorkoutImport {
+    
+    var normalizedRecords: [Record] {
+        var dictionary = [Int: Record]()
+
+        for record in records {
+            let key = keyForTimestamp(record.date)
+            dictionary[key] = record
+        }
+
+        return dictionary.sorted(by: {$0.value.date < $1.value.date }).map({ $0.value })
+    }
+    
+    func keyForTimestamp(_ timestamp: Date) -> Int {
+        Int(truncating: timestamp.timeIntervalSince1970 as NSNumber)
+    }
     
     var startDate: Date? {
         start.dateValue
@@ -286,7 +300,7 @@ extension WorkoutImport {
     
     static func isFileSupported(fit: FitFile) -> Bool {
         guard let field = fit.messages(forMessageType: .sport).first?.interpretedField(key: "sport") else { return false }
-        return Sport(string: field.name ?? "").isSupported
+        return Sport(string: field.name ?? "").isImportSupported
     }
     
 }

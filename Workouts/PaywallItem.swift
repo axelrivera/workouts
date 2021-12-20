@@ -18,14 +18,23 @@ struct PaywallItem: Identifiable, Hashable {
 extension PaywallItem {
     
     static func items() -> [PaywallItem] {
-        [workoutLog, laps, heartRate, progress, files, more]
+        [tags, workoutLog, laps, heartRate, progress, files, more]
+    }
+    
+    static var tags: PaywallItem {
+        PaywallItem(
+            imageName: "tag",
+            imageColor: .green,
+            title: "Tag Management",
+            description: "Add tags to let you keep track of detailed metrics for bikes, shoes, workout types and more."
+        )
     }
     
     static var workoutLog: PaywallItem {
         PaywallItem(
             imageName: "calendar",
             imageColor: .accentColor,
-            title: "Workout Log",
+            title: "Activity Log",
             description: "Compare your weekly workouts relative to each other by distance or time."
         )
     }

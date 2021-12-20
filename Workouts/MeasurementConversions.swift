@@ -55,6 +55,14 @@ func kilometersToMeters(for kilometers: Double) -> Double {
     return measurement.converted(to: .meters).value
 }
 
+func localizedDistanceToMeters(for distance: Double) -> Double {
+    if Locale.isMetric() {
+        return kilometersToMeters(for: distance)
+    } else {
+        return milesToMeters(for: distance)
+    }
+}
+
 func metersToMiles(for meters: Double) -> Double {
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     return measurement.converted(to: .miles).value

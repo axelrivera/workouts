@@ -36,6 +36,10 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Application Preferences")) {
+                    NavigationLink(destination: TagsManageView()) {
+                        Label("Manage Tags", systemImage: "tag.fill")
+                    }
+                    
                     NavigationLink(destination: HeartRateView()) {
                         Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
                     }

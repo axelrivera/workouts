@@ -11,12 +11,15 @@ import Polyline
 import CoreLocation
 
 private let MarkedForDeletionDateKey = "markedForDeletionDate"
+private let IsLocationPendingKey = "isLocationPending"
 private let SportKey = "sportValue"
 private let RemoteIdentifierKey = "remoteIdentifier"
+private let DistanceKey = "distance"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
 private let EndDateKey = "end"
+private let IndoorKey = "indoor"
 
 private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
 private let ZoneValue1Key = "zoneValue1"
@@ -29,8 +32,7 @@ extension Workout: Identifiable {}
 
 @objc(Workout)
 class Workout: NSManagedObject {
-    static var MAX_RETRIES: Int = 5
-    
+    @NSManaged var isReady: Bool
     @NSManaged var remoteIdentifier: UUID?
     @NSManaged fileprivate(set) var sportValue: String?
     @NSManaged var indoor: Bool
@@ -62,6 +64,7 @@ class Workout: NSManagedObject {
     @NSManaged var markedForDeletionDate: Date?
     @NSManaged fileprivate(set) var totalRetries: Int
     @NSManaged var coordinatesValue: String
+    @NSManaged var isLocationPending: Bool
     
     // Heart Rate Zones
     @NSManaged private(set) var zoneMaxHeartRate: Int
@@ -73,10 +76,7 @@ class Workout: NSManagedObject {
     
     @NSManaged private(set) var createdAt: Date
     @NSManaged private(set) var updatedAt: Date
-    
-    // MARK: Relationships
-    @NSManaged var samples: Set<Sample>
-    
+            
     // MARK: Enums
     @nonobjc
     var sport: Sport {
@@ -161,34 +161,35 @@ extension Workout {
         return identifier.contains(BWAppleHealthIdentifier) ? device : nil
     }
     
-    var shouldRegenerateSamples: Bool {
-        if indoor { return false }
-        if showMap { return false }
-        return totalRetries < Self.MAX_RETRIES
-    }
-    
-    func updateRetries() {
-        totalRetries += 1
-    }
-    
     var zoneValues: [Int] {
         [zoneValue1, zoneValue2, zoneValue3, zoneValue4, zoneValue5]
     }
     
 }
 
+// MARK: - Metadata References
+
+extension Workout {
+    
+    var metadata: WorkoutMetadata? {
+        guard let metadata = value(forKey: "metadata") as? [WorkoutMetadata] else { return nil }
+        return metadata.first
+    }
+    
+}
+
+// MARK: - Helpers
+
 extension Workout {
     
     // MARK: Predicates
     
     static func activePredicate(sport: Sport?, interval: DateInterval?) -> NSPredicate {
-        var predicates = [NSPredicate]()
+        var predicates = [notMarkedForLocalDeletionPredicate]
 
         if let sport = sport {
             predicates.append(Workout.predicateForSport(sport))
         }
-
-        predicates.append(notMarkedForLocalDeletionPredicate)
         
         if let interval = interval {
             predicates.append(predicateForInterval(interval))
@@ -198,13 +199,11 @@ extension Workout {
     }
     
     static func activePredicate(sports: [Sport], interval: DateInterval?) -> NSPredicate {
-        var predicates = [NSPredicate]()
+        var predicates = [notMarkedForLocalDeletionPredicate]
 
         if sports.isPresent {
             predicates.append(Workout.predicateForSports(sports))
         }
-
-        predicates.append(notMarkedForLocalDeletionPredicate)
         
         if let interval = interval {
             predicates.append(predicateForInterval(interval))
@@ -233,6 +232,10 @@ extension Workout {
         NSPredicate(format: "%K IN %@", SportKey, sports.map({ $0.rawValue }))
     }
     
+    static func predicateForIndoor(_ indoor: Bool) -> NSPredicate {
+        NSPredicate(format: "%K == %@", IndoorKey, NSNumber(booleanLiteral: indoor))
+    }
+    
     static func sortedByDateDescriptor(ascending: Bool = false) -> NSSortDescriptor {
         NSSortDescriptor(keyPath: \Workout.start, ascending: ascending)
     }
@@ -241,8 +244,24 @@ extension Workout {
         NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
     }
     
+    static var locationPendingPredicate: NSPredicate {
+        NSPredicate(format: "%K == %@", IsLocationPendingKey, NSNumber(booleanLiteral: true))
+    }
+    
     static func predicateForIdentifiers(_ identifiers: [UUID]) -> NSPredicate {
         NSPredicate(format: "%K IN %@", RemoteIdentifierKey, identifiers)
+    }
+    
+    static func predicateForMinDistance(_ distance: Double) -> NSPredicate {
+        NSPredicate(format: "%K >= %@", DistanceKey, distance as NSNumber)
+    }
+    
+    static func predicateForMaxDistance(_ distance: Double) -> NSPredicate {
+        NSPredicate(format: "%K <= %@", DistanceKey, distance as NSNumber)
+    }
+    
+    static func distantFuturePredicate() -> NSPredicate {
+        NSPredicate(format: "%K > %@", Date.distantFuture as NSDate)
     }
     
     // MARK: Reqeusts
@@ -252,17 +271,20 @@ extension Workout {
     }
     
     static var sortedFetchRequest: NSFetchRequest<Workout> {
-        let sortDescriptors = [Self.sortedByDateDescriptor()]
         let request = defaultFetchRequest()
-        request.predicate = notMarkedForLocalDeletionPredicate
-        request.sortDescriptors = sortDescriptors
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [notMarkedForLocalDeletionPredicate])
+        request.sortDescriptors = [sortedByDateDescriptor()]
         return request
     }
     
-    static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext) -> [Workout] {
+    static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext, sorted: Bool = false) -> [Workout] {
         let request = defaultFetchRequest()
         request.predicate = predicateForIdentifiers(ids)
         request.returnsObjectsAsFaults = false
+        
+        if sorted {
+            request.sortDescriptors = [sortedByDateDescriptor()]
+        }
         
         do {
             return try context.fetch(request)
@@ -279,22 +301,66 @@ extension Workout {
         }
     }
     
+    static func pendingWorkouts(in context: NSManagedObjectContext) -> [UUID] {
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = NSCompoundPredicate(
+                andPredicateWithSubpredicates: [notMarkedForLocalDeletionPredicate, locationPendingPredicate]
+            )
+            request.resultType = .dictionaryResultType
+            request.returnsObjectsAsFaults = false
+            request.sortDescriptors = [sortedByDateDescriptor()]
+            request.propertiesToFetch = ["remoteIdentifier"]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> UUID? in
+                    return dictionary["remoteIdentifier"] as? UUID
+                }
+            } catch {
+                return []
+            }
+        }
+    }
+    
+    static func availableSports(in context: NSManagedObjectContext) -> [Sport] {
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = notMarkedForLocalDeletionPredicate
+            request.resultType = .dictionaryResultType
+            request.returnsObjectsAsFaults = false
+            request.returnsDistinctResults = true
+            request.propertiesToFetch = [SportKey]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> Sport? in
+                    let string = dictionary[SportKey] as? String
+                    return Sport(string: string ?? "")
+                }.sorted(by: { $0.activityName < $1.activityName })
+            } catch {
+                return []
+            }
+        }
+    }
+    
 }
 
 extension Workout {
-    typealias WorkoutObject = WorkoutProcessor.Object
+    typealias WorkoutObject = WorkoutProcessor.InsertObject
     
     @discardableResult
-    static func insert(into context: NSManagedObjectContext, object: WorkoutObject, regenerate: Bool) -> Workout {
+    static func insert(into context: NSManagedObjectContext, object: WorkoutObject) -> Workout {
         context.performAndWait {
             let workout = Workout(context: context)
-            updateValues(for: workout, object: object, in: context)
+            updateValues(for: workout, object: object, isLocationPending: !object.indoor, in: context)
             return workout
         }
     }
     
-    static func updateValues(for workout: Workout, object: WorkoutObject, in context: NSManagedObjectContext) {
+    static func updateValues(for workout: Workout, object: WorkoutObject, isLocationPending: Bool, in context: NSManagedObjectContext) {
         context.performAndWait {
+            workout.isLocationPending = isLocationPending
             workout.remoteIdentifier = object.identifier
             workout.sport = object.sport
             workout.indoor = object.indoor
@@ -304,10 +370,10 @@ extension Workout {
             workout.movingTime = object.movingTime
             workout.avgMovingSpeed = object.avgMovingSpeed
             workout.distance = object.distance
-            workout.avgHeartRate = object.avgHeartRate
-            workout.maxHeartRate = object.maxHeartRate
             workout.avgPace = object.avgPace
             workout.avgMovingPace = object.avgMovingPace
+            workout.avgHeartRate = object.avgHeartRate
+            workout.maxHeartRate = object.maxHeartRate
             workout.energyBurned = object.energyBurned
             workout.avgSpeed = object.avgSpeed
             workout.maxSpeed = object.maxSpeed
@@ -315,11 +381,8 @@ extension Workout {
             workout.maxCyclingCadence = object.maxCyclingCadence
             workout.elevationAscended = object.elevationAscended
             workout.elevationDescended = object.elevationDescended
-            workout.minElevation = object.minElevation
-            workout.maxElevation = object.maxElevation
             workout.source = object.source
             workout.device = object.device
-            workout.coordinatesValue = object.coordinatesValue
             
             // Heart Rate Zones
             let zoneHeartRate = AppSettings.maxHeartRate
@@ -340,11 +403,6 @@ extension Workout {
         zoneValue3 = value3
         zoneValue4 = value4
         zoneValue5 = value5
-    }
-    
-    func resetSamples() {
-        let samples = self.samples
-        samples.forEach({ $0.workout = nil })
     }
     
 }

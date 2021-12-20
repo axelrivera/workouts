@@ -175,8 +175,11 @@ extension ImportManager {
         
         workout.status = .processing
         let operation = ImportOperation(workout: workout)
+        let start = Date()
         operation.completionBlock = {
             DispatchQueue.main.async {
+                let end = Date()
+                Log.debug("finished importing: \(end.timeIntervalSince(start)) sec")
                 self.isProcessingImports = !self.importQueue.operations.isEmpty
             }
         }

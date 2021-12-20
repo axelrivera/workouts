@@ -12,6 +12,7 @@ struct LogFilterView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
+    @Binding var availableSports: [Sport]
     @Binding var dateFilter: DateFilter
     @Binding var filterYear: String
     @Binding var years: [String]
@@ -37,7 +38,7 @@ struct LogFilterView: View {
                 }
                 
                 Section(header: Text("Workout")) {
-                    ForEach(Sport.supportedSports) { sport in
+                    ForEach(availableSports) { sport in
                         Button(action: { togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
                                 Image(systemName: isSportSelected(sport) ? "checkmark.circle.fill" : "circle")
@@ -84,6 +85,7 @@ struct LogFilterView_Previews: PreviewProvider {
     
     static var previews: some View {
         LogFilterView(
+            availableSports: $sports,
             dateFilter: $dateFilter,
             filterYear: $filterYear,
             years: $years,

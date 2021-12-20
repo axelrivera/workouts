@@ -30,6 +30,18 @@ struct AdvancedSettingsView: View {
                     Text("Reset Maps")
                 }
             }
+            
+            #if DEVELOPMENT_BUILD
+            Section {
+                Button(action: { AppSettings.initialTagsReady = false }) {
+                    Text("Reset Default Tags Flag")
+                }
+            }
+            #endif
+            
+            Section(footer: Text("Clear tags from existing workouts.")) {
+                NavigationLink("Tags", destination: TagsResetView())
+            }
         }
         .disabled(workoutManager.isProcessingRemoteData)
         .overlay(processOverlay())
@@ -66,10 +78,7 @@ struct AdvancedSettingsView: View {
     
     @ViewBuilder func processOverlay() -> some View {
         if workoutManager.isProcessingRemoteData {
-            ProcessView(
-                title: "Processing Workouts",
-                value: $workoutManager.processingRemoteDataValue
-            )
+            HUDView()
         }
     }
 }

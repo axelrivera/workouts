@@ -46,6 +46,8 @@ struct ShareDetailView: View {
                         WorkoutColorPicker(selectedColor: $shareManager.backgroundColor) { newColor in
                             Log.debug("selected color: \(newColor)")
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding([.top, .bottom], CGFloat(10.0))
                     }
                     
                     if shareManager.viewModel.includesLocation {

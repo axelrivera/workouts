@@ -63,10 +63,6 @@ extension WorkoutInterval: Equatable, Hashable {
 
 extension Sequence where Iterator.Element: WorkoutInterval {
     
-    func movingTime() -> Double {
-        ceil(map({ $0.movingTime }).reduce(0, +))
-    }
-    
     func doubleValues(keyPath key: KeyPath<Element, Double>) -> [Double] {
         map { $0[keyPath: key] }
     }
@@ -85,7 +81,7 @@ extension Sequence where Iterator.Element: WorkoutInterval {
         return samples
     }
     
-    func chartIntervals(avgCadence: Double) -> WorkoutChartIntervals {
+    func chartIntervals(duration: Double, avgCadence: Double) -> WorkoutChartIntervals {
         let speed = floatValues(keyPath: \.maxSpeed)
         let heartRate = floatValues(keyPath: \.maxHeartRate).compactMap({ $0 > 0 ? $0 : nil })
         let cadence = cadenceValues(avgCadence: avgCadence)
@@ -93,8 +89,7 @@ extension Sequence where Iterator.Element: WorkoutInterval {
             guard let altitude = interval.maxAltitude else { return nil }
             return Float(altitude)
         }
-        
-        let duration = movingTime()
+                
         let speedChart = ChartInterval.intervals(samples: speed, movingTime: duration, valueType: .speed)
         let heartRateChart = ChartInterval.intervals(samples: heartRate, movingTime: duration, valueType: .heartRate)
         let cadenceChart = ChartInterval.cadenceIntervals(samples: cadence, movingTime: duration)

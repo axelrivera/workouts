@@ -11,7 +11,7 @@ import CoreLocation
 import Polyline
 
 extension WorkoutProcessor {
-    struct Object {
+    struct InsertObject {
         let identifier: UUID
         let sport: Sport
         let indoor: Bool
@@ -30,13 +30,16 @@ extension WorkoutProcessor {
         let energyBurned: Double
         let avgHeartRate: Double
         let maxHeartRate: Double
-        let coordinatesValue: String
         let elevationAscended: Double
         let elevationDescended: Double
-        let maxElevation: Double
-        let minElevation: Double
         let source: String
         let device: String?
+    }
+    
+    struct UpdateObject {
+        let coordinatesValue: String
+        let minElevation: Double
+        let maxElevation: Double
     }
 }
 
@@ -51,9 +54,14 @@ final class WorkoutProcessor {
         self.workout = workout
     }
     
-    static func object(for workout: HKWorkout) async -> Object {
+    static func insertObject(for workout: HKWorkout) async -> InsertObject {
         let processor = WorkoutProcessor(workout: workout)
-        return await processor.object()
+        return await processor.insertObject()
+    }
+    
+    static func updateObject(for workout: HKWorkout) async -> UpdateObject {
+        let processor = WorkoutProcessor(workout: workout)
+        return await processor.updateObject()
     }
     
 }
@@ -62,32 +70,25 @@ final class WorkoutProcessor {
 
 extension WorkoutProcessor {
     
-    func object() async -> Object {
-        var locations: [CLLocation]
+    func insertObject() async -> InsertObject {
         let avgHeartRate: Double
         let maxHeartRate: Double
         
         do {
-            locations = try await provider.fetchLocations(for: workout)
             (avgHeartRate, maxHeartRate) = try await provider.fetchHeartRateStats(for: workout)
         } catch {
-            locations = []
             avgHeartRate = 0
             maxHeartRate = 0
         }
-        
-        let coordinates = locations.sorted(by: {$0.timestamp < $1.timestamp}).map({ $0.coordinate })
-        let coordinatesValue = Polyline(coordinates: coordinates).encodedPolyline
-        
-        let altitudes = locations.altitudeValues()
-        let minElevation = altitudes.min() ?? 0
-        let maxElevation = altitudes.max() ?? 0
         
         let movingTime = workout.duration
         let avgMovingSpeed: Double = totalDistance() / movingTime
         let avgMovingPace: Double = calculateRunningWalkingPace(distanceInMeters: totalDistance(), duration: movingTime) ?? avgPace()
         
-        let object = Object(
+        // calculated values
+        // coordinatesValue, minElevation, maxElevation, avgHeartRate, maxHeartRage
+        
+        let object = InsertObject(
             identifier: workout.uuid,
             sport: workout.workoutActivityType.sport(),
             indoor: workout.isIndoor,
@@ -106,11 +107,8 @@ extension WorkoutProcessor {
             energyBurned: energyBurned(),
             avgHeartRate: avgHeartRate,
             maxHeartRate: maxHeartRate,
-            coordinatesValue: coordinatesValue,
             elevationAscended: elevationAscended(),
             elevationDescended: elevationDescended(),
-            maxElevation: minElevation,
-            minElevation: maxElevation,
             source: workout.sourceRevision.source.name,
             device: workout.device?.name
         )
@@ -118,6 +116,34 @@ extension WorkoutProcessor {
         return object
     }
     
+    func updateObject() async -> UpdateObject {
+        var locations: [CLLocation]
+        
+        do {
+            locations = try await provider.fetchLocations(for: workout)
+        } catch {
+            locations = []
+        }
+        
+        var coordinates = [CLLocationCoordinate2D]()
+        var altitudes = [Double]()
+        
+        for location in locations {
+            coordinates.append(location.coordinate)
+            altitudes.append(location.altitude)
+        }
+        
+        let coordinatesValue = Polyline(coordinates: coordinates).encodedPolyline
+        let minElevation = altitudes.min() ?? 0
+        let maxElevation = altitudes.max() ?? 0
+        
+        let object = UpdateObject(
+            coordinatesValue: coordinatesValue,
+            minElevation: minElevation,
+            maxElevation: maxElevation
+        )
+        return object
+    }
     
     private func totalDistance() -> Double {
         workout.totalDistance?.doubleValue(for: .meter()) ?? 0

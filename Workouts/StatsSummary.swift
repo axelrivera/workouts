@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 fileprivate extension NumberFormatter {
     static let countFormatter: NumberFormatter = {
@@ -41,36 +42,60 @@ extension StatsSummary: Identifiable {}
 extension StatsSummary: Hashable {}
 
 struct StatsSummary {
-    let id = UUID().uuidString
+    let id: String
     let sport: Sport?
     let timeframe: Timeframe
     let interval: DateInterval
-    let count: Int
-    let distance: Double
-    let duration: Double
-    let elevation: Double
-    let energyBurned: Double
-    let longestDistance: Double
-    let highestElevation: Double
+    let title: String?
     
-    init(sport: Sport?, timeframe: Timeframe, interval: DateInterval? = nil, dictionary: [String: Any] = [String: Any]()) {
+    private(set) var total: Int = 0
+    private(set) var distance: Double = 0
+    private(set) var avgDistance: Double = 0
+    private(set) var duration: Double = 0
+    private(set) var avgDuration: Double = 0
+    private(set) var calories: Double = 0
+    private(set) var avgCalories: Double = 0
+    private(set) var elevation: Double = 0
+    private(set) var avgElevation: Double = 0
+    
+    init(sport: Sport?, timeframe: Timeframe, interval: DateInterval? = nil, title: String? = nil, dictionary: [String: Any] = [String: Any]()) {        
+        self.id = UUID().uuidString
         self.sport = sport
         self.timeframe = timeframe
         self.interval = interval ?? Self.currentInterval(for: timeframe)
-        count = dictionary["count"] as? Int ?? 0
-        distance = dictionary["distance"] as? Double ?? 0
-        duration = dictionary["movingTime"] as? Double ?? 0
-        elevation = dictionary["elevation"] as? Double ?? 0
-        energyBurned = dictionary["energyBurned"] as? Double ?? 0
-        longestDistance = dictionary["longestDistance"] as? Double ?? 0
-        highestElevation = dictionary["highestElevation"] as? Double ?? 0
+        self.title = title
+        
+        total = dictionary[StatsProperties.count.key] as? Int ?? 0
+        distance = dictionary[StatsProperties.distance.key] as? Double ?? 0
+        avgDistance = dictionary[StatsProperties.avgDistance.key] as? Double ?? 0
+        duration = dictionary[StatsProperties.duration.key] as? Double ?? 0
+        avgDuration = dictionary[StatsProperties.avgDuration.key] as? Double ?? 0
+        calories = dictionary[StatsProperties.energyBurned.key] as? Double ?? 0
+        avgCalories = dictionary[StatsProperties.avgEnergyBurned.key] as? Double ?? 0
+        elevation = dictionary[StatsProperties.elevation.key] as? Double ?? 0
+        avgElevation = dictionary[StatsProperties.avgElevation.key] as? Double ?? 0
     }
+}
+
+extension StatsSummary: WorkoutSummary {
+    var showSpeed: Bool {
+        sport?.isCycling ?? false
+    }
+    
+    var showPace: Bool {
+        sport?.isWalkingOrRunning ?? false
+    }
+    
+    var identifier: String { id }
+    var titleColor: Color? { .primary }
+    var sportValue: Sport? { sport }
+    var gearValue: GearType? { nil }
 }
 
 extension StatsSummary {
     
     var formattedCount: String {
-        NumberFormatter.countFormatter.string(from: count as NSNumber) ?? ""
+        NumberFormatter.countFormatter.string(from: total as NSNumber) ?? ""
     }
     
 }
@@ -149,7 +174,7 @@ extension StatsSummary {
     }
     
     private var isCountSingular: Bool {
-        count == 1
+        total == 1
     }
     
     var sportTitle: String {
@@ -180,31 +205,31 @@ extension StatsSummary {
         }
     }
     
-    var timeString: String {
-        formattedHoursMinutesPrettyString(for: duration)
-    }
-    
-    var distanceString: String {
-        let values: [Timeframe] = [.week, .month]
-        let mode: DistanceMode = values.contains(timeframe) ? .default : .rounded
-        return formattedDistanceString(for: distance, mode: mode, zeroPadding: true)
-    }
-    
-    var caloriesString: String {
-        formattedCaloriesString(for: energyBurned, zeroPadding: true)
-    }
-    
-    var elevationString: String {
-        formattedElevationString(for: elevation, zeroPadding: true)
-    }
-    
-    var longestDistanceString: String {
-        formattedDistanceString(for: longestDistance, zeroPadding: true)
-    }
-    
-    var highestElevationString: String {
-        formattedElevationString(for: highestElevation, zeroPadding: true)
-    }
+//    var timeString: String {
+//        formattedHoursMinutesPrettyString(for: duration)
+//    }
+//
+//    var distanceString: String {
+//        let values: [Timeframe] = [.week, .month]
+//        let mode: DistanceMode = values.contains(timeframe) ? .default : .rounded
+//        return formattedDistanceString(for: distance, mode: mode, zeroPadding: true)
+//    }
+//
+//    var caloriesString: String {
+//        formattedCaloriesString(for: energyBurned, zeroPadding: true)
+//    }
+//
+//    var elevationString: String {
+//        formattedElevationString(for: elevation, zeroPadding: true)
+//    }
+//
+//    var longestDistanceString: String {
+//        formattedDistanceString(for: longestDistance, zeroPadding: true)
+//    }
+//
+//    var highestElevationString: String {
+//        formattedElevationString(for: highestElevation, zeroPadding: true)
+//    }
     
 }
 

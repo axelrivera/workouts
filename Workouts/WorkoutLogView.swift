@@ -17,25 +17,37 @@ extension WorkoutLogView {
 }
 
 struct WorkoutLogView: View {
+    enum ActiveCoverSheet: Identifiable {
+        case settings
+        var id: Int { hashValue }
+    }
+    
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var manager: LogManager
     @EnvironmentObject var purchaseManager: IAPManager
 
     @State private var activeSheet: ActiveSheet?
-
+    @State private var activeCoverSheet: ActiveCoverSheet?
+    
+    @ViewBuilder
     func headerView() -> some View {
-        VStack(alignment: .center, spacing: 0) {
-            Picker("Display", selection: $manager.displayType.animation()) {
-                ForEach(LogManager.DisplayType.allCases, id: \.self) { dataType in
-                    Text(dataType.rawValue.capitalized)
+        if manager.sports.isPresent || manager.dateFilter != .recentMonths {
+            HStack {
+                Text(manager.filterTitleString)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                if manager.sports.isPresent {
+                    Text(manager.filterSportString)
+                        .foregroundColor(.secondary)
                 }
             }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding()
-
-            Divider()
+            .frame(maxWidth: .infinity)
+            .padding([.leading, .trailing])
+            .padding([.top, .bottom], CGFloat(10.0))
+            .background(.regularMaterial)
         }
-        .background(.bar)
     }
 
     var body: some View {
@@ -56,25 +68,27 @@ struct WorkoutLogView: View {
             }
             .overlay(emptyOverlay())
             .paywallButtonOverlay()
-            .navigationTitle("Workout Log")
+            .navigationTitle("Training Log")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { activeCoverSheet = .settings }) {
+                       Image(systemName: "gearshape")
+                    }
                 }
                 
                 ToolbarItem(placement: .principal) {
-                    VStack {
-                        Text(manager.filterTitleString)
-                            .font(.footnote)
-                            .foregroundColor(.primary)
-                        Text(manager.filterSportString)
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
+                    Picker("Display", selection: $manager.displayType.animation()) {
+                        ForEach(LogManager.DisplayType.allCases, id: \.self) { dataType in
+                            Text(dataType.rawValue.capitalized)
+                        }
                     }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .fixedSize()
+                    .disabled(!purchaseManager.isActive)
                 }
-
-                ToolbarItem(placement: .navigationBarTrailing)  {
+                
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: { activeSheet = .filter }) {
                         Image(systemName: "line.horizontal.3.decrease.circle")
                     }
@@ -85,11 +99,19 @@ struct WorkoutLogView: View {
                 switch item {
                 case .filter:
                     LogFilterView(
+                        availableSports: $manager.availableSports,
                         dateFilter: $manager.dateFilter,
                         filterYear: $manager.displayYear,
                         years: $manager.filterYears,
                         sports: $manager.sports
                     )
+                }
+            }
+            .fullScreenCover(item: $activeCoverSheet) { item in
+                switch item {
+                case .settings:
+                    SettingsView()
+                        .environmentObject(purchaseManager)
                 }
             }
         }
@@ -118,7 +140,6 @@ extension WorkoutLogView {
 
 struct WorkoutLogView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    
     static var workoutManager = WorkoutManagerPreview.manager(context: viewContext)
     
     static var manager: LogManager = {

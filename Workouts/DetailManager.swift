@@ -13,7 +13,7 @@ import CoreData
 
 class DetailManager: ObservableObject {
     enum DetailError: Error {
-        case lap
+        case lap, metadata
     }
     
     @Published var isProcessingAnalysis: Bool = false
@@ -36,16 +36,22 @@ class DetailManager: ObservableObject {
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
     @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
+    
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
         
     var distanceSamples: [Quantity]?
-    
-    private var context: NSManagedObjectContext?
-    private var _workout: Workout?
-    
+        
     var detail: WorkoutDetailViewModel
-            
-    init(viewModel: WorkoutDetailViewModel) {
+    var context: NSManagedObjectContext
+    private let metaProvider: MetadataProvider
+    private let workoutTagProvider: WorkoutTagProvider
+    
+    init(viewModel: WorkoutDetailViewModel, context: NSManagedObjectContext) {
         self.detail = viewModel
+        self.context = context
+        metaProvider = MetadataProvider(context: context)
+        workoutTagProvider = WorkoutTagProvider(context: context)
     }
     
     lazy var provider: HealthProvider = {
@@ -84,6 +90,8 @@ extension DetailManager {
     var sport: Sport { detail.sport }
         
     func processWorkout() {
+        preProcess()
+        
         DispatchQueue.main.async {
             withAnimation {
                 self.isProcessingAnalysis = true
@@ -97,6 +105,16 @@ extension DetailManager {
         }
     }
     
+    private func preProcess() {
+        let isFavorite = metaProvider.isFavorite(detail.id)
+        let tags = fetchTags()
+        
+        DispatchQueue.main.async {
+            self.isFavorite = isFavorite
+            self.tags = tags
+        }
+    }
+    
     private func process() async {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { return }
@@ -107,8 +125,7 @@ extension DetailManager {
             let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
             let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
-            
-            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
+            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(duration: detail.movingTime, avgCadence: avgCadence)
             
             let paceValues: [ChartInterval]
             let bestPace: Double
@@ -216,7 +233,7 @@ extension DetailManager {
         }
     }
     
-    func updateZones(maxHeartRate: Int, values: [Int], context: NSManagedObjectContext) async {
+    func updateZones(maxHeartRate: Int, values: [Int]) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
         guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
                 
@@ -235,6 +252,45 @@ extension DetailManager {
             withAnimation {
                 self.zoneManager = zoneManager
                 self.zones = zones
+            }
+        }
+    }
+    
+    func fetchWorkout() throws -> WorkoutMetadata {
+        return try metaProvider.fetchWorkout(identifier: detail.id)
+    }
+    
+    func fetchTags() -> [TagLabelViewModel] {
+        workoutTagProvider.visibleTags(forWorkout: detail.id).map({ $0.viewModel() })
+    }
+    
+    func reloadTags() {
+        WorkoutStorage.resetTags(forID: detail.id)
+        
+        let tags = fetchTags()
+        DispatchQueue.main.async {
+            withAnimation {
+                self.tags = tags
+            }
+        }
+    }
+    
+    func toggleFavorite() throws {
+        let identifier = detail.id
+        
+        var isFavorite = self.isFavorite
+        if isFavorite {
+            try metaProvider.unfavoriteWorkout(for: identifier)
+            isFavorite = false
+        } else {
+            try metaProvider.favoriteWorkout(for: identifier)
+            isFavorite = true
+        }
+        
+        WorkoutStorage.updateFavorite(isFavorite, forID: identifier)
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isFavorite = isFavorite
             }
         }
     }

@@ -41,11 +41,12 @@ extension StatsRecentView {
 struct StatsRecentView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     
-    let options: [Options] = [.distance, .calories, .elevation]
-    @State var option = Options.distance
+    private let options: [Options] = [.distance, .calories, .elevation]
+    @State private var option = Options.distance
     
-    var timeframe: StatsSummary.Timeframe
-    var summaries: [StatsSummary]
+    let timeframe: StatsSummary.Timeframe
+    let sport: Sport?
+    let summaries: [StatsSummary]
     
     @State private var values = [Double]()
     
@@ -84,7 +85,7 @@ struct StatsRecentView: View {
                                 .foregroundColor(summary.isCurrentInterval ? .time : .primary)
                             
                             HStack {
-                                Text(summary.timeString)
+                                Text(summary.durationString)
                                     .foregroundColor(.time)
                                 
                                 Divider()
@@ -109,6 +110,17 @@ struct StatsRecentView: View {
         .paywallButtonOverlay()
         .navigationTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text(timeframe.recentTitle)
+                        .font(.system(size: 13.0, weight: .semibold, design: .default))
+                    Text(sport?.activityName ?? "All Workouts")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
 }
 
@@ -169,7 +181,7 @@ extension StatsRecentView {
         summaries.map { (summary) -> ChartInterval in
             ChartInterval(
                 xValue: summary.interval.start.timeIntervalSince1970,
-                yValue: summary.energyBurned
+                yValue: summary.calories
             )
         }.reversed()
     }
@@ -190,7 +202,7 @@ struct StatsRecentView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            StatsRecentView(timeframe: .week, summaries: summaries)
+            StatsRecentView(timeframe: .week, sport: .cycling, summaries: summaries)
                 .environmentObject(IAPManagerPreview.manager(isActive: true))
                 .preferredColorScheme(.dark)
         }

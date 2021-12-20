@@ -69,6 +69,10 @@ extension FileManager {
         try data.write(to: url, options: .atomic)
     }
     
+    static func deleteLocalImage(at url: URL) throws {
+        try FileManager.default.removeItem(at: url)
+    }
+    
     static func localImage(at url: URL) -> UIImage? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         return UIImage(data: data, scale: UIScreen.main.scale)

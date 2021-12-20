@@ -9,27 +9,29 @@ import SwiftUI
 import CoreData
 
 struct WorkoutFilter<Content: View>: View {
-    @FetchRequest<Workout>
-    var workouts: FetchedResults<Workout>
+    
+    var fetchRequest: FetchRequest<Workout>
+    var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
     
     var content: (Workout) -> Content
-    @Binding var isEmpty: Bool
     
-    init(sport: Sport?, interval: DateInterval? = nil, isEmpty: Binding<Bool>, @ViewBuilder content: @escaping (Workout) -> Content) {
-        _workouts = DataProvider.fetchRequest(sport: sport, interval: interval)
+    init(fetchRequest: FetchRequest<Workout>, @ViewBuilder content: @escaping (Workout) -> Content) {
+        self.fetchRequest = fetchRequest
         self.content = content
-        _isEmpty = isEmpty
     }
     
-    init(identifiers: [UUID], isEmpty: Binding<Bool>, @ViewBuilder content: @escaping (Workout) -> Content) {
-        _workouts = DataProvider.fetchRequest(for: identifiers)
+    init(sport: Sport?, interval: DateInterval? = nil, @ViewBuilder content: @escaping (Workout) -> Content) {
+        fetchRequest = DataProvider.fetchRequest(sport: sport, interval: interval)
         self.content = content
-        _isEmpty = isEmpty
+    }
+    
+    init(identifiers: [UUID], @ViewBuilder content: @escaping (Workout) -> Content) {
+        fetchRequest = DataProvider.fetchRequest(for: identifiers)
+        self.content = content
     }
 
     var body: some View {
-        isEmpty = workouts.isEmpty
-        return ForEach(workouts, id: \.objectID) { workout in
+        ForEach(workouts, id: \.objectID) { workout in
             content(workout)
         }
     }

@@ -46,6 +46,8 @@ extension LogManager {
 
 class LogManager: ObservableObject {
     typealias DisplayType = LogDisplayType
+    
+    @Published var availableSports = [Sport]()
         
     // Filter Related
     @Published var sports = [Sport]() {
@@ -72,8 +74,6 @@ class LogManager: ObservableObject {
     
     // Data
     @Published var intervals = [LogInterval]()
-    @Published var currentInterval = LogInterval.currentInterval()
-    @Published var prevInterval = LogInterval.previousInterval()
     
     private var refreshCancellable: Cancellable?
     
@@ -82,23 +82,6 @@ class LogManager: ObservableObject {
     init(context: NSManagedObjectContext) {
         self.context = context
         addObservers()
-    }
-    
-    func reloadCurrentInterval() {
-        // Current Interval
-
-        let currentDateInterval = LogInterval.currentDateInterval()
-        let currentInterval = logInterval(for: currentDateInterval)
-
-        let prevDateInterval = LogInterval.previousWeekDateInterval()
-        let prevInterval = logInterval(for: prevDateInterval)
-
-        DispatchQueue.main.async {
-            withAnimation(.none) {
-                self.currentInterval = currentInterval
-                self.prevInterval = prevInterval
-            }
-        }
     }
     
     func reloadIntervals() {
@@ -112,28 +95,28 @@ class LogManager: ObservableObject {
 
 extension LogManager {
     
-    private func logInterval(for dateInterval: DateInterval) -> LogInterval {
-        let dates = Date.dates(from: dateInterval.start, to: dateInterval.end)
-        
-        var dictionary = [String: LogDay]()
-        let days: [LogDay] = dates.map { date -> LogDay in
-            let day = LogDay(date: date, activities: [])
-            dictionary[date.logKey] = day
-            return day
-        }
-        
-        let request = Self.fetchRequest(for: Sport.supportedSports, interval: dateInterval, ascending: false)
-        let workouts = (try? context.fetch(request)) ?? [Workout]()
-        
-        for workout in workouts {
-            let key = workout.start.logKey
-            if let day = dictionary[key] {
-                day.activities.append(workout.logActivity())
-            }
-        }
-        
-        return LogInterval(days: days)
-    }
+//    private func logInterval(for dateInterval: DateInterval) -> LogInterval {
+//        let dates = Date.dates(from: dateInterval.start, to: dateInterval.end)
+//
+//        var dictionary = [String: LogDay]()
+//        let days: [LogDay] = dates.map { date -> LogDay in
+//            let day = LogDay(date: date, activities: [])
+//            dictionary[date.logKey] = day
+//            return day
+//        }
+//
+//        let request = Self.fetchRequest(for: Sport.supportedSports, interval: dateInterval, ascending: false)
+//        let workouts = (try? context.fetch(request)) ?? [Workout]()
+//
+//        for workout in workouts {
+//            let key = workout.start.logKey
+//            if let day = dictionary[key] {
+//                day.activities.append(workout.logActivity())
+//            }
+//        }
+//
+//        return LogInterval(days: days)
+//    }
     
     private func fetchIntervals() {
         let filterInterval: DateInterval
@@ -215,6 +198,7 @@ extension LogManager {
             return
         }
         
+        let availableSports = Workout.availableSports(in: context)
         let startYear = date.year()
         let endYear = Date().year()
         
@@ -222,6 +206,7 @@ extension LogManager {
         let displayYear = filters.first ?? ""
         
         DispatchQueue.main.async {
+            self.availableSports = availableSports
             self.filterYears = filters
             self.displayYear = displayYear
         }
@@ -236,7 +221,8 @@ extension LogManager {
         case .recentMonths, .recentYears:
             string = dateFilter.title
         case .byYear:
-            string = displayYear.isEmpty ? "\(Date().year())" : displayYear
+            let yearString = displayYear.isEmpty ? "\(Date().year())" : displayYear
+            string = String(format: "Year %@", yearString)
         }
         return string
     }
@@ -244,40 +230,6 @@ extension LogManager {
     var filterSportString: String {
         if sports.isEmpty { return "All Workouts" }
         return sports.map({ $0.altName }).sorted().joined(separator: ", ")
-    }
-    
-    var currentIntervalDateLabel: String {
-        let start = currentInterval.start ?? Date().workoutWeekStart
-        let end = currentInterval.end ?? Date().workoutWeekEnd
-        
-        let formatter = DateFormatter.monthDay
-        return String(format: "%@ - %@", formatter.string(from: start), formatter.string(from: end))
-    }
-    
-    var currentIntervalDisplayLabel: String {
-        switch displayType {
-        case .distance:
-            return formattedDistanceString(for: currentInterval.distance, zeroPadding: true)
-        case .time:
-            return formattedHoursMinutesPrettyString(for: currentInterval.duration)
-        }
-    }
-    
-    var prevIntervalDateLabel: String {
-        let start = prevInterval.start ?? Date().workoutWeekStart
-        let end = prevInterval.end ?? Date().workoutWeekEnd
-        
-        let formatter = DateFormatter.monthDay
-        return String(format: "%@ - %@", formatter.string(from: start), formatter.string(from: end))
-    }
-    
-    var prevIntervalDisplayLabel: String {
-        switch displayType {
-        case .distance:
-            return formattedDistanceString(for: prevInterval.distance, zeroPadding: true)
-        case .time:
-            return formattedHoursMinutesPrettyString(for: prevInterval.duration)
-        }
     }
     
 }
@@ -312,10 +264,6 @@ class LogManagerPreview: LogManager {
     
     static func manager(context: NSManagedObjectContext) -> LogManager {
         LogManagerPreview(context: context) as LogManager
-    }
-    
-    override func reloadCurrentInterval() {
-        // no-op
     }
     
     override func reloadIntervals() {

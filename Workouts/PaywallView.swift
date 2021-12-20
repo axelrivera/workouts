@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PaywallView: View {
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var purchaseManager: IAPManager
     @State private var isProcessing = false
     
@@ -125,6 +126,7 @@ extension PaywallView {
             withAnimation { self.isPurchasing = false }
             switch result {
             case .success:
+                viewContext.refreshAllObjects()
                 presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("purchase failed: \(error.localizedDescription)")

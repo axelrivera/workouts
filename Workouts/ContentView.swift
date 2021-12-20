@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case home, history, stats, goals
+        case workouts, log, stats, tags
         var id: String { rawValue }
     }
     
@@ -21,25 +21,32 @@ struct ContentView: View {
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
     
-    @State private var selected = Tabs.home
+    @State private var selected = Tabs.workouts
     
     var body: some View {
         TabView(selection: $selected) {
-            HomeView()
-                .tabItem { Label("Home", systemImage: "house") }
-                .tag(Tabs.home)
-            
+            WorkoutsView()
+                .tabItem { Label("Workouts", systemImage: "flame") }
+                .tag(Tabs.workouts)
+
+            WorkoutLogView()
+                .tabItem { Label("Training", systemImage: "calendar") }
+                .tag(Tabs.log)
+
             StatsView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
+
+            TagsView()
+                .tabItem { Label("Tags", systemImage: "tag") }
+                .tag(Tabs.tags)
             
-            WorkoutsView(sport: $workoutManager.sport)
-                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
-                .tag(Tabs.history)
         }
         .onboardingOverlay()
+        .noWorkoutsOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
             viewContext.refreshAllObjects()
+            workoutManager.storage.resetAll()
         }
         .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
             reloadData()
@@ -55,7 +62,7 @@ struct ContentView: View {
             case .background:
                 Log.debug("background")
                 viewContext.batchDeleteObjects()
-                viewContext.refreshAllObjects()
+                viewContext.saveOrRollback()
             case .inactive:
                 Log.debug("inactive")
             @unknown default:
@@ -72,22 +79,28 @@ struct ContentView: View {
 extension ContentView {
     
     private func reloadData() {
-        logManager.reloadCurrentInterval()
-        workoutManager.fetchRecentWorkouts()
         statsManager.refresh()
+        logManager.reloadIntervals()
     }
     
 }
 
 struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workoutManager = WorkoutManagerPreview.manager(context: viewContext)
+    
+    static var workoutManager: WorkoutManager = {
+        let manager = WorkoutManagerPreview.manager(context: viewContext)
+        //manager.state = .notAvailable
+        return manager
+    }()
+    
     static let logManager = LogManagerPreview.manager(context: viewContext)
     static let statsManager = StatsManagerPreview.manager(context: viewContext)
     static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         ContentView()
+            .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(logManager)
             .environmentObject(statsManager)

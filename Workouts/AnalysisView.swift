@@ -16,7 +16,6 @@ struct AnalysisView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
-    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var detailManager: DetailManager
     @EnvironmentObject var purchaseManager: IAPManager
     
@@ -193,7 +192,7 @@ extension AnalysisView {
     
     func saveZones(heartRate: Int, values: [Int]) {
         Task(priority: .userInitiated) {
-            await detailManager.updateZones(maxHeartRate: heartRate, values: values, context: viewContext)
+            await detailManager.updateZones(maxHeartRate: heartRate, values: values)
             activeSheet = nil
         }
     }
@@ -276,7 +275,7 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     static var previews: some View {
         AnalysisView()
             .environment(\.managedObjectContext, viewContext)
-            .environmentObject(DetailManager(viewModel: workout.detailViewModel))
+            .environmentObject(DetailManager(viewModel: workout.detailViewModel, context: viewContext))
             .environmentObject(purchaseManager)
             .colorScheme(.dark)
         

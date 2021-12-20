@@ -15,7 +15,13 @@ struct DetailView: View {
         case analysis
         case laps
         case sharing
+        case tags
         var id: Int { hashValue }
+    }
+    
+    enum ActiveAlert: Hashable, Identifiable {
+        case error(message: String)
+        var id: Self { self }
     }
     
     enum RowType: Identifiable, CaseIterable {
@@ -28,6 +34,7 @@ struct DetailView: View {
     @StateObject var detailManager: DetailManager
     
     @State private var activeSheet: ActiveSheet?
+    @State private var activeAlert: ActiveAlert?
         
     var workout: WorkoutDetailViewModel { detailManager.detail }
     var sport: Sport { detailManager.detail.sport }
@@ -56,25 +63,44 @@ struct DetailView: View {
             }
                         
             HStack {
-                Button(action: { activeSheet = .analysis }) {
-                    Label("Analysis", systemImage: "flame")
-                        .padding([.top, .bottom], CGFloat(10.0))
-                        .frame(maxWidth: .infinity)
+                analysisButton()
+                if workout.sport.supportsSplits {
+                    splitsButton()
                 }
-                .buttonStyle(.bordered)
-                
-                Button(action: { activeSheet = .laps }) {
-                    Label("Splits", systemImage: "arrow.2.squarepath")
-                        .padding([.top, .bottom], CGFloat(10.0))
-                        .frame(maxWidth: .infinity)
-                    
-                }
-                .buttonStyle(.bordered)
             }
             
-            ForEach(RowType.allCases) { rowType in
-                viewForRow(rowType)
+            row1View()
+            if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
+                row2View()
             }
+            row3View()
+            row4View()
+            
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("Tags")
+                        .font(.body)
+                    
+                    if !detailManager.tags.isEmpty {
+                        Spacer()
+                        Button("Edit", action: { activeSheet = .tags })
+                            .buttonStyle(.borderless)
+                    }
+                }
+                
+                if detailManager.tags.isEmpty {
+                    Button(action: { activeSheet = .tags }) {
+                        Label("Add Tags", systemImage: "tag")
+                            .padding([.top, .bottom], CGFloat(10.0))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                        
+                } else {
+                    TagGrid(tags: detailManager.tags)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
             
             HStack {
                 Text("Source")
@@ -97,7 +123,12 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button(action: toggleFavorite) {
+                    Image(systemName: detailManager.isFavorite ? "heart.fill" : "heart")
+                }
+                
                 Button(action: { activeSheet = .sharing }) {
                     Image(systemName: "square.and.arrow.up")
                 }
@@ -118,7 +149,38 @@ struct DetailView: View {
             case .sharing:
                 ShareView(viewModel: detailManager.shareViewModel)
                     .environmentObject(purchaseManager)
+            case .tags:
+                TagSelectorView(tagManager: tagManager()) {
+                    detailManager.reloadTags()
+                }
+                .environmentObject(purchaseManager)
             }
+        }
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .error(let message):
+                return Alert(
+                    title: Text("Workout Error"),
+                    message: Text(message),
+                    dismissButton: Alert.Button.default(Text("Ok"))
+                )
+            }
+        }
+    }
+    
+    func tagManager() -> TagManager {
+        TagManager(
+            context: viewContext,
+            sport: detailManager.sport,
+            workoutIdentifier: detailManager.detail.id
+        )
+    }
+    
+    func toggleFavorite() {
+        do {
+            try detailManager.toggleFavorite()
+        } catch {
+            activeAlert = .error(message: "Unable to update favorite status.")
         }
     }
 }
@@ -126,34 +188,71 @@ struct DetailView: View {
 extension DetailView {
     
     @ViewBuilder
-    func viewForRow(_ rowType: RowType) -> some View {
+    func analysisButton() -> some View {
+        Button(action: { activeSheet = .analysis }) {
+            Label("Analysis", systemImage: "flame")
+                .padding([.top, .bottom], CGFloat(10.0))
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+    }
+    
+    @ViewBuilder
+    func splitsButton() -> some View {
+        Button(action: { activeSheet = .laps }) {
+            Label("Splits", systemImage: "arrow.2.squarepath")
+                .padding([.top, .bottom], CGFloat(10.0))
+                .frame(maxWidth: .infinity)
+            
+        }
+        .buttonStyle(.bordered)
+    }
+    
+    @ViewBuilder
+    func row1View() -> some View {
         HStack {
-            switch rowType {
-            case .row1:
+            if workout.distance > 0 {
                 DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
-                DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
-            case .row2:
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
-                } else if sport.isWalkingOrRunning {
-                    DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
-                }
-                
-                if sport.isCycling {
-                    DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
-                }
-            case .row3:
-                DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
-                DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
-            case .row4:
-                DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+            }
+            DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
+        }
+    }
+    
+    @ViewBuilder
+    func row2View() -> some View {
+        HStack {
+            if sport.isCycling {
+                DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
+            } else if sport.isWalkingOrRunning {
+                DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+            }
+            
+            if sport.isCycling {
+                DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func row3View() -> some View {
+        HStack {
+            DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
+            DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
+        }
+    }
+    
+    @ViewBuilder
+    func row4View() -> some View {
+        HStack {
+            DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+            if workout.coordinates.isPresent {
                 DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
         }
     }
     
     var distanceString: String {
-        formattedDistanceString(for: workout.distance)
+        formattedDistanceString(for: workout.distance, zeroPadding: true)
     }
     
     var timeLabel: String {
@@ -234,7 +333,7 @@ struct DetailView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
+            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel, context: viewContext))
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

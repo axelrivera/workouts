@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 
 struct StatsWorkoutsView: View {
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     
     @State private var selectedWorkout: UUID?
@@ -23,12 +24,12 @@ struct StatsWorkoutsView: View {
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel))
+        DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
     }
             
     var body: some View {
         List {
-            WorkoutFilter(sport: sport, interval: interval, isEmpty: $isEmpty) { workout in
+            WorkoutFilter(sport: sport, interval: interval) { workout in
                 NavigationLink(
                     tag: workout.workoutIdentifier,
                     selection: $selectedWorkout,

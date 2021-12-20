@@ -36,10 +36,6 @@ struct Constants {
     static let cornerRadius: CGFloat = 12.0
 }
 
-struct WorkoutConstants {
-    static let availableActivityTypes: [HKWorkoutActivityType] = [.cycling, .running, .walking]
-}
-
 struct URLStrings {
     static let faq = "https://mobile.betterworkouts.app"
     static let about = "https://betterworkouts.app/about/"

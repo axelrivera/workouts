@@ -7,78 +7,157 @@
 
 import SwiftUI
 import MapKit
+import Combine
+
+
+final class WorkoutMapCellManager: ObservableObject {
+    private(set) var viewModel: WorkoutViewModel
+    
+    init(viewModel: WorkoutViewModel) {
+        self.viewModel = viewModel
+        showLocation = Self.showLocation(viewModel: viewModel)
+        isFavorite = viewModel.isFavorite
+        tags = viewModel.tags
+        isPendingLocation = viewModel.isPendingLocation
+        coordinates = viewModel.coordinates
+    }
+    
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
+    @Published var coordinates = [CLLocationCoordinate2D]()
+    @Published var isPendingLocation = false
+    @Published var showLocation = true
+    
+    func updateViewModel(_ viewModel: WorkoutViewModel) {
+        self.viewModel = viewModel
+        withAnimation {
+            showLocation = Self.showLocation(viewModel: viewModel)
+            isFavorite = viewModel.isFavorite
+            tags = viewModel.tags
+            isPendingLocation = viewModel.isPendingLocation
+            coordinates = viewModel.coordinates
+        }
+    }
+    
+    static func showLocation(viewModel: WorkoutViewModel) -> Bool {
+        if viewModel.indoor {
+            return false
+        } else if viewModel.isPendingLocation {
+            return true
+        } else {
+            return viewModel.coordinates.isPresent
+        }
+    }
+    
+}
 
 struct WorkoutMapCell: View {
     @Environment(\.colorScheme) var colorScheme
-    let viewModel: WorkoutCellViewModel
+    @EnvironmentObject var workoutManager: WorkoutManager
+    @StateObject var manager: WorkoutMapCellManager
+    
+    var id: UUID {
+        manager.viewModel.id
+    }
+    
+    init(viewModel: WorkoutViewModel) {
+        _manager = StateObject(wrappedValue: WorkoutMapCellManager(viewModel: viewModel))
+    }
     
     var body: some View {
         VStack {
             VStack(alignment: .leading, spacing: 2.0) {
-                Text(viewModel.dateString())
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Text(viewModel.title)
-                    .font(.title)
-                    .padding(.bottom, 5.0)
                 HStack {
-                    Text(viewModel.distanceString)
-                        .font(.fixedBody)
-                        .foregroundColor(.distance)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(manager.viewModel.dateString())
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                     
-                    Text(viewModel.durationString)
-                        .font(.fixedBody)
-                        .foregroundColor(.time)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Text(viewModel.speedOrPaceString)
-                        .font(.fixedBody)
-                        .foregroundColor(viewModel.speedOrPaceColor)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    if viewModel.sport == .cycling && !viewModel.indoor {
-                        Text(viewModel.elevationString)
-                            .font(.fixedBody)
-                            .foregroundColor(.elevation)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    if manager.isFavorite {
+                        Spacer()
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(.red)
                     }
                 }
+                
+                Text(manager.viewModel.title)
+                    .font(.title)
+                    .padding(.bottom, 5.0)
+                
+                if manager.tags.isPresent {
+                    TagGrid(tags: manager.tags)
+                }
+                
+                statsView()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if viewModel.includesLocation {
-                MapContainer(viewModel: viewModel, scheme: colorScheme)
+            if manager.showLocation {
+                MapContainer(id: manager.viewModel.id, scheme: colorScheme, coordinates: manager.coordinates)
                     .frame(minHeight: 200.0, maxHeight: 200.0)
                     .background(Color.systemFill)
                     .cornerRadius(12.0)
             }
         }
+        .padding([.leading, .trailing])
+        .padding([.top, .bottom], CGFloat(10.0))
+        .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
+            processNotification(notification)
+        }
+    }
+    
+    @ViewBuilder
+    func statsView() -> some View {
+        HStack {
+            if manager.viewModel.distance > 0 {
+                Text(manager.viewModel.distanceString)
+                    .font(.fixedBody)
+                    .foregroundColor(.distance)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            Text(manager.viewModel.durationString)
+                .font(.fixedBody)
+                .foregroundColor(.time)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            if manager.viewModel.sport.supportsSplits {
+                Text(manager.viewModel.speedOrPaceString)
+                    .font(.fixedBody)
+                    .foregroundColor(manager.viewModel.speedOrPaceColor)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            if manager.viewModel.sport == .cycling && !manager.viewModel.indoor {
+                Text(manager.viewModel.elevationString)
+                    .font(.fixedBody)
+                    .foregroundColor(.elevation)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+    
+    func processNotification(_ notification: Notification) {
+        guard let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel else { return }
+        guard viewModel.id == manager.viewModel.id else { return }
+        Log.debug("update view model: \(viewModel.id), date: \(viewModel.dateString())")
+        manager.updateViewModel(viewModel)
     }
 }
 
 struct WorkoutMapCell_Previews: PreviewProvider {
-    static let viewModel: WorkoutCellViewModel = {
-        WorkoutCellViewModel(
-            id: UUID(),
-            sport: .cycling,
-            indoor: false,
-            coordinates: [],
-            title: "Outdoor Cycling",
-            date: Date(),
-            distance: milesToMeters(for: 10),
-            duration: hoursToSeconds(for: 1),
-            avgSpeed: 0,
-            avgPace: 0,
-            calories: 0,
-            elevation: 0
-        )
-    }()
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = StorageProvider.sampleWorkout(sport: .cycling, date: Date(), moc: viewContext)
+    static let viewModel: WorkoutViewModel = WorkoutViewModel(workout: workout)
     
     static var previews: some View {
         NavigationView {
-            List(1 ..< 5, id: \.self) { _ in
-                WorkoutMapCell(viewModel: viewModel)
+            ScrollView {
+                LazyVStack(spacing: 0.0) {
+                    ForEach(1...5, id: \.self) { _ in
+                        WorkoutMapCell(viewModel: viewModel)
+                        Divider()
+                    }
+                }
             }
             .listStyle(PlainListStyle())
             .navigationTitle("Workouts")
@@ -88,10 +167,11 @@ struct WorkoutMapCell_Previews: PreviewProvider {
 }
 
 private struct MapContainer: View {
-    let viewModel: WorkoutCellViewModel
+    @EnvironmentObject var manager: WorkoutManager
+    var id: UUID
     let scheme: ColorScheme
-    private let imageCache = MapImageCache.getImageCache()
-    
+    var coordinates: [CLLocationCoordinate2D]
+        
     @State var cachedImage: UIImage?
     
     var body: some View {
@@ -100,23 +180,28 @@ private struct MapContainer: View {
                 Image(uiImage: image)
             } else {
                 Color.systemFill
+                    .overlay(
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                    )
                     .onAppear { fetchCachedImage(for: proxy.size) }
+                    .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
+                        fetchCachedImage(for: proxy.size)
+                    }
             }
         }
     }
         
     private func fetchCachedImage(for size: CGSize) {
-        let url = URL.cachedMapImageURL(id: viewModel.id, scheme: scheme)
-        if let image = imageCache.getMemory(url: url) {
+        if let image = manager.storage.getCachedImage(forID: id, scheme: scheme) {
             cachedImage = image
-        } else if let image = imageCache.getDisk(url: url) {
-            imageCache.set(image: image, url: url, memoryOnly: true)
+        } else if let image = manager.storage.getDiskImage(forID: id, scheme: scheme) {
+            manager.storage.set(image: image, forID: id, scheme: scheme, memoryOnly: true)
             cachedImage = image
         } else {
-            MKMapView.mapImage(coordinates: viewModel.coordinates, size: size) { image in
+            MKMapView.mapImage(coordinates: coordinates, size: size) { image in
                 if let newImage = image {
-                    imageCache.set(image: newImage, url: url)
-                    
+                    manager.storage.set(image: newImage, forID: id, scheme: scheme)
                     withAnimation {
                         self.cachedImage = newImage
                     }

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-class MapImageCache {
+final class MapImageCache {
     enum Prefix: String {
         case home, feed
     }
@@ -43,6 +43,17 @@ class MapImageCache {
                 Log.debug("failed to write cached image: \(error.localizedDescription)")
             }
         }
+    }
+    
+    func resetImage(at url: URL) {
+        lock.lock(); defer { lock.unlock() }
+        cache.removeObject(forKey: url.path as NSString)
+        do {
+            try FileManager.deleteLocalImage(at: url)
+        } catch {
+            Log.debug("failed to delete image: \(error.localizedDescription)")
+        }
+        
     }
     
     func resetAll() {

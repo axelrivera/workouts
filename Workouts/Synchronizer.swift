@@ -11,6 +11,7 @@ import HealthKit
 class Synchronizer {
     let context: NSManagedObjectContext
     let importer: RemoteImporter
+    let updator: RemoteUpdator
         
     var isAuthorizedToFetchWorkouts = false
     var anchor: HKQueryAnchor?
@@ -20,6 +21,7 @@ class Synchronizer {
     init(context: NSManagedObjectContext) {
         self.context = context
         self.importer = RemoteImporter(context: context)
+        self.updator = RemoteUpdator(context: context)
         self.anchor = AppSettings.workoutsQueryAnchor
         addObservers()
     }
@@ -44,13 +46,20 @@ class Synchronizer {
             return
         }
         
+        // import workouts first
         Log.debug("importing workouts")
         self.isFetchingWorkouts = true
         let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
         
+        // save anchor and regenerate flat before processing
         AppSettings.workoutsQueryAnchor = newAnchor
         self.anchor = newAnchor
         self.regenerate = false
+        
+        // update heart rate and location data
+        await updator.updatePendingWorkouts()
+        
+        // reset fetching flag last
         self.isFetchingWorkouts = false
     }
     
@@ -96,15 +105,18 @@ extension Notification.Name {
     static var didInsertRemoteData = Notification.Name("arn_did_insert_remote_data")
     static var willBeginProcessingRemoteData = Notification.Name("arn_will_begin_processing_remote_data")
     static var didFinishProcessingRemoteData = Notification.Name("arn_did_finish_processing_remote_data")
+    static var willBeginProcessingRemoteLocationData = Notification.Name("arn_will_begin_processing_remote_location_data")
+    static var didFinishProcessingRemoteLocationData = Notification.Name("arn_did_finish_processing_remote_location_data")
+    static var didUpdateRemoteLocationData = Notification.Name("arn_did_update_remote_location_data")
     
 }
 
 extension Notification {
     
     static var isAuthorizedToFetchRemoteDataKey = "arn_is_authorized_to_fetch_remote_data"
-    static var totalRemoteWorkoutsKey = "arn_total_remote_workouts"
     static var remoteWorkoutKey = "arn_remote_workout"
     static var resetAnchorKey = "arn_reset_anchor"
     static var regenerateDataKey = "arn_regenerate_data"
+    static var coordinatesKey = "arn_coordinates"
     
 }

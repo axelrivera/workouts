@@ -27,6 +27,7 @@ func formattedHoursMinutesSecondsDurationString(for duration: Double?) -> String
 
 func formattedChartDurationString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
@@ -38,10 +39,33 @@ func formattedChartDurationString(for duration: Double?) -> String {
 
 func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
-        return String(format: "%dh %02dm", h, m)
+        return String(format: "%@h %02dm", h.formatted(), m)
+    } else {
+        return String(format: "%dm %02ds", m, s)
+    }
+}
+
+func formattedHoursMinutesPrettyStringInTags(for duration: Double?) -> String {
+    let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        if h > 1_000 {
+            return String(format: "%@h", h.formatted())
+        } else {
+            return String(format: "%dh %02dm", h, m)
+        }
     } else {
         return String(format: "%dm %02ds", m, s)
     }
@@ -166,6 +190,16 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     }
 }
 
+func formattedDistanceStringInTags(for meters: Double) -> String {
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
+    if conversion.value > 10_000 {
+        return MeasurementFormatter.roundedDistance.string(from: measurement)
+    } else {
+        return MeasurementFormatter.distanceCompact.string(from: conversion)
+    }
+}
+
 func formattedLapDistanceString(for meters: Double?) -> String {
     guard let meters = meters, meters > 0 else { return "0 \(distanceUnitString())" }
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
@@ -194,13 +228,13 @@ func formattedRunningWalkingPaceUnitString() -> String {
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
-    let duration = duration ?? 0
+    guard let duration = duration else { return "0:00 \(formattedRunningWalkingPaceUnitString())"}
     let pace = formattedPaceString(for: duration)
     return String(format: "%@ %@", pace, formattedRunningWalkingPaceUnitString())
 }
 
 func formattedPaceString(for duration: Double?) -> String {
-    guard let duration = duration, duration > 0 else { return "" }
+    guard let duration = duration, duration > 0 else { return "0:00" }
     let (m, s) = secondsToMinutesSeconds(seconds: Int(duration))
     return String(format: "%d:%02d", m, s)
 }
@@ -395,7 +429,7 @@ extension NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
+        formatter.maximumFractionDigits = 1
         return formatter
     }()
     
