@@ -27,6 +27,7 @@ func formattedHoursMinutesSecondsDurationString(for duration: Double?) -> String
 
 func formattedChartDurationString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
@@ -38,6 +39,10 @@ func formattedChartDurationString(for duration: Double?) -> String {
 
 func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
@@ -49,6 +54,10 @@ func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
 
 func formattedHoursMinutesPrettyStringInTags(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {

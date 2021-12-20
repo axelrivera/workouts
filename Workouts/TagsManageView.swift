@@ -59,21 +59,6 @@ struct TagsManageContentView: View {
                 }
             }
             .textCase(nil)
-            
-            if !purchaseManager.isActive {
-                Section {
-                    Button(action: { activeSheet = .paywall }) {
-                        VStack(spacing: CGFloat(5.0)) {
-                            Label("Upgrade to Pro Now", systemImage: "lock.fill")
-                            Text("Managing Tags requires Pro version")
-                                .font(.subheadline)
-                                .foregroundColor(.black.opacity(0.4))
-                        }
-                    }
-                    .buttonStyle(PaywallButtonStyle())
-                }
-                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-            }
         }
         .onAppear { manager.reloadData() }
         .listStyle(InsetGroupedListStyle())
@@ -180,13 +165,28 @@ struct TagsManageContentView: View {
     
     @ViewBuilder
     func header() -> some View {
-        Picker("Tags", selection: $selectedSegment) {
-            ForEach(TagPickerSegment.allCases, id: \.self) { segment in
-                Text(segment.title)
+        VStack(spacing: 20.0) {
+            Picker("Tags", selection: $selectedSegment) {
+                ForEach(TagPickerSegment.allCases, id: \.self) { segment in
+                    Text(segment.title)
+                }
+            }
+            .disabled(isManagingDisabled)
+            .pickerStyle(SegmentedPickerStyle())
+            
+            if !purchaseManager.isActive {
+                Button(action: { activeSheet = .paywall }) {
+                    VStack(spacing: CGFloat(5.0)) {
+                        Label("Upgrade to Pro Now", systemImage: "lock.fill")
+                        Text("Editing tags requires PRO version")
+                            .font(.subheadline)
+                            .foregroundColor(.black.opacity(0.4))
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .buttonStyle(PaywallButtonStyle())
             }
         }
-        .disabled(isManagingDisabled)
-        .pickerStyle(SegmentedPickerStyle())
         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         .padding([.top, .bottom], CGFloat(20.0))
     }

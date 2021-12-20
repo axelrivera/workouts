@@ -26,6 +26,24 @@ struct TagSelector: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 5.0) {
+                if !purchaseManager.isActive {
+                    Button(action: { activeSheet = .paywall }) {
+                        VStack(spacing: CGFloat(5.0)) {
+                            Text("Try selecting any of the default Tags")
+                                .font(.subheadline)
+                                .foregroundColor(.black.opacity(0.4))
+                                .multilineTextAlignment(.center)
+                            Label("Upgrade to Pro Now", systemImage: "lock.fill")
+                            Text("Adding new Tags requires Pro version")
+                                .font(.subheadline)
+                                .foregroundColor(.black.opacity(0.4))
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    .buttonStyle(PaywallButtonStyle())
+                    .padding(.bottom)
+                }
+                
                 ForEach(tags, id: \.self) { tag in
                     Button(action: { toggleTag(tag) }) {
                         HStack {
@@ -42,22 +60,6 @@ struct TagSelector: View {
                         .background(backgroundForTag(tag))
                         .cornerRadius(12.0)
                     }
-                }
-                
-                if !purchaseManager.isActive {
-                    Button(action: { activeSheet = .paywall }) {
-                        VStack(spacing: CGFloat(5.0)) {
-                            Text("Try out existing tags FREE!")
-                                .font(.subheadline)
-                                .foregroundColor(.black.opacity(0.5))
-                            Label("Upgrade to Pro Now", systemImage: "lock.fill")
-                            Text("New Tags require Pro version")
-                                .font(.subheadline)
-                                .foregroundColor(.black.opacity(0.4))
-                        }
-                    }
-                    .buttonStyle(PaywallButtonStyle())
-                    .padding(.top)
                 }
             }
             .padding()

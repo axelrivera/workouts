@@ -36,7 +36,12 @@ struct TagsContentView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var manager: TagsDisplayManager
     
-    @State private var currentSegment = TagPickerSegment.active
+    @State private var currentSegment = TagPickerSegment.active {
+        didSet {
+            reload()
+        }
+    }
+    
     @State private var tags = [TagSummaryViewModel]()
     
     @State private var activeCover: ActiveCover?
@@ -49,7 +54,9 @@ struct TagsContentView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(tags, id: \.id) { viewModel in
                         NavigationLink(destination: TagWorkoutsView(viewModel: viewModel)) {
-                            TagSummaryCell(viewModel: viewModel)
+                            SummaryCell(viewModel: viewModel)
+                                .padding([.leading, .trailing])
+                                .padding([.top, .bottom], CGFloat(10.0))
                                 .tag("\(currentSegment)::\(viewModel.id.uuidString)")
                         }
                         .contextMenu {
@@ -65,7 +72,6 @@ struct TagsContentView: View {
             .onAppear { reload() }
             .overlay(emptyView())
             .navigationTitle("Tags")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeCover = .settings }) {
@@ -73,15 +79,19 @@ struct TagsContentView: View {
                     }
                 }
                 
-                ToolbarItem(placement: .principal) {
-                    Picker("Tags", selection: $currentSegment.animation()) {
-                        ForEach(TagPickerSegment.allCases, id: \.self) { segment in
-                            Text(segment.title)
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        ForEach(TagPickerSegment.allCases) { segment in
+                            Button(action: { currentSegment = segment }) {
+                                Text(segment.title)
+                                if currentSegment == segment {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
                         }
+                    } label: {
+                        Text(currentSegment.title)
                     }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .fixedSize()
-                    .onChange(of: currentSegment, perform: { _ in reload() })
                 }
             }
             .fullScreenCover(item: $activeCover, onDismiss: { reload() }) { item in

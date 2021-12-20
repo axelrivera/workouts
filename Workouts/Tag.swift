@@ -11,7 +11,6 @@ import SwiftUI
 private let NameKey = "name"
 private let ArchivedKey = "archivedDate"
 private let DeletedKey = "deletedDate"
-private let FavoriteKey = "isFavorite"
 private let UUIDKey = "uuid"
 private let GearTypeKey = "gearTypeValue"
 private let DefaultKey = "isDefault"
@@ -54,7 +53,6 @@ class Tag: NSManagedObject {
     @NSManaged var name: String
     @NSManaged var color: UIColor?
     @NSManaged fileprivate var gearTypeValue: String?
-    @NSManaged var isFavorite: Bool
     @NSManaged var isDefault: Bool
     
     @NSManaged private(set) var archivedDate: Date?

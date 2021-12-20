@@ -30,11 +30,13 @@ class StatsManager: ObservableObject {
     @Published var recentWeekly = [StatsSummary]()
     @Published var recentMonthly = [StatsSummary]()
     
+    @Published var avgWeeklyTotal: Int = 0
     @Published var avgWeeklyDistance: Double = 0
     @Published var avgWeeklyDuration: Double = 0
     @Published var avgWeeklyElevation: Double = 0
     @Published var avgWeeklyCalories: Double = 0
     
+    @Published var avgMonthlyTotal: Int = 0
     @Published var avgMonthlyDistance: Double = 0
     @Published var avgMonthlyDuration: Double = 0
     @Published var avgMonthlyElevation: Double = 0
@@ -96,20 +98,24 @@ extension StatsManager {
 
             let avgWeeklyValues = recentWeekly.dropFirst()
             let totalWeekly = Double(avgWeeklyValues.count)
+            
+            let avgWeeklyTotal = avgWeeklyValues.map({ Double($0.total) }).reduce(0, +) / totalWeekly
             let avgWeeklyDistance = avgWeeklyValues.map({ $0.distance }).reduce(0, +) / totalWeekly
             let avgWeeklyDuration = avgWeeklyValues.map({ $0.duration }).reduce(0, +) / totalWeekly
             let avgWeeklyElevation = avgWeeklyValues.map({ $0.elevation }).reduce(0, +) / totalWeekly
-            let avgWeeklyCalories = avgWeeklyValues.map({ $0.energyBurned }).reduce(0, +) / totalWeekly
+            let avgWeeklyCalories = avgWeeklyValues.map({ $0.calories }).reduce(0, +) / totalWeekly
             
             let monthly = self.fetchSummary(for: .month)
             let recentMonthly = self.fetchRecentSummary(for: .month)
             
             let avgMonthlyValues = recentMonthly.dropFirst()
             let totalMonthly = Double(avgMonthlyValues.count)
+            
+            let avgMontlyTotal = avgMonthlyValues.map({ Double($0.total) }).reduce(0, +) / totalMonthly
             let avgMonthlyDistance = avgMonthlyValues.map({ $0.distance }).reduce(0, +) / totalMonthly
             let avgMonthlyDuration = avgMonthlyValues.map({ $0.duration }).reduce(0, +) / totalMonthly
             let avgMonthlyElevation = avgMonthlyValues.map({ $0.elevation }).reduce(0, +) / totalMonthly
-            let avgMonthlyCalories = avgMonthlyValues.map({ $0.energyBurned }).reduce(0, +) / totalMonthly
+            let avgMonthlyCalories = avgMonthlyValues.map({ $0.calories }).reduce(0, +) / totalMonthly
 
             let yearly = self.fetchSummary(for: .year)
             let all = self.fetchSummary(for: .allTime)
@@ -121,11 +127,13 @@ extension StatsManager {
                 self.yearStats = yearly
                 self.allStats = all
                 
+                self.avgWeeklyTotal = Int(avgWeeklyTotal.rounded())
                 self.avgWeeklyDistance = avgWeeklyDistance
                 self.avgWeeklyDuration = avgWeeklyDuration
                 self.avgWeeklyElevation = avgWeeklyElevation
                 self.avgWeeklyCalories = avgWeeklyCalories
                 
+                self.avgMonthlyTotal = Int(avgMontlyTotal.rounded())
                 self.avgMonthlyDistance = avgMonthlyDistance
                 self.avgMonthlyDuration = avgMonthlyDuration
                 self.avgMonthlyElevation = avgMonthlyElevation

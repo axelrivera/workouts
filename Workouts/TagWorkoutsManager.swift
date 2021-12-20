@@ -14,6 +14,7 @@ final class TagWorkoutsManager: ObservableObject {
     
     var workoutIds = [UUID]()
     private let provider: WorkoutTagProvider
+    @Published var showEmpty = false
     
     init(viewModel: TagSummaryViewModel, context: NSManagedObjectContext) {
         self.viewModel = viewModel
@@ -25,6 +26,10 @@ extension TagWorkoutsManager {
     
     func reload() {
         workoutIds = provider.workoutIdentifiers(forTag: viewModel.id)
+        
+        DispatchQueue.main.async {
+            self.showEmpty = self.workoutIds.isEmpty
+        }
     }
     
     func predicate() -> NSPredicate {

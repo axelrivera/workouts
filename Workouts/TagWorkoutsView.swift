@@ -54,7 +54,7 @@ struct TagWorkoutsContentView: View {
     
     @ViewBuilder
     func emptyView() -> some View {
-        if workouts.isEmpty {
+        if manager.showEmpty {
             Text("No Workouts")
                 .foregroundColor(.secondary)
         }

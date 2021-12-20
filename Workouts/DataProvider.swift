@@ -129,7 +129,7 @@ extension DataProvider {
         }
     }
     
-    func dateRageForActiveWorkouts() -> ClosedRange<Date> {
+    func dateRangeForActiveWorkouts() -> ClosedRange<Date> {
         let request = Workout.defaultFetchRequest()
         request.predicate = Workout.activePredicate(sport: nil, interval: nil)
         request.sortDescriptors = [Workout.sortedByDateDescriptor(ascending: true)]
@@ -187,8 +187,6 @@ extension DataProvider {
         let avgElevation = expressionDescription(for: .avgElevation, function: .avg)
         let energy = expressionDescription(for: .energyBurned, function: .sum)
         let avgEnergy = expressionDescription(for: .avgEnergyBurned, function: .avg)
-        let maxDistance = expressionDescription(for: .longestDistance, function: .max)
-        let maxElevation = expressionDescription(for: .highestElevation, function: .max)
         
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
         request.returnsObjectsAsFaults = false
@@ -196,8 +194,7 @@ extension DataProvider {
         request.predicate = predicate
         
         request.propertiesToFetch = [
-            distance, avgDistance, duration, avgDuration, elevation, avgElevation, energy, avgEnergy,
-            maxDistance, maxElevation
+            distance, avgDistance, duration, avgDuration, elevation, avgElevation, energy, avgEnergy
         ]
         
         var resultDictionary = [String: Any]()

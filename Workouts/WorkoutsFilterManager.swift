@@ -76,7 +76,7 @@ final class WorkoutsFilterManager: ObservableObject {
         self.supportedSports = Workout.availableSports(in: context)
         
         // Dates
-        dateRange = dataProvider.dateRageForActiveWorkouts()
+        dateRange = dataProvider.dateRangeForActiveWorkouts()
         let interval = DateInterval.lastSixMonths()
         startDate = interval.start
         endDate = interval.end

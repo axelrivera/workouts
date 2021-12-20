@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19461" systemVersion="21A559" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21C52" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Tag" representedClassName="Tag" syncable="YES">
         <attribute name="archivedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="color" optional="YES" attributeType="Transformable" valueTransformerName="ColorTransformer" customClassName="UIKit.UIColor"/>
@@ -7,10 +7,17 @@
         <attribute name="gearTypeValue" optional="YES" attributeType="String"/>
         <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isDefault" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="position" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+            <fetchIndexElement property="position" type="Binary" order="ascending"/>
+            <fetchIndexElement property="deletedDate" type="Binary" order="ascending"/>
+            <fetchIndexElement property="archivedDate" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isDefault" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isArchived" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <entity name="Workout" representedClassName="Workout" syncable="YES">
         <attribute name="appIdentifier" optional="YES" attributeType="String"/>
@@ -70,11 +77,20 @@
         <attribute name="favoriteDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="identifier" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="identifier" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isFavorite" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <entity name="WorkoutTag" representedClassName="WorkoutTag" syncable="YES">
         <attribute name="deletedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="tagId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="workoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="tagId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="workoutId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="deletedDate" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <configuration name="Cloud" usedWithCloudKit="YES">
         <memberEntity name="WorkoutMetadata"/>
@@ -85,7 +101,7 @@
         <memberEntity name="Workout"/>
     </configuration>
     <elements>
-        <element name="Tag" positionX="-54" positionY="144" width="128" height="179"/>
+        <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
         <element name="Workout" positionX="-63" positionY="-18" width="128" height="650"/>
         <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
         <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
