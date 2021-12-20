@@ -20,11 +20,22 @@ final class WorkoutsFilterManager: ObservableObject {
         }
     }
     
+    enum DayOfWeek: Identifiable {
+        case `default`, weekday, weekend
+
+        var id: Int { hashValue}
+        
+        var isActive: Bool {
+            self != .default
+        }
+    }
+    
     private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
     
     @Published var supportedSports = [Sport]()
     @Published var sports = Set<Sport>()
     @Published var workoutLocation = WorkoutLocation.default
+    @Published var dayOfWeek = DayOfWeek.default
     
     @Published var showFavorites = false
     @Published var showDateRange = false
@@ -72,9 +83,7 @@ final class WorkoutsFilterManager: ObservableObject {
         self.metaProvider = MetadataProvider(context: context)
         self.tagProvider = TagProvider(context: context)
         self.workoutTagProvider = WorkoutTagProvider(context: context)
-        
-        self.supportedSports = Workout.availableSports(in: context)
-        
+                
         // Dates
         dateRange = dataProvider.dateRangeForActiveWorkouts()
         let interval = DateInterval.lastSixMonths()
@@ -87,6 +96,17 @@ final class WorkoutsFilterManager: ObservableObject {
 }
 
 extension WorkoutsFilterManager {
+    
+    func loadSports() {
+        context.perform { [weak self] in
+            guard let self = self else { return }
+                
+            let sports = Workout.availableSports(in: self.context)
+            DispatchQueue.main.async {
+                self.supportedSports = sports
+            }
+        }
+    }
     
     func count() -> Int {
         let request = Workout.defaultFetchRequest()
@@ -111,6 +131,7 @@ extension WorkoutsFilterManager {
     var isFilterActive: Bool {
         if sports.isPresent { return true }
         if workoutLocation.isActive { return true }
+        if dayOfWeek.isActive { return true }
         if showFavorites { return true }
         if showDateRange { return true }
         if let _ = minDistanceValue { return true }
@@ -124,6 +145,7 @@ extension WorkoutsFilterManager {
         
         sports = Set<Sport>()
         workoutLocation = .default
+        dayOfWeek = .default
         showFavorites = false
         showDateRange = false
         startDate = interval.start
@@ -242,6 +264,16 @@ extension WorkoutsFilterManager {
                 workoutLocation = .default
             } else {
                 workoutLocation = location
+            }
+        }
+    }
+    
+    func updateDayOfWeek(for dayOfWeek: DayOfWeek) {
+        withAnimation {
+            if dayOfWeek == self.dayOfWeek {
+                self.dayOfWeek = .default
+            } else {
+                self.dayOfWeek = dayOfWeek
             }
         }
     }
@@ -399,6 +431,17 @@ extension WorkoutsFilterManager {
         
         if workoutLocation.isActive {
             predicates.append(Workout.predicateForIndoor(workoutLocation == .indoor))
+        }
+        
+        if dayOfWeek.isActive {
+            switch dayOfWeek {
+            case .weekday:
+                predicates.append(Workout.predicateForWeekday())
+            case .weekend:
+                predicates.append(Workout.predicateForWeekend())
+            default:
+                break
+            }
         }
         
         if let distance = minDistanceValue {

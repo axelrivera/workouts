@@ -18,7 +18,7 @@ struct WorkoutsFilterView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: header("Workout")) {
+                Section {
                     ForEach(manager.supportedSports) { sport in
                         Button(action: { manager.togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
@@ -30,33 +30,6 @@ struct WorkoutsFilterView: View {
                     }
                 }
                 .textCase(nil)
-                
-                Section {
-                    Button(action: { manager.updateWorkoutLocation(for: .indoor) }) {
-                        HStack {
-                            Text("Indoor")
-                                .foregroundColor(.primary)
-                            
-                            if manager.workoutLocation == .indoor {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
-                            }
-                        }
-                    }
-                    Button(action: { manager.updateWorkoutLocation(for: .outdoor) }) {
-                        HStack {
-                            Text("Outdoor")
-                                .foregroundColor(.primary)
-                            
-                            if manager.workoutLocation == .outdoor {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
-                            }
-                        }
-                    }
-                }
                 
                 Section {
                     Toggle(isOn: $manager.showFavorites) {
@@ -94,6 +67,62 @@ struct WorkoutsFilterView: View {
                 }
                 .textCase(nil)
                 
+                Section(header: header("Location")) {
+                    Button(action: { manager.updateWorkoutLocation(for: .indoor) }) {
+                        HStack {
+                            Text("Indoor")
+                                .foregroundColor(.primary)
+                            
+                            if manager.workoutLocation == .indoor {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                    Button(action: { manager.updateWorkoutLocation(for: .outdoor) }) {
+                        HStack {
+                            Text("Outdoor")
+                                .foregroundColor(.primary)
+                            
+                            if manager.workoutLocation == .outdoor {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                }
+                .textCase(nil)
+                
+                Section(header: header("Day of Week")) {
+                    Button(action: { manager.updateDayOfWeek(for: .weekday) }) {
+                        HStack {
+                            Text("Weekday")
+                                .foregroundColor(.primary)
+                            
+                            if manager.dayOfWeek == .weekday {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                    Button(action: { manager.updateDayOfWeek(for: .weekend) }) {
+                        HStack {
+                            Text("Weekend")
+                                .foregroundColor(.primary)
+                            
+                            if manager.dayOfWeek == .weekend {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                }
+                .textCase(nil)
+                
                 if manager.tags.isPresent {
                     Section(header: header("Tags")) {
                         ForEach(manager.tags) { tag in
@@ -114,7 +143,10 @@ struct WorkoutsFilterView: View {
                 }
             }
             .interactiveDismissDisabled()
-            .onAppear { manager.reloadTags() }
+            .onAppear {
+                manager.loadSports()
+                manager.reloadTags()
+            }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

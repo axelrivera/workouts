@@ -29,6 +29,7 @@
         <attribute name="avgSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="coordinatesValue" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayOfWeek" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="device" optional="YES" attributeType="String"/>
         <attribute name="distance" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -66,6 +67,7 @@
         <fetchIndex name="byPropertyIndex">
             <fetchIndexElement property="start" type="Binary" order="descending"/>
             <fetchIndexElement property="remoteIdentifier" type="Binary" order="ascending"/>
+            <fetchIndexElement property="dayOfWeek" type="Binary" order="ascending"/>
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
@@ -102,7 +104,7 @@
     </configuration>
     <elements>
         <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
-        <element name="Workout" positionX="-63" positionY="-18" width="128" height="650"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="665"/>
         <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
         <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
     </elements>

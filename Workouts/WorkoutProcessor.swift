@@ -10,6 +10,8 @@ import HealthKit
 import CoreLocation
 import Polyline
 
+fileprivate let gregorianCalendar = Calendar.init(identifier: .gregorian)
+
 extension WorkoutProcessor {
     struct InsertObject {
         let identifier: UUID
@@ -34,6 +36,10 @@ extension WorkoutProcessor {
         let elevationDescended: Double
         let source: String
         let device: String?
+        
+        var weekday: Int {
+            gregorianCalendar.component(.weekday, from: start)
+        }
     }
     
     struct UpdateObject {

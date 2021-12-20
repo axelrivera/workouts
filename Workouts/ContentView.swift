@@ -57,7 +57,7 @@ struct ContentView: View {
                 Log.debug("active")
                 Task {
                     Log.debug("requesting status")
-                    await workoutManager.requestHealthaStatus()
+                    await workoutManager.requestHealthStatus()
                 }
             case .background:
                 Log.debug("background")

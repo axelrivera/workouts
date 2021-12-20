@@ -37,7 +37,7 @@ struct LogFilterView: View {
                     }
                 }
                 
-                Section(header: Text("Workout")) {
+                Section {
                     ForEach(availableSports) { sport in
                         Button(action: { togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {

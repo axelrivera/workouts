@@ -31,6 +31,7 @@ struct WorkoutsApp: App {
     let synchronizer: Synchronizer
     
     init() {
+        AppSettings.workoutsQueryAnchor = nil
         let context = storageProvider.persistentContainer.viewContext
         remoteData.load(context: context)
         workoutDataStore = WorkoutDataStore.shared

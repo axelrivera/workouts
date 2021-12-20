@@ -20,6 +20,7 @@ private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
 private let EndDateKey = "end"
 private let IndoorKey = "indoor"
+private let DayOfWeekKey = "dayOfWeek"
 
 private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
 private let ZoneValue1Key = "zoneValue1"
@@ -65,6 +66,7 @@ class Workout: NSManagedObject {
     @NSManaged fileprivate(set) var totalRetries: Int
     @NSManaged var coordinatesValue: String
     @NSManaged var isLocationPending: Bool
+    @NSManaged var dayOfWeek: Int
     
     // Heart Rate Zones
     @NSManaged private(set) var zoneMaxHeartRate: Int
@@ -260,6 +262,14 @@ extension Workout {
         NSPredicate(format: "%K <= %@", DistanceKey, distance as NSNumber)
     }
     
+    static func predicateForWeekday() -> NSPredicate {
+        NSPredicate(format: "%K IN %@", DayOfWeekKey, [2,3,4,5,6] as [NSNumber])
+    }
+    
+    static func predicateForWeekend() -> NSPredicate {
+        NSPredicate(format: "%K IN %@", DayOfWeekKey, [7,1] as [NSNumber])
+    }
+    
     static func distantFuturePredicate() -> NSPredicate {
         NSPredicate(format: "%K > %@", Date.distantFuture as NSDate)
     }
@@ -383,6 +393,7 @@ extension Workout {
             workout.elevationDescended = object.elevationDescended
             workout.source = object.source
             workout.device = object.device
+            workout.dayOfWeek = object.weekday
             
             // Heart Rate Zones
             let zoneHeartRate = AppSettings.maxHeartRate

@@ -62,7 +62,7 @@ class WorkoutManager: ObservableObject {
     
     // MARK: - Methods
     
-    func requestHealthaStatus() async {
+    func requestHealthStatus() async {
         let shouldRequestStatus = await authProvider.shouldRequestStatus()
         if shouldRequestStatus {
             DispatchQueue.main.async {

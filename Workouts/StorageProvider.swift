@@ -45,15 +45,15 @@ class StorageProvider: ObservableObject {
                 description.shouldMigrateStoreAutomatically = false
             }
         } else {
-            #if DEBUG
-            do {
-                // Use the container to initialize the development schema.
-                try persistentContainer.initializeCloudKitSchema(options: [])
-            } catch {
-                Log.debug("failed to initialize schema: \(error.localizedDescription)")
-                // Handle any errors.
-            }
-            #endif
+//            #if DEBUG
+//            do {
+//                // Use the container to initialize the development schema.
+//                try persistentContainer.initializeCloudKitSchema(options: [])
+//            } catch {
+//                Log.debug("failed to initialize schema: \(error.localizedDescription)")
+//                // Handle any errors.
+//            }
+//            #endif
             
             persistentContainer.persistentStoreDescriptions.forEach { description in
                 description.shouldInferMappingModelAutomatically = false
@@ -73,7 +73,6 @@ class StorageProvider: ObservableObject {
                 switch currentVersion {
                 case .v2, .v3, .v4:
                     NSPersistentStoreCoordinator.destroyStore(at: storeURL)
-                    AppSettings.workoutsQueryAnchor = nil
                 default:
                     migrator.migrateStore(at: storeURL, toVersion: currentVersion)
                 }

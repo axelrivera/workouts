@@ -17,6 +17,12 @@ class RemoteImporter {
     }
     
     func importLatestWorkouts(anchor: HKQueryAnchor?, regenerate: Bool) async -> HKQueryAnchor? {
+        if let anchor = anchor {
+            Log.debug("fetch latest workouts with anchor: \(anchor)")
+        } else {
+            Log.debug("fetch latest workouts -- no anchor")
+        }
+        
         let (remoteWorkouts, deleted, newAnchor) = await downloader.fethLatestWorkouts(anchor: anchor)
         var responseAnchor: HKQueryAnchor? = newAnchor
         
