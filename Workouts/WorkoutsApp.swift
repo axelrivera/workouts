@@ -16,28 +16,34 @@ import SwiftUI
 
 @main
 struct WorkoutsApp: App {
+    
     let purchaseManager = IAPManager()
+    // Instanciate LogManager and StatsManager first because they have observers that may depend from other singletons
+    let logManager: LogManager
+    let statsManager: StatsManager
+    
     let workoutDataStore: WorkoutDataStore
     let storageProvider = StorageProvider()
     let workoutManager: WorkoutManager
-    let statsManager: StatsManager
     let synchronizer: Synchronizer
     
     init() {
         workoutDataStore = WorkoutDataStore.shared
-        workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
+        logManager = LogManager(context: storageProvider.persistentContainer.viewContext)
         statsManager = StatsManager(context: storageProvider.persistentContainer.viewContext)
+        workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
         
         let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
         backgroundContext.automaticallyMergesChangesFromParent = true
         synchronizer = Synchronizer(context: backgroundContext)
     }
     
-    var body: some Scene {
+    @SceneBuilder var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, storageProvider.persistentContainer.viewContext)
                 .environmentObject(workoutManager)
+                .environmentObject(logManager)
                 .environmentObject(statsManager)
                 .environmentObject(purchaseManager)
         }

@@ -6,6 +6,7 @@
 //
 
 import HealthKit
+import CoreLocation
 
 extension HKQuantityType {
     
@@ -58,6 +59,10 @@ extension HKUnit {
 
 extension HKWorkout {
     
+    var totalElapsedTime: Double {
+        endDate.timeIntervalSince(startDate)
+    }
+    
     var isIndoor: Bool {
         metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
     }
@@ -88,6 +93,35 @@ extension HKWorkout {
     
     var elevationDescended: HKQuantity? {
         metadata?[HKMetadataKeyElevationDescended] as? HKQuantity
+    }
+    
+    var movingTime: Double? {
+        metadata?[MetadataKeyMovingTime] as? Double
+    }
+    
+    var avgHeartRate: Double? {
+        metadata?[MetadataKeyAvgHeartRate] as? Double
+    }
+    
+    var minHeartRate: Double? {
+        metadata?[MetadataKeyMinHeartRate] as? Double
+    }
+    
+    var maxHeartRate: Double? {
+        metadata?[MetadataKeyMaxHeartRate] as? Double
+    }
+    
+    var startCoordinate: CLLocationCoordinate2D? {
+        guard let lat = metadata?[MetadataKeyStartLatitude] as? Double, let long = metadata?[MetadataKeyStartLongitude] as? Double else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: long)
+    }
+    
+    var maxAltitude: Double? {
+        metadata?[MetadataKeyMaxAltitude] as? Double
+    }
+    
+    var minAltitude: Double? {
+        metadata?[MetadataKeyMaxAltitude] as? Double
     }
     
 }

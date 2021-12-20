@@ -7,44 +7,47 @@
 
 import SwiftUI
 import Charts
+import CoreData
 
-struct DetailAnalysisView: View {
+struct AnalysisView: View {
+    enum ActiveSheet: Identifiable {
+        case heartRateZones
+        var id: Int { hashValue }
+    }
+    
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var detailManager: DetailManager
+    @EnvironmentObject var purchaseManager: IAPManager
+    
+    @State private var activeSheet: ActiveSheet?
     
     var localizedAvgSpeed: Double? {
         nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
     }
     
-    var workout: Workout {
-        detailManager.workout
-    }
-    
-    var workoutTitle: String {
-        let distanceStr = formattedDistanceString(for: workout.distance)
-        let titleStr = workout.title
-        return String(format: "%@ %@", distanceStr, titleStr)
+    var workout: WorkoutDetailViewModel {
+        detailManager.detail
     }
     
     var body: some View {
         NavigationView {
             List {
-                Section(header: Color.clear.frame(width: 0, height: 20.0)) {
+                Section {
                     rowForText("Total Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.duration), detailColor: .time)
                     
-                    if workout.movingTime > 0 && workout.movingTime < workout.duration {
+                    if workout.shouldUseMovingTime {
                         rowForText("Moving Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.movingTime), detailColor: .time)
-                    }
-                    
-                    if workout.sport.isWalkingOrRunning && detailManager.avgPace > 0 {
-                        rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: detailManager.avgPace), detailColor: .cadence)
+                        
+                        rowForText("Paused Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
                     }
                 }
                 
-                if workout.sport.isSpeedSport && workout.showMap && workout.avgSpeed > 0 {
+                if workout.sport.isSpeedSport && workout.avgSpeed > 0 {
                     Section(header: Text("Speed")) {
                         if detailManager.speedValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .speed,
                                 supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
                                 supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
                                 values: detailManager.speedValues, avgValue: localizedAvgSpeed,
@@ -69,10 +72,27 @@ struct DetailAnalysisView: View {
                     }
                 }
                 
+                if workout.sport.isWalkingOrRunning && workout.avgPace > 0 {
+                    Section(header: Text("Pace")) {
+                        if detailManager.paceValues.isPresent {
+                            chartArea(
+                                valueType: .pace,
+                                supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+                                supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+                                values: detailManager.paceValues, avgValue: workout.avgPace,
+                                accentColor: .pace
+                            )
+                        } else {
+                            rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .pace)
+                        }
+                    }
+                }
+                
                 if workout.avgHeartRate > 0 {
                     Section(header: Text("Heart Rate")) {
                         if detailManager.heartRateValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .heartRate,
                                 supportLabel1: "Average", supportValue1: formattedHeartRateString(for: workout.avgHeartRate),
                                 supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: workout.maxHeartRate),
                                 values: detailManager.heartRateValues, avgValue: workout.avgHeartRate,
@@ -86,12 +106,22 @@ struct DetailAnalysisView: View {
                             }
                         }
                     }
+                    
+                    if detailManager.zones.isPresent {
+                        Section(header: zonesHeader()) {
+                            HRZonesView(summaries: purchaseManager.isActive ? detailManager.zones : HRZoneSummary.samples())
+                                .padding([.top, .bottom])
+                                .paywallButtonOverlay()
+                                
+                        }
+                    }
                 }
 
                 if workout.sport.isCycling && workout.avgCyclingCadence > 0 {
                     Section(header: Text("Cadence")) {
                         if detailManager.cyclingCadenceValues.isPresent {
-                            chart(
+                            chartArea(
+                                valueType: .cadence,
                                 supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
                                 supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
                                 values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
@@ -107,10 +137,11 @@ struct DetailAnalysisView: View {
                     }
                 }
 
-                if (detailManager.showMap && detailManager.altitudeValues.isPresent) || (workout.elevationAscended > 0 || workout.elevationDescended > 0) {
+                if detailManager.includesLocation || (showElevationAscended || showElevationDescended) {
                     Section(header: Text("Elevation")) {
-                        if detailManager.altitudeValues.isPresent {
-                            chart(
+                        if detailManager.includesLocation {
+                            chartArea(
+                                valueType: .altitude,
                                 supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.minElevation),
                                 supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.maxElevation),
                                 values: detailManager.altitudeValues, avgValue: nil,
@@ -118,34 +149,65 @@ struct DetailAnalysisView: View {
                             )
                         }
                         
-                        if abs(workout.elevationAscended) > 0 {
+                        if showElevationAscended {
                             rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
                         }
                         
-                        if abs(workout.elevationDescended) > 0 {
+                        if showElevationDescended {
                             rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
                         }
                     }
                 }
             }
+            .loadingView(isVisible: detailManager.isProcessingAnalysis)
             .listStyle(GroupedListStyle())
-            .navigationTitle(workoutTitle)
+            .navigationTitle(workout.analysisTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Text("Done")
                     }
                 }
             }
-            
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .heartRateZones:
+                    HeartRateEditView(action: saveZones)
+                        .environmentObject(detailManager.zoneManager)
+                }
+            }
         }
     }
 }
 
-extension DetailAnalysisView {
+extension AnalysisView {
     
-    func chart(supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
+    var showElevationAscended: Bool {
+        abs(workout.elevationAscended) > 0
+    }
+    
+    var showElevationDescended: Bool {
+        abs(workout.elevationDescended) > 0
+    }
+    
+    func saveZones(heartRate: Int, values: [Int]) {
+        Task(priority: .userInitiated) {
+            await detailManager.updateZones(maxHeartRate: heartRate, values: values, context: viewContext)
+            activeSheet = nil
+        }
+    }
+    
+    func zonesHeader() -> some View {
+        HStack {
+            Text("Heart Rate Zones")
+            Spacer()
+            Button("Edit") { activeSheet = .heartRateZones }
+                .disabled(!purchaseManager.isActive)
+        }
+    }
+    
+    func chartArea(valueType: ChartInterval.ValueType, supportLabel1: String, supportValue1: String, supportLabel2: String, supportValue2: String, values: [ChartInterval], avgValue: Double?, accentColor: Color) -> some View {
         VStack(alignment: .leading) {
             if supportValue1.isPresent || supportValue2.isPresent {
                 HStack {
@@ -176,13 +238,23 @@ extension DetailAnalysisView {
                 .padding()
             }
             
-            lineChart(values: values, avg: avgValue, color: accentColor, yAxisFormatter: yAxisFormatter)
+            chart(
+                valueType: valueType,
+                values: values,
+                avg: avgValue
+            )
         }
     }
 
-    func lineChart(values: [ChartInterval], avg: Double?, color: Color, yAxisFormatter: AxisValueFormatter? = nil) -> some View {
-        LineChart(values: values, avgValue: avg, lineColor: color, yAxisFormatter: yAxisFormatter)
-            .frame(maxWidth: .infinity, minHeight: 200.0)
+    @ViewBuilder
+    func chart(valueType: ChartInterval.ValueType, values: [ChartInterval], avg: Double?) -> some View {
+        if valueType == .cadence {
+            ScatterChart(values: values, avgValue: avg, lineColor: .cadence, yAxisFormatter: nil)
+                .frame(maxWidth: .infinity, minHeight: 200.0)
+        } else {
+            LineChart(valueType: valueType, values: values, avg: avg)
+                .frame(maxWidth: .infinity, minHeight: 200.0)
+        }
     }
     
     func rowForText(_ text: String, detail: String, detailColor: Color = .secondary) -> some View {
@@ -197,11 +269,15 @@ extension DetailAnalysisView {
 }
 
 struct DetailAnalysisView_Previews: PreviewProvider {
-    static let workout = StorageProvider.sampleWorkout()
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
-        DetailAnalysisView()
-            .environmentObject(DetailManager(workout: workout))
+        AnalysisView()
+            .environment(\.managedObjectContext, viewContext)
+            .environmentObject(DetailManager(viewModel: workout.detailViewModel))
+            .environmentObject(purchaseManager)
             .colorScheme(.dark)
         
     }

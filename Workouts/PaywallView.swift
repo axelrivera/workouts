@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct PaywallView: View {
-    @ObservedObject var purchaseManager: IAPManager
+    @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var purchaseManager: IAPManager
     @State private var isProcessing = false
     
     @State private var isPurchasing = false {
@@ -23,97 +24,97 @@ struct PaywallView: View {
         }
     }
     
-    var onSuccess = {}
+    @State private var items = PaywallItem.items()
+    
+    @ViewBuilder
+    func headerView() -> some View {
+        VStack(spacing: 15.0) {
+            Image(systemName: "flame.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 50.0, height: 50.0)
+
+            VStack {
+                Text("Better Workouts Pro")
+                    .font(.fixedTitle)
+
+                Text(purchaseManager.packageSupportString)
+                    .font(.fixedBody)
+                    .foregroundColor(.yellow)
+            }
+
+            Button(action: purchase) {
+                Group {
+                    if isPurchasing {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                    } else {
+                        Text(purchaseManager.packageBuyString)
+                            .foregroundColor(.black)
+                    }
+                }
+            }
+            .buttonStyle(PaywallButtonStyle())
+            .disabled(isProcessing)
+
+            Button(action: restore) {
+                Text("Restore Purchases")
+                    .font(.fixedBody)
+                    .underline()
+            }
+            .disabled(isProcessing)
+        }
+        .foregroundColor(.white)
+        .padding(.all, CGFloat(25.0))
+        .frame(maxWidth: .infinity)
+        .background(Color.accentColor)
+    }
             
     var body: some View {
-        ZStack {
-            Color.systemBackground
-                .ignoresSafeArea()
-            
-            VStack(alignment: .center, spacing: 20.0) {
-                Spacer()
-                
-                VStack(alignment: .center, spacing: 10.0) {
-                    Text("Better Workouts Pro")
-                        .font(.largeTitle)
-                        .foregroundColor(.orange)
-                                        
-                    Text("Upgrade to Better Workouts Pro to support further development and gain access to some great extra features:")
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                
-                VStack(spacing: 20.0) {
-                    HStack(alignment: .center, spacing: 15.0) {
-                        Image(systemName: "square.and.arrow.down")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, alignment: .center)
-                            .foregroundColor(.green)
-                        Text("Manually import FIT files recorded from your cycling computer or smartwatch.")
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    
-                    
-                    
-                    HStack(alignment: .center, spacing: 15.0) {
-                        Image(systemName: "star.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 32, alignment: .center)
-                            .foregroundColor(.green)
-                        Text("Additional PRO features coming soon!")
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                .padding([.leading, .trailing], 10.0)
-                .padding([.top, .bottom])
-                                            
-                Spacer()
-                
-                VStack(spacing: 10.0) {
-                    Text(purchaseManager.packageSupportString)
-                        .font(.headline)
-                        .foregroundColor(.orange)
-                    
-                    
-                    Button(action: purchase) {
-                        Group {
-                            if isPurchasing {
-                                ProgressView()
-                                    .progressViewStyle(DefaultProgressViewStyle())
-                            } else {
-                                Text(purchaseManager.packageBuyString)
-                                    .foregroundColor(.white)
+        NavigationView {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: headerView()) {
+                        Text("Upgrade to unlock all these PRO features.")
+                            .font(.fixedHeadline)
+                            .foregroundColor(.orange)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.all, CGFloat(15.0))
+                        
+                        ForEach(items, id: \.self) { item in
+                            Divider()
+                            HStack(alignment: .top, spacing: CGFloat(15.0)) {
+                                Image(systemName: item.imageName)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: CGFloat(28.0), height: CGFloat(28.0), alignment: .center)
+                                    .foregroundColor(item.imageColor)
+                                    .padding(.top, CGFloat(5.0))
+                                
+                                VStack(alignment: .leading, spacing: CGFloat(5.0)) {
+                                    Text(item.title)
+                                        .font(.headline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text(item.description)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
+                            .padding(.init(top: CGFloat(10.0), leading: CGFloat(20.0), bottom: CGFloat(10.0), trailing: CGFloat(20.0)))
                         }
-                        .frame(minWidth: 0, maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .cornerRadius(Constants.cornerRadius)
                     }
-                    .disabled(isProcessing)
-                    
-                    
-                    Button(action: restore) {
-                        Group {
-                            if isRestoring {
-                                ProgressView()
-                                    .progressViewStyle(DefaultProgressViewStyle())
-                            } else {
-                                Text("Restore Purchase")
-                            }
-                        }
-                        .padding([.top, .bottom], 10)
-                    }.disabled(isProcessing)
                 }
-                .padding([.leading, .trailing])
-                
             }
-            .padding()
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Not Now", action: { presentationMode.wrappedValue.dismiss() })
+                }
+            }
         }
     }
+    
 }
 
 extension PaywallView {
@@ -124,8 +125,7 @@ extension PaywallView {
             withAnimation { self.isPurchasing = false }
             switch result {
             case .success:
-                Log.debug("purchase is active")
-                onSuccess()
+                presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("purchase failed: \(error.localizedDescription)")
             }
@@ -138,8 +138,7 @@ extension PaywallView {
             withAnimation { self.isRestoring = false }
             switch result {
             case .success:
-                Log.debug("restore purchase is active")
-                onSuccess()
+                presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("restore failed: \(error.localizedDescription)")
             }
@@ -149,14 +148,10 @@ extension PaywallView {
 }
 
 struct PaywallView_Previews: PreviewProvider {
-    static let purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = false
-        return manager
-    }()
     
     static var previews: some View {
-        PaywallView(purchaseManager: purchaseManager)
+        PaywallView()
+            .environmentObject(IAPManagerPreview.manager(isActive: true))
             .colorScheme(.dark)
     }
 }

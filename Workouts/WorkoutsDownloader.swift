@@ -11,7 +11,15 @@ import HealthKit
 final class WorkoutsDownloader {
     let healthStore = HealthData.shared.healthStore
     
-    func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
+    func fethLatestWorkouts(anchor: HKQueryAnchor?) async -> (remoteWorkouts: [HKWorkout], deleted: [UUID], newAnchor: HKQueryAnchor?) {
+        return await withCheckedContinuation { continuation in
+            fetchLatestWorkouts(anchor: anchor) { remoteWorkouts, deleted, newAnchor in
+                continuation.resume(returning: (remoteWorkouts, deleted, newAnchor))
+            }
+        }
+    }
+    
+    private func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
             predicate: WorkoutDataStore.shared.defaultActivitiesPredicate(),

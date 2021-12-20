@@ -16,9 +16,11 @@ protocol Interpolator {
 
 extension Interpolator {
     
-    func resample(interval: Float) -> [Value] {
+    func resample(interval: Float, ignoreZeroes: Bool = false) -> [Value] {
         let count = Int(floor(Float(points.count) / interval))
-        return Array(0..<count).map { interpolate(Float($0) * interval) }
+        return Array(0..<count).map { index in
+            interpolate(Float(index) * interval)
+        }
     }
     
 }

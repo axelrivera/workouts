@@ -8,95 +8,89 @@
 import SwiftUI
 
 struct ContentView: View {
-    enum Tabs: Int {
-        case workouts, stats, settings
+    enum Tabs: String, Identifiable {
+        case home, history, stats, goals
+        var id: String { rawValue }
     }
     
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.managedObjectContext) var viewContext
+    
     @EnvironmentObject var workoutManager: WorkoutManager
-    @EnvironmentObject var storageProvider: StorageProvider
+    @EnvironmentObject var logManager: LogManager
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
-    @State private var selected = Tabs.workouts
+    
+    @State private var selected = Tabs.home
     
     var body: some View {
-        ZStack {
-            TabView(selection: $selected) {
-                WorkoutsView()
-                    .tabItem { Label("Workouts", systemImage: selected == .workouts ? "flame.fill" : "flame") }
-                    .tag(Tabs.workouts)
-                    .onAppear {
-                        fetchWorkoutsIfNecessary(resetAnchor: false)
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                        fetchWorkoutsIfNecessary(resetAnchor: true)
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                        viewContext.batchDeleteObjects()
-                        viewContext.refreshAllObjects()
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
-                        viewContext.refreshAllObjects()
-                    }
-                
-                StatsView()
-                    .onAppear {
-                        fetchSummariesIfNecessary()
-                    }
-                    .tabItem { Label("Statistics", systemImage: selected == .stats  ? "chart.bar.fill" : "chart.bar") }
-                    .tag(Tabs.stats)
-                
-                SettingsView()
-                    .tabItem { Label("Settings", systemImage: selected == .settings ? "gearshape.fill" : "gearshape") }
-                    .tag(Tabs.settings)
-            }
+        TabView(selection: $selected) {
+            HomeView()
+                .tabItem { Label("Home", systemImage: "house") }
+                .tag(Tabs.home)
             
-            if workoutManager.shouldRequestReadingAuthorization  {
-                Color.systemBackground
-                    .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
-                OnboardingView(action: onboardingAction)
+            StatsView()
+                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
+                .tag(Tabs.stats)
+            
+            WorkoutsView(sport: $workoutManager.sport)
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+                .tag(Tabs.history)
+        }
+        .onboardingOverlay()
+        .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
+            viewContext.refreshAllObjects()
+        }
+        .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
+            reloadData()
+        }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .active:
+                Log.debug("active")
+                Task {
+                    Log.debug("requesting status")
+                    await workoutManager.requestHealthaStatus()
+                }
+            case .background:
+                Log.debug("background")
+                viewContext.batchDeleteObjects()
+                viewContext.refreshAllObjects()
+            case .inactive:
+                Log.debug("inactive")
+            @unknown default:
+                Log.debug("unknown state")
+                assertionFailure()
             }
         }
     }
+    
 }
+
+// MARK: - Methods
 
 extension ContentView {
     
-    func fetchWorkoutsIfNecessary(resetAnchor: Bool) {
-        if !workoutManager.isProcessingRemoteData {
-            workoutManager.fetchRequestStatusForReading(resetAnchor: resetAnchor)
-        }
-    }
-    
-    func fetchSummariesIfNecessary() {
-        if !workoutManager.isProcessingRemoteData {
-            statsManager.fetchSummaries()
-        }
-    }
-    
-    func onboardingAction() -> Void {
-        workoutManager.requestReadingAuthorization { success in
-            Log.debug("reading authorization succeeded: \(success)")
-        }
+    private func reloadData() {
+        logManager.reloadCurrentInterval()
+        workoutManager.fetchRecentWorkouts()
+        statsManager.refresh()
     }
     
 }
 
 struct ContentView_Previews: PreviewProvider {
     static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workoutManager = WorkoutManager(context: viewContext)
-    static let statsManager = StatsManager(context: viewContext)
+    static let workoutManager = WorkoutManagerPreview.manager(context: viewContext)
+    static let logManager = LogManagerPreview.manager(context: viewContext)
+    static let statsManager = StatsManagerPreview.manager(context: viewContext)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         ContentView()
-            .onAppear(perform: {
-                workoutManager.state = .ok
-                workoutManager.isLoading = true
-                workoutManager.shouldRequestReadingAuthorization = false
-            })
-            .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
+            .environmentObject(logManager)
             .environmentObject(statsManager)
-            .environmentObject(IAPManager())
+            .environmentObject(purchaseManager)
     }
 }

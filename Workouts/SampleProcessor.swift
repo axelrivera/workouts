@@ -12,9 +12,6 @@ import HealthKit
 class SampleProcessor {
     let workout: HKWorkout
     let locations: [CLLocation]
-    let heartRateSamples: [Quantity]
-    let cadenceSamples: [Quantity]
-    let paceSamples: [Pace]
     
     private(set) var sampleMaxSpeed: Double = 0
     private(set) var avgMovingSpeed: Double = 0
@@ -24,12 +21,9 @@ class SampleProcessor {
     private var dictionary = [Int: Record]()
     private var stoppedIntervals = [DateInterval]()
     
-    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity], paceSamples: [Pace]) {
+    init(workout: HKWorkout, locations: [CLLocation], heartRateSamples: [Quantity], cadenceSamples: [Quantity]) {
         self.workout = workout
         self.locations = locations.sorted(by: { $0.timestamp < $1.timestamp })
-        self.heartRateSamples = heartRateSamples
-        self.cadenceSamples = cadenceSamples
-        self.paceSamples = paceSamples
     }
     
     var start: Date {
@@ -38,10 +32,6 @@ class SampleProcessor {
     
     var end: Date {
         workout.endDate
-    }
-    
-    var validRecords: [Record] {
-        records.filter({ $0.isPresent })
     }
     
 }
@@ -125,6 +115,15 @@ extension SampleProcessor {
         return sampleMaxSpeed
     }
     
+    func avgPace() -> Double {
+        let sport = workout.workoutActivityType.sport()
+        guard sport.isWalkingOrRunning else { return 0 }
+        
+        let duration = movingTime
+        let distance = totalDistance()
+        return calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
+    }
+    
     private func generateManualEventIntervals() {
         let speed = avgSpeed()
         let baseDistance = max(speed * 0.25, 1.0)
@@ -196,13 +195,22 @@ extension SampleProcessor {
     
     private func processSamples() {
         processLocationSamples()
-        processHeartRateSamples()
-        processCadenceSamples()
+        
+        if locations.isPresent {
+            movingTime = Double(records.filter({ $0.isActive }).count)
+        }
+        
+        if movingTime == 0 {
+            movingTime = duration
+        }
+        
+        let distance = totalDistance()
+        avgMovingSpeed = distance / movingTime
     }
     
     private func processLocationSamples() {
         guard isLocationSupported else { return }
-        
+                
         for location in locations {
             let key = keyForTimestamp(location.timestamp)
             guard let record = dictionary[key] else { continue }
@@ -214,34 +222,6 @@ extension SampleProcessor {
             record.altitude = location.altitude
             
             sampleMaxSpeed = max(sampleMaxSpeed, location.speed)
-        }
-        
-        movingTime = Double(records.filter({ $0.isActive }).count)
-        if movingTime > 0 {
-            let distance = totalDistance()
-            avgMovingSpeed = distance / movingTime
-        }
-    }
-    
-    private func processHeartRateSamples() {
-        guard heartRateSamples.isPresent else { return }
-        
-        for sample in heartRateSamples {
-            let key = keyForTimestamp(sample.timestamp)
-            guard let record = dictionary[key] else { continue }
-            
-            record.heartRate = max(record.heartRate, sample.value)
-        }
-    }
-    
-    private func processCadenceSamples() {
-        guard workout.workoutActivityType.isCycling && cadenceSamples.isPresent else { return }
-        
-        for sample in cadenceSamples {
-            let key = keyForTimestamp(sample.timestamp)
-            guard let record = dictionary[key] else { continue }
-            
-            record.cyclingCadence = max(record.cyclingCadence, sample.value)
         }
     }
     
@@ -257,29 +237,9 @@ extension SampleProcessor {
         var longitude: Double = 0
         var speed: Double = 0
         var altitude: Double = 0
-        var heartRate: Double = 0
-        var cyclingCadence: Double = 0
-        var temperature: Double = 0
         
         init(timestamp: Date) {
             self.timestamp = timestamp
-        }
-        
-        var isEmpty: Bool {
-            let sum = [
-                latitude,
-                longitude,
-                speed,
-                altitude,
-                heartRate,
-                cyclingCadence,
-                temperature
-            ].reduce(0, +)
-            return sum == 0
-        }
-        
-        var isPresent: Bool {
-            !isEmpty
         }
     }
     

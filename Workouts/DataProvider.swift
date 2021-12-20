@@ -7,15 +7,38 @@
 
 import Foundation
 import CoreData
-
-private let StartDateKey = "start"
-private let EndDateKey = "end"
+import SwiftUI
 
 final class DataProvider {
     let context: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {
         self.context = context
+    }
+    
+}
+
+// MARK: - Requests
+
+extension DataProvider {
+    
+    static func fetchRequest(for identifiers: [UUID]) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.predicateForIdentifiers(identifiers)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.returnsObjectsAsFaults = false
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
+        
+    }
+    
+    static func fetchRequest(sport: Sport?, interval: DateInterval?) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 10
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
     }
     
 }
@@ -28,26 +51,30 @@ extension DataProvider {
         case missingPropertyDictionary
     }
     
-    static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
-        NSPredicate(
-            format: "%K >= %@ AND %K <= %@",
-            EndDateKey, start as NSDate,
-            StartDateKey, end as NSDate
-        )
+    static func fetchRequestForSport(sport: Sport?, interval: DateInterval?) -> NSFetchRequest<NSFetchRequestResult> {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
+        request.returnsObjectsAsFaults = false
+        request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        return request
     }
     
-    static func fetchRequestForSport(sport: Sport, timeframe: StatsSummary.Timeframe) -> NSFetchRequest<NSFetchRequestResult> {
-        let (start, end) = timeframe.interval
-        
-        let sportPredicate = Workout.predicateForSport(sport)
-        let visiblePredicate = Workout.notMarkedForLocalDeletionPredicate
-        let datePredicate = datePredicateFor(start: start, end: end)
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [sportPredicate, visiblePredicate, datePredicate])
-        
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+}
+
+// MARK: - Recent Workouts
+
+extension DataProvider {
+    
+    func recentWorkouts() -> [Workout] {
+        let request = Workout.defaultFetchRequest()
         request.returnsObjectsAsFaults = false
-        request.predicate = predicate
-        return request
+        request.predicate = Workout.activePredicate(sport: nil, interval: DateInterval.lastTwoWeeks())
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            return []
+        }
     }
     
 }
@@ -65,85 +92,91 @@ extension DataProvider {
         }
     }
     
-    func fetchStatsSummary(sport: Sport, timeframe: StatsSummary.Timeframe) throws -> StatsSummary {
-        let distanceDesc = expressionDescriptionForProperty(.distance, function: .sum)
-        let durationDesc = expressionDescriptionForProperty(.duration, function: .sum)
-        let elevationDesc = expressionDescriptionForProperty(.elevation, function: .sum)
-        let energyDesc = expressionDescriptionForProperty(.energyBurned, function: .sum)
-        let maxDistanceDesc = expressionDescriptionForProperty(.distance, function: .max)
-        let maxElevationDesc = expressionDescriptionForProperty(.elevation, function: .max)
+    func fetchStatsSummary(sport: Sport?, interval: DateInterval) throws -> [String: Any] {
+        let distanceDesc = expressionDescription(for: .distance, function: .sum)
+        let durationDesc = expressionDescription(for: .duration, function: .sum)
+        let elevationDesc = expressionDescription(for: .elevation, function: .sum)
+        let energyDesc = expressionDescription(for: .energyBurned, function: .sum)
+        let maxDistanceDesc = expressionDescription(for: .longestDistance, function: .max)
+        let maxElevationDesc = expressionDescription(for: .highestElevation, function: .max)
         
-        let request = Self.fetchRequestForSport(sport: sport, timeframe: timeframe)
+        let request = Self.fetchRequestForSport(sport: sport, interval: interval)
         request.resultType = .dictionaryResultType
         request.propertiesToFetch = [
             distanceDesc, durationDesc, elevationDesc, energyDesc, maxDistanceDesc, maxElevationDesc
         ]
         
-        do {
-            let count = try context.count(for: request)
-            
-            let results = try context.fetch(request)
-            guard let first = results.first, let dictionary = first as? [String: Double] else {
-                throw DataError.missingPropertyDictionary
+        var resultDictionary = [String: Any]()
+        context.performAndWait {
+            do {
+                let count = try context.count(for: request)
+                let results = try context.fetch(request)
+                guard let first = results.first, let dictionary = first as? [String: Double] else {
+                    throw DataError.missingPropertyDictionary
+                }
+                
+                resultDictionary = dictionary
+                resultDictionary[Name.count.key] = count
+            } catch {
+                resultDictionary = [String: Any]()
             }
-            
-            var summary = StatsSummary(sport: sport, timeframe: timeframe)
-            summary.count = count
-            summary.distance = dictionary[Property.distance.nameFor(function: .sum)] ?? 0
-            summary.duration = dictionary[Property.duration.nameFor(function: .sum)] ?? 0
-            summary.elevation = dictionary[Property.elevation.nameFor(function: .sum)] ?? 0
-            summary.energyBurned = dictionary[Property.energyBurned.nameFor(function: .sum)] ?? 0
-            summary.longestDistance = dictionary[Property.distance.nameFor(function: .max)] ?? 0
-            summary.highestElevation = dictionary[Property.elevation.nameFor(function: .max)] ?? 0
-            return summary
-        } catch {
-            throw error
+        }
+        
+        if resultDictionary.isEmpty {
+            throw DataError.missingPropertyDictionary
+        } else {
+            return resultDictionary
         }
     }
     
 }
 
-// MARK: - Samples
+// MARK: - Helper Methods
 
 extension DataProvider {
     
-    enum ExpressionFunction: String {
-        case sum, max
+    struct Function: RawRepresentable {
+        typealias RawValue = String
+        let rawValue: String
         
-        var value: String {
-            switch self {
-            case .sum:
-                return "sum:"
-            case .max:
-                return "max:"
-            }
-            
-        }
+        static let sum = Function(rawValue: "sum:")
+        static let max = Function(rawValue: "max:")
     }
     
-    enum Property: String {
-        case distance, duration, energyBurned, elevation
+    struct Name: RawRepresentable, Equatable {
+        typealias RawValue = String
+        let rawValue: String
         
-        var name: String {
+        static let count = Name(rawValue: "count")
+        static let distance = Name(rawValue: "distance")
+        static let duration = Name(rawValue: "movingTime")
+        static let elevation = Name(rawValue: "elevation")
+        static let energyBurned = Name(rawValue: "energyBurned")
+        static let longestDistance = Name(rawValue: "longestDistance")
+        static let highestElevation = Name(rawValue: "highestElevation")
+        
+        var key: String {
+            return rawValue
+        }
+        
+        var property: String {
             switch self {
-            case .elevation:
+            case .elevation, .highestElevation:
                 return "elevationAscended"
+            case .longestDistance:
+                return "distance"
             default:
                 return rawValue
             }
         }
-        
-        func nameFor(function: ExpressionFunction) -> String {
-            name + function.rawValue.firstCapitalized
-        }
     }
     
-    private func expressionDescriptionForProperty(_ property: Property, function: ExpressionFunction) -> NSExpressionDescription {
+    private func expressionDescription(for name: Name, function: Function) -> NSExpressionDescription {
         let expressionDesc = NSExpressionDescription()
-        expressionDesc.name = property.nameFor(function: function)
+        expressionDesc.name = name.key
         expressionDesc.expression = NSExpression(
-            forFunction: function.value,
-            arguments: [NSExpression(forKeyPath: property.name)]
+            forFunction: function.rawValue,
+            arguments: [NSExpression(forKeyPath: name.property)]
         )
         expressionDesc.expressionResultType = .doubleAttributeType
         return expressionDesc

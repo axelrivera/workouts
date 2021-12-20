@@ -5,7 +5,7 @@
 //  Created by Axel Rivera on 2/10/21.
 //
 
-import Foundation
+import SwiftUI
 
 enum Sport: String, Identifiable, CaseIterable {
     case cycling, running, walking, other
@@ -47,10 +47,55 @@ enum Sport: String, Identifiable, CaseIterable {
         self.rawValue.capitalized
     }
     
+    var normalizedDistanceValue: Double {
+        switch self {
+        case .cycling:
+            return 3
+        default:
+            return 3
+        }
+    }
+    
+    var defaultDistanceValue: Double {
+        switch self {
+        case .cycling:
+            return 100
+        default:
+            return 3
+        }
+    }
+    
+    static let paceDistanceValue: Double = 100
+    
+    var color: Color {
+        switch self {
+        case .cycling:
+            return .cycling
+        case .running:
+            return .running
+        case .walking:
+            return .walking
+        default: return .sport
+        }
+    }
+    
     var name: String {
         switch self {
         case .cycling:
             return "Cycle"
+        case .running:
+            return "Run"
+        case .walking:
+            return "Walk"
+        default:
+            return "Generic Activity"
+        }
+    }
+    
+    var altName: String {
+        switch self {
+        case .cycling:
+            return "Ride"
         case .running:
             return "Run"
         case .walking:

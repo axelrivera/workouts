@@ -1,0 +1,89 @@
+//
+//  URL+Maps.swift
+//  URL+Maps
+//
+//  Created by Axel Rivera on 9/2/21.
+//
+
+import Foundation
+import SwiftUI
+
+enum MapImageError: Error {
+    case invalidImage
+}
+
+fileprivate let MapImageCacheDirectoryName = "BWMapImages"
+fileprivate let MapImageExtension = "feed"
+
+fileprivate func stringForColorScheme(_ scheme: ColorScheme) -> String {
+    switch scheme {
+    case .light:
+        return "light"
+    case .dark:
+        return "dark"
+    @unknown default:
+        return "light"
+    }
+}
+
+extension URL {
+    
+    private static func mapFileName(id: UUID, scheme: ColorScheme) -> String {
+        String(format: "%@_%@.%@", id.uuidString, stringForColorScheme(scheme), MapImageExtension)
+    }
+    
+    static func mapImagesCacheDirectory() -> URL {
+        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
+    }
+    
+    static func cachedMapImageURL(id: UUID, scheme: ColorScheme) -> URL {
+        let url = mapImagesCacheDirectory()
+        return url.appendingPathComponent(mapFileName(id: id, scheme: scheme))
+    }
+    
+}
+
+extension FileManager {
+    
+    static func createImagesCacheDirectoryIfNeeded() throws {
+        let url = URL.mapImagesCacheDirectory()
+        if !FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        }
+    }
+    
+    static func deleteImageCacheDirectory() {
+        let url = URL.mapImagesCacheDirectory()
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        
+        do {
+            try FileManager.default.moveItem(at: url, to: tmpURL)
+        } catch {
+            Log.debug("failed to delete image cache directory: \(error.localizedDescription)")
+        }
+    }
+    
+    static func writeLocalImage(_ image: UIImage, at url: URL) throws {
+        guard let data = image.jpegData(compressionQuality: 0.9) else { throw MapImageError.invalidImage }
+        try data.write(to: url, options: .atomic)
+    }
+    
+    static func localImage(at url: URL) -> UIImage? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data, scale: UIScreen.main.scale)
+    }
+    
+    static func writeCacheMapImage(id: UUID, scheme: ColorScheme, image: UIImage) throws {
+        try createImagesCacheDirectoryIfNeeded()
+        
+        let url = URL.cachedMapImageURL(id: id, scheme: scheme)
+        try writeLocalImage(image, at: url)
+    }
+    
+    static func cachedMapImage(id: UUID, scheme: ColorScheme) -> UIImage? {
+        let url = URL.cachedMapImageURL(id: id, scheme: scheme)
+        return localImage(at: url)
+    }
+    
+}

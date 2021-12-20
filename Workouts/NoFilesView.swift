@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct NoFilesView: View {
-    var addAction = {}
-    var reviewAction = {}
     
     var body: some View {
         VStack(alignment: .center, spacing: 30.0) {
@@ -64,11 +62,6 @@ struct NoFilesView: View {
             }
             
             Spacer()
-            
-            VStack(alignment: .center, spacing: 20.0) {
-                RoundButton(text: "Add FIT Files", action: addAction)
-                //Button("Review Tutorial", action: reviewAction)
-            }
         }
         .padding()
     }

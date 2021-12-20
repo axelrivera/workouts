@@ -12,231 +12,252 @@ import HealthKit
 import CoreData
 
 class DetailManager: ObservableObject {
-    let baseIntervalPoints : Int = 600
+    enum DetailError: Error {
+        case lap
+    }
     
-    @Published var points = [CLLocationCoordinate2D]()
+    @Published var isProcessingAnalysis: Bool = false
+    @Published var isProcessingLaps: Bool = false
+        
     @Published var heartRateValues = [ChartInterval]()
     @Published var speedValues = [ChartInterval]()
     @Published var cyclingCadenceValues = [ChartInterval]()
+    
     @Published var paceValues = [ChartInterval]()
+    @Published var bestPace: Double = 0
+    
     @Published var altitudeValues = [ChartInterval]()
     @Published var minElevation: Double = 0
     @Published var maxElevation: Double = 0
-    @Published var showMap: Bool = false
     
-    @Published var avgPace: Double = 0
-    @Published var bestPace: Double = 0
-    @Published var city: String?
-    @Published var state: String?
+    @Published var zones = [HRZoneSummary]()
+    @Published var zoneManager: HRZoneManager = HRZoneManager()
     
-    @Published var workout: Workout
-    private var context: NSManagedObjectContext
-    private var geocoder = CLGeocoder()
+    @Published var showLaps = false
+    @Published var selectedLapDistance = LapDistance.option1
+    @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
         
-    init(workout: Workout) {
-        self.workout = workout
-        self.showMap = workout.showMap
-        self.city = workout.locationCity
-        self.state = workout.locationState
-        self.context = workout.managedObjectContext!
+    var distanceSamples: [Quantity]?
+    
+    private var context: NSManagedObjectContext?
+    private var _workout: Workout?
+    
+    var detail: WorkoutDetailViewModel
+            
+    init(viewModel: WorkoutDetailViewModel) {
+        self.detail = viewModel
     }
+    
+    lazy var provider: HealthProvider = {
+        HealthProvider.shared
+    }()
 }
 
 extension DetailManager {
     
-    var locationName: String? {
-        let strings: [String] = [city, state].compactMap{ $0 }
-        if strings.isEmpty { return nil }
-        return strings.joined(separator: ", ")
+    var includesLocation: Bool { detail.includesLocation }
+    
+    func remoteWorkout() async throws -> HKWorkout {
+        try await provider.fetchWorkout(uuid: detail.id)
     }
     
-    func run() {
-        Log.debug("running samples - retries: \(workout.totalRetries)")
-        
-        if workout.shouldRegenerateSamples {
-            Log.debug("regenerating samples")
-            WorkoutDataStore.shared.fetchWorkout(for: workout.remoteIdentifier!) { [weak self] remoteWorkout in
-                guard let self = self else { return }
-                guard let remoteWorkout = remoteWorkout else {
-                    self.context.perform {
-                        self.updateValues(animated: false)
-                    }
-                    return
-                }
-                
-                self.context.perform {
-                    self.workout.updateSamples(remoteWorkout: remoteWorkout)
-                    self.updateValues(animated: self.workout.showMap)
-                }
-            }
-        } else {
-            Log.debug("samples in place")
-            
-            context.perform { [weak self] in
-                guard let self = self else { return }
-                self.updateValues(animated: false)
-            }
-        }
-    }
-    
-    private func updateValues(animated: Bool = true) {
-        let samples = workout.samples.sorted(by: { $0.timestamp < $1.timestamp })
-        
-        let showMap = workout.showMap
-        let locations = samples.filter({ $0.isLocation }).compactMap { $0.location }
-        let points = locations.map { $0.coordinate }
-        let altitude = locations.map { $0.altitude }
-        let minElevation = altitude.min() ?? 0
-        let maxElevation = altitude.max() ?? 0
-        
-        let movingSamples = samples.filter { sample in
-            if workout.showMap {
-                return sample.isActive && sample.speed > 0
-            } else {
-                return sample.isActive
-            }
-        }
-        
-        let heartRateValues = heartRateChartIntervals(for: movingSamples)
-        let speedValues = speedChartIntervals(for: movingSamples)
-        let cadenceValues = cadenceChartIntervals(for: movingSamples)
-        let altitudeValues = altitudeChartIntervals(for: movingSamples)
+    private func defaultDistanceSamples(remoteWorkout: HKWorkout) async -> [Quantity] {
+        if let currentSamples = distanceSamples { return currentSamples }
 
-        var avgPace: Double = 0
-        if workout.sport.isWalkingOrRunning {
-            let duration = workout.movingTime > 0 ? workout.movingTime : workout.duration
-            let distance = workout.distance
-            avgPace = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
+        let interval = DateInterval(start: remoteWorkout.startDate, end: remoteWorkout.endDate)
+        let source = remoteWorkout.sourceRevision.source
+
+        var samples = [Quantity]()
+        do {
+            if sport.isCycling {
+                samples = try await provider.fetchDistanceSamples(distanceType: .distanceCycling(), interval: interval, source: source)
+            } else {
+                samples = try await provider.fetchDistanceSamples(distanceType: .distanceWalkingRunning(), interval: interval, source: source)
+            }
+        } catch {
+            samples = []
         }
-                    
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+
+        return samples.normalizedByDistance(sport: sport)
+    }
+    
+    var sport: Sport { detail.sport }
+        
+    func processWorkout() {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isProcessingAnalysis = true
+                self.isProcessingLaps = true
+            }
+        }
+                
+        Task(priority: .userInitiated) {
+            await process()
+            await processLaps()
+        }
+    }
+    
+    private func process() async {
+        do {
+            guard let remoteWorkout = try? await remoteWorkout() else { return }
+
+            let locations = (try? await provider.fetchLocations(for: remoteWorkout)) ?? []
+            let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
+            let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
+            let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
-            withAnimation(animated ? .default : nil) {
-                self.showMap = showMap
-                self.points = points
+            let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
+            
+            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
+            
+            let paceValues: [ChartInterval]
+            let bestPace: Double
+            
+            if sport.isWalkingOrRunning {
+                let paceIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: Sport.paceDistanceValue)
+                
+                let paceSamples = paceIntervals.doubleValues(keyPath: \.avgPace)
+                paceValues = ChartInterval.paceChartIntervals(samples: paceSamples, movingTime: detail.movingTime)
+                bestPace = paceSamples.min() ?? 0
+            } else {
+                paceValues = []
+                bestPace = 0
+            }
+            
+            let zoneMaxHeartRate = detail.zoneMaxHeartRate
+            let zoneValues = detail.zoneValues
+            let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
+
+            let zones: [HRZoneSummary]
+            if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout),  heartRate.isPresent {
+                zones = fetchedZones
+            } else {
+                zones = []
+            }
+
+            let locationAltitudes = locations.altitudeValues()
+            let maxElevation = locationAltitudes.max() ?? 0
+            let minElevation = locationAltitudes.min() ?? 0
+
+            DispatchQueue.main.async {
+                self.speedValues = speed
+                self.paceValues = paceValues
+                self.bestPace = bestPace
+                self.heartRateValues = heartRate
+                self.cyclingCadenceValues = cadence
+                self.altitudeValues = altitude
                 self.minElevation = minElevation
                 self.maxElevation = maxElevation
-                self.heartRateValues = heartRateValues
-                self.speedValues = speedValues
-                self.cyclingCadenceValues = cadenceValues
-                self.altitudeValues = altitudeValues
-                self.avgPace = avgPace
+                self.zoneManager = zoneManager
+                self.zones = zones
                 
-                if let location = locations.first, self.city == nil || self.state == nil {
-                    self.geocoder.reverseGeocodeLocation(location) { placemarks, error in
-                        if let placemark = placemarks?.first {
-                            if let city = placemark.locality {
-                                self.city = city
-                                self.workout.locationCity = city
-                            }
-
-                            if let state = placemark.administrativeArea {
-                                self.state = state
-                                self.workout.locationState = state
-                            }
-                        }
-                        
-                        if self.context.hasChanges {
-                            self.context.saveOrRollback()
-                        }
-                    }
+                withAnimation {
+                    self.isProcessingAnalysis = false
                 }
+            }
+        } catch {
+            Log.debug("unable to process intervals")
+        }
+    }
+    
+    func selectedLaps() -> [WorkoutLap] {
+        guard let laps = lapsDictionary[selectedLapDistance] else {
+            return []
+        }
+        return laps
+    }
+    
+    private func processLaps() async {
+        async let option1 = lapsForDistance(.option1)
+        async let option2 = lapsForDistance(.option2)
+        async let option3 = lapsForDistance(.option3)
+        async let option4 = lapsForDistance(.option4)
+        
+        let dictionary: [LapDistance: [WorkoutLap]] = [
+            .option1: await option1,
+            .option2: await option2,
+            .option3: await option3,
+            .option4: await option4
+        ]
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.lapsDictionary = dictionary
+                self.isProcessingLaps = false
             }
         }
     }
     
-    private var sampleInterval: Float {
-        let movingTime = self.movingTime
-        var intervalPoints: Float
-        
-        switch movingTime {
-        case let x where x > 3600:
-            intervalPoints = 500
-        case let x where x > 1800:
-            intervalPoints = 600
-        default:
-            intervalPoints = 1000
-        }
-        return Float(movingTime) / intervalPoints
-    }
-    
-    private var movingTime: Double {
-        if workout.movingTime > 0 && workout.movingTime < workout.duration {
-            return workout.movingTime
-        }
-        return workout.duration
-    }
-    
-    private func interpolatedValues(for values: [Float], interval: Float? = nil) -> (xStep: Double, points: [Float]) {
-        guard values.isPresent else { return (0, []) }
+    private func lapsForDistance(_ lapDistance: LapDistance) async -> [WorkoutLap] {
+        do {
+            guard let remoteWorkout = try? await remoteWorkout() else { throw  DetailError.lap }
 
-        let resampleInterval = interval ?? sampleInterval
-        let points = LinearInterpolator(points: values).resample(interval: resampleInterval)
-        let xStep = movingTime / Double(points.count)
-        return (xStep, points)
-    }
-    
-    private func heartRateChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        let heartRates = movingSamples.filter({ $0.heartRate > 0 }).map({ Float($0.heartRate) })
-        let (xStep, samples) = interpolatedValues(for: heartRates)
-        
-        return samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue: Double(value))
-        }
-    }
-    
-    private func speedChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        guard workout.sport.isSpeedSport else { return [] }
-        
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.speed) }))
-        
-        return samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue: nativeSpeedToLocalizedUnit(for: Double(value)))
-        }
-    }
-    
-    private func cadenceChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        guard workout.sport.isCycling else { return [] }
-        
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.cyclingCadence) }))
-        
-        return samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue: Double(value))
-        }
-    }
-    
-    private func altitudeChartIntervals(for movingSamples: [Sample]) -> [ChartInterval] {
-        let (xStep, samples) = interpolatedValues(for: movingSamples.map({ Float($0.altitude) }))
-        
-        return samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue: nativeAltitudeToLocalizedUnit(for: Double(value)))
-        }
-    }
-    
-    private func paceChartIntervals(for movingSamples: [Sample]) -> (best: Double, intervals: [ChartInterval]) {
-        guard workout.sport.isWalkingOrRunning else { return (0, []) }
-        
-        let paces: [Float] = movingSamples.compactMap { sample in
-            let duration = sample.paceDuration
-            let distance = sample.paceDistance
-            guard let value = calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) else { return nil }
-            return Float(value)
-        }
-        
-        let (xStep, samples) = interpolatedValues(for: paces)
+            let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
+            let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
 
-        let intervals: [ChartInterval] = samples.enumerated().map { index, value in
-            let xValue = Double(index) * xStep
-            return ChartInterval(xValue: xValue, yValue:  Double(value))
+            let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: lapDistance.distanceInMeters(for: sport))
+            let laps = lapIntervals.map { interval in
+                WorkoutLap(
+                    sport: interval.sport,
+                    lapNumber: interval.number,
+                    distance: interval.distance,
+                    duration: interval.movingTime,
+                    avgSpeed: interval.avgSpeed,
+                    avgPace: interval.avgPace,
+                    avgCadence: interval.avgCadence,
+                    avgHeartRate: interval.avgHeartRate,
+                    maxHeartRate: interval.maxHeartRate
+                )
+            }
+            return laps
+        } catch {
+            Log.debug("unable to process intervals")
+            return []
         }
-        let best = paces.filter({ $0 > 0 }).min() ?? 0
-        
-        return (Double(best), intervals)
+    }
+    
+    func updateZones(maxHeartRate: Int, values: [Int], context: NSManagedObjectContext) async {
+        guard let remoteWorkout = try? await remoteWorkout() else { return }
+        guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
+                
+        workout.updateHeartRateZones(with: maxHeartRate, values: values)
+        context.saveOrRollback()
+
+        let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
+        let zones: [HRZoneSummary]
+        if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout) {
+            zones = fetchedZones
+        } else {
+            zones = []
+        }
+
+        DispatchQueue.main.async {
+            withAnimation {
+                self.zoneManager = zoneManager
+                self.zones = zones
+            }
+        }
+    }
+    
+}
+
+extension DetailManager {
+    
+    var shareViewModel: WorkoutCardViewModel {
+        WorkoutCardViewModel(
+            sport: sport,
+            indoor: detail.indoor,
+            title: detail.title,
+            date: formattedWorkoutShareDateString(for: detail.start),
+            duration: formattedHoursMinutesPrettyString(for: detail.totalTime),
+            distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
+            speed: detail.avgSpeed > 0 ? formattedSpeedString(for: detail.avgSpeed) : nil,
+            pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
+            heartRate: detail.avgHeartRate > 0 ? formattedHeartRateString(for: detail.avgHeartRate) : nil,
+            elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
+            calories: detail.energyBurned > 0 ? formattedCaloriesString(for: detail.energyBurned) : nil,
+            coordinates: detail.coordinates
+        )
     }
     
 }

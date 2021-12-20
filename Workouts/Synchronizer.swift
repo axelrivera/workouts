@@ -20,39 +20,38 @@ class Synchronizer {
     init(context: NSManagedObjectContext) {
         self.context = context
         self.importer = RemoteImporter(context: context)
+        self.anchor = AppSettings.workoutsQueryAnchor
         addObservers()
     }
     
-    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) {
+    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) async {
         // reset anchor even if is fetching
         // request will be ignored but anchor will be respected on next fetch
         if resetAnchor {
             anchor = nil
+            AppSettings.workoutsQueryAnchor = anchor
         }
-        
+
         self.regenerate = regenerate
-        
+
         if isFetchingWorkouts {
             Log.debug("ignore remote data fetch - already fetching workouts")
             return
         }
-        
+
         guard isAuthorizedToFetchWorkouts else {
             Log.debug("ignore remote data fetch - not authorized yet")
             return
         }
         
-        Log.debug("fetching remote data")
-        context.performAndWait {
-            self.isFetchingWorkouts = true
-            self.importer.importLatestWorkouts(anchor: anchor, regenerate: self.regenerate) { [unowned self] newAnchor in
-                self.anchor = newAnchor
-            }
-            self.isFetchingWorkouts = false
-            self.regenerate = false
-        }
+        Log.debug("importing workouts")
+        self.isFetchingWorkouts = true
+        let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
         
-        NotificationCenter.default.post(name: .didRefreshWorkouts, object: nil)
+        AppSettings.workoutsQueryAnchor = newAnchor
+        self.anchor = newAnchor
+        self.regenerate = false
+        self.isFetchingWorkouts = false
     }
     
     deinit {
@@ -68,16 +67,17 @@ extension Synchronizer {
         if let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool {
             isAuthorizedToFetchWorkouts = isAuthorized
         }
+
+        // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
+        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? self.regenerate
+        let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
         
-        var resetAnchor = notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
-        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? false
-        
-        if regenerate {
-            // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
-            resetAnchor = true
+        let _ = context.performAndWait {
+            Task {
+                Log.debug("fetching remote data")
+                await fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
+            }
         }
-        
-        fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
     }
     
     func addObservers() {

@@ -13,79 +13,67 @@ struct DetailView: View {
     enum ActiveSheet: Identifiable {
         case map
         case analysis
+        case laps
+        case sharing
         var id: Int { hashValue }
     }
     
+    enum RowType: Identifiable, CaseIterable {
+        case row1, row2, row3, row4
+        var id: Int { hashValue }
+    }
+    
+    @Environment(\.managedObjectContext) var viewContext
+    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var detailManager: DetailManager
     
-    @State var activeSheet: ActiveSheet?
-    @State var showMapOverlay = false
-    
-    var workout: Workout {
-        detailManager.workout
-    }
-    
-    var totalTime: Workout.Time {
-        workout.totalTime
-    }
-    
-    init(workout: Workout) {
-        let manager = DetailManager(workout: workout)
-        _detailManager = StateObject(wrappedValue: manager)
-    }
+    @State private var activeSheet: ActiveSheet?
+        
+    var workout: WorkoutDetailViewModel { detailManager.detail }
+    var sport: Sport { detailManager.detail.sport }
     
     var body: some View {
         List {
             VStack(alignment: .leading, spacing: 5.0) {
                 Text(workout.title)
-                    .font(.title)
-                
-                if detailManager.showMap {
-                    HStack(alignment: .firstTextBaseline, spacing: 5.0) {
-                        Image(systemName: "location.fill")
-                            .font(.caption)
-                        Text(detailManager.locationName ?? "Unknown Location")
-                    }
-                    .foregroundColor(.secondary)
-                }
+                    .font(.largeTitle)
                 
                 HStack(alignment: .lastTextBaseline) {
                     Text(formattedFullDateString(for: workout.start))
-                        .font(.subheadline)
+                        .font(.fixedSubheadline)
                     Text(formattedTimeRangeString(start: workout.start, end: workout.end))
-                        .font(.subheadline)
+                        .font(.fixedSubheadline)
                         .foregroundColor(.secondary)
                 }
             }
-            .padding([.top, .bottom], 5.0)
+            .padding([.top, .bottom], CGFloat(5.0))
             
-            if detailManager.showMap {
+            if detailManager.includesLocation {
                 Button(action: { activeSheet = .map }) {
-                    WorkoutMap(points: $detailManager.points)
-                        .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
-                        .overlay(showMapOverlay ? Color.black.opacity(0.3) : Color.clear)
-                        .cornerRadius(Constants.cornerRadius)
+                    WorkoutMap(points: detailManager.detail.coordinates)
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(WorkoutMapButtonStyle())
             }
-            
-            Group {
-                RoundButton(text: "Workout Analysis") {
-                    activeSheet = .analysis
+                        
+            HStack {
+                Button(action: { activeSheet = .analysis }) {
+                    Label("Analysis", systemImage: "flame")
+                        .padding([.top, .bottom], CGFloat(10.0))
+                        .frame(maxWidth: .infinity)
                 }
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            ForEach(gridRows(for: workout, heartRate: workout.avgHeartRate)) { row in
-                HStack(spacing: 5.0) {
-                    if let left = row.left {
-                        DetailGridView(text: left.text, detail: left.detail, detailColor: left.detailColor)
-                    }
+                .buttonStyle(.bordered)
+                
+                Button(action: { activeSheet = .laps }) {
+                    Label("Splits", systemImage: "arrow.2.squarepath")
+                        .padding([.top, .bottom], CGFloat(10.0))
+                        .frame(maxWidth: .infinity)
                     
-                    if let right = row.right {
-                        DetailGridView(text: right.text, detail: right.detail, detailColor: right.detailColor)
-                    }
                 }
+                .buttonStyle(.bordered)
+            }
+            
+            ForEach(RowType.allCases) { rowType in
+                viewForRow(rowType)
             }
             
             HStack {
@@ -95,7 +83,7 @@ struct DetailView: View {
                     .foregroundColor(.secondary)
             }
             
-            if let device = workout.deviceString {
+            if let device = workout.device {
                 HStack {
                     Text("Device")
                     Spacer()
@@ -104,106 +92,118 @@ struct DetailView: View {
                 }
             }
         }
-        .onAppear(perform: {
-            detailManager.run()
-        })
-        .navigationTitle(workout.detailTitle)
+        .onAppear { detailManager.processWorkout() }
+        .navigationTitle(workout.detailTitle )
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
-        .fullScreenCover(item: $activeSheet) { (item) in
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: { activeSheet = .sharing }) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
+        .sheet(item: $activeSheet) { item in
             switch item {
             case .map:
-                DetailMapView(points: detailManager.points)
+                DetailMapView(title: workout.analysisTitle, points: detailManager.detail.coordinates)
             case .analysis:
-                DetailAnalysisView()
+                AnalysisView()
                     .environmentObject(detailManager)
+                    .environmentObject(purchaseManager)
+            case .laps:
+                LapsView()
+                    .environmentObject(detailManager)
+                    .environmentObject(purchaseManager)
+            case .sharing:
+                ShareView(viewModel: detailManager.shareViewModel)
+                    .environmentObject(purchaseManager)
             }
         }
     }
 }
 
 extension DetailView {
-    struct GridItem: Identifiable {
-        let id = UUID()
-        var text: String
-        var detail: String
-        var detailColor = Color.primary
-    }
     
-    struct GridRow: Identifiable {
-        let id = UUID()
-        var left: GridItem?
-        var right: GridItem?
-        
-        var isEmpty: Bool {
-            left == nil && right == nil
-        }
-        
-        var isPresent: Bool {
-            !isEmpty
-        }
-    }
-    
-    func gridRows(for workout: Workout, heartRate: Double?) -> [GridRow] {
-        var items = [GridItem]()
-        var item: GridItem
-        
-        if workout.distance > 0 {
-            item = GridItem(text: "Distance", detail: formattedDistanceString(for: workout.distance), detailColor: .distance)
-            items.append(item)
-        }
-        
-        switch workout.totalTime {
-        case .moving(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
-            items.append(item)
-        case .total(let duration):
-            item = GridItem(text: workout.totalTime.title, detail: formattedHoursMinutesSecondsDurationString(for: duration), detailColor: .time)
-            items.append(item)
-        }
-        
-        if workout.avgHeartRate > 0 {
-            item = GridItem(text: "Avg Heart Rate", detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
-            items.append(item)
-        }
-        
-        if workout.energyBurned > 0 {
-            item = GridItem(text: "Calories", detail: formattedCaloriesString(for: workout.energyBurned), detailColor: .calories)
-            items.append(item)
-        }
-        
-        if workout.sport.isSpeedSport && !workout.indoor && workout.avgSpeed > 0 {
-            item = GridItem(text: "Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
-            items.append(item)
-        }
-        
-        if workout.sport.isWalkingOrRunning  && detailManager.avgPace > 0 {
-            item = GridItem(text: "Avg Pace", detail: formattedRunningWalkingPaceString(for: detailManager.avgPace), detailColor: .cadence)
-            items.append(item)
-        }
-        
-        if workout.sport.isCycling && workout.avgCyclingCadence > 0 {
-            item = GridItem(text: "Avg Cadence", detail: formattedCyclingCadenceString(for: workout.avgCyclingCadence), detailColor: .cadence)
-            items.append(item)
-        }
-        
-        if detailManager.showMap && workout.elevationAscended > 0 {
-            item = GridItem(text: "Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
-            items.append(item)
-        }
-        
-        var rows = [GridRow]()
-        
-        let chunkedItems = items.chunked(into: 2)
-        for row in chunkedItems {
-            if row.count == 2 {
-                rows.append(GridRow(left: row[0], right: row[1]))
-            } else if row.count == 1 {
-                rows.append(GridRow(left: row[0], right: nil))
+    @ViewBuilder
+    func viewForRow(_ rowType: RowType) -> some View {
+        HStack {
+            switch rowType {
+            case .row1:
+                DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
+                DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
+            case .row2:
+                if sport.isCycling {
+                    DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
+                } else if sport.isWalkingOrRunning {
+                    DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+                }
+                
+                if sport.isCycling {
+                    DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
+                }
+            case .row3:
+                DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
+                DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
+            case .row4:
+                DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+                DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
         }
-        
-        return rows
+    }
+    
+    var distanceString: String {
+        formattedDistanceString(for: workout.distance)
+    }
+    
+    var timeLabel: String {
+        workout.totalTimeLabel
+    }
+    
+    var timeString: String {
+        formattedHoursMinutesSecondsDurationString(for: workout.totalTime)
+    }
+    
+    var speedUnit: String {
+        speedUnitString()
+    }
+    
+    var avgSpeedString: String {
+        guard workout.displayAvgSpeed > 0 else { return "-- \(speedUnit)" }
+        return formattedSpeedString(for: workout.displayAvgSpeed)
+    }
+    
+    var avgCadenceString: String {
+        guard workout.avgCyclingCadence > 0 else { return "--" }
+        return formattedCyclingCadenceString(for: workout.avgCyclingCadence)
+    }
+    
+    var paceUnit: String {
+        formattedRunningWalkingPaceUnitString()
+    }
+    
+    var avgPaceString: String {
+        guard workout.avgPace > 0 else { return "--" }
+        return formattedRunningWalkingPaceString(for: workout.avgPace)
+    }
+    
+    var avgHeartRateString: String {
+        guard workout.avgHeartRate > 0 else { return "--" }
+        return formattedHeartRateString(for: workout.avgHeartRate)
+    }
+    
+    var maxHeartRateString: String {
+        guard workout.maxHeartRate > 0 else { return "--" }
+        return formattedHeartRateString(for: workout.maxHeartRate)
+    }
+    
+    var caloriesString: String {
+        guard workout.energyBurned > 0 else { return "--"}
+        return formattedCaloriesString(for: workout.energyBurned)
+    }
+    
+    var elevationString: String {
+        formattedElevationString(for: workout.elevationAscended)
     }
     
 }
@@ -214,12 +214,13 @@ struct DetailGridView: View {
     var detailColor = Color.primary
     
     var body: some View {
-        VStack(spacing: 0.0) {
+        VStack(alignment: .leading, spacing: 2.0) {
             Group {
                 Text(text)
                 Text(detail)
-                    .font(.title)
+                    .font(.largeTitle)
                     .foregroundColor(detailColor)
+                    .minimumScaleFactor(0.5)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -227,11 +228,15 @@ struct DetailGridView: View {
 }
 
 struct DetailView_Previews: PreviewProvider {
-    static let workout = StorageProvider.sampleWorkout()
+    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         NavigationView {
-            DetailView(workout: workout)
+            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
+                .environment(\.managedObjectContext, viewContext)
+                .environmentObject(purchaseManager)
         }
         .colorScheme(.dark)
     }

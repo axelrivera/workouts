@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
-import Purchases
 
-final class IAPManager: NSObject, ObservableObject {
+#if PRODUCTION_BUILD
+import Purchases
+#endif
+
+class IAPManager: NSObject, ObservableObject {
     enum Constants {
         static let apiKey = "NYucELjRYAuIEelhphHUNKTcZYaCoRSH"
         static let entitlementId = "pro"
@@ -16,6 +19,8 @@ final class IAPManager: NSObject, ObservableObject {
         static let freePriceString = "$1.99"
     }
     
+    #if PRODUCTION_BUILD
+        
     @Published var purchaserInfo: Purchases.PurchaserInfo? {
         didSet {
             withAnimation {
@@ -24,6 +29,9 @@ final class IAPManager: NSObject, ObservableObject {
         }
     }
     @Published var offerings: Purchases.Offerings?
+    
+    #endif
+    
     @Published var isActive: Bool = false {
         didSet {
             #if DEVELOPMENT_BUILD
@@ -46,7 +54,7 @@ extension IAPManager {
     
     private func registerPurchasesManager() {
         #if PRODUCTION_BUILD
-        Purchases.debugLogsEnabled = true
+        Purchases.logLevel = .info
         Purchases.configure(withAPIKey: Constants.apiKey)
         Purchases.shared.delegate = self
         #else
@@ -79,6 +87,8 @@ extension IAPManager {
         #endif
     }
     
+    #if PRODUCTION_BUILD
+    
     var offering: Purchases.Offering? {
         offerings?.current
     }
@@ -86,6 +96,8 @@ extension IAPManager {
     var package: Purchases.Package? {
         offering?.lifetime
     }
+    
+    #endif
     
     var packagePrice: Double {
         #if PRODUCTION_BUILD
@@ -111,7 +123,7 @@ extension IAPManager {
         if packagePrice == 0 {
             return "FREE for a limited time!"
         } else {
-            return "All features for a one time payment."
+            return "All features for a one time payment!"
         }
     }
     
@@ -216,6 +228,8 @@ extension IAPManager {
 
 // MARK: - Purchases Delegate
 
+#if PRODUCTION_BUILD
+
 extension IAPManager: PurchasesDelegate {
     
     func purchases(_ purchases: Purchases, didReceiveUpdated purchaserInfo: Purchases.PurchaserInfo) {
@@ -223,6 +237,8 @@ extension IAPManager: PurchasesDelegate {
     }
     
 }
+
+#endif
 
 // MARK: - Errors
 
@@ -254,7 +270,23 @@ extension IAPManager.PurchaseError: LocalizedError {
 
 // MARK: - Helpers
 
+#if PRODUCTION_BUILD
+
 extension Purchases.Package: Identifiable {
     public var id: String { self.identifier }
+}
+
+#endif
+
+// MARK: - Previews
+
+class IAPManagerPreview: IAPManager {
+    
+    static func manager(isActive: Bool) -> IAPManager {
+        let manager = IAPManagerPreview()
+        manager.isActive = isActive
+        return manager as IAPManager
+    }
+    
 }
 

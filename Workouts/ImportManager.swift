@@ -17,12 +17,7 @@ class ImportManager: ObservableObject {
             Self.whitelisted.contains(self)
         }
         
-        var showEmptyView: Bool {
-            Self.emptyViewStates.contains(self)
-        }
-        
-        static let whitelisted: [State] = [.ok]
-        static let emptyViewStates: [State] = [.empty, .notAuthorized, notAvailable]
+        static let whitelisted: [State] = [.ok, .empty, .processing]
     }
     
     @Published var workouts = [WorkoutImport]()
@@ -109,11 +104,7 @@ extension ImportManager {
 extension ImportManager {
         
     var isImportDisabled: Bool {
-        return newWorkouts.isEmpty || isProcessingImports || !state.isWhitelisted
-    }
-    
-    var isAddImportDisabled: Bool {
-        isProcessingImports || !state.isWhitelisted
+        return isProcessingImports || !state.isWhitelisted
     }
     
     var newWorkouts: [WorkoutImport] {

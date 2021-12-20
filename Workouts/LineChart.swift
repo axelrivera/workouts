@@ -9,11 +9,32 @@ import SwiftUI
 import Charts
 
 struct LineChart: UIViewRepresentable {
-    
+    var valueType: ChartInterval.ValueType
     var values = [ChartInterval]()
     var avgValue: Double?
-    var lineColor = Color.red
-    var yAxisFormatter: AxisValueFormatter? = nil
+    
+    private var lineColor = Color.red
+    private var yAxisFormatter: AxisValueFormatter? = nil
+    
+    init(valueType: ChartInterval.ValueType, values: [ChartInterval], avg: Double?) {
+        self.valueType = valueType
+        self.values = values
+        self.avgValue = avg
+        
+        switch valueType {
+        case .heartRate:
+            self.lineColor = .calories
+        case .speed:
+            self.lineColor = .speed
+        case .cadence:
+            self.lineColor = .cadence
+        case .pace:
+            self.lineColor = .pace
+            self.yAxisFormatter = PaceValueFormatter()
+        case .altitude:
+            self.lineColor = .elevation
+        }
+    }
 
     func makeUIView(context: Context) -> LineChartView {
         let chartView = LineChartView()
@@ -38,8 +59,7 @@ struct LineChart: UIViewRepresentable {
         
         let leftAxis = chartView.leftAxis
         leftAxis.labelTextColor = .label
-//        leftAxis.axisMaximum = 200
-//        leftAxis.axisMinimum = 90
+        
         leftAxis.gridLineDashLengths = [5, 5]
         leftAxis.drawLimitLinesBehindDataEnabled = true
         
@@ -96,7 +116,7 @@ struct LineChart: UIViewRepresentable {
 struct LineChart_Previews: PreviewProvider {
     
     static var previews: some View {
-        LineChart(values: [], avgValue: 140.0)
+        LineChart(valueType: .heartRate, values: [], avg: 140.0)
             .frame(maxWidth: .infinity, maxHeight: 200.0)
             .colorScheme(.dark)
     }

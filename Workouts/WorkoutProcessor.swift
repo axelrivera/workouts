@@ -8,64 +8,52 @@
 import Foundation
 import HealthKit
 import CoreLocation
-
-
-extension WorkoutProcessor.Object {
-    
-    static func empty() -> WorkoutProcessor.Object {
-        WorkoutProcessor.Object(
-            records: [],
-            duration: 0,
-            distance: 0,
-            movingTime: 0,
-            avgMovingSpeed: 0,
-            avgSpeed: 0,
-            maxSpeed: 0,
-            avgHeartRate: 0,
-            maxHeartRate: 0,
-            showMap: false
-        )
-    }
-    
-}
+import Polyline
 
 extension WorkoutProcessor {
     struct Object {
-        let records: [SampleProcessor.Record]
+        let identifier: UUID
+        let sport: Sport
+        let indoor: Bool
+        let start: Date
+        let end: Date
         let duration: Double
         let distance: Double
         let movingTime: Double
         let avgMovingSpeed: Double
         let avgSpeed: Double
         let maxSpeed: Double
+        let avgPace: Double
+        let avgMovingPace: Double
+        let avgCyclingCadence: Double
+        let maxCyclingCadence: Double
+        let energyBurned: Double
         let avgHeartRate: Double
         let maxHeartRate: Double
-        let showMap: Bool
+        let coordinatesValue: String
+        let elevationAscended: Double
+        let elevationDescended: Double
+        let maxElevation: Double
+        let minElevation: Double
+        let source: String
+        let device: String?
     }
 }
 
 final class WorkoutProcessor {
     let workout: HKWorkout
-    
-    var locations = [CLLocation]()
-    var heartRateSamples = [Quantity]()
-    var cadenceSamples = [Quantity]()
-    var paceSamples = [Pace]()
-    
-    private(set) var object: Object
-    
-    private var avgHeartRate: Double = 0
-    private var maxHeartRate: Double = 0
+        
+    lazy var provider: HealthProvider = {
+        HealthProvider.shared
+    }()
     
     init(workout: HKWorkout) {
         self.workout = workout
-        object = Object.empty()
     }
     
-    static func object(for workout: HKWorkout) -> Object {
+    static func object(for workout: HKWorkout) async -> Object {
         let processor = WorkoutProcessor(workout: workout)
-        processor.generateRecords()
-        return processor.object
+        return await processor.object()
     }
     
 }
@@ -74,64 +62,62 @@ final class WorkoutProcessor {
 
 extension WorkoutProcessor {
     
-    private func generateRecords() {
-        if workout.isOutdoor {
-            fetchLocations()
+    func object() async -> Object {
+        var locations: [CLLocation]
+        let avgHeartRate: Double
+        let maxHeartRate: Double
+        
+        do {
+            locations = try await provider.fetchLocations(for: workout)
+            (avgHeartRate, maxHeartRate) = try await provider.fetchHeartRateStats(for: workout)
+        } catch {
+            locations = []
+            avgHeartRate = 0
+            maxHeartRate = 0
         }
         
-        fetchHeartRateStats()
-        fetchHeartRateSamples()
+        let coordinates = locations.sorted(by: {$0.timestamp < $1.timestamp}).map({ $0.coordinate })
+        let coordinatesValue = Polyline(coordinates: coordinates).encodedPolyline
         
-        if workout.workoutActivityType.isCycling {
-            fetchCadenceSamples()
-        }
+        let altitudes = locations.altitudeValues()
+        let minElevation = altitudes.min() ?? 0
+        let maxElevation = altitudes.max() ?? 0
         
-        if workout.workoutActivityType.isRunningWalking {
-            fetchPaceSamples()
-        }
+        let movingTime = workout.duration
+        let avgMovingSpeed: Double = totalDistance() / movingTime
+        let avgMovingPace: Double = calculateRunningWalkingPace(distanceInMeters: totalDistance(), duration: movingTime) ?? avgPace()
         
-        let shouldGenerateRecords = locations.isPresent || heartRateSamples.isPresent ||
-            cadenceSamples.isPresent || paceSamples.isPresent
+        let object = Object(
+            identifier: workout.uuid,
+            sport: workout.workoutActivityType.sport(),
+            indoor: workout.isIndoor,
+            start: workout.startDate,
+            end: workout.endDate,
+            duration: workout.totalElapsedTime,
+            distance: totalDistance(),
+            movingTime: movingTime,
+            avgMovingSpeed: avgMovingSpeed,
+            avgSpeed: avgSpeed(),
+            maxSpeed: maxSpeed(),
+            avgPace: avgPace(),
+            avgMovingPace: avgMovingPace,
+            avgCyclingCadence: avgCyclingCadence(),
+            maxCyclingCadence: maxCyclingCadence(),
+            energyBurned: energyBurned(),
+            avgHeartRate: avgHeartRate,
+            maxHeartRate: maxHeartRate,
+            coordinatesValue: coordinatesValue,
+            elevationAscended: elevationAscended(),
+            elevationDescended: elevationDescended(),
+            maxElevation: minElevation,
+            minElevation: maxElevation,
+            source: workout.sourceRevision.source.name,
+            device: workout.device?.name
+        )
         
-        if shouldGenerateRecords {
-            let generator = SampleProcessor(
-                workout: self.workout,
-                locations: locations,
-                heartRateSamples: heartRateSamples,
-                cadenceSamples: cadenceSamples,
-                paceSamples: paceSamples
-            )
-            generator.process()
-            
-            let showMap = !workout.isIndoor && locations.isPresent
-            
-            object = Object(
-                records: generator.validRecords,
-                duration: generator.duration,
-                distance: totalDistance(),
-                movingTime: generator.movingTime,
-                avgMovingSpeed: generator.avgMovingSpeed,
-                avgSpeed: generator.avgSpeed(),
-                maxSpeed: generator.maxSpeed(),
-                avgHeartRate: self.avgHeartRate,
-                maxHeartRate: self.maxHeartRate,
-                showMap: showMap
-            )
-        } else {
-            object = Object(
-                records: [],
-                duration: workout.duration,
-                distance: totalDistance(),
-                movingTime: 0,
-                avgMovingSpeed: 0,
-                avgSpeed: avgSpeed(),
-                maxSpeed: maxSpeed(),
-                avgHeartRate: self.avgHeartRate,
-                maxHeartRate: self.maxHeartRate,
-                showMap: false
-            )
-        }
+        return object
     }
+    
     
     private func totalDistance() -> Double {
         workout.totalDistance?.doubleValue(for: .meter()) ?? 0
@@ -142,108 +128,42 @@ extension WorkoutProcessor {
             return speed
         }
         
-        guard workout.duration > 0 else { return 0 }
+        guard workout.totalElapsedTime > 0 else { return 0 }
         let distance = totalDistance()
-        return distance / workout.duration
+        return distance / workout.totalElapsedTime
     }
     
     private func maxSpeed() -> Double {
         workout.maxSpeed?.doubleValue(for: .metersPerSecond()) ?? 0
     }
     
-    private func fetchLocations() {
-        let semaphore = DispatchSemaphore(value: 0)
+    func avgPace() -> Double {
+        let sport = workout.workoutActivityType.sport()
+        guard sport.isWalkingOrRunning else { return 0 }
         
-        WorkoutDataStore.shared.fetchRoute(for: workout) { [weak self] (result) in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            switch result {
-            case .success(let locations):
-                self.locations = locations
-            case .failure(let error):
-                Log.debug("fetching route failed: \(error.localizedDescription)")
-            }
-                        
-            semaphore.signal()
-        }
-        _ = semaphore.wait(timeout: .distantFuture)
+        let duration = workout.totalElapsedTime
+        let distance = totalDistance()
+        return calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
     }
     
-    private func fetchHeartRateStats() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchHeartRateStatsValue(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            switch result {
-            case .success(let sample):
-                self.avgHeartRate = sample.avg ?? 0
-                self.maxHeartRate = sample.max ?? 0
-            case .failure(let error):
-                Log.debug("fetching heart rate failed: \(error.localizedDescription)")
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
+    func avgCyclingCadence() -> Double {
+        workout.avgCyclingCadence ?? 0
     }
     
-    private func fetchHeartRateSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchHeartRateSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            if let samples = try? result.get() as? [Quantity] {
-                self.heartRateSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
+    func maxCyclingCadence() -> Double {
+        workout.maxCyclingCadence ?? 0
     }
     
-    private func fetchCadenceSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchCyclingCadenceSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            if let samples = try? result.get() as? [Quantity] {
-                self.cadenceSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
+    private func energyBurned() -> Double {
+        workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
     }
     
-    private func fetchPaceSamples() {
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        WorkoutDataStore.shared.fetchRunningWalkingPaceSamples(workout: workout) { [weak self] result in
-            guard let self = self else {
-                semaphore.signal()
-                return
-            }
-            
-            if let samples = try? result.get() as? [Pace] {
-                self.paceSamples = samples
-            }
-            semaphore.signal()
-        }
-        
-        _ = semaphore.wait(timeout: .distantFuture)
+    private func elevationAscended() -> Double {
+        workout.elevationAscended?.doubleValue(for: .meter()) ?? 0
+    }
+    
+    private func elevationDescended() -> Double {
+        workout.elevationDescended?.doubleValue(for: .meter()) ?? 0
     }
     
 }

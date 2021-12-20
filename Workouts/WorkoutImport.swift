@@ -57,12 +57,15 @@ class WorkoutImport: ObservableObject, Identifiable {
     var startPosition: Value = .init(valueType: .location, value: nil)
     var totalAscent: Value = .init(valueType: .altitude, value: 0)
     var totalDescent: Value = .init(valueType: .altitude, value: 0)
+    var minAltitude: Value = .init(valueType: .altitude, value: 0)
+    var maxAltitude: Value = .init(valueType: .altitude, value: 0)
     
     var totalDistance: Value = .init(valueType: .distance, value: 0)
     var avgSpeed: Value = .init(valueType: .speed, value: 0)
     var maxSpeed: Value = .init(valueType: .speed, value: 0)
     
     var avgHeartRate: Value = .init(valueType: .heartRate, value: 0)
+    var minHeartRate: Value = .init(valueType: .heartRate, value: 0)
     var maxHeartRate: Value = .init(valueType: .heartRate, value: 0)
     var totalEnergyBurned: Value = .init(valueType: .calories, value: 0)
     
@@ -108,12 +111,16 @@ class WorkoutImport: ObservableObject, Identifiable {
         startPosition = .init(valueType: .location, field: session.interpretedField(key: "start_position"))
         totalAscent = .init(valueType: .altitude, field: session.interpretedField(key: "total_ascent"))
         totalDescent = .init(valueType: .altitude, field: session.interpretedField(key: "total_descent"))
+        minAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "min_altitude"))
+        maxAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "max_altitude"))
+        
         
         totalDistance = .init(valueType: .distance, field: session.interpretedField(key: "total_distance"))
         avgSpeed = .init(valueType: .speed, field: session.interpretedField(key: "avg_speed"))
         maxSpeed = .init(valueType: .speed, field: session.interpretedField(key: "max_speed"))
         
         avgHeartRate = .init(valueType: .heartRate, field: session.interpretedField(key: "avg_heart_rate"))
+        minHeartRate = .init(valueType: .heartRate, field: session.interpretedField(key: "min_heart_rate"))
         maxHeartRate = .init(valueType: .heartRate, field: session.interpretedField(key: "max_heart_rate"))
         totalEnergyBurned = .init(valueType: .calories, field: session.interpretedField(key: "total_calories"))
         

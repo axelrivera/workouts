@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ImportView: View {
     enum ActiveSheet: Identifiable {
-        case document, tutorial
+        case document
         var id: Int { hashValue }
     }
     
@@ -21,57 +21,48 @@ struct ImportView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var importManager: ImportManager = ImportManager()
-    @State var isProcessingDocuments = false
     
-    @State var activeSheet: ActiveSheet?
-    @State var activeAlert: ActiveAlert?
+    @State private var isProcessingDocuments = false
     
+    @State private var activeSheet: ActiveSheet?
+    @State private var activeAlert: ActiveAlert?
+    @State private var shouldFetchWritePermission = false
+        
     var body: some View {
         NavigationView {
-            ZStack {
-                Form {
-                    if importManager.state == .processing {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                            Spacer()
-                        }
-                        .id(UUID())
-                    } else {
-                        ForEach(importManager.workouts) { workout in
-                            ImportRow(workout: workout) {
-                                importManager.processWorkout(workout)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
+            VStack {
+                List(importManager.workouts) { workout in
+                    ImportRow(workout: workout) {
+                        importManager.processWorkout(workout)
                     }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .onAppear { requestWritingAuthorizationIfNeeded() }
-                .zIndex(1.0)
+                .listStyle(InsetGroupedListStyle())
+                .modifier(ImportEmptyModifier(importState: importManager.state, isActive: purchaseManager.isActive))
                 
-                if importManager.state.showEmptyView {
-                    Color.systemBackground
-                        .ignoresSafeArea()
-                        .zIndex(2.0)
-                    ImportEmptyView(
-                        importState: importManager.state,
-                        addAction: addAction,
-                        reviewAction: { activeSheet = .tutorial }
-                    )
-                        .zIndex(3.0)
-                }
+                Spacer()
                 
-                if !purchaseManager.isActive {
-                    PaywallView(purchaseManager: purchaseManager)
-                        .zIndex(4.0)
-                        .transition(.opacity)
-                }
+                RoundButton(text: "Add FIT Files", action: addAction)
+                    .disabled(importManager.isImportDisabled)
+                    .padding()
+                    .opacity(purchaseManager.isActive ? 1.0 : 0.0)
             }
+            .opacity(purchaseManager.isActive ? 1.0 : 0.5)
+            .paywallButtonOverlay(sample: false)
+            .onAppear { requestWritingAuthorizationIfNeeded() }
+            .onChange(of: purchaseManager.isActive, perform: { isActive in
+                requestWritingAuthorizationIfNeeded()
+            })
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(leading: dismissButton(), trailing: addButton())
-            .sheet(item: $activeSheet) { item in
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(action: dismissAction) {
+                        Text("Done")
+                    }
+                }
+            }
+            .sheet(item: $activeSheet, onDismiss: onSheetDismiss) { item in
                 switch item {
                 case .document:
                     DocumentPicker(forOpeningContentTypes: [.fitDocument, .zip]) { urls in
@@ -80,8 +71,6 @@ struct ImportView: View {
                             importManager.state = urls.isEmpty ? .empty : .ok
                         }
                     }
-                case .tutorial:
-                    SafariView(urlString: URLStrings.tutorial)
                 }
             }
             .alert(item: $activeAlert) { item in
@@ -100,14 +89,9 @@ struct ImportView: View {
 
 private extension ImportView {
     
-    func addButton() -> some View {
-        Button(action: addAction) {
-            Image(systemName: "plus")
-        }
-        .disabled(withAnimation { importManager.isAddImportDisabled })
-    }
-    
     func addAction() {
+        if importManager.state == .processing { return }
+        
         importManager.requestWritingAuthorization { success in
             DispatchQueue.main.async {
                 if success {
@@ -124,13 +108,14 @@ private extension ImportView {
         importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") }
     }
     
-    func dismissButton() -> some View {
-        Button(action: { dismissAction(skipConfirmation: false) }) {
-            Text("Done")
+    func onSheetDismiss() {
+        if shouldFetchWritePermission {
+            requestWritingAuthorizationIfNeeded()
         }
+        shouldFetchWritePermission = false
     }
     
-    func dismissAction(skipConfirmation: Bool) {
+    func dismissAction() {
         if importManager.isProcessingImports {
             activeAlert = .dismiss
         } else {
@@ -139,31 +124,17 @@ private extension ImportView {
         }
     }
     
-    func formHeader() -> some View {
-        HStack {
-            Text("Files")
-            Spacer()
-            Button(action: {}) {
-                Text("Select All")
-            }
-        }
-    }
-    
 }
 
 struct ImportView_Previews: PreviewProvider {
     static let importManager: ImportManager = {
         let manager = ImportManager()
-        manager.state = .empty
+        manager.state = .ok
         manager.loadSampleWorkouts()
         return manager
     }()
     
-    static let purchaseManager: IAPManager = {
-        let manager = IAPManager()
-        manager.isActive = true
-        return manager
-    }()
+    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         ImportView(importManager: importManager)

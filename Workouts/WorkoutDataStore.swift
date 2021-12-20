@@ -30,7 +30,6 @@ struct WorkoutDataStore {
 
 extension WorkoutDataStore {
     
-    
     func dataError(_ error: DataError, system: Error?) -> DataError {
         if let systemError = system {
             return .system(systemError)
@@ -49,8 +48,6 @@ extension WorkoutDataStore {
     }
     
     func fetchTotalWorkouts(completionHandler: @escaping (Result<Int, Error>) -> Void) {
-        Log.debug("fetching total workouts...")
-        
         let query = HKSampleQuery(
             sampleType: .workoutType(),
             predicate: defaultActivitiesPredicate(),
@@ -206,7 +203,7 @@ extension WorkoutDataStore {
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
             let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.maximumQuantity(for: source) else { return nil }
-                return Quantity(timestamp: statistics.startDate, value: quantity.doubleValue(for: .bpm()))
+                return Quantity(start: statistics.startDate, end: statistics.endDate, value: quantity.doubleValue(for: .bpm()))
             }
             completionHandler(.success(values))
         }
@@ -240,10 +237,10 @@ extension WorkoutDataStore {
             }
             
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
-            let values: [Pace] = sortedStatistics.compactMap { (statistics) in
+            let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
                 guard let quantity = statistics.sumQuantity(for: source) else { return nil }
                 let distance = quantity.doubleValue(for: .meter())
-                return Pace(start: statistics.startDate, end: statistics.endDate, distance: distance)
+                return Quantity(start: statistics.startDate, end: statistics.endDate, value: distance)
             }
             completionHandler(.success(values))
         }
@@ -269,7 +266,7 @@ extension WorkoutDataStore {
             
             let cadenceSamples: [Quantity] = samples.compactMap { sample in
                 guard let cadence = sample.metadata?[MetadataKeySampleCadence] as? Double else { return nil }
-                return Quantity(timestamp: sample.startDate, value: cadence)
+                return Quantity(start: sample.startDate, end: sample.endDate, value: cadence)
             }
             completionHandler(.success(cadenceSamples))
             
@@ -284,7 +281,6 @@ extension WorkoutDataStore {
 extension WorkoutDataStore {
     
     func saveWorkoutImport(_ workoutImport: WorkoutImport, completionHandler: @escaping (Result<Bool, DataError>) -> Void) {
-        Log.debug("start: \(workoutImport.startDate?.debugDescription ?? "n/a"), end: \(workoutImport.endDate?.debugDescription ?? "n/a")")
         guard let start = workoutImport.startDate, let end = workoutImport.endDate else {
             fatalError("missing dates")
         }
@@ -469,6 +465,13 @@ extension WorkoutDataStore {
         dictionary[HKMetadataKeyElevationAscended] = file.totalAscentQuantity
         dictionary[HKMetadataKeyElevationDescended] = file.totalDescentQuantity
         dictionary[HKMetadataKeyAverageMETs] = file.avgMETQuantity
+        dictionary[MetadataKeyMaxTemperature] = file.maxTemperatureValue
+        dictionary[MetadataKeyMovingTime] = file.totalTimerTimeValue
+        dictionary[MetadataKeyAvgHeartRate] = file.avgHeartRateValue
+        dictionary[MetadataKeyMinHeartRate] = file.minHeartRateValue
+        dictionary[MetadataKeyMaxHeartRate] = file.maxHeartRateValue
+        dictionary[MetadataKeyMinAltitude] = file.minAltitudeValue
+        dictionary[MetadataKeyMaxAltitude] = file.maxAltitudeValue
         
         if file.sport == .cycling {
             dictionary[MetadataKeyAvgCyclingCadence] = file.totalAvgCadenceValue

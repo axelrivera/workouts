@@ -15,18 +15,28 @@ class StorageProvider: ObservableObject {
     init(inMemory: Bool = false) {
         persistentContainer = PersistentContainer(name: "Workouts")
         
-//        #if DEBUG
-//        if let storeDescription = persistentContainer.persistentStoreDescriptions.first, let url = storeDescription.url {
-//            do {
-//                try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(at: url, ofType: storeDescription.type)
-//            } catch {
-//                Log.debug("failed to reset persistent store: \(error.localizedDescription)")
-//            }
-//        }
-//        #endif
-        
         if inMemory {
             persistentContainer.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        }
+        
+        for description in persistentContainer.persistentStoreDescriptions {
+            description.shouldInferMappingModelAutomatically = false
+            description.shouldMigrateStoreAutomatically = false
+        }
+        
+        guard let storeURL = persistentContainer.persistentStoreDescriptions.first?.url else {
+            fatalError("missing persistent store url")
+        }
+
+        let migrator = CoreDataMigrator()
+        let currentVersion = ModelVersion.current
+        if migrator.requiresMigration(at: storeURL, toVersion: currentVersion) {
+            switch currentVersion {
+            case .v2, .v3:
+                NSPersistentStoreCoordinator.destroyStore(at: storeURL)
+            default:
+                migrator.migrateStore(at: storeURL, toVersion: currentVersion)
+            }
         }
         
         persistentContainer.loadPersistentStores(completionHandler: { description, error in
@@ -39,18 +49,14 @@ class StorageProvider: ObservableObject {
         persistentContainer.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
     }
     
-    func destroy() {
-        
-    }
-    
     static let preview: StorageProvider = {
         let result = StorageProvider(inMemory: true)
         let viewContext = result.persistentContainer.viewContext
         
-        for _ in 0 ..< 10 {
-            let _ = sampleWorkout(moc: viewContext)
-            try! viewContext.save()
-        }
+//        for _ in 0 ..< 10 {
+//            let _ = sampleWorkout(moc: viewContext)
+//            try! viewContext.save()
+//        }
         
         return result
     }()
@@ -61,28 +67,44 @@ class StorageProvider: ObservableObject {
         return context
     }()
     
-    static func sampleWorkout(moc context: NSManagedObjectContext? = nil) -> Workout {
+    static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
         let viewContext = context ?? sampleContext
         
-        let start = Date.dateFor(month: 1, day: 1, year: 2021)!
-        let end = start.addingTimeInterval(3600) // 1 hour
+        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
+        let end = start.addingTimeInterval(9000) // 1 hour
+        let duration = end.timeIntervalSince(start)
+        let avgSpeed = 6.7056
+        
+        let object = WorkoutProcessor.Object(
+            identifier: UUID(),
+            sport: sport ?? .cycling,
+            indoor: false,
+            start: start,
+            end: end,
+            duration: duration,
+            distance: 20000.0,
+            movingTime: duration - 300.0,
+            avgMovingSpeed: avgSpeed,
+            avgSpeed: avgSpeed,
+            maxSpeed: avgSpeed + 1.0,
+            avgPace: 0.0,
+            avgMovingPace: 0.0,
+            avgCyclingCadence: 80.0,
+            maxCyclingCadence: 90.0,
+            energyBurned: 500.0,
+            avgHeartRate: 140.0,
+            maxHeartRate: 170.0,
+            coordinatesValue: "",
+            elevationAscended: 0.0,
+            elevationDescended: 0.0,
+            maxElevation: 0.0,
+            minElevation: 0.0,
+            source: "Workouts Preview",
+            device: nil
+        )
         
         let workout = Workout(context: viewContext)
-        workout.remoteIdentifier = UUID()
-        workout.sport = .cycling
-        workout.start = start
-        workout.end = end
-        workout.distance = 20000.0
-        workout.energyBurned = 500.0
-        workout.avgSpeed = 6.7056
-        workout.maxSpeed = 10.2919
-        workout.avgCyclingCadence = 80.0
-        workout.maxCyclingCadence = 95.0
-        workout.elevationAscended = 500.0
-        workout.elevationDescended = 200.0
-        workout.locationCity = "Orlando"
-        workout.locationState = "FL"
-        workout.source = "Workouts Preview"
+        Workout.updateValues(for: workout, object: object, in: viewContext)
         
         return workout
     }

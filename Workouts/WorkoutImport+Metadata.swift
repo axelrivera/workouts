@@ -14,6 +14,10 @@ extension WorkoutImport {
         HKQuantity.quantity(for: avgTemperature.temperatureValue, unit: .celcius())
     }
     
+    var maxTemperatureValue: Double? {
+        maxTemperature.temperatureValue
+    }
+    
     var avgSpeedQuantity: HKQuantity? {
         HKQuantity.quantity(for: avgSpeed.speedValue, unit: .metersPerSecond())
     }
@@ -33,6 +37,38 @@ extension WorkoutImport {
     var avgMETQuantity: HKQuantity? {
         let unit = HKUnit(from: "kcal/(kg*hr)")
         return HKQuantity.quantity(for: avgMETValue, unit: unit)
+    }
+    
+    var totalTimerTimeValue: Double? {
+        totalTimerTime.timeValue
+    }
+    
+    var avgHeartRateValue: Double? {
+        avgHeartRate.heartRateValue
+    }
+    
+    var minHeartRateValue: Double? {
+        minHeartRate.heartRateValue
+    }
+    
+    var maxHeartRateValue: Double? {
+        maxHeartRate.heartRateValue
+    }
+    
+    var startLatitudeValue: Double? {
+        startPosition.coordinateValue?.latitude
+    }
+    
+    var startLongitudeValue: Double? {
+        startPosition.coordinateValue?.longitude
+    }
+    
+    var minAltitudeValue: Double? {
+        minAltitude.altitudeValue
+    }
+    
+    var maxAltitudeValue: Double? {
+        maxAltitude.altitudeValue
     }
     
     var totalAvgCadenceValue: Double? {
