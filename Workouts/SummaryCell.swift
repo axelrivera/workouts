@@ -44,9 +44,9 @@ struct SummaryCell: View {
     let viewModel: WorkoutSummary
     let rows: [Row]
     
-    init(viewModel: WorkoutSummary) {
+    init(viewModel: WorkoutSummary, active: Bool) {
         self.viewModel = viewModel
-        self.rows = SummaryCellProcessor(viewModel: viewModel).gridRows()
+        self.rows = SummaryCellProcessor(viewModel: viewModel, active: active).gridRows()
     }
     
     var body: some View {
@@ -93,7 +93,7 @@ struct SummaryCell_Previews: PreviewProvider {
     
     static var previews: some View {
         Group {
-            SummaryCell(viewModel: viewModel1)
+            SummaryCell(viewModel: viewModel1, active: false)
                 .frame(maxWidth: .infinity, maxHeight: 140, alignment: .leading)
         }
         .padding()
@@ -103,6 +103,7 @@ struct SummaryCell_Previews: PreviewProvider {
 
 struct SummaryCellProcessor {
     let viewModel: WorkoutSummary
+    let active: Bool
 }
 
 extension SummaryCellProcessor {
@@ -167,32 +168,32 @@ extension SummaryCellProcessor {
     func distanceObjects() -> [Object] {
         [
             .init(text: "Distance"),
-            .init(text: viewModel.distanceString, color: .distance),
-            .init(text: viewModel.avgDistanceString, color: .distance)
+            .init(text: active ? viewModel.distanceString : zeroDistance, color: .distance),
+            .init(text: active ? viewModel.avgDistanceString : zeroDistance, color: .distance)
         ]
     }
     
     func timeObjects() -> [Object] {
         [
             .init(text: "Time"),
-            .init(text: viewModel.durationString, color: .time),
-            .init(text: viewModel.avgDurationString, color: .time)
+            .init(text: active ? viewModel.durationString : zeroDuration, color: .time),
+            .init(text: active ? viewModel.avgDurationString : zeroDuration, color: .time)
         ]
     }
     
     func calorieObjects() -> [Object] {
         [
             .init(text: "Calories"),
-            .init(text: viewModel.caloriesString, color: .calories),
-            .init(text: viewModel.avgCaloriesString, color: .calories)
+            .init(text: active ? viewModel.caloriesString : zeroCalories, color: .calories),
+            .init(text: active ? viewModel.avgCaloriesString : zeroCalories, color: .calories)
         ]
     }
     
     func elevationObjects() -> [Object] {
         [
             .init(text: "Elevation"),
-            .init(text: viewModel.elevationString, color: .elevation),
-            .init(text: viewModel.avgElevationString, color: .elevation)
+            .init(text: active ? viewModel.elevationString : zeroElevation, color: .elevation),
+            .init(text: active ? viewModel.avgElevationString : zeroElevation, color: .elevation)
         ]
     }
     
@@ -200,7 +201,7 @@ extension SummaryCellProcessor {
         [
             .init(text: "Speed"),
             .init(text: ""),
-            .init(text: viewModel.avgSpeedString, color: .speed)
+            .init(text: active ? viewModel.avgSpeedString : zeroSpeed, color: .speed)
         ]
     }
     
@@ -208,8 +209,32 @@ extension SummaryCellProcessor {
         [
             .init(text: "Pace"),
             .init(text: ""),
-            .init(text: viewModel.avgPaceString, color: .pace)
+            .init(text: active ? viewModel.avgPaceString : zeroPace, color: .pace)
         ]
+    }
+    
+    var zeroDistance: String {
+        formattedDistanceStringInTags(for: 0)
+    }
+    
+    var zeroDuration: String {
+        formattedHoursMinutesPrettyStringInTags(for: 0)
+    }
+    
+    var zeroCalories: String {
+        formattedCaloriesString(for: 0, zeroPadding: true)
+    }
+    
+    var zeroElevation: String {
+        formattedElevationString(for: 0, zeroPadding: true)
+    }
+    
+    var zeroSpeed: String {
+        formattedSpeedString(for: 0)
+    }
+    
+    var zeroPace: String {
+        formattedRunningWalkingPaceString(for: 0)
     }
     
     func gridRows() -> [Row] {

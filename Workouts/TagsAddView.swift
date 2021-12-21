@@ -36,11 +36,6 @@ struct TagsAddView: View {
         }
     }
     
-    enum ActiveSheet: Identifiable {
-        case paywall
-        var id: Int { hashValue }
-    }
-    
     enum ActiveAlert: Hashable, Identifiable {
         case error(message: String)
         case confirmation(confirmationType: ConfirmationType)
@@ -51,9 +46,7 @@ struct TagsAddView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     @EnvironmentObject private var tagManager: TagManager
-    @EnvironmentObject private var purchaseManager: IAPManager
     
-    @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
     
     @StateObject var viewModel: TagEditViewModel
@@ -114,22 +107,9 @@ struct TagsAddView: View {
                     }
                     .disabled(viewModel.isArchived)
                 }
-                .disabled(!purchaseManager.isActive)
                 
                 if viewModel.mode == .edit {
                     VStack {
-                        if !purchaseManager.isActive {
-                            Button(action: { activeSheet = .paywall }) {
-                                VStack(spacing: CGFloat(5.0)) {
-                                    Label("Upgrade to Pro Now", systemImage: "lock.fill")
-                                    Text("Editing Tags requires Pro version")
-                                        .font(.subheadline)
-                                        .foregroundColor(.black.opacity(0.4))
-                                }
-                            }
-                            .buttonStyle(PaywallButtonStyle())
-                        }
-                        
                         HStack {
                             if viewModel.isArchived {
                                 Button(action: toggleRestore) {
@@ -138,7 +118,6 @@ struct TagsAddView: View {
                                         .padding(.all, CGFloat(5.0))
                                 }
                                 .buttonStyle(.bordered)
-                                .disabled(!purchaseManager.isActive)
                             } else {
                                 Button(action: toggleArchive) {
                                     Label("Archive", systemImage: "archivebox")
@@ -146,7 +125,6 @@ struct TagsAddView: View {
                                         .padding(.all, CGFloat(5.0))
                                 }
                                 .buttonStyle(.bordered)
-                                .disabled(!purchaseManager.isActive)
                             }
                             
                             Button(action: toggleDelete) {
@@ -156,7 +134,6 @@ struct TagsAddView: View {
                             }
                             .buttonStyle(.bordered)
                             .tint(.red)
-                            .disabled(!purchaseManager.isActive)
                         }
                     }
                     .padding()
@@ -172,14 +149,7 @@ struct TagsAddView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: saveTag)
-                        .disabled(!purchaseManager.isActive || viewModel.isArchived)
-                }
-            }
-            .sheet(item: $activeSheet) { sheet in
-                switch sheet {
-                case .paywall:
-                    PaywallView()
-                        .environmentObject(purchaseManager)
+                        .disabled(viewModel.isArchived)
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -277,7 +247,6 @@ extension TagsAddView {
 struct TagsAddView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
     static var tagManager = TagManager(context: viewContext)
-    static var purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var viewModel: TagEditViewModel = {
         var model = TagEditViewModel(uuid: UUID(), mode: .edit)
@@ -288,7 +257,6 @@ struct TagsAddView_Previews: PreviewProvider {
     static var previews: some View {
         TagsAddView(viewModel: viewModel, isInsert: false)
             .environmentObject(tagManager)
-            .environmentObject(purchaseManager)
             .preferredColorScheme(.dark)
     }
 }

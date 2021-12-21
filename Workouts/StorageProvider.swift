@@ -285,7 +285,9 @@ extension StorageProvider {
             }
             
             // Update the history token using the last transaction.
-            lastHistoryToken = transactions.last!.token
+            if let token = transactions.last?.token {
+                lastHistoryToken = token
+            }
         }
     }
 }

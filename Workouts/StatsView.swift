@@ -21,125 +21,33 @@ struct StatsView: View {
     @EnvironmentObject var statsManager: StatsManager
     
     @State var activeSheet: ActiveSheet?
-        
-    var weeklySectionTitle: String {
-        statsManager.weekStats.dateRangeHeader
-    }
-    
-    var weeklySectionDetail: String {
-        statsManager.weekStats.countLabel
-    }
-    
-    var weeklySectionAvg: String {
-        String(format: "%@ /week", statsManager.avgWeeklyTotal.formatted())
-    }
-    
-    var monthlySectionTitle: String {
-        statsManager.monthStats.dateRangeHeader
-    }
-    
-    var monthlySectionDetail: String {
-        statsManager.monthStats.countLabel
-    }
-    
-    var monthlySectionAvg: String {
-        String(format: "%@ /month", statsManager.avgMonthlyTotal.formatted())
-    }
-    
-    var yearToDateSectionDetail: String {
-        statsManager.yearStats.countLabel
-    }
-    
-    var allTimeSectionDetail: String {
-        statsManager.allStats.countLabel
-    }
-    
-    var weeklySummaries: [StatsSummary] {
-        purchaseManager.isActive ? statsManager.recentWeekly : StatsSummary.weeklySamples()
-    }
-    
-    var monthlySummaries: [StatsSummary] {
-        purchaseManager.isActive ? statsManager.recentMonthly : StatsSummary.monthlySamples()
-    }
-    
-    var summaryViewModel: TagSummaryViewModel {
-        TagSummaryViewModel.sample(name: "Tag 1")
-    }
     
     var body: some View {
         NavigationView {
             ScrollView {
-                LazyVStack(spacing: 15.0) {
-                    VStack(spacing: SECTION_SPACING) {
-                        VStack(alignment: .leading, spacing: 5.0) {
-                            statsHeader(
-                                text: weeklySectionTitle,
-                                destination: StatsRecentView(timeframe: .week, sport: statsManager.sport, summaries: weeklySummaries)
-                            )
-                            
-                            HStack(spacing: 10.0) {
-                                Text(weeklySectionDetail)
-                                    .foregroundColor(.primary)
-                                Divider()
-                                Text(weeklySectionAvg)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        StatsSummaryView(timeframe: .week, manager: statsManager)
-                            .padding([.top, .bottom], CGFloat(10.0))
+                LazyVStack(spacing: 0.0) {
+                    recentSummary(stats: statsManager.weekStats)
+                        .padding(.bottom)
+                    recentSummary(stats: statsManager.monthStats)
+                        .padding(.bottom)
+                    
+                    Divider()
+                    
+                    NavigationLink(destination: destination(forTimeframe: .yearToDate)) {
+                        SummaryCell(viewModel: statsManager.yearStats, active: true)
                             .padding([.leading, .trailing])
-                            .background(Color.secondarySystemBackground)
-                            .cornerRadius(12.0)
-                    }
-                    .padding([.leading, .trailing])
-                                        
-                    VStack(spacing: SECTION_SPACING) {
-                        VStack(alignment: .leading, spacing: 5.0) {
-                            statsHeader(
-                                text: monthlySectionTitle,
-                                destination: StatsRecentView(timeframe: .month, sport: statsManager.sport, summaries: monthlySummaries)
-                            )
-                            
-                            HStack(spacing: 10.0) {
-                                Text(monthlySectionDetail)
-                                    .foregroundColor(.primary)
-                                Divider()
-                                Text(monthlySectionAvg)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        StatsSummaryView(timeframe: .month, manager: statsManager)
                             .padding([.top, .bottom], CGFloat(10.0))
-                            .padding([.leading, .trailing])
-                            .background(Color.secondarySystemBackground)
-                            .cornerRadius(12.0)
-                            
                     }
-                    .padding([.leading, .trailing])
+                    .buttonStyle(WorkoutPlainButtonStyle())
                     
                     Divider()
                                         
-                    VStack(spacing: SECTION_SPACING) {
-                        statsHeader(
-                            text: "Year to Date",
-                            destination: StatsTimelineView(sport: statsManager.sport, displayType: .yearToDate)
-                        )
-                            .padding(.bottom, CGFloat(10.0))
-                        SummaryCell(viewModel: statsManager.yearStats)
+                    NavigationLink(destination: destination(forTimeframe: .allTime)) {
+                        SummaryCell(viewModel: statsManager.allStats, active: true)
+                            .padding([.leading, .trailing])
+                            .padding([.top, .bottom], CGFloat(10.0))
                     }
-                    .padding([.leading, .trailing])
-                    
-                    Divider()
-                                        
-                    VStack(spacing: SECTION_SPACING) {
-                        statsHeader(
-                            text: "All Time",
-                            destination: StatsTimelineView(sport: statsManager.sport, displayType: .allTime)
-                        )
-                            .padding(.bottom, CGFloat(10.0))
-                        SummaryCell(viewModel: statsManager.allStats)
-                    }
-                    .padding([.leading, .trailing])
+                    .buttonStyle(WorkoutPlainButtonStyle())
                 }
                 .padding([.top, .bottom])
             }
@@ -201,21 +109,85 @@ struct StatsView: View {
         }
     }
     
-    @ViewBuilder
-    func statsHeader<Destination: View>(text: String, destination: Destination) -> some View {
-        HStack {
-            Text(text)
-                .font(.title2)
-                .foregroundColor(.primary)
-            Spacer()
-            NavigationLink(destination: destination) {
-                Text("Show More")
-            }
-        }
-    }
 }
 
 // MARK: - Methods
+
+extension StatsView {
+    
+    func avgLabel(forTimeframe timeframe: StatsManager.Timeframe) -> String {
+        switch timeframe {
+        case .week:
+            return String(format: "%@ /week", statsManager.avgWeeklyTotal.formatted())
+        case .month:
+            return String(format: "%@ /month", statsManager.avgMonthlyTotal.formatted())
+        default:
+            return ""
+        }
+    }
+    
+    func summaries(forTimeframe timeframe: StatsManager.Timeframe) -> [StatsSummary] {
+        switch timeframe {
+        case .week:
+            return purchaseManager.isActive ? statsManager.recentWeekly : StatsSummary.weeklySamples()
+        case .month:
+            return purchaseManager.isActive ? statsManager.recentMonthly : StatsSummary.monthlySamples()
+        default:
+            return []
+        }
+    }
+    
+    @ViewBuilder
+    func recentSummary(stats: StatsSummary) -> some View {
+        VStack(spacing: SECTION_SPACING) {
+            VStack(alignment: .leading, spacing: 5.0) {
+                Text(stats.title)
+                    .font(.title2)
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 10.0) {
+                    Text(stats.countLabel)
+                        .foregroundColor(.primary)
+                    Divider()
+                    Text(avgLabel(forTimeframe: stats.timeframe))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    NavigationLink(destination: destination(forTimeframe: stats.timeframe)) {
+                        Text("See More")
+                    }
+                }
+            }
+            StatsSummaryView(timeframe: stats.timeframe, manager: statsManager)
+                .padding([.top, .bottom], CGFloat(10.0))
+                .padding([.leading, .trailing])
+                .background(Color.secondarySystemBackground)
+                .cornerRadius(12.0)
+        }
+        .padding([.leading, .trailing])
+    }
+    
+    @ViewBuilder
+    func destination(forTimeframe timeframe: StatsManager.Timeframe) -> some View {
+        switch timeframe {
+        case .week, .month:
+            StatsRecentView(
+                timeframe: timeframe,
+                sport: statsManager.sport,
+                summaries: summaries(forTimeframe: timeframe)
+            )
+        case .yearToDate:
+            StatsTimelineView(displayType: .yearToDate(sport: statsManager.sport))
+        case .allTime:
+            StatsTimelineView(displayType: .allTime(sport: statsManager.sport))
+        default:
+            EmptyView()
+        }
+    }
+    
+}
+
+
+// MARK: - Previews
 
 struct StatsView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext

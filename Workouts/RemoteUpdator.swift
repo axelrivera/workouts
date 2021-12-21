@@ -40,6 +40,8 @@ class RemoteUpdator {
                 workout.isLocationPending = false
             }
             
+            context.saveOrRollback()
+            
             let identifier = workout.workoutIdentifier
             let coordinates = workout.coordinates
             
@@ -48,7 +50,6 @@ class RemoteUpdator {
                 Notification.coordinatesKey: coordinates
             ]
             
-            context.saveOrRollback()
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .didUpdateRemoteLocationData, object: nil, userInfo: userInfo)
             }

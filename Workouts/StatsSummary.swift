@@ -21,7 +21,7 @@ fileprivate extension NumberFormatter {
 extension StatsSummary {
     
     enum Timeframe: Identifiable, CaseIterable {
-        case week, month, year, allTime
+        case week, month, year, yearToDate, allTime
         var id: Int { hashValue }
         
         var recentTitle: String {
@@ -46,7 +46,7 @@ struct StatsSummary {
     let sport: Sport?
     let timeframe: Timeframe
     let interval: DateInterval
-    let title: String?
+    let workouts: [UUID]
     
     private(set) var total: Int = 0
     private(set) var distance: Double = 0
@@ -58,12 +58,12 @@ struct StatsSummary {
     private(set) var elevation: Double = 0
     private(set) var avgElevation: Double = 0
     
-    init(sport: Sport?, timeframe: Timeframe, interval: DateInterval? = nil, title: String? = nil, dictionary: [String: Any] = [String: Any]()) {        
+    init(sport: Sport?, timeframe: Timeframe, interval: DateInterval? = nil, dictionary: [String: Any] = [String: Any](), workouts: [UUID] = []) {
         self.id = UUID().uuidString
         self.sport = sport
         self.timeframe = timeframe
         self.interval = interval ?? Self.currentInterval(for: timeframe)
-        self.title = title
+        self.workouts = workouts
         
         total = dictionary[StatsProperties.count.key] as? Int ?? 0
         distance = dictionary[StatsProperties.distance.key] as? Double ?? 0
@@ -78,6 +78,22 @@ struct StatsSummary {
 }
 
 extension StatsSummary: WorkoutSummary {
+    
+    var title: String {
+        switch timeframe {
+        case .week:
+            return formattedMonthDayRangeString(start: interval.start, end: interval.end)
+        case .month:
+            return formattedMonthYearString(for: interval.start)
+        case .year:
+            return "\(interval.start.year())"
+        case .yearToDate:
+            return "Year to Date"
+        case .allTime:
+            return "All Time"
+        }
+    }
+    
     var showSpeed: Bool {
         sport?.isCycling ?? false
     }
@@ -87,7 +103,6 @@ extension StatsSummary: WorkoutSummary {
     }
     
     var identifier: String { id }
-    var titleColor: Color? { .primary }
     var sportValue: Sport? { sport }
     var gearValue: GearType? { nil }
 }
@@ -113,7 +128,7 @@ extension StatsSummary {
         case .month:
 //                return (Date.dateFor(month: 2, day: 1, year: 2021)!, Date.dateFor(month: 2, day: 28, year: 2021)!)
             return DateInterval(start: date.startOfMonth, end: date.endOfMonth)
-        case .year:
+        case .year, .yearToDate:
             return DateInterval(start: date.startOfYear, end: date.endOfYear)
         case .allTime:
             return DateInterval(start: Date.distantPast, end: Date.distantFuture)
@@ -194,48 +209,24 @@ extension StatsSummary {
         String(format: "%@ %@", formattedCount, sportTitle)
     }
     
-    var dateRangeHeader: String {
-        switch timeframe {
-        case .week:
-            return formattedMonthDayRangeString(start: interval.start, end: interval.end)
-        case .month:
-            return formattedMonthYearString(for: interval.start)
-        default:
-            return ""
-        }
-    }
-    
-//    var timeString: String {
-//        formattedHoursMinutesPrettyString(for: duration)
-//    }
-//
-//    var distanceString: String {
-//        let values: [Timeframe] = [.week, .month]
-//        let mode: DistanceMode = values.contains(timeframe) ? .default : .rounded
-//        return formattedDistanceString(for: distance, mode: mode, zeroPadding: true)
-//    }
-//
-//    var caloriesString: String {
-//        formattedCaloriesString(for: energyBurned, zeroPadding: true)
-//    }
-//
-//    var elevationString: String {
-//        formattedElevationString(for: elevation, zeroPadding: true)
-//    }
-//
-//    var longestDistanceString: String {
-//        formattedDistanceString(for: longestDistance, zeroPadding: true)
-//    }
-//
-//    var highestElevationString: String {
-//        formattedElevationString(for: highestElevation, zeroPadding: true)
-//    }
-    
 }
 
 // MARK: - Samples
 
 extension StatsSummary {
+    
+    static func sample(forTimeframe timeframe: Timeframe) -> StatsSummary {
+        switch timeframe {
+        case .week:
+            return weeklySample()
+        case .month:
+            return monthlySample()
+        case .year:
+            return yearlySample()
+        default:
+            return allSample()
+        }
+    }
     
     static func weeklySample() -> StatsSummary {
         let dictionary: [String: Any] = [
@@ -256,7 +247,7 @@ extension StatsSummary {
             "elevation": 9144.0,
             "energyBurned": 25000.0
         ]
-        return StatsSummary(sport: .cycling, timeframe: .week, dictionary: dictionary)
+        return StatsSummary(sport: .cycling, timeframe: .month, dictionary: dictionary)
     }
     
     static func yearlySample() -> StatsSummary {

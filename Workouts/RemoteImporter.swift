@@ -58,8 +58,11 @@ class RemoteImporter {
                 }
             }
             
+            let identifier = remoteWorkout.uuid
+            let userInfo: [String: Any] = [Notification.remoteWorkoutKey: identifier]
+            
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil, userInfo: userInfo)
             }
         } 
         

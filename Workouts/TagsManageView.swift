@@ -17,7 +17,7 @@ struct TagsManageView: View {
 
 struct TagsManageContentView: View {
     enum ActiveSheet: Hashable, Identifiable {
-        case add, edit(tag: Tag), paywall
+        case add, edit(tag: Tag)
         var id: Self { self }
     }
     
@@ -28,7 +28,6 @@ struct TagsManageContentView: View {
     }
         
     @StateObject var manager: TagManager
-    @EnvironmentObject var purchaseManager: IAPManager
     
     @State var editMode = EditMode.inactive
     @State private var activeSheet: ActiveSheet?
@@ -67,7 +66,7 @@ struct TagsManageContentView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                EditButton()
-                    .disabled(!purchaseManager.isActive || selectedSegment == .archived)
+                    .disabled(selectedSegment == .archived)
             }
             
             ToolbarItemGroup(placement: .bottomBar) {
@@ -89,9 +88,6 @@ struct TagsManageContentView: View {
             case .edit(let tag):
                 TagsAddView(viewModel: tag.editViewModel(), isInsert: false)
                     .environmentObject(manager)
-            case .paywall:
-                PaywallView()
-                    .environmentObject(purchaseManager)
             }
         }
         .alert(item: $activeAlert) { alert in
@@ -140,7 +136,6 @@ struct TagsManageContentView: View {
         }
         .onMove(perform: move)
         .onDelete(perform: editMode == .active ? delete : nil)
-        .disabled(!purchaseManager.isActive)
     }
     
     @ViewBuilder
@@ -160,7 +155,6 @@ struct TagsManageContentView: View {
                 .buttonStyle(.borderless)
             }
         }
-        .disabled(!purchaseManager.isActive)
     }
     
     @ViewBuilder
@@ -173,19 +167,6 @@ struct TagsManageContentView: View {
             }
             .disabled(isManagingDisabled)
             .pickerStyle(SegmentedPickerStyle())
-            
-            if !purchaseManager.isActive {
-                Button(action: { activeSheet = .paywall }) {
-                    VStack(spacing: CGFloat(5.0)) {
-                        Label("Upgrade to Pro Now", systemImage: "lock.fill")
-                        Text("Editing tags requires PRO version")
-                            .font(.subheadline)
-                            .foregroundColor(.black.opacity(0.4))
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .buttonStyle(PaywallButtonStyle())
-            }
         }
         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         .padding([.top, .bottom], CGFloat(20.0))
@@ -205,7 +186,7 @@ struct TagsManageContentView: View {
 extension TagsManageContentView {
     
     var isManagingDisabled: Bool {
-        !purchaseManager.isActive || editMode == .active
+        editMode == .active
     }
     
     var isNewButtonDisabled: Bool {
@@ -239,13 +220,11 @@ extension TagsManageContentView {
 
 struct TagsManageView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {
         NavigationView {
             TagsManageView()
         }
         .environment(\.managedObjectContext, viewContext)
-        .environmentObject(purchaseManager)
     }
 }

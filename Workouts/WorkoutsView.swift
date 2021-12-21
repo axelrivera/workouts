@@ -77,10 +77,15 @@ struct WorkoutsContentView: View {
                                 destination: { detailDestination(viewModel: workout.detailViewModel) }) {
                                     WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
                             }
+                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
+                                    workoutManager.storage.refreshAllWorkouts()
+                                }
                                 .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
-                                    guard let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
-                                          viewModel.id == workout.workoutIdentifier else { return }
-                                    viewContext.refresh(workout, mergeChanges: true)
+                                    if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
+                                       viewModel.id == workout.workoutIdentifier {
+                                        viewContext.refresh(workout, mergeChanges: true)
+                                    }
+                                    
                             }
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {

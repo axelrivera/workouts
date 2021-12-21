@@ -11,12 +11,11 @@ import CoreData
 struct StatsTimelineView: View {
     @Environment(\.managedObjectContext) var viewContext
     
-    let sport: Sport?
     let displayType: StatsTimelineManager.DisplayType
     
     var body: some View {
         StatsTimelineContentView(
-            manager: StatsTimelineManager(sport: sport, displayType: displayType, context: viewContext)
+            manager: StatsTimelineManager(displayType: displayType, context: viewContext)
         )
     }
     
@@ -24,18 +23,14 @@ struct StatsTimelineView: View {
 
 struct StatsTimelineContentView: View {
     @StateObject var manager: StatsTimelineManager
-    
-    func destination(stats: StatsSummary) -> some View {
-        StatsWorkoutsView(sport: manager.sport, interval: stats.interval)
-            .navigationTitle(stats.title ?? "Workouts")
-    }
+    @EnvironmentObject var purchaseManager: IAPManager
     
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(manager.stats, id: \.id) { stats in
-                    NavigationLink(destination: destination(stats: stats)) {
-                        SummaryCell(viewModel: stats)
+                    NavigationLink(destination: StatsWorkoutsView(identifiers: stats.workouts, title: stats.title)) {
+                        SummaryCell(viewModel: stats, active: purchaseManager.isActive)
                             .padding([.leading, .trailing])
                             .padding([.top, .bottom], CGFloat(10.0))
                     }
@@ -45,6 +40,8 @@ struct StatsTimelineContentView: View {
             }
             .onAppear { manager.reload() }
         }
+        .overlay(emptyOverlay())
+        .paywallButtonOverlay()
         .navigationTitle(manager.displayType.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -52,7 +49,7 @@ struct StatsTimelineContentView: View {
                 VStack {
                     Text(manager.displayType.title)
                         .font(.system(size: 13.0, weight: .semibold, design: .default))
-                    Text(manager.sport?.activityName ?? "All Workouts")
+                    Text(manager.displayType.subtitle)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -76,7 +73,16 @@ struct StatsTimelineContentView: View {
                 } label: {
                     Text(manager.timeframe.title)
                 }
+                .disabled(!purchaseManager.isActive)
             }
+        }
+    }
+    
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if manager.stats.isEmpty {
+            Text("No Workouts")
+                .foregroundColor(.secondary)
         }
     }
 }
@@ -88,11 +94,14 @@ struct StatsTimelineView_Previews: PreviewProvider {
         return manager
     }()
     
+    static var purchaseManager = IAPManagerPreview.manager(isActive: false)
+    
     static var previews: some View {
         NavigationView {
-            StatsTimelineView(sport: .cycling, displayType: .yearToDate)
+            StatsTimelineView(displayType: .yearToDate(sport: .cycling))
         }
         .environment(\.managedObjectContext, viewContext)
         .environmentObject(workoutManager)
+        .environmentObject(purchaseManager)
     }
 }

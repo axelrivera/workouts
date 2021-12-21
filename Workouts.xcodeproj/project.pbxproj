@@ -109,10 +109,6 @@
 		16240565273B020D00FC4864 /* WorkoutTagProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16240563273B020D00FC4864 /* WorkoutTagProvider.swift */; };
 		16240568273B2D2200FC4864 /* GearImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16240567273B2D2200FC4864 /* GearImage.swift */; };
 		16240569273B2D2200FC4864 /* GearImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16240567273B2D2200FC4864 /* GearImage.swift */; };
-		1624056B273B5F0F00FC4864 /* TagWorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624056A273B5F0F00FC4864 /* TagWorkoutsView.swift */; };
-		1624056C273B5F0F00FC4864 /* TagWorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624056A273B5F0F00FC4864 /* TagWorkoutsView.swift */; };
-		1624056E273B601A00FC4864 /* TagWorkoutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624056D273B601A00FC4864 /* TagWorkoutsManager.swift */; };
-		1624056F273B601A00FC4864 /* TagWorkoutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624056D273B601A00FC4864 /* TagWorkoutsManager.swift */; };
 		1624C95426BC2F7200373D7E /* OnboardingModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624C95326BC2F7200373D7E /* OnboardingModifier.swift */; };
 		1624C95526BC2F7200373D7E /* OnboardingModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1624C95326BC2F7200373D7E /* OnboardingModifier.swift */; };
 		16372FBE26E0EE01007466A3 /* URL+Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16372FBD26E0EE01007466A3 /* URL+Maps.swift */; };
@@ -324,8 +320,6 @@
 		16A544F826B6461100CB6160 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 16A544F626B6461100CB6160 /* Launch Screen.storyboard */; };
 		16A544FA26B75F5300CB6160 /* WorkoutLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */; };
 		16A544FB26B75F5300CB6160 /* WorkoutLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */; };
-		16A5450026B8180100CB6160 /* WorkoutFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544FF26B8180100CB6160 /* WorkoutFilter.swift */; };
-		16A5450126B8180100CB6160 /* WorkoutFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544FF26B8180100CB6160 /* WorkoutFilter.swift */; };
 		16A5451E26BADE7900CB6160 /* Font+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A5451D26BADE7900CB6160 /* Font+Additions.swift */; };
 		16A5451F26BADE7900CB6160 /* Font+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A5451D26BADE7900CB6160 /* Font+Additions.swift */; };
 		16A589852729920900F97CC5 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A589842729920900F97CC5 /* TagView.swift */; };
@@ -493,8 +487,6 @@
 		16240560273A0F4500FC4864 /* WorkoutTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTag.swift; sourceTree = "<group>"; };
 		16240563273B020D00FC4864 /* WorkoutTagProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTagProvider.swift; sourceTree = "<group>"; };
 		16240567273B2D2200FC4864 /* GearImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GearImage.swift; sourceTree = "<group>"; };
-		1624056A273B5F0F00FC4864 /* TagWorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagWorkoutsView.swift; sourceTree = "<group>"; };
-		1624056D273B601A00FC4864 /* TagWorkoutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagWorkoutsManager.swift; sourceTree = "<group>"; };
 		1624C95326BC2F7200373D7E /* OnboardingModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingModifier.swift; sourceTree = "<group>"; };
 		16372FBD26E0EE01007466A3 /* URL+Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Maps.swift"; sourceTree = "<group>"; };
 		163A5F3B25EFC8DA00146964 /* WorkoutAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutAnnotation.swift; sourceTree = "<group>"; };
@@ -614,7 +606,6 @@
 		16A544F026B5C2E800CB6160 /* WorkoutCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCell.swift; sourceTree = "<group>"; };
 		16A544F626B6461100CB6160 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLogRow.swift; sourceTree = "<group>"; };
-		16A544FF26B8180100CB6160 /* WorkoutFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutFilter.swift; sourceTree = "<group>"; };
 		16A5451C26BA11B500CB6160 /* Workouts 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Workouts 3.xcdatamodel"; sourceTree = "<group>"; };
 		16A5451D26BADE7900CB6160 /* Font+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Additions.swift"; sourceTree = "<group>"; };
 		16A589842729920900F97CC5 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
@@ -735,7 +726,6 @@
 			children = (
 				16F5B6D02740543F005152E0 /* WorkoutsFilterManager.swift */,
 				1645B91E25B350BB00B04478 /* WorkoutsView.swift */,
-				16A544FF26B8180100CB6160 /* WorkoutFilter.swift */,
 				16F5B6CD273EE508005152E0 /* WorkoutsFilterView.swift */,
 				16DF29D8274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift */,
 			);
@@ -1304,8 +1294,6 @@
 			children = (
 				168D25B8273579A00066B1C8 /* TagsDisplayManager.swift */,
 				16CCDBA3272E042600C75BD4 /* TagsView.swift */,
-				1624056D273B601A00FC4864 /* TagWorkoutsManager.swift */,
-				1624056A273B5F0F00FC4864 /* TagWorkoutsView.swift */,
 			);
 			name = Tags;
 			sourceTree = "<group>";
@@ -1615,7 +1603,6 @@
 				16E37B4D26E82D0D0075178E /* ShareSettings.swift in Sources */,
 				1602AFAC26C7DE8A0079A6E4 /* CLLocation+Array.swift in Sources */,
 				160BB08825DD61700059E493 /* DocumentPicker.swift in Sources */,
-				16A5450126B8180100CB6160 /* WorkoutFilter.swift in Sources */,
 				160BB08925DD61700059E493 /* WorkoutImport+Record.swift in Sources */,
 				1641DBDD2726D4F3001F8C49 /* TagsAddView.swift in Sources */,
 				16208BEE26D3C81900693530 /* ShareView.swift in Sources */,
@@ -1646,7 +1633,6 @@
 				163D351C27299DBD003909EB /* WrapingHStack.swift in Sources */,
 				16864BEF268E95320005E7D8 /* RecentChart.swift in Sources */,
 				16CCDBA8272E069700C75BD4 /* EmptyListHeader.swift in Sources */,
-				1624056C273B5F0F00FC4864 /* TagWorkoutsView.swift in Sources */,
 				16EDDE90272EE2FA0041CDA3 /* TagProvider.swift in Sources */,
 				16864BE62685EADD0005E7D8 /* HRZoneManager.swift in Sources */,
 				160BB09125DD61700059E493 /* AppData.swift in Sources */,
@@ -1654,7 +1640,6 @@
 				16B321CE26C121C1007CCE70 /* LapsView.swift in Sources */,
 				160BB09325DD61700059E493 /* Locale+Additions.swift in Sources */,
 				160BB09425DD61700059E493 /* RowItem.swift in Sources */,
-				1624056F273B601A00FC4864 /* TagWorkoutsManager.swift in Sources */,
 				16E7FC9026DFB61E00DDFBD7 /* WorkoutDetailViewModel.swift in Sources */,
 				16EDDE93272EF4D30041CDA3 /* TagEditViewModel.swift in Sources */,
 				165D648726195D140015744C /* SafariView.swift in Sources */,
@@ -1820,7 +1805,6 @@
 				16E37B4C26E82D0D0075178E /* ShareSettings.swift in Sources */,
 				1602AFAB26C7DE8A0079A6E4 /* CLLocation+Array.swift in Sources */,
 				1645B92325B350BB00B04478 /* DocumentPicker.swift in Sources */,
-				16A5450026B8180100CB6160 /* WorkoutFilter.swift in Sources */,
 				16A065F825C48CB300019096 /* WorkoutImport+Record.swift in Sources */,
 				1641DBDC2726D4F3001F8C49 /* TagsAddView.swift in Sources */,
 				16208BED26D3C81900693530 /* ShareView.swift in Sources */,
@@ -1850,7 +1834,6 @@
 				163D351B27299DBD003909EB /* WrapingHStack.swift in Sources */,
 				16864BEE268E95320005E7D8 /* RecentChart.swift in Sources */,
 				16CCDBA7272E069700C75BD4 /* EmptyListHeader.swift in Sources */,
-				1624056B273B5F0F00FC4864 /* TagWorkoutsView.swift in Sources */,
 				16EDDE8F272EE2FA0041CDA3 /* TagProvider.swift in Sources */,
 				16864BE52685EADD0005E7D8 /* HRZoneManager.swift in Sources */,
 				1645B92825B350BB00B04478 /* AppData.swift in Sources */,
@@ -1858,7 +1841,6 @@
 				16B321CD26C121C1007CCE70 /* LapsView.swift in Sources */,
 				16E8322925D20B4500382545 /* Locale+Additions.swift in Sources */,
 				1645B94625B3612700B04478 /* RowItem.swift in Sources */,
-				1624056E273B601A00FC4864 /* TagWorkoutsManager.swift in Sources */,
 				16E7FC8F26DFB61E00DDFBD7 /* WorkoutDetailViewModel.swift in Sources */,
 				16EDDE92272EF4D30041CDA3 /* TagEditViewModel.swift in Sources */,
 				165D648626195D140015744C /* SafariView.swift in Sources */,
@@ -1933,7 +1915,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -1962,7 +1944,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -2017,7 +1999,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2080,7 +2062,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2111,7 +2093,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
@@ -2140,7 +2122,7 @@
 				CODE_SIGN_ENTITLEMENTS = Workouts/Workouts.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;

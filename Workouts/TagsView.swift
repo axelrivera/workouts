@@ -53,11 +53,10 @@ struct TagsContentView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(tags, id: \.id) { viewModel in
-                        NavigationLink(destination: TagWorkoutsView(viewModel: viewModel)) {
-                            SummaryCell(viewModel: viewModel)
+                        NavigationLink(destination: StatsTimelineView(displayType: .tag(tag: viewModel))) {
+                            SummaryCell(viewModel: viewModel, active: true)
                                 .padding([.leading, .trailing])
                                 .padding([.top, .bottom], CGFloat(10.0))
-                                .tag("\(currentSegment)::\(viewModel.id.uuidString)")
                         }
                         .contextMenu {
                             Button(action: { editTag(viewModel.id) }) {

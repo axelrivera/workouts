@@ -154,16 +154,8 @@ struct WorkoutLogItem: View {
                 Text("No Workout")
             }
         } else {
-            List {
-                WorkoutFilter(identifiers: day.remoteIdentifiers) { workout in
-                    NavigationLink(destination: DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel, context: viewContext))) {
-                        WorkoutPlainCell(viewModel: workout.detailViewModel)
-                    }
-                }
-            }
-            .listStyle(PlainListStyle())
-            .navigationTitle("Workouts")
-            .navigationBarTitleDisplayMode(.inline)
+            StatsWorkoutsView(identifiers: day.remoteIdentifiers)
+                .navigationTitle("Workouts")
         }
     }
 }

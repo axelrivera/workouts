@@ -49,7 +49,7 @@ class StatsManager: ObservableObject {
         
         weekStats = StatsSummary(sport: sport, timeframe: .week)
         monthStats = StatsSummary(sport: sport, timeframe: .month)
-        yearStats = StatsSummary(sport: sport, timeframe: .year)
+        yearStats = StatsSummary(sport: sport, timeframe: .yearToDate)
         allStats = StatsSummary(sport: sport, timeframe: .allTime)
     }
     
@@ -99,11 +99,19 @@ extension StatsManager {
             let avgWeeklyValues = recentWeekly.dropFirst()
             let totalWeekly = Double(avgWeeklyValues.count)
             
-            let avgWeeklyTotal = avgWeeklyValues.map({ Double($0.total) }).reduce(0, +) / totalWeekly
-            let avgWeeklyDistance = avgWeeklyValues.map({ $0.distance }).reduce(0, +) / totalWeekly
-            let avgWeeklyDuration = avgWeeklyValues.map({ $0.duration }).reduce(0, +) / totalWeekly
-            let avgWeeklyElevation = avgWeeklyValues.map({ $0.elevation }).reduce(0, +) / totalWeekly
-            let avgWeeklyCalories = avgWeeklyValues.map({ $0.calories }).reduce(0, +) / totalWeekly
+            var avgWeeklyTotal: Double?
+            var avgWeeklyDistance: Double?
+            var avgWeeklyDuration: Double?
+            var avgWeeklyElevation: Double?
+            var avgWeeklyCalories: Double?
+            
+            if totalWeekly > 0 {
+                avgWeeklyTotal = avgWeeklyValues.map({ Double($0.total) }).reduce(0, +) / totalWeekly
+                avgWeeklyDistance = avgWeeklyValues.map({ $0.distance }).reduce(0, +) / totalWeekly
+                avgWeeklyDuration = avgWeeklyValues.map({ $0.duration }).reduce(0, +) / totalWeekly
+                avgWeeklyElevation = avgWeeklyValues.map({ $0.elevation }).reduce(0, +) / totalWeekly
+                avgWeeklyCalories = avgWeeklyValues.map({ $0.calories }).reduce(0, +) / totalWeekly
+            }
             
             let monthly = self.fetchSummary(for: .month)
             let recentMonthly = self.fetchRecentSummary(for: .month)
@@ -111,13 +119,21 @@ extension StatsManager {
             let avgMonthlyValues = recentMonthly.dropFirst()
             let totalMonthly = Double(avgMonthlyValues.count)
             
-            let avgMontlyTotal = avgMonthlyValues.map({ Double($0.total) }).reduce(0, +) / totalMonthly
-            let avgMonthlyDistance = avgMonthlyValues.map({ $0.distance }).reduce(0, +) / totalMonthly
-            let avgMonthlyDuration = avgMonthlyValues.map({ $0.duration }).reduce(0, +) / totalMonthly
-            let avgMonthlyElevation = avgMonthlyValues.map({ $0.elevation }).reduce(0, +) / totalMonthly
-            let avgMonthlyCalories = avgMonthlyValues.map({ $0.calories }).reduce(0, +) / totalMonthly
-
-            let yearly = self.fetchSummary(for: .year)
+            var avgMontlyTotal: Double?
+            var avgMonthlyDistance: Double?
+            var avgMonthlyDuration: Double?
+            var avgMonthlyElevation: Double?
+            var avgMonthlyCalories: Double?
+            
+            if totalMonthly > 0 {
+                avgMontlyTotal = avgMonthlyValues.map({ Double($0.total) }).reduce(0, +) / totalMonthly
+                avgMonthlyDistance = avgMonthlyValues.map({ $0.distance }).reduce(0, +) / totalMonthly
+                avgMonthlyDuration = avgMonthlyValues.map({ $0.duration }).reduce(0, +) / totalMonthly
+                avgMonthlyElevation = avgMonthlyValues.map({ $0.elevation }).reduce(0, +) / totalMonthly
+                avgMonthlyCalories = avgMonthlyValues.map({ $0.calories }).reduce(0, +) / totalMonthly
+            }
+            
+            let yearly = self.fetchSummary(for: .yearToDate)
             let all = self.fetchSummary(for: .allTime)
             
             DispatchQueue.main.async {
@@ -127,17 +143,17 @@ extension StatsManager {
                 self.yearStats = yearly
                 self.allStats = all
                 
-                self.avgWeeklyTotal = Int(avgWeeklyTotal.rounded())
-                self.avgWeeklyDistance = avgWeeklyDistance
-                self.avgWeeklyDuration = avgWeeklyDuration
-                self.avgWeeklyElevation = avgWeeklyElevation
-                self.avgWeeklyCalories = avgWeeklyCalories
+                self.avgWeeklyTotal = Int(avgWeeklyTotal?.rounded() ?? 0)
+                self.avgWeeklyDistance = avgWeeklyDistance ?? 0
+                self.avgWeeklyDuration = avgWeeklyDuration ?? 0
+                self.avgWeeklyElevation = avgWeeklyElevation ?? 0
+                self.avgWeeklyCalories = avgWeeklyCalories ?? 0
                 
-                self.avgMonthlyTotal = Int(avgMontlyTotal.rounded())
-                self.avgMonthlyDistance = avgMonthlyDistance
-                self.avgMonthlyDuration = avgMonthlyDuration
-                self.avgMonthlyElevation = avgMonthlyElevation
-                self.avgMonthlyCalories = avgMonthlyCalories
+                self.avgMonthlyTotal = Int(avgMontlyTotal?.rounded() ?? 0)
+                self.avgMonthlyDistance = avgMonthlyDistance ?? 0
+                self.avgMonthlyDuration = avgMonthlyDuration ?? 0
+                self.avgMonthlyElevation = avgMonthlyElevation ?? 0
+                self.avgMonthlyCalories = avgMonthlyCalories ?? 0
                 
                 self.recentWeekly = recentWeekly
                 self.recentMonthly = recentMonthly
@@ -149,8 +165,10 @@ extension StatsManager {
         let interval = StatsSummary.currentInterval(for: timeframe)
         
         do {
-            let dictionary = try dataProvider.fetchStatsSummary(sport: sport, interval: interval)
-            return StatsSummary(sport: sport, timeframe: timeframe, dictionary: dictionary)
+            let predicate = Workout.activePredicate(sport: sport, interval: interval)
+            let workouts = dataProvider.workoutIdentifiers(for: predicate)
+            let dictionary = try dataProvider.fetchStatsSummary(for: workouts)
+            return StatsSummary(sport: sport, timeframe: timeframe, dictionary: dictionary, workouts: workouts)
         } catch {
             Log.debug("fetch summary error: \(error.localizedDescription)")
             return StatsSummary(sport: sport, timeframe: timeframe, interval: interval)
@@ -174,8 +192,10 @@ extension StatsManager {
         do {
             var summaries = [StatsSummary]()
             for interval in intervals {
-                let dictionary = try dataProvider.fetchStatsSummary(sport: sport, interval: interval)
-                let summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval, dictionary: dictionary)
+                let predicate = Workout.activePredicate(sport: sport, interval: interval)
+                let workouts = dataProvider.workoutIdentifiers(for: predicate)
+                let dictionary = try dataProvider.fetchStatsSummary(for: workouts)
+                let summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval, dictionary: dictionary, workouts: workouts)
                 summaries.append(summary)
             }
             return summaries

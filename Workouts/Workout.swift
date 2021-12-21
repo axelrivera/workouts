@@ -18,7 +18,6 @@ private let DistanceKey = "distance"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
-private let EndDateKey = "end"
 private let IndoorKey = "indoor"
 private let DayOfWeekKey = "dayOfWeek"
 
@@ -186,11 +185,15 @@ extension Workout {
     
     // MARK: Predicates
     
-    static func activePredicate(sport: Sport?, interval: DateInterval?) -> NSPredicate {
+    static func activePredicate(sport: Sport?, interval: DateInterval?, identifiers: [UUID] = []) -> NSPredicate {
         var predicates = [notMarkedForLocalDeletionPredicate]
+        
+        if identifiers.isPresent {
+            predicates.append(predicateForIdentifiers(identifiers))
+        }
 
         if let sport = sport {
-            predicates.append(Workout.predicateForSport(sport))
+            predicates.append(predicateForSport(sport))
         }
         
         if let interval = interval {
@@ -217,7 +220,7 @@ extension Workout {
     static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
         NSPredicate(
             format: "%K >= %@ AND %K <= %@",
-            EndDateKey, start as NSDate,
+            StartDateKey, start as NSDate,
             StartDateKey, end as NSDate
         )
     }

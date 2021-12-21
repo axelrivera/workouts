@@ -11,8 +11,8 @@ protocol WorkoutSummary {
     typealias GearType = Tag.GearType
     
     var identifier: String { get }
-    var title: String? { get }
-    var titleColor: Color? { get }
+    var title: String { get }
+    var titleColor: Color { get }
     var sportValue: Sport? { get }
     var gearValue: GearType? { get }
     
@@ -32,10 +32,8 @@ protocol WorkoutSummary {
 }
 
 extension WorkoutSummary {
-    
-    var title: String? { nil }
-    
-    var titleColor: Color? { nil }
+        
+    var titleColor: Color { .primary }
     
     // unit: meters/second
     var avgSpeed: Double {
@@ -56,11 +54,11 @@ extension WorkoutSummary {
     }
     
     var durationString: String {
-        formattedHoursMinutesPrettyString(for: duration)
+        formattedDistanceStringInTags(for: duration)
     }
     
     var avgDurationString: String {
-        formattedHoursMinutesPrettyString(for: avgDuration)
+        formattedHoursMinutesPrettyStringInTags(for: avgDuration)
     }
     
     var caloriesString: String {
@@ -145,8 +143,8 @@ struct TagSummaryViewModel: TagViewModel, WorkoutSummary {
     }
     
     var identifier: String { id.uuidString }
-    var title: String? { name }
-    var titleColor: Color? { color }
+    var title: String { name }
+    var titleColor: Color { color }
     var sportValue: Sport? { nil }
     var gearValue: GearType? { gearType }
     

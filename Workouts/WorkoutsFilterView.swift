@@ -63,6 +63,7 @@ struct WorkoutsFilterView: View {
                                     .keyboardType(.numberPad)
                             }
                         }
+                        .padding(.bottom, CGFloat(5.0))
                     }
                 }
                 .textCase(nil)

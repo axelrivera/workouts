@@ -40,9 +40,9 @@ extension DataProvider {
         return FetchRequest(fetchRequest: request, animation: .default)
     }
     
-    static func fetchRequest(sport: Sport?, interval: DateInterval?) -> FetchRequest<Workout> {
+    static func fetchRequest(sport: Sport?, interval: DateInterval?, identifiers: [UUID] = []) -> FetchRequest<Workout> {
         let request = Workout.defaultFetchRequest()
-        request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        request.predicate = Workout.activePredicate(sport: sport, interval: interval, identifiers: identifiers)
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
         request.fetchBatchSize = 10
         
@@ -174,9 +174,9 @@ extension DataProvider {
         try fetchStatsSummary(for: Workout.predicateForIdentifiers(identifiers))
     }
     
-    func fetchStatsSummary(sport: Sport?, interval: DateInterval) throws -> [String: Any] {
-        try fetchStatsSummary(for: Workout.activePredicate(sport: sport, interval: interval))
-    }
+//    func fetchStatsSummary(sport: Sport?, interval: DateInterval) throws -> [String: Any] {
+//        try fetchStatsSummary(for: Workout.activePredicate(sport: sport, interval: interval))
+//    }
     
     func fetchStatsSummary(for predicate: NSPredicate) throws -> [String: Any] {
         let distance = expressionDescription(for: .distance, function: .sum)

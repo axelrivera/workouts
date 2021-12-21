@@ -52,7 +52,34 @@ extension WorkoutStorage {
             workouts[workout.workoutIdentifier] = viewModel
             return viewModel
         }
-        
+    }
+    
+    func refreshMetadata(forWorkout workout: Workout) {
+        queue.sync { [unowned self] in
+            let id = workout.workoutIdentifier
+            let viewModel = workouts[id] ?? WorkoutViewModel(workout: workout)
+            viewModel.isFavorite = metaProvider.isFavorite(id)
+            viewModel.tags = workoutTagProvider.visibleTags(forWorkout: id).map({ $0.viewModel() })
+            
+            workouts[workout.workoutIdentifier] = viewModel
+            
+            DispatchQueue.main.async {
+                postNotification(forViewModel: viewModel)
+            }
+        }
+    }
+    
+    func refreshAllWorkouts() {
+        queue.sync { [unowned self] in
+            for (id, viewModel) in workouts {
+                viewModel.isFavorite = metaProvider.isFavorite(id)
+                viewModel.tags = workoutTagProvider.visibleTags(forWorkout: id).map({ $0.viewModel() })
+                
+                DispatchQueue.main.async {
+                    postNotification(forViewModel: viewModel)
+                }
+            }
+        }
     }
     
     func resetAll() {

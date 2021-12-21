@@ -11,16 +11,16 @@ import CoreData
 struct StatsWorkoutsView: View {
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
-    
-    @State private var selectedWorkout: UUID?
-    @State private var isEmpty = false
-        
-    var sport: Sport?
-    var interval: DateInterval?
 
-    init(sport: Sport?, interval: DateInterval? = nil) {
-        self.sport = sport
-        self.interval = interval
+    private var fetchRequest: FetchRequest<Workout>
+    private var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
+    
+    let title: String?
+    @State private var selectedWorkout: UUID?
+    
+    init(identifiers: [UUID], title: String? = nil) {
+        self.title = title
+        fetchRequest = DataProvider.fetchRequest(for: identifiers)
     }
     
     func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
@@ -28,24 +28,23 @@ struct StatsWorkoutsView: View {
     }
             
     var body: some View {
-        List {
-            WorkoutFilter(sport: sport, interval: interval) { workout in
-                NavigationLink(
-                    tag: workout.workoutIdentifier,
-                    selection: $selectedWorkout,
-                    destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                        WorkoutPlainCell(viewModel: workout.detailViewModel)
-                }
+        List(workouts, id: \.objectID) { workout in
+            NavigationLink(
+                tag: workout.workoutIdentifier,
+                selection: $selectedWorkout,
+                destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                    WorkoutPlainCell(viewModel: workout.detailViewModel)
             }
         }
         .overlay(emptyOverlay())
         .listStyle(PlainListStyle())
+        .navigationTitle(title ?? "Workouts")
         .navigationBarTitleDisplayMode(.inline)
     }
     
     @ViewBuilder
     func emptyOverlay() -> some View {
-        if isEmpty {
+        if workouts.isEmpty {
             Text("No Workouts")
                 .foregroundColor(.secondary)
         }
@@ -59,11 +58,10 @@ struct StatsWorkoutsView_Previews: PreviewProvider {
         //manager.state = .notAvailable
         return manager
     }()
-        
+    
     static var previews: some View {
         NavigationView {
-            StatsWorkoutsView(sport: nil)
-                .navigationTitle("Workouts")
+            StatsWorkoutsView(identifiers: [])
         }
         .environment(\.managedObjectContext, viewContext)
         .environmentObject(workoutManager)
