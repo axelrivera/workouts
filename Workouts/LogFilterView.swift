@@ -37,7 +37,7 @@ struct LogFilterView: View {
                     }
                 }
                 
-                Section {
+                Section(header: header("Workout")) {
                     ForEach(availableSports) { sport in
                         Button(action: { togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
@@ -48,6 +48,7 @@ struct LogFilterView: View {
                         }
                     }
                 }
+                .textCase(nil)
             }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
@@ -57,6 +58,15 @@ struct LogFilterView: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    func header(_ title: String) -> some View {
+        Text(title)
+            .font(.headline)
+            .foregroundColor(.primary)
+            .padding([.top, .bottom])
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
     
 }

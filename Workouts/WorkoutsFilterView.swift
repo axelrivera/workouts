@@ -18,7 +18,7 @@ struct WorkoutsFilterView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section {
+                Section(header: header("Workout")) {
                     ForEach(manager.supportedSports) { sport in
                         Button(action: { manager.togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
