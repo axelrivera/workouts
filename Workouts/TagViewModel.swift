@@ -54,7 +54,7 @@ extension WorkoutSummary {
     }
     
     var durationString: String {
-        formattedDistanceStringInTags(for: duration)
+        formattedHoursMinutesPrettyStringInTags(for: duration)
     }
     
     var avgDurationString: String {
