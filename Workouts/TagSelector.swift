@@ -12,6 +12,7 @@ struct TagSelector: View {
     @Binding var tags: [Tag]
     @Binding var selectedTags: Set<Tag>
         
+    var defaultAction = {}
     var toggleAction: (_ tag: Tag) -> Void
         
     var body: some View {
@@ -36,6 +37,14 @@ struct TagSelector: View {
                 }
             }
             .padding()
+        }
+        .overlay(emptyOverlay())
+    }
+    
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if tags.isEmpty {
+            EmptyTagsView(displayType: .selector, onCreate: defaultAction)
         }
     }
 }
@@ -63,7 +72,7 @@ extension TagSelector {
 struct TagSelector_Previews: PreviewProvider {
     
     static var previews: some View {
-        TagSelector(tags: .constant([]), selectedTags: .constant([])) { tag in
+        TagSelector(tags: .constant([]), selectedTags: .constant([]), defaultAction: {}) { tag in
             
         }
     }

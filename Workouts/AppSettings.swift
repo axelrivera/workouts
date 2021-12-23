@@ -37,6 +37,9 @@ struct AppSettings {
         static let maxHeartRate = "arn_max_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
         static let workoutsQueryAnchor = "arn_workouts_query_anchor"
+        static let yearToDateTimeframe = "arn_year_to_date_timeframe"
+        static let allTimeTimeframe = "arn_all_time_timeframe"
+        static let tagsTimeframe = "arn_tag_timeframe"
     }
     
     struct RemoteKeys {
@@ -53,6 +56,15 @@ struct AppSettings {
     
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
+    }
+
+    private static func timeframeForKey(_ key: String) -> StatsTimelineManager.Timeframe? {
+        let string = objectForKey(key) as? String ?? ""
+        return StatsTimelineManager.Timeframe(rawValue: string)
+    }
+    
+    private static func setTimeframe(_ value: StatsTimelineManager.Timeframe, forKey: String) {
+        setValue(value.rawValue, for: forKey)
     }
         
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
@@ -78,6 +90,21 @@ struct AppSettings {
         
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
+    
+    static var yearToDateTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.yearToDateTimeframe) ?? .month }
+        set { setTimeframe(newValue, forKey: Keys.yearToDateTimeframe) }
+    }
+    
+    static var allTimeTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.allTimeTimeframe) ?? .year }
+        set { setTimeframe(newValue, forKey: Keys.allTimeTimeframe) }
+    }
+    
+    static var tagsTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.tagsTimeframe) ?? .year }
+        set { setTimeframe(newValue, forKey: Keys.tagsTimeframe )}
+    }
     
     static var shareSettings: ShareSettings {
         get {
@@ -111,24 +138,6 @@ struct AppSettings {
             } else {
                 setValue(nil, for: Keys.workoutsQueryAnchor)
             }
-        }
-    }
-    
-    static var initialTagsReady: Bool {
-        get {
-            if CloudKitRemote.isAvailable {
-                if let value = NSUbiquitousKeyValueStore.default.object(forKey: RemoteKeys.initialTagsReady) as? Bool {
-                    return value
-                } else {
-                    return objectForKey(RemoteKeys.initialTagsReady) as? Bool ?? false
-                }
-            } else {
-                return objectForKey(RemoteKeys.initialTagsReady) as? Bool ?? false
-            }
-        }
-        set {
-            NSUbiquitousKeyValueStore.default.set(newValue, forKey: RemoteKeys.initialTagsReady)
-            setValue(newValue, for: RemoteKeys.initialTagsReady)
         }
     }
     

@@ -34,6 +34,10 @@ struct Constants {
     static let defaultChartSampleInSeconds = 10
     static let defaultWeight: Double = 81.6466 // Use default weight of 180 lbs (81.6466 Kg)
     static let cornerRadius: CGFloat = 12.0
+    static let cachedWorkoutImageWidth: CGFloat = 390.0
+    static let cachedWorkoutImageHeight: CGFloat = 200.0
+    static let cachedWorkoutImageScaleFactor = cachedWorkoutImageHeight / cachedWorkoutImageWidth
+    static let cachedWorkoutImageSize = CGSize(width: cachedWorkoutImageWidth, height: cachedWorkoutImageHeight)
 }
 
 struct URLStrings {

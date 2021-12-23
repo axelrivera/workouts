@@ -12,6 +12,8 @@ struct ImportRow: View {
     
     var importAction = {}
     
+    @State private var rotationAngle: Double = 0
+    
     var body: some View {
         HStack(spacing: 10.0) {
             VStack(alignment: .leading) {
@@ -36,8 +38,15 @@ struct ImportRow: View {
                 }
                 .foregroundColor(.accentColor)
             case .processing:
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle())
+                Image(systemName: "hourglass")
+                    .foregroundColor(.secondary)
+                    .rotationEffect(.degrees(rotationAngle))
+                    .onAppear {
+                        let animation = Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)
+                        withAnimation(animation) {
+                            rotationAngle = 360.0
+                        }
+                    }
             case .processed:
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
@@ -61,7 +70,7 @@ struct ImportRow: View {
 struct ImportRow_Previews: PreviewProvider {
     static var workout: WorkoutImport = {
         let workout = ImportManager.sampleWorkout()
-        workout.status = .new
+        workout.status = .processing
         return workout
     }()
     

@@ -95,7 +95,7 @@ struct StatsTimelineView_Previews: PreviewProvider {
     }()
     
     static var purchaseManager = IAPManagerPreview.manager(isActive: false)
-    
+        
     static var previews: some View {
         NavigationView {
             StatsTimelineView(displayType: .yearToDate(sport: .cycling))

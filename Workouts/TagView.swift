@@ -29,34 +29,56 @@ extension TagLabelViewModel {
 }
 
 struct TagView: View {
-    let name: String
-    let color: Color
+    let viewModel: TagLabelViewModel
     
     var body: some View {
-        Text(name)
+        Text(viewModel.name)
             .font(.fixedSubheadline)
             .foregroundColor(.primary)
             .padding(CGFloat(5.0))
-            .background(color.opacity(0.3))
+            .background(viewModel.color.opacity(0.3))
             .cornerRadius(5.0)
     }
 }
 
 struct TagView_Previews: PreviewProvider {
+    static var tags = TagLabelViewModel.samples
+    
     static var previews: some View {
-        TagGrid(tags: TagLabelViewModel.samples)
-            .padding()
+        Form {
+            TagGrid(tags: tags)
+            TagLine(tags: tags)
+        }
     }
 }
 
 struct TagGrid: View {
-    let tags: [TagLabelViewModel]
+    var tags: [TagLabelViewModel]
     
     var body: some View {
-        WrappingHStack(tags, id: \.self, alignment: .leading, spacing: .constant(10.0)) { tag in
-            TagView(name: tag.name, color: tag.color)
-                .padding([.top, .bottom], 5.0)
+        TagCloud(models: tags) {
+            TagView(viewModel: $0)
         }
+        .padding([.top, .bottom], 5.0)
     }
+    
+}
+
+struct TagLine: View {
+    var tags: [TagLabelViewModel]
+    
+    let rows: [GridItem] = [.init(.flexible(minimum: 0, maximum: 0))]
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHGrid(rows: rows, alignment: .center, spacing: 10.0) {
+                ForEach(tags, id: \.id) { tag in
+                    TagView(viewModel: tag)
+                }
+            }
+        }
+        .frame(height: 44.0, alignment: .center)
+    }
+    
     
 }

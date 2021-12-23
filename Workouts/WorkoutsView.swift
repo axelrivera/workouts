@@ -17,13 +17,12 @@ struct WorkoutsView: View {
 }
 
 struct WorkoutsContentView: View {
-    enum ActiveCoverSheet: Identifiable {
-        case settings
-        var id: Int { hashValue }
+    enum ActiveCoverSheet: Hashable, Identifiable {
+        case settings, add
+        var id: Self { self }
     }
     
     enum ActiveSheet: Hashable, Identifiable {
-        case add
         case filter
         case tagsToAll
         case tags(identifier: UUID, sport: Sport)
@@ -46,15 +45,12 @@ struct WorkoutsContentView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var activeCoverSheet: ActiveCoverSheet?
     @State private var activeAlert: ActiveAlert?
+    
     @State private var selectedWorkout: UUID?
         
     init(filterManager: WorkoutsFilterManager) {
         _filterManager = StateObject(wrappedValue: filterManager)
         fetchRequest = DataProvider.fetchFetquest(for: filterManager.filterPredicate())
-    }
-    
-    func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
     }
     
     var filterImageName: String {
@@ -74,7 +70,7 @@ struct WorkoutsContentView: View {
                             NavigationLink(
                                 tag: workout.workoutIdentifier,
                                 selection: $selectedWorkout,
-                                destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                                destination: { DetailView(viewModel: workout.detailViewModel) }) {
                                     WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
                             }
                                 .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
@@ -122,7 +118,7 @@ struct WorkoutsContentView: View {
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: { activeSheet = .add}) {
+                    Button(action: { activeCoverSheet = .add}) {
                         Image(systemName: "plus")
                     }
                     .disabled(isAddDisabled)
@@ -134,9 +130,6 @@ struct WorkoutsContentView: View {
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
-                case .add:
-                    ImportView()
-                        .environmentObject(ImportManager())
                 case .filter:
                     WorkoutsFilterView()
                         .environmentObject(filterManager)
@@ -153,6 +146,9 @@ struct WorkoutsContentView: View {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
+                case .add:
+                    ImportView()
+                        .environmentObject(ImportManager())
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -190,7 +186,7 @@ struct WorkoutsContentView: View {
                 }
                 
                 if filterManager.isFilterActive {
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 15.0) {
                         HStack(spacing: 20.0) {
                             Text("\(workouts.count.formatted()) Workouts")
                             Spacer()
@@ -205,7 +201,6 @@ struct WorkoutsContentView: View {
                         HStack {
                             Button("Reset Filter", role: .destructive, action: resetFilter)
                             Spacer()
-                            
                             Menu {
                                 Button(action: filterManager.favoriteAll) {
                                     Label("Favorite All", systemImage: "heart")
@@ -219,11 +214,13 @@ struct WorkoutsContentView: View {
                                     Label("Tag All", systemImage: "tag")
                                 }
                             } label: {
-                                Image(systemName: "ellipsis.circle")
+                                HStack {
+                                    // adding HStack to as workaround for image dissapearing in some cases
+                                    Image(systemName: "ellipsis.circle")
+                                }
                             }
                         }
                     }
-                    .frame(maxWidth: .infinity)
                     .padding([.leading, .trailing])
                     .padding([.top, .bottom], CGFloat(10.0))
                     .background(.regularMaterial)

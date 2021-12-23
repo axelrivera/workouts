@@ -33,7 +33,10 @@ struct TagSelectorView: View {
     
     var body: some View {
         NavigationView {
-            TagSelector(tags: $tagManager.tags, selectedTags: $tagManager.selectedTags) { tag in
+            TagSelector(
+                tags: $tagManager.tags,
+                selectedTags: $tagManager.selectedTags,
+                defaultAction: tagManager.reloadData) { tag in
                 toggleTag(tag)
             }
             .onAppear { tagManager.reloadData() }
@@ -77,11 +80,13 @@ struct TagSelectorView: View {
 extension TagSelectorView {
     
     func toggleTag(_ tag: Tag) {
-        do {
-            try tagManager.toggle(tag: tag)
-            action?()
-        } catch {
-            activeAlert = .error(message: "Unable to update tag \(tag.name).")
+        DispatchQueue.main.async {
+            do {
+                try tagManager.toggle(tag: tag)
+                action?()
+            } catch {
+                activeAlert = .error(message: "Unable to update tag \(tag.name).")
+            }
         }
     }
     

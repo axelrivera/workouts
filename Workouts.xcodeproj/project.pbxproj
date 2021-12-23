@@ -80,8 +80,6 @@
 		16195A19274B387600EFE81A /* TagSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16195A18274B387600EFE81A /* TagSelector.swift */; };
 		16195A1A274B387600EFE81A /* TagSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16195A18274B387600EFE81A /* TagSelector.swift */; };
 		161AF5E3276B646600148C63 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16CA62802720518B002A2D92 /* CloudKit.framework */; };
-		161AF5E5276B6AA900148C63 /* CloudKitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */; };
-		161AF5E6276B6AA900148C63 /* CloudKitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */; };
 		161F20CC26CB3A9300A3CF13 /* MapImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */; };
 		161F20CD26CB3A9300A3CF13 /* MapImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */; };
 		161FDB6625B34D4B00929433 /* WorkoutsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161FDB6525B34D4B00929433 /* WorkoutsApp.swift */; };
@@ -115,8 +113,6 @@
 		16372FBF26E0EE01007466A3 /* URL+Maps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16372FBD26E0EE01007466A3 /* URL+Maps.swift */; };
 		163A5F3C25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163A5F3B25EFC8DA00146964 /* WorkoutAnnotation.swift */; };
 		163A5F3D25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163A5F3B25EFC8DA00146964 /* WorkoutAnnotation.swift */; };
-		163D351B27299DBD003909EB /* WrapingHStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163D351A27299DBD003909EB /* WrapingHStack.swift */; };
-		163D351C27299DBD003909EB /* WrapingHStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163D351A27299DBD003909EB /* WrapingHStack.swift */; };
 		1641DBD62725F386001F8C49 /* SummaryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBD52725F386001F8C49 /* SummaryCell.swift */; };
 		1641DBD72725F386001F8C49 /* SummaryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBD52725F386001F8C49 /* SummaryCell.swift */; };
 		1641DBD92726C743001F8C49 /* TagsManageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBD82726C743001F8C49 /* TagsManageView.swift */; };
@@ -270,6 +266,10 @@
 		1694A51A2732CEED00DEAD8B /* TagViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694A5182732CEED00DEAD8B /* TagViewModel.swift */; };
 		1694A51C2733263F00DEAD8B /* MetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694A51B2733263F00DEAD8B /* MetadataProvider.swift */; };
 		1694A51D2733263F00DEAD8B /* MetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694A51B2733263F00DEAD8B /* MetadataProvider.swift */; };
+		1694BE9E2773CFE800E76D82 /* TagCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BE9D2773CFE800E76D82 /* TagCloud.swift */; };
+		1694BE9F2773CFE800E76D82 /* TagCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BE9D2773CFE800E76D82 /* TagCloud.swift */; };
+		1694BEA42774CC5600E76D82 /* EmptyTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */; };
+		1694BEA52774CC5600E76D82 /* EmptyTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */; };
 		1696420C260419ED00E68A45 /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 1696420B260419ED00E68A45 /* FitFileParser */; };
 		1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421126041A1F00E68A45 /* ZIPFoundation */; };
 		1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421626041A2F00E68A45 /* ZIPFoundation */; };
@@ -467,7 +467,6 @@
 		16124C0526E2BCCE00A21709 /* NotificationCenter+Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotificationCenter+Publisher.swift"; sourceTree = "<group>"; };
 		16124C0826E302EB00A21709 /* WorkoutColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutColorPicker.swift; sourceTree = "<group>"; };
 		16195A18274B387600EFE81A /* TagSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelector.swift; sourceTree = "<group>"; };
-		161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitRemote.swift; sourceTree = "<group>"; };
 		161F20CB26CB3A9300A3CF13 /* MapImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapImageCache.swift; sourceTree = "<group>"; };
 		161FDB6225B34D4B00929433 /* Better Workouts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Better Workouts.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		161FDB6525B34D4B00929433 /* WorkoutsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsApp.swift; sourceTree = "<group>"; };
@@ -490,7 +489,6 @@
 		1624C95326BC2F7200373D7E /* OnboardingModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingModifier.swift; sourceTree = "<group>"; };
 		16372FBD26E0EE01007466A3 /* URL+Maps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Maps.swift"; sourceTree = "<group>"; };
 		163A5F3B25EFC8DA00146964 /* WorkoutAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutAnnotation.swift; sourceTree = "<group>"; };
-		163D351A27299DBD003909EB /* WrapingHStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrapingHStack.swift; sourceTree = "<group>"; };
 		1641DBD52725F386001F8C49 /* SummaryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryCell.swift; sourceTree = "<group>"; };
 		1641DBD82726C743001F8C49 /* TagsManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsManageView.swift; sourceTree = "<group>"; };
 		1641DBDB2726D4F3001F8C49 /* TagsAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsAddView.swift; sourceTree = "<group>"; };
@@ -578,6 +576,8 @@
 		168F3CA326A5CE5B0054AFD1 /* MigrationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationError.swift; sourceTree = "<group>"; };
 		1694A5182732CEED00DEAD8B /* TagViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagViewModel.swift; sourceTree = "<group>"; };
 		1694A51B2733263F00DEAD8B /* MetadataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataProvider.swift; sourceTree = "<group>"; };
+		1694BE9D2773CFE800E76D82 /* TagCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagCloud.swift; sourceTree = "<group>"; };
+		1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyTagsView.swift; sourceTree = "<group>"; };
 		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
 		1697607A25CB7BCC00CAF544 /* DetailMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMap.swift; sourceTree = "<group>"; };
 		1697608025CB7EFD00CAF544 /* DetailMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMapView.swift; sourceTree = "<group>"; };
@@ -897,7 +897,6 @@
 				161FDB6525B34D4B00929433 /* WorkoutsApp.swift */,
 				1645B91A25B350BB00B04478 /* AppData.swift */,
 				16E8321C25D2096100382545 /* AppSettings.swift */,
-				161AF5E4276B6AA900148C63 /* CloudKitRemote.swift */,
 			);
 			name = "App + Constants";
 			sourceTree = "<group>";
@@ -926,6 +925,7 @@
 		1645B93625B3520C00B04478 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				1694BE9C2773CFD300E76D82 /* Tags */,
 				16CA68D526ADF25C0056C1BA /* Goals */,
 				16CA68D126ADE7660056C1BA /* Workout Log */,
 				16864BCD2683684A0005E7D8 /* Heart Rate */,
@@ -1105,13 +1105,10 @@
 				168F3C7526A05F050054AFD1 /* Alert+Additions.swift */,
 				16A544F026B5C2E800CB6160 /* WorkoutCell.swift */,
 				16A02AD026D1D48D009BD2E1 /* LoadingModifier.swift */,
-				16A589842729920900F97CC5 /* TagView.swift */,
 				1641DBD52725F386001F8C49 /* SummaryCell.swift */,
-				163D351A27299DBD003909EB /* WrapingHStack.swift */,
 				16CCDBA6272E069700C75BD4 /* EmptyListHeader.swift */,
 				16240567273B2D2200FC4864 /* GearImage.swift */,
 				16F5B6CA273EA9C8005152E0 /* WorkoutCellStatsView.swift */,
-				16195A18274B387600EFE81A /* TagSelector.swift */,
 				16610FDB2753EFD900A584EE /* HUDView.swift */,
 			);
 			name = Components;
@@ -1200,6 +1197,17 @@
 				168F3CA326A5CE5B0054AFD1 /* MigrationError.swift */,
 			);
 			name = Migrator;
+			sourceTree = "<group>";
+		};
+		1694BE9C2773CFD300E76D82 /* Tags */ = {
+			isa = PBXGroup;
+			children = (
+				1694BE9D2773CFE800E76D82 /* TagCloud.swift */,
+				16195A18274B387600EFE81A /* TagSelector.swift */,
+				16A589842729920900F97CC5 /* TagView.swift */,
+				1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */,
+			);
+			name = Tags;
 			sourceTree = "<group>";
 		};
 		16A065FC25C48CBA00019096 /* Imports */ = {
@@ -1504,6 +1512,7 @@
 				168F3C8E26A1B0DC0054AFD1 /* HeartRateInfoView.swift in Sources */,
 				169A1306275E3CED00D2F176 /* RemoteUpdator.swift in Sources */,
 				16610FDD2753EFD900A584EE /* HUDView.swift in Sources */,
+				1694BE9F2773CFE800E76D82 /* TagCloud.swift in Sources */,
 				160BB07025DD61700059E493 /* DetailView.swift in Sources */,
 				160BB07125DD61700059E493 /* TimeHelper.swift in Sources */,
 				168D25BA273579A00066B1C8 /* TagsDisplayManager.swift in Sources */,
@@ -1542,7 +1551,6 @@
 				16FB84F625F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CF273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
 				16208BFD26D4253600693530 /* View+Snapshot.swift in Sources */,
-				161AF5E6276B6AA900148C63 /* CloudKitRemote.swift in Sources */,
 				1624055F2739F3BA00FC4864 /* WorkoutCache.swift in Sources */,
 				16E588DC2665420600CD0273 /* DataProvider.swift in Sources */,
 				16A17D0126039B9700273321 /* Quantity.swift in Sources */,
@@ -1629,8 +1637,8 @@
 				16240569273B2D2200FC4864 /* GearImage.swift in Sources */,
 				16B24D5F25E9BA16001EF1FC /* HKWorkoutActivityType+String.swift in Sources */,
 				165BE37026E4D6DA00C3F36B /* ShareManager.swift in Sources */,
+				1694BEA52774CC5600E76D82 /* EmptyTagsView.swift in Sources */,
 				160BB08F25DD61700059E493 /* SettingsView.swift in Sources */,
-				163D351C27299DBD003909EB /* WrapingHStack.swift in Sources */,
 				16864BEF268E95320005E7D8 /* RecentChart.swift in Sources */,
 				16CCDBA8272E069700C75BD4 /* EmptyListHeader.swift in Sources */,
 				16EDDE90272EE2FA0041CDA3 /* TagProvider.swift in Sources */,
@@ -1705,6 +1713,7 @@
 				168F3C8D26A1B0DC0054AFD1 /* HeartRateInfoView.swift in Sources */,
 				169A1305275E3CED00D2F176 /* RemoteUpdator.swift in Sources */,
 				16610FDC2753EFD900A584EE /* HUDView.swift in Sources */,
+				1694BE9E2773CFE800E76D82 /* TagCloud.swift in Sources */,
 				1645B92A25B350BB00B04478 /* DetailView.swift in Sources */,
 				1645B92425B350BB00B04478 /* TimeHelper.swift in Sources */,
 				168D25B9273579A00066B1C8 /* TagsDisplayManager.swift in Sources */,
@@ -1743,7 +1752,6 @@
 				16FB84F525F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CE273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
 				16208BFC26D4253600693530 /* View+Snapshot.swift in Sources */,
-				161AF5E5276B6AA900148C63 /* CloudKitRemote.swift in Sources */,
 				1624055E2739F3BA00FC4864 /* WorkoutCache.swift in Sources */,
 				16E588DB2665420600CD0273 /* DataProvider.swift in Sources */,
 				16A17D0026039B9700273321 /* Quantity.swift in Sources */,
@@ -1830,8 +1838,8 @@
 				16240568273B2D2200FC4864 /* GearImage.swift in Sources */,
 				16B24D5E25E9BA16001EF1FC /* HKWorkoutActivityType+String.swift in Sources */,
 				165BE36F26E4D6DA00C3F36B /* ShareManager.swift in Sources */,
+				1694BEA42774CC5600E76D82 /* EmptyTagsView.swift in Sources */,
 				1645B92725B350BB00B04478 /* SettingsView.swift in Sources */,
-				163D351B27299DBD003909EB /* WrapingHStack.swift in Sources */,
 				16864BEE268E95320005E7D8 /* RecentChart.swift in Sources */,
 				16CCDBA7272E069700C75BD4 /* EmptyListHeader.swift in Sources */,
 				16EDDE8F272EE2FA0041CDA3 /* TagProvider.swift in Sources */,

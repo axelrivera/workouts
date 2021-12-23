@@ -15,6 +15,8 @@ class Synchronizer {
         
     var isAuthorizedToFetchWorkouts = false
     var anchor: HKQueryAnchor?
+    
+    var resetAnchor: Bool = false
     var regenerate: Bool = false
     var isFetchingWorkouts = false
     
@@ -26,19 +28,12 @@ class Synchronizer {
         addObservers()
     }
     
-    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) async {
+    private func fetchLatestWorkouts() async {
         // reset anchor even if is fetching
         // request will be ignored but anchor will be respected on next fetch
         if resetAnchor {
             anchor = nil
             AppSettings.workoutsQueryAnchor = anchor
-        }
-
-        self.regenerate = regenerate
-
-        if isFetchingWorkouts {
-            Log.debug("ignore remote data fetch - already fetching workouts")
-            return
         }
 
         guard isAuthorizedToFetchWorkouts else {
@@ -76,15 +71,25 @@ extension Synchronizer {
         if let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool {
             isAuthorizedToFetchWorkouts = isAuthorized
         }
-
+        
         // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
         let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? self.regenerate
         let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
         
+        self.regenerate = regenerate
+        self.resetAnchor = resetAnchor
+        
+        // this prevents the task from being called twice
+        // regenerate and resetAnchor are set before to cache the values in case of multiple requests
+        if isFetchingWorkouts {
+            Log.debug("ignore remote data fetch - already fetching workouts")
+            return
+        }
+        
         let _ = context.performAndWait {
             Task {
                 Log.debug("fetching remote data")
-                await fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
+                await fetchLatestWorkouts()
             }
         }
     }

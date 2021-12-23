@@ -22,17 +22,13 @@ struct StatsWorkoutsView: View {
         self.title = title
         fetchRequest = DataProvider.fetchRequest(for: identifiers)
     }
-    
-    func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
-    }
             
     var body: some View {
         List(workouts, id: \.objectID) { workout in
             NavigationLink(
                 tag: workout.workoutIdentifier,
                 selection: $selectedWorkout,
-                destination: { detailDestination(viewModel: workout.detailViewModel) }) {
+                destination: { DetailView(viewModel: workout.detailViewModel) }) {
                     WorkoutPlainCell(viewModel: workout.detailViewModel)
             }
         }

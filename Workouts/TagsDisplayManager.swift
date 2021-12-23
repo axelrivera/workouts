@@ -19,7 +19,7 @@ final class TagsDisplayManager: ObservableObject {
     let dataProvider: DataProvider
     let tagProvider: TagProvider
     let workoutTagProvider: WorkoutTagProvider
-    
+        
     init(context: NSManagedObjectContext) {
         self.context = context
         self.dataProvider = DataProvider(context: context)

@@ -171,6 +171,8 @@ struct TagSummaryViewModel: TagViewModel, WorkoutSummary {
 
 // MARK: - Label
 
+extension TagLabelViewModel: Hashable, Identifiable {}
+
 struct TagLabelViewModel: TagViewModel {
     let id: UUID
     let name: String

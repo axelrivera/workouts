@@ -41,7 +41,7 @@ class TagManager: ObservableObject {
     
     private(set) var sport: Sport?
     private(set) var workoutIdentifier: UUID?
-        
+            
     init(context: NSManagedObjectContext, sport: Sport? = nil, workoutIdentifier: UUID? = nil) {
         self.context = context
         self.backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
@@ -180,12 +180,18 @@ extension TagManager {
     
     func addTagToWorkout(_ tag: Tag) throws {
         guard let workoutId = workoutIdentifier else { throw TagManagerError.missingIdentifier }
-        try workoutTagProvider.addWorkoutTag(for: workoutId, tag: tag.uuid)
+        
+        try context.performAndWait {
+            try workoutTagProvider.addWorkoutTag(for: workoutId, tag: tag.uuid)
+        }
     }
     
     func removeTagFromWorkout(_ tag: Tag) throws {
         guard let workoutId = workoutIdentifier else { throw TagManagerError.missingIdentifier }
-        try workoutTagProvider.deleteWorkoutTag(for: workoutId, tag: tag.uuid)
+        
+        try context.performAndWait {
+            try workoutTagProvider.deleteWorkoutTag(for: workoutId, tag: tag.uuid)
+        }
     }
     
 }

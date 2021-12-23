@@ -123,8 +123,7 @@ struct TagsContentView: View {
     @ViewBuilder
     func emptyView() -> some View {
         if tags.isEmpty {
-            Text("No Tags")
-                .foregroundColor(.secondary)
+            EmptyTagsView(displayType: .tags, onCreate: { reload() })
         }
     }
     

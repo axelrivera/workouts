@@ -205,7 +205,11 @@ func formattedLapDistanceString(for meters: Double?) -> String {
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
     
-    return MeasurementFormatter.distanceLap.string(from: conversion)
+    if conversion.value > 0.9 {
+        return MeasurementFormatter.distanceLap.string(from: conversion)
+    } else {
+        return MeasurementFormatter.distanceLapFraction.string(from: conversion)
+    }
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
@@ -420,7 +424,7 @@ extension NumberFormatter {
     static let distance: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
+        formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 2
         return formatter
     }()
@@ -430,6 +434,14 @@ extension NumberFormatter {
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = 1
+        return formatter
+    }()
+    
+    static let distanceLapFraction: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
         return formatter
     }()
     
@@ -490,6 +502,14 @@ extension MeasurementFormatter {
     static let distanceLap: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distanceLap
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
+    static let distanceLapFraction: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.distanceLapFraction
         formatter.unitStyle = .medium
         formatter.unitOptions = .providedUnit
         return formatter

@@ -109,6 +109,15 @@ final class StatsTimelineManager: ObservableObject {
     @Published var stats = [StatsSummary]()
     @Published var timeframe: Timeframe = .month {
         didSet {
+            switch displayType {
+            case .allTime:
+                AppSettings.allTimeTimeframe = timeframe
+            case .yearToDate:
+                AppSettings.yearToDateTimeframe = timeframe
+            case .tag:
+                AppSettings.tagsTimeframe = timeframe
+            }
+            
             reload()
         }
     }
@@ -124,10 +133,13 @@ final class StatsTimelineManager: ObservableObject {
             identifiers = workoutTagProvider.workoutIdentifiers(forTag: tag)
         }
         
-        if let timeframe = displayType.cases.first {
-            self.timeframe = timeframe
-        } else {
-            self.timeframe = .month
+        switch displayType {
+        case .allTime:
+            timeframe = AppSettings.allTimeTimeframe
+        case .yearToDate:
+            timeframe = AppSettings.yearToDateTimeframe
+        case .tag:
+            timeframe = AppSettings.tagsTimeframe
         }
     }
     

@@ -31,14 +31,6 @@ struct AdvancedSettingsView: View {
                 }
             }
             
-            #if DEVELOPMENT_BUILD
-            Section {
-                Button(action: { AppSettings.initialTagsReady = false }) {
-                    Text("Reset Default Tags Flag")
-                }
-            }
-            #endif
-            
             Section(footer: Text("Clear tags from existing workouts.")) {
                 NavigationLink("Tags", destination: TagsResetView())
             }

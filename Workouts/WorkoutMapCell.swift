@@ -12,14 +12,16 @@ import Combine
 
 final class WorkoutMapCellManager: ObservableObject {
     private(set) var viewModel: WorkoutViewModel
+    private(set) var isPreview = false
     
-    init(viewModel: WorkoutViewModel) {
+    init(viewModel: WorkoutViewModel, isPreview: Bool = false) {
         self.viewModel = viewModel
         showLocation = Self.showLocation(viewModel: viewModel)
         isFavorite = viewModel.isFavorite
         tags = viewModel.tags
         isPendingLocation = viewModel.isPendingLocation
         coordinates = viewModel.coordinates
+        self.isPreview = isPreview
     }
     
     @Published var isFavorite = false
@@ -59,9 +61,9 @@ struct WorkoutMapCell: View {
     var id: UUID {
         manager.viewModel.id
     }
-    
-    init(viewModel: WorkoutViewModel) {
-        _manager = StateObject(wrappedValue: WorkoutMapCellManager(viewModel: viewModel))
+        
+    init(viewModel: WorkoutViewModel, isPreview: Bool = false) {
+        _manager = StateObject(wrappedValue: WorkoutMapCellManager(viewModel: viewModel, isPreview: isPreview))
     }
     
     var body: some View {
@@ -84,17 +86,15 @@ struct WorkoutMapCell: View {
                     .padding(.bottom, 5.0)
                 
                 if manager.tags.isPresent {
-                    TagGrid(tags: manager.tags)
+                    TagLine(tags: manager.tags)
                 }
                 
                 statsView()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if manager.showLocation {
+            if manager.showLocation || manager.isPreview {
                 MapContainer(id: manager.viewModel.id, scheme: colorScheme, coordinates: manager.coordinates)
-                    .frame(minHeight: 200.0, maxHeight: 200.0)
-                    .background(Color.systemFill)
                     .cornerRadius(12.0)
             }
         }
@@ -154,7 +154,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             ScrollView {
                 LazyVStack(spacing: 0.0) {
                     ForEach(1...5, id: \.self) { _ in
-                        WorkoutMapCell(viewModel: viewModel)
+                        WorkoutMapCell(viewModel: viewModel, isPreview: true)
                         Divider()
                     }
                 }
@@ -171,35 +171,50 @@ private struct MapContainer: View {
     var id: UUID
     let scheme: ColorScheme
     var coordinates: [CLLocationCoordinate2D]
-        
+    
+    @State var height = CGFloat(200)
     @State var cachedImage: UIImage?
     
     var body: some View {
-        GeometryReader { proxy in
-            if let image = cachedImage {
-                Image(uiImage: image)
-            } else {
-                Color.systemFill
-                    .overlay(
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                    )
-                    .onAppear { fetchCachedImage(for: proxy.size) }
-                    .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
-                        fetchCachedImage(for: proxy.size)
+        Group {
+            GeometryReader { proxy in
+                VStack {
+                    if let image = cachedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Color.systemFill
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            )
+                            .onAppear { fetchCachedImage() }
+                            .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
+                                fetchCachedImage()
+                            }
                     }
+                }
+                .onAppear { updateHeight(for: proxy) }
             }
+        }
+        .frame(height: height)
+    }
+    
+    func updateHeight(for proxy: GeometryProxy) {
+        DispatchQueue.main.async {
+            height = (proxy.size.width * Constants.cachedWorkoutImageScaleFactor).rounded()
         }
     }
         
-    private func fetchCachedImage(for size: CGSize) {
+    private func fetchCachedImage() {
         if let image = manager.storage.getCachedImage(forID: id, scheme: scheme) {
             cachedImage = image
         } else if let image = manager.storage.getDiskImage(forID: id, scheme: scheme) {
             manager.storage.set(image: image, forID: id, scheme: scheme, memoryOnly: true)
             cachedImage = image
         } else {
-            MKMapView.mapImage(coordinates: coordinates, size: size) { image in
+            MKMapView.mapImage(coordinates: coordinates, size: Constants.cachedWorkoutImageSize) { image in
                 if let newImage = image {
                     manager.storage.set(image: newImage, forID: id, scheme: scheme)
                     withAnimation {

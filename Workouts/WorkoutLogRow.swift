@@ -149,7 +149,7 @@ struct WorkoutLogItem: View {
     func destinationView() -> some View {
         if let identifier = day.remoteIdentifiers.first, day.totalActivities == 1 {
             if let workout = Workout.find(using: identifier, in: viewContext) {
-                DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel, context: viewContext))
+                DetailView(viewModel: workout.detailViewModel)
             } else {
                 Text("No Workout")
             }

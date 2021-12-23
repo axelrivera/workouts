@@ -40,8 +40,8 @@ struct TagsManageContentView: View {
             Section(header: header(), footer: editFooter()) {
                 switch selectedSegment {
                 case .active:
-                    if manager.tags.isEmpty {
-                        Text("No Active Tags")
+                    if editMode.isEditing && manager.tags.isEmpty {
+                        Text("No Tags")
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                     } else {
@@ -61,6 +61,7 @@ struct TagsManageContentView: View {
         }
         .onAppear { manager.reloadData() }
         .listStyle(InsetGroupedListStyle())
+        .overlay(emptyOverlay())
         .navigationTitle("Tags")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -176,6 +177,13 @@ struct TagsManageContentView: View {
     func editFooter() -> some View {
         if editMode == .active {
             Text("Deleted tags cannot be restored.")
+        }
+    }
+    
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if selectedSegment == .active && !editMode.isEditing && manager.tags.isEmpty {
+            EmptyTagsView(displayType: .selector, onCreate: manager.reloadData)
         }
     }
     

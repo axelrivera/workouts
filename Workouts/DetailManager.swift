@@ -39,7 +39,7 @@ class DetailManager: ObservableObject {
     
     @Published var isFavorite = false
     @Published var tags = [TagLabelViewModel]()
-        
+            
     var distanceSamples: [Quantity]?
         
     var detail: WorkoutDetailViewModel
@@ -90,35 +90,31 @@ extension DetailManager {
     var sport: Sport { detail.sport }
         
     func processWorkout() {
-        preProcess()
-        
         DispatchQueue.main.async {
-            withAnimation {
-                self.isProcessingAnalysis = true
-                self.isProcessingLaps = true
-            }
+            self.isProcessingAnalysis = true
+            self.isProcessingLaps = true
         }
-                
+
         Task(priority: .userInitiated) {
+            context.performAndWait {
+                let isFavorite = self.metaProvider.isFavorite(self.detail.id)
+                let tags: [TagLabelViewModel] = self.workoutTagProvider.visibleTags(forWorkout: self.detail.id).map({ $0.viewModel() })
+
+                DispatchQueue.main.async {
+                    self.isFavorite = isFavorite
+                    self.tags = tags
+                }
+            }
+            
             await process()
             await processLaps()
-        }
-    }
-    
-    private func preProcess() {
-        let isFavorite = metaProvider.isFavorite(detail.id)
-        let tags = fetchTags()
-        
-        DispatchQueue.main.async {
-            self.isFavorite = isFavorite
-            self.tags = tags
         }
     }
     
     private func process() async {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { return }
-
+            
             let locations = (try? await provider.fetchLocations(for: remoteWorkout)) ?? []
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
@@ -155,7 +151,7 @@ extension DetailManager {
             let locationAltitudes = locations.altitudeValues()
             let maxElevation = locationAltitudes.max() ?? 0
             let minElevation = locationAltitudes.min() ?? 0
-
+            
             DispatchQueue.main.async {
                 self.speedValues = speed
                 self.paceValues = paceValues

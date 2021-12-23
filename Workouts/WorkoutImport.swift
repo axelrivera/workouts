@@ -10,7 +10,9 @@ import CoreLocation
 import FitFileParser
 import HealthKit
 
-extension WorkoutImport.Status: Equatable {
+extension WorkoutImport.Status: Equatable, Identifiable, Hashable {
+    
+    var id: Self { self }
     
     static func ==(lhs: WorkoutImport.Status, rhs: WorkoutImport.Status) -> Bool {
         switch (lhs, rhs) {
@@ -33,7 +35,7 @@ extension WorkoutImport.Status: Equatable {
     
 }
 
-class WorkoutImport: ObservableObject, Identifiable {
+class WorkoutImport: ObservableObject, Identifiable, Hashable {
     enum Status {
         case new, processing, processed, notSupported, failed, invalid(file: String)
     }
@@ -42,6 +44,10 @@ class WorkoutImport: ObservableObject, Identifiable {
     
     var uuidString: String {
         id.uuidString
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
     
     @Published var status: Status
@@ -142,21 +148,6 @@ class WorkoutImport: ObservableObject, Identifiable {
 }
 
 extension WorkoutImport {
-    
-    var normalizedRecords: [Record] {
-        var dictionary = [Int: Record]()
-
-        for record in records {
-            let key = keyForTimestamp(record.date)
-            dictionary[key] = record
-        }
-
-        return dictionary.sorted(by: {$0.value.date < $1.value.date }).map({ $0.value })
-    }
-    
-    func keyForTimestamp(_ timestamp: Date) -> Int {
-        Int(truncating: timestamp.timeIntervalSince1970 as NSNumber)
-    }
     
     var startDate: Date? {
         start.dateValue

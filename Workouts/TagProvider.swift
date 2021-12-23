@@ -69,8 +69,8 @@ extension TagProvider {
 
 extension TagProvider {
     
-    func addTag(viewModel: TagEditViewModel, position: Int?) throws {
-        Tag.insert(into: context, viewModel: viewModel, position: position)
+    func addTag(viewModel: TagEditViewModel, position: Int?) {
+        Self.addTag(viewModel: viewModel, position: position, context: context)
     }
     
 }
@@ -79,12 +79,11 @@ extension TagProvider {
 
 extension TagProvider {
     
-    func createInitialTagsIfNeeded() {
-        if AppSettings.initialTagsReady {
-            Log.debug("skip initial tag creation")
-            return
-        }
-        
+    static func addTag(viewModel: TagEditViewModel, position: Int?, context: NSManagedObjectContext) {
+        Tag.insert(into: context, viewModel: viewModel, position: position)
+    }
+    
+    static func createDefaultTags(in context: NSManagedObjectContext) {
         let viewModels = [
             Tag.addViewModel(name: "My Bike", gearType: .bike, color: .accentColor),
             Tag.addViewModel(name: "My Shoes", gearType: .shoes, color: .ruby),
@@ -94,12 +93,11 @@ extension TagProvider {
         ]
         
         viewModels.enumerated().forEach { (index, viewModel) in
-            try? addTag(viewModel: viewModel, position: index)
+            addTag(viewModel: viewModel, position: index, context: context)
         }
         
         do {
             try context.save()
-            AppSettings.initialTagsReady = true
             Log.debug("created initial tags")
         } catch {
             Log.debug("failed to save tags")

@@ -31,13 +31,13 @@ struct ImportView: View {
     var body: some View {
         NavigationView {
             VStack {
-                List(importManager.workouts) { workout in
+                List(importManager.workouts, id: \.id) { workout in
                     ImportRow(workout: workout) {
                         importManager.processWorkout(workout)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
-                .listStyle(InsetGroupedListStyle())
+                .listStyle(PlainListStyle())
                 .modifier(ImportEmptyModifier(importState: importManager.state, isActive: purchaseManager.isActive))
                 
                 Spacer()

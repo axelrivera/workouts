@@ -10,6 +10,16 @@ import MapKit
 import CoreData
 
 struct DetailView: View {
+    @Environment(\.managedObjectContext) var viewContext
+    
+    let viewModel: WorkoutDetailViewModel
+    
+    var body: some View {
+        DetailContentView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
+    }
+}
+
+struct DetailContentView: View {
     enum ActiveSheet: Identifiable {
         case map
         case analysis
@@ -185,7 +195,7 @@ struct DetailView: View {
     }
 }
 
-extension DetailView {
+extension DetailContentView {
     
     @ViewBuilder
     func analysisButton() -> some View {
@@ -333,7 +343,7 @@ struct DetailView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel, context: viewContext))
+            DetailView(viewModel: workout.detailViewModel)
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

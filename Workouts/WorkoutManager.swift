@@ -16,6 +16,7 @@ class WorkoutManager: ObservableObject {
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
     private(set) var metaProvider: MetadataProvider
+    private(set) var tagProvider: TagProvider
     private(set) var storage: WorkoutStorage
     
     private let authProvider = HealthAuthProvider.shared
@@ -52,6 +53,7 @@ class WorkoutManager: ObservableObject {
         self.context = context
         dataProvider = DataProvider(context: context)
         metaProvider = MetadataProvider(context: context)
+        tagProvider = TagProvider(context: context)
         storage = WorkoutStorage(context: context)
         addObservers()
     }

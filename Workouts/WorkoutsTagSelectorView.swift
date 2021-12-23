@@ -37,7 +37,10 @@ struct WorkoutsTagSelectorContent: View {
     
     var body: some View {
         NavigationView {
-            TagSelector(tags: $manager.tags, selectedTags: $manager.selectedTags) { tag in
+            TagSelector(
+                tags: $manager.tags,
+                selectedTags: $manager.selectedTags,
+                defaultAction: manager.reload) { tag in
                 do {
                     try manager.toggle(tag: tag)
                 } catch {
