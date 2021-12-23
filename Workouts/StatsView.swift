@@ -115,7 +115,7 @@ struct StatsView: View {
 
 extension StatsView {
     
-    func avgLabel(forTimeframe timeframe: StatsManager.Timeframe) -> String {
+    func avgLabel(forTimeframe timeframe: StatsSummary.Timeframe) -> String {
         switch timeframe {
         case .week:
             return String(format: "%@ /week", statsManager.avgWeeklyTotal.formatted())
@@ -126,7 +126,7 @@ extension StatsView {
         }
     }
     
-    func summaries(forTimeframe timeframe: StatsManager.Timeframe) -> [StatsSummary] {
+    func summaries(forTimeframe timeframe: StatsSummary.Timeframe) -> [StatsSummary] {
         switch timeframe {
         case .week:
             return purchaseManager.isActive ? statsManager.recentWeekly : StatsSummary.weeklySamples()
@@ -167,7 +167,7 @@ extension StatsView {
     }
     
     @ViewBuilder
-    func destination(forTimeframe timeframe: StatsManager.Timeframe) -> some View {
+    func destination(forTimeframe timeframe: StatsSummary.Timeframe) -> some View {
         switch timeframe {
         case .week, .month:
             StatsRecentView(

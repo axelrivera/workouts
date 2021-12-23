@@ -20,9 +20,9 @@ fileprivate extension NumberFormatter {
 
 extension StatsSummary {
     
-    enum Timeframe: Identifiable, CaseIterable {
+    enum Timeframe: Identifiable, Hashable, CaseIterable {
         case week, month, year, yearToDate, allTime
-        var id: Int { hashValue }
+        var id: Self { self }
         
         var recentTitle: String {
             switch self {
@@ -121,12 +121,8 @@ extension StatsSummary {
         let date = Date()
         switch timeframe {
         case .week:
-//                let start = Date.dateFor(month: 2, day: 15, year: 2021)
-//                let end = Date.dateFor(month: 2, day: 21, year: 2021)
-//                return (start!, end!)
             return DateInterval(start: date.workoutWeekStart, end: date.workoutWeekEnd)
         case .month:
-//                return (Date.dateFor(month: 2, day: 1, year: 2021)!, Date.dateFor(month: 2, day: 28, year: 2021)!)
             return DateInterval(start: date.startOfMonth, end: date.endOfMonth)
         case .year, .yearToDate:
             return DateInterval(start: date.startOfYear, end: date.endOfYear)

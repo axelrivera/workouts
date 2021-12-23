@@ -11,8 +11,6 @@ import CoreData
 import Combine
 
 class StatsManager: ObservableObject {
-    typealias Timeframe = StatsSummary.Timeframe
-    
     @Published var sport: Sport? {
         didSet {
             fetchSummaries()
@@ -71,27 +69,6 @@ extension StatsManager {
             guard let self = self else { return }
             
             let availableSports = Workout.availableSports(in: self.dataProvider.context)
-            
-            // Screenshot Values
-            
-//            let weekly = StatsSummary.weeklySample()
-//            let recentWeekly = StatsSummary.weeklySamples()
-//            let avgWeeklyDistance: Double = 241402
-//            let avgWeeklyDuration: Double = 34200
-//            let avgWeeklyElevation: Double = 915
-//            let avgWeeklyCalories: Double = 6000
-//
-//            let monthly = StatsSummary.monthlySample()
-//            let recentMonthly = StatsSummary.monthlySamples()
-//            let avgMonthlyDistance: Double = 724205
-//            let avgMonthlyDuration: Double = 88200
-//            let avgMonthlyElevation: Double = 9000.0
-//            let avgMonthlyCalories: Double = 24500.0
-//
-//            let yearly = StatsSummary.yearlySample()
-//            let all = StatsSummary.allSample()
-            
-            // End of Screenshot Values
             
             let weekly = self.fetchSummary(for: .week)
             let recentWeekly = self.fetchRecentSummary(for: .week)
@@ -161,12 +138,13 @@ extension StatsManager {
         }
     }
     
-    private func fetchSummary(for timeframe: Timeframe) -> StatsSummary {
+    private func fetchSummary(for timeframe: StatsSummary.Timeframe) -> StatsSummary {
         let interval = StatsSummary.currentInterval(for: timeframe)
         
         do {
             let predicate = Workout.activePredicate(sport: sport, interval: interval)
             let workouts = dataProvider.workoutIdentifiers(for: predicate)
+            
             let dictionary = try dataProvider.fetchStatsSummary(for: workouts)
             return StatsSummary(sport: sport, timeframe: timeframe, dictionary: dictionary, workouts: workouts)
         } catch {
@@ -175,7 +153,7 @@ extension StatsManager {
         }
     }
     
-    private func fetchRecentSummary(for timeframe: Timeframe) -> [StatsSummary] {
+    private func fetchRecentSummary(for timeframe: StatsSummary.Timeframe) -> [StatsSummary] {
         var intervals = [DateInterval]()
         
         switch timeframe {
@@ -186,23 +164,23 @@ extension StatsManager {
         default:
             break
         }
-        
+                
         if intervals.isEmpty { return [] }
         
-        do {
-            var summaries = [StatsSummary]()
-            for interval in intervals {
-                let predicate = Workout.activePredicate(sport: sport, interval: interval)
-                let workouts = dataProvider.workoutIdentifiers(for: predicate)
-                let dictionary = try dataProvider.fetchStatsSummary(for: workouts)
-                let summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval, dictionary: dictionary, workouts: workouts)
-                summaries.append(summary)
+        var summaries = [StatsSummary]()
+        for interval in intervals {
+            let predicate = Workout.activePredicate(sport: sport, interval: interval)
+            let workouts = dataProvider.workoutIdentifiers(for: predicate)
+            
+            var summary: StatsSummary
+            if let dictionary = try? dataProvider.fetchStatsSummary(for: workouts) {
+                summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval, dictionary: dictionary, workouts: workouts)
+            } else {
+                summary = StatsSummary(sport: sport, timeframe: timeframe, interval: interval)
             }
-            return summaries
-        } catch {
-            Log.debug("fetch recent error: \(error.localizedDescription)")
-            return []
+            summaries.append(summary)
         }
+        return summaries
     }
     
 }

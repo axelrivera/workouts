@@ -80,6 +80,7 @@ extension DataProvider {
             request.predicate = predicate
             request.resultType = .dictionaryResultType
             request.propertiesToFetch = ["remoteIdentifier"]
+            request.returnsObjectsAsFaults = false
             
             return try context.fetch(request).compactMap { dictionary in
                 dictionary["remoteIdentifier"] as? UUID
@@ -174,10 +175,6 @@ extension DataProvider {
         try fetchStatsSummary(for: Workout.predicateForIdentifiers(identifiers))
     }
     
-//    func fetchStatsSummary(sport: Sport?, interval: DateInterval) throws -> [String: Any] {
-//        try fetchStatsSummary(for: Workout.activePredicate(sport: sport, interval: interval))
-//    }
-    
     func fetchStatsSummary(for predicate: NSPredicate) throws -> [String: Any] {
         let distance = expressionDescription(for: .distance, function: .sum)
         let avgDistance = expressionDescription(for: .avgDistance, function: .avg)
@@ -250,8 +247,6 @@ extension DataProvider {
         static let avgElevation = Name(rawValue: "avgElevation")
         static let energyBurned = Name(rawValue: "energyBurned")
         static let avgEnergyBurned = Name(rawValue: "avgEnergyBurned")
-        static let longestDistance = Name(rawValue: "longestDistance")
-        static let highestElevation = Name(rawValue: "highestElevation")
         
         var key: String {
             return rawValue
@@ -259,9 +254,9 @@ extension DataProvider {
         
         var property: String {
             switch self {
-            case .elevation, .avgElevation, .highestElevation:
+            case .elevation, .avgElevation:
                 return "elevationAscended"
-            case .avgDistance, .longestDistance:
+            case .avgDistance:
                 return "distance"
             case .avgDuration:
                 return "movingTime"

@@ -18,6 +18,7 @@ private let DistanceKey = "distance"
 private let CreatedAtKey = "createdAt"
 private let UpdatedAtKey = "updatedAt"
 private let StartDateKey = "start"
+private let EndDateKey = "end"
 private let IndoorKey = "indoor"
 private let DayOfWeekKey = "dayOfWeek"
 
@@ -220,7 +221,7 @@ extension Workout {
     static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
         NSPredicate(
             format: "%K >= %@ AND %K <= %@",
-            StartDateKey, start as NSDate,
+            EndDateKey, start as NSDate,
             StartDateKey, end as NSDate
         )
     }
