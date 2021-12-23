@@ -114,15 +114,11 @@ final class TagsResetManager: ObservableObject {
     @Published var isProcessing = false
     
     let context: NSManagedObjectContext
-    let backgroundContext: NSManagedObjectContext
     let tagProvider: TagProvider
     let workoutTagProvider: WorkoutTagProvider
     
     init(context: NSManagedObjectContext) {
         self.context = context
-        self.backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        self.backgroundContext.parent = context
-        
         self.tagProvider = TagProvider(context: context)
         self.workoutTagProvider = WorkoutTagProvider(context: context)
     }
@@ -134,40 +130,46 @@ final class TagsResetManager: ObservableObject {
     
     func resetAllTags() {
         if isProcessing { return }
-        let tags = workoutTagProvider.allWorkoutTags()
-        resetTags(tags)
+        resetTags(forTag: nil)
     }
     
     func resetTags(for uuid: UUID) {
         if isProcessing { return }
-        let tags = workoutTagProvider.workoutTags(forTag: uuid)
-        resetTags(tags)
+        resetTags(forTag: uuid)
     }
     
-    private func resetTags(_ workoutTags: [WorkoutTag]) {
-        self.isProcessing = true
+    private func resetTags(forTag tag: UUID?) {
+        DispatchQueue.main.async {
+            self.isProcessing = true
+        }
         
-        backgroundContext.perform { [weak self] in
-            guard let self = self else { return }
-            workoutTags.forEach { $0.archive() }
-            
-            do {
-                try self.backgroundContext.save()
-                try self.context.save()
-                self.context.refreshAllObjects()
-            } catch {
-                Log.debug("failed to save context: \(error.localizedDescription)")
+        context.performAndWait {
+            var tags: [WorkoutTag]
+            if let tag = tag {
+                tags = workoutTagProvider.workoutTags(forTag: tag)
+            } else {
+                tags = workoutTagProvider.allWorkoutTags()
             }
             
-            DispatchQueue.main.async {
-                WorkoutStorage.resetAll()
-                NotificationCenter.default.post(
-                    name: .refreshWorkoutsFilter,
-                    object: nil
-                )
-                
-                self.isProcessing = false
-            }
+            tags.forEach { $0.archive() }
+        }
+        
+        do {
+            try context.save()
+            context.refreshAllObjects()
+        } catch {
+            Log.debug("failed to save context: \(error.localizedDescription)")
+        }
+        
+        WorkoutStorage.resetAll()
+        
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: .refreshWorkoutsFilter,
+                object: nil
+            )
+            
+            self.isProcessing = false
         }
     }
     

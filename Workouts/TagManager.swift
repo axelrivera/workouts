@@ -105,7 +105,8 @@ extension TagManager {
                 if let tag = Tag.find(using: viewModel.uuid, in: context) {
                     Tag.updateValues(for: tag, viewModel: viewModel, position: nil, in: context)
                 } else {
-                    let position: Int = isInsert ? 0 : self.tags.count + 1
+                    let total = provider.totalActiveTags
+                    let position = total + 1
                     let newTag = Tag.insert(into: context, viewModel: viewModel, position: position)
                     if isInsert {
                         self.tags.insert(newTag, at: 0)

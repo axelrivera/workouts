@@ -83,6 +83,7 @@ extension WorkoutProcessor {
         do {
             (avgHeartRate, maxHeartRate) = try await provider.fetchHeartRateStats(for: workout)
         } catch {
+            Log.debug("fetching heart rate stats failed for workout: \(workout.uuid): \(error.localizedDescription)")
             avgHeartRate = 0
             maxHeartRate = 0
         }

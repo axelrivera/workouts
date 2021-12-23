@@ -366,7 +366,7 @@ extension Workout {
     static func insert(into context: NSManagedObjectContext, object: WorkoutObject) -> Workout {
         context.performAndWait {
             let workout = Workout(context: context)
-            updateValues(for: workout, object: object, isLocationPending: !object.indoor, in: context)
+            updateValues(for: workout, object: object, isLocationPending: true, in: context)
             return workout
         }
     }

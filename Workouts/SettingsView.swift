@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct SettingsView: View {
-    enum ActiveSheet: Identifiable {
-        case paywall, feedback, about, privacy
-        var id: Int { hashValue }
+    enum ActiveSheet: Identifiable, Hashable {
+        case paywall, feedback, website(urlString: String, reader: Bool = true)
+        var id: Self { self }
     }
     
     enum ActiveAlert: Identifiable {
@@ -50,13 +50,14 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
+                    Button("Frequently Asked Questions", action: { activeSheet = .website(urlString: URLStrings.faq, reader: false) })
                     Button("Send Feedback", action: feedbackAction)
                 }
                 
                 Section(header: Text("Better Workouts"), footer: footerView()) {
-                    Button("About Rivera Labs", action: { activeSheet = .about })
+                    Button("About Rivera Labs", action: { activeSheet = .website(urlString: URLStrings.about) })
                     Button("Review on the App Store", action: reviewAction)
-                    Button("Privacy Policy", action: { activeSheet = .privacy })
+                    Button("Privacy Policy", action: { activeSheet = .website(urlString: URLStrings.privacy, reader: false) })
                     HStack {
                         Text("Version")
                             .foregroundColor(.secondary)
@@ -85,10 +86,8 @@ struct SettingsView: View {
                 case .paywall:
                     PaywallView()
                         .environmentObject(purchaseManager)
-                case .about:
-                    SafariView(urlString: URLStrings.about, entersReaderIfAvailable: false)
-                case .privacy:
-                    SafariView(urlString: URLStrings.privacy)
+                case .website(let url, let reader):
+                    SafariView(urlString: url, entersReaderIfAvailable: reader)
                 case .feedback:
                     MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
                         .navigationBarTitleDisplayMode(.inline)
