@@ -12,42 +12,32 @@ import Combine
 
 final class WorkoutMapCellManager: ObservableObject {
     private(set) var viewModel: WorkoutViewModel
-    private(set) var isPreview = false
     
-    init(viewModel: WorkoutViewModel, isPreview: Bool = false) {
+    init(viewModel: WorkoutViewModel) {
         self.viewModel = viewModel
-        showLocation = Self.showLocation(viewModel: viewModel)
         isFavorite = viewModel.isFavorite
         tags = viewModel.tags
         isPendingLocation = viewModel.isPendingLocation
         coordinates = viewModel.coordinates
-        self.isPreview = isPreview
     }
     
     @Published var isFavorite = false
     @Published var tags = [TagLabelViewModel]()
     @Published var coordinates = [CLLocationCoordinate2D]()
     @Published var isPendingLocation = false
-    @Published var showLocation = true
     
     func updateViewModel(_ viewModel: WorkoutViewModel) {
-        self.viewModel = viewModel
-        withAnimation {
-            showLocation = Self.showLocation(viewModel: viewModel)
-            isFavorite = viewModel.isFavorite
-            tags = viewModel.tags
-            isPendingLocation = viewModel.isPendingLocation
-            coordinates = viewModel.coordinates
-        }
-    }
-    
-    static func showLocation(viewModel: WorkoutViewModel) -> Bool {
-        if viewModel.indoor {
-            return false
-        } else if viewModel.isPendingLocation {
-            return true
-        } else {
-            return viewModel.coordinates.isPresent
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            self.viewModel = viewModel
+            
+            withAnimation {
+                self.isFavorite = viewModel.isFavorite
+                self.tags = viewModel.tags
+                self.isPendingLocation = viewModel.isPendingLocation
+                self.coordinates = viewModel.coordinates
+            }
         }
     }
     
@@ -63,7 +53,7 @@ struct WorkoutMapCell: View {
     }
         
     init(viewModel: WorkoutViewModel, isPreview: Bool = false) {
-        _manager = StateObject(wrappedValue: WorkoutMapCellManager(viewModel: viewModel, isPreview: isPreview))
+        _manager = StateObject(wrappedValue: WorkoutMapCellManager(viewModel: viewModel))
     }
     
     var body: some View {
@@ -93,8 +83,12 @@ struct WorkoutMapCell: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if manager.showLocation || manager.isPreview {
-                MapContainer(id: manager.viewModel.id, scheme: colorScheme, coordinates: manager.coordinates)
+            if manager.isPendingLocation || manager.coordinates.isPresent {
+                MapContainer(
+                    id: manager.viewModel.id,
+                    scheme: colorScheme,
+                    coordinates: $manager.coordinates
+                )
                     .cornerRadius(12.0)
             }
         }
@@ -139,7 +133,7 @@ struct WorkoutMapCell: View {
     func processNotification(_ notification: Notification) {
         guard let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel else { return }
         guard viewModel.id == manager.viewModel.id else { return }
-        Log.debug("update view model: \(viewModel.id), date: \(viewModel.dateString())")
+        Log.debug("update view model: \(viewModel.id), date: \(viewModel.dateString()), coordinates: \(viewModel.coordinates.isPresent), pending location: \(viewModel.isPendingLocation)")
         manager.updateViewModel(viewModel)
     }
 }
@@ -154,7 +148,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             ScrollView {
                 LazyVStack(spacing: 0.0) {
                     ForEach(1...5, id: \.self) { _ in
-                        WorkoutMapCell(viewModel: viewModel, isPreview: true)
+                        WorkoutMapCell(viewModel: viewModel)
                         Divider()
                     }
                 }
@@ -170,10 +164,11 @@ private struct MapContainer: View {
     @EnvironmentObject var manager: WorkoutManager
     var id: UUID
     let scheme: ColorScheme
-    var coordinates: [CLLocationCoordinate2D]
+    @Binding var coordinates: [CLLocationCoordinate2D]
+    @State private var cachedImage: UIImage?
     
+    @State var isFetchingImage = false
     @State var height = CGFloat(200)
-    @State var cachedImage: UIImage?
     
     var body: some View {
         Group {
@@ -190,8 +185,12 @@ private struct MapContainer: View {
                                     .progressViewStyle(CircularProgressViewStyle())
                             )
                             .onAppear { fetchCachedImage() }
-                            .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
-                                fetchCachedImage()
+                            .onChange(of: coordinates) { newCoordinates in
+                                if newCoordinates.isPresent {
+                                    Log.debug("coordinates changed - fetching cached image")
+                                    cachedImage = nil
+                                    fetchCachedImage()
+                                }
                             }
                     }
                 }
@@ -208,15 +207,20 @@ private struct MapContainer: View {
     }
         
     private func fetchCachedImage() {
+        if isFetchingImage { return }
+        
         if let image = manager.storage.getCachedImage(forID: id, scheme: scheme) {
             cachedImage = image
+            isFetchingImage = false
         } else if let image = manager.storage.getDiskImage(forID: id, scheme: scheme) {
             manager.storage.set(image: image, forID: id, scheme: scheme, memoryOnly: true)
             cachedImage = image
+            isFetchingImage = false
         } else {
             MKMapView.mapImage(coordinates: coordinates, size: Constants.cachedWorkoutImageSize) { image in
                 if let newImage = image {
                     manager.storage.set(image: newImage, forID: id, scheme: scheme)
+                    isFetchingImage = false
                     withAnimation {
                         self.cachedImage = newImage
                     }

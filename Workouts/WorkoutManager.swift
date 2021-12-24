@@ -43,7 +43,7 @@ class WorkoutManager: ObservableObject {
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
 
-    @Published var showNoWorkoutsOverlay = false
+    @Published var showNoWorkoutsAlert = false
     
     var isProcessing: Bool {
         isProcessingRemoteData || isUpdatingRemoteLocationData
@@ -119,11 +119,11 @@ class WorkoutManager: ObservableObject {
             do {
                 let total = try await healthProvider.totalWorkouts()
                 DispatchQueue.main.async {
-                    self.showNoWorkoutsOverlay = total == 0
+                    self.showNoWorkoutsAlert = total == 0
                 }
             } catch {
                 DispatchQueue.main.async {
-                    self.showNoWorkoutsOverlay = true
+                    self.showNoWorkoutsAlert = true
                 }
             }
         }
@@ -248,6 +248,7 @@ extension WorkoutManager {
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
         processingRemoteDataTimestamp = nil
+        validateHealthPermissions()
         
         DispatchQueue.main.async {
             withAnimation {

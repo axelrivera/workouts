@@ -8,66 +8,57 @@
 import SwiftUI
 
 struct NoWorkoutsView: View {
-    var action = {}
+    var body: some View {
+        VStack(alignment: .center, spacing: 5.0) {
+            HStack(spacing: 5.0) {
+                Image(systemName: "exclamationmark.triangle")
+                    .foregroundColor(.red)
+
+                Text("No Workouts")
+                    .font(.body)
+                    .foregroundColor(.red)
+            }
+            Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
+                .font(.footnote)
+                .foregroundColor(.black)
+                .multilineTextAlignment(.center)
+        }
+        .padding([.top, .bottom], CGFloat(10.0))
+        .frame(maxWidth: .infinity)
+        .background(Color.yellow.opacity(0.5))
+        .background(.regularMaterial)
+    }
+}
+
+struct ProcessingLocationView: View {
     
     var body: some View {
-        VStack(alignment: .center, spacing: 20.0) {
-            Spacer()
-            Text("No Workouts")
-                .font(.title)
-                .foregroundColor(.secondary)
-            Image(systemName: "exclamationmark.triangle")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100, alignment: .center)
-                .foregroundColor(.red)
-            Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
-                .foregroundColor(.secondary)
+        VStack(spacing: 5.0) {
+            HStack(spacing: 10.0) {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                Text("Processing Location Data")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+            }
+            Text("Some data may be missing while processing")
+                .font(.footnote)
+                .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .padding(.bottom)
-            
-            Spacer()
-            
-            RoundButton(text: "Dismiss", action: action)
         }
-        .padding()
+        .padding([.top, .bottom], CGFloat(10.0))
+        .frame(maxWidth: .infinity)
+        .background(Color.red.opacity(0.5))
+        .background(.regularMaterial)
     }
+    
 }
 
 struct NoWorkoutsView_Previews: PreviewProvider {
     static var previews: some View {
-        NoWorkoutsView()
-    }
-}
-
-struct NoWorkoutsModifier: ViewModifier {
-    @EnvironmentObject var workoutManager: WorkoutManager
-
-    func body(content: Content) -> some View {
-        content.overlay(overlay())
-    }
-
-    @ViewBuilder
-    func overlay() -> some View {
-        if workoutManager.showNoWorkoutsOverlay {
-            ZStack {
-                Color.systemBackground
-                    .ignoresSafeArea()
-                NoWorkoutsView {
-                    withAnimation {
-                        workoutManager.showNoWorkoutsOverlay = false
-                    }
-                }
-            }
+        VStack {
+            NoWorkoutsView()
+            ProcessingLocationView()
         }
     }
-
-}
-
-extension View {
-    
-    func noWorkoutsOverlay() -> some View {
-        modifier(NoWorkoutsModifier())
-    }
-    
 }

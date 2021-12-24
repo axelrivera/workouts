@@ -43,7 +43,6 @@ struct ContentView: View {
             
         }
         .onboardingOverlay()
-        .noWorkoutsOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
             viewContext.refreshAllObjects()
             workoutManager.storage.resetAll()

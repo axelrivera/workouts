@@ -167,22 +167,14 @@ struct WorkoutsContentView: View {
     
     @ViewBuilder
     func sectionHeader() -> some View {
-        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading {
+        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading || workoutManager.showNoWorkoutsAlert {
             VStack(spacing: 0) {
                 if workoutManager.showUpdatingRemoteLocationDataLoading {
-                    VStack(spacing: 5.0) {
-                        Text("Processing Location Data...")
-                            .font(.subheadline)
-                            .foregroundColor(.white)
-                        Text("Some data may be missing until the process is finished.")
-                            .font(.footnote)
-                            .foregroundColor(.white.opacity(0.7))
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding([.top, .bottom], CGFloat(10.0))
-                    .frame(maxWidth: .infinity)
-                    .background(Color.red.opacity(0.5))
-                    .background(.regularMaterial)
+                    ProcessingLocationView()
+                }
+                
+                if workoutManager.showNoWorkoutsAlert {
+                    NoWorkoutsView()
                 }
                 
                 if filterManager.isFilterActive {
@@ -275,6 +267,7 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable
+        manager.showNoWorkoutsAlert = true
         return manager
     }()
     
