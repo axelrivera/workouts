@@ -18,6 +18,7 @@ struct NoWorkoutsView: View {
                     .font(.body)
                     .foregroundColor(.red)
             }
+            
             Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
                 .font(.footnote)
                 .foregroundColor(.black)
@@ -41,7 +42,7 @@ struct ProcessingLocationView: View {
                     .font(.subheadline)
                     .foregroundColor(.white)
             }
-            Text("Some data may be missing while processing")
+            Text("Some data may not be available while processing")
                 .font(.footnote)
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -55,10 +56,13 @@ struct ProcessingLocationView: View {
 }
 
 struct NoWorkoutsView_Previews: PreviewProvider {
+    
     static var previews: some View {
-        VStack {
-            NoWorkoutsView()
-            ProcessingLocationView()
+        NavigationView {
+            VStack {
+                NoWorkoutsView()
+                ProcessingLocationView()
+            }
         }
     }
 }

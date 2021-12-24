@@ -218,12 +218,23 @@ extension Workout {
         return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
     }
     
+    static func activePredicate(for identifiers: [UUID]) -> NSPredicate {
+        NSCompoundPredicate(andPredicateWithSubpredicates: [
+            notMarkedForLocalDeletionPredicate,
+            predicateForIdentifiers(identifiers)
+        ])
+    }
+    
     static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
         NSPredicate(
             format: "%K >= %@ AND %K <= %@",
             EndDateKey, start as NSDate,
             StartDateKey, end as NSDate
         )
+    }
+    
+    static func predicateForRemoteIdentifier(_ identifier: UUID) -> NSPredicate {
+        NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
     }
     
     static func predicateForInterval(_ interval: DateInterval) -> NSPredicate {
@@ -314,8 +325,12 @@ extension Workout {
     
     static func find(using identifier: UUID, in context: NSManagedObjectContext) -> Workout? {
         context.performAndWait {
+            let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    notMarkedForLocalDeletionPredicate,
+                    predicateForRemoteIdentifier(identifier)
+            ])
             let request = defaultFetchRequest()
-            request.predicate = NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
+            request.predicate = predicate
             return try? context.fetch(request).first
         }
     }
@@ -403,6 +418,7 @@ extension Workout {
             workout.source = object.source
             workout.device = object.device
             workout.dayOfWeek = object.weekday
+            workout.markedForDeletionDate = nil
             
             // Heart Rate Zones
             let zoneHeartRate = AppSettings.maxHeartRate

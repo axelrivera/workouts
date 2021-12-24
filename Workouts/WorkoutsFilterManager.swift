@@ -414,7 +414,7 @@ extension WorkoutsFilterManager {
         }
         
         if ids.isPresent {
-            predicates.append(Workout.predicateForIdentifiers(Array(ids)))
+            predicates.append(Workout.activePredicate(for: Array(ids)))
         }
         
         if showDateRange {
