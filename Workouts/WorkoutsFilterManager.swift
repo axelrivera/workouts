@@ -393,18 +393,20 @@ extension WorkoutsFilterManager {
         var ids = Set<UUID>()
         
         if showFavorites {
-            let favorites = WorkoutMetadata.favorites(in: context)
-            ids.formUnion(favorites)
+            let workouts = WorkoutMetadata.favorites(in: context)
+            let active = dataProvider.workoutIdentifiers(for: Workout.activePredicate(for: workouts))
+            ids.formUnion(active)
         }
         
         if selectedTags.isPresent {
             let tagIds = selectedTags.map { $0.id }
             let workouts = workoutTagProvider.workoutIdentifiers(forTags: tagIds)
+            let active = dataProvider.workoutIdentifiers(for: Workout.activePredicate(for: workouts))
             
             if ids.isEmpty {
-                ids.formUnion(workouts)
+                ids.formUnion(active)
             } else {
-                ids.formIntersection(workouts)
+                ids.formIntersection(active)
             }
         }
         
