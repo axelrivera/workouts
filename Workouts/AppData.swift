@@ -52,3 +52,8 @@ struct Emails {
     static let support = "feedback@betterworkouts.app"
 }
 
+enum GlobalError: Error {
+    case database
+}
+
+

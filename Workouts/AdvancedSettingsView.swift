@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct AdvancedSettingsView: View {
     enum ActiveAlert: Identifiable {
@@ -13,6 +14,7 @@ struct AdvancedSettingsView: View {
         var id: Int { hashValue }
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     
     @State private var activeAlert: ActiveAlert?
@@ -46,11 +48,15 @@ struct AdvancedSettingsView: View {
                 let message = "This action will reset and regenerate your local workout data from Apple Health."
                 
                 let action = {
-                    NotificationCenter.default.post(
-                        name: .shouldFetchRemoteData,
-                        object: nil,
-                        userInfo: [ Notification.regenerateDataKey: true ]
-                    )
+                    DispatchQueue.main.async {
+                        WorkoutMetadata.fixDuplicates(in: viewContext)
+                        
+                        NotificationCenter.default.post(
+                            name: .shouldFetchRemoteData,
+                            object: nil,
+                            userInfo: [ Notification.regenerateDataKey: true ]
+                        )
+                    }
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)

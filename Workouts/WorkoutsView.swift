@@ -76,6 +76,9 @@ struct WorkoutsContentView: View {
                                 .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
                                     workoutManager.storage.refreshAllWorkouts()
                                 }
+                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)) { notification in
+                                    workoutManager.storage.refreshAllWorkouts()
+                                }
                                 .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
                                     if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
                                        viewModel.id == workout.workoutIdentifier {

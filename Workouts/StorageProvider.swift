@@ -16,6 +16,14 @@ class StorageProvider: ObservableObject {
     let persistentContainer: PersistentContainer
 
     init(inMemory: Bool = false) {
+        if let tokenData = try? Data(contentsOf: Self.tokenFile) {
+            do {
+                lastHistoryToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
+            } catch {
+                print("###\(#function): Failed to unarchive NSPersistentHistoryToken. Error = \(error)")
+            }
+        }
+        
         persistentContainer = PersistentContainer(name: "Workouts")
         
         let defaultSQliteLocation = PersistentContainer.defaultDirectoryURL()
@@ -120,7 +128,7 @@ class StorageProvider: ObservableObject {
                 let data = try? NSKeyedArchiver.archivedData( withRootObject: token, requiringSecureCoding: true) else { return }
             
             do {
-                try data.write(to: tokenFile)
+                try data.write(to: Self.tokenFile)
             } catch {
                 print("###\(#function): Failed to write token data. Error = \(error)")
             }
@@ -130,7 +138,7 @@ class StorageProvider: ObservableObject {
     /**
      The file URL for persisting the persistent history token.
     */
-    private lazy var tokenFile: URL = {
+    private static var tokenFile: URL = {
         let url = NSPersistentContainer.defaultDirectoryURL().appendingPathComponent("Workouts", isDirectory: true)
         if !FileManager.default.fileExists(atPath: url.path) {
             do {
@@ -256,6 +264,7 @@ extension StorageProvider {
 
 extension Notification.Name {
     static let didFindRelevantTransactions = Notification.Name("didFindRelevantTransactions")
+    static let didFinishProcessingDuplicates = Notification.Name("didFinishProcessingDuplicates")
 }
 
 extension StorageProvider {
@@ -284,10 +293,71 @@ extension StorageProvider {
                 NotificationCenter.default.post(name: .didFindRelevantTransactions, object: self, userInfo: ["transactions": transactions])
             }
             
+            var newWorkoutMetaObjects = [NSManagedObjectID]()
+            let workoutMetaEntity = WorkoutMetadata.entityName
+            
+            for transaction in transactions where transaction.changes != nil {
+                for change in transaction.changes! where change.changedObjectID.entity.name == workoutMetaEntity && change.changeType == .insert {
+                    newWorkoutMetaObjects.append(change.changedObjectID)
+                }
+            }
+            
+            if newWorkoutMetaObjects.isPresent {
+                deduplicateAndWait(metaObjectIDs: newWorkoutMetaObjects)
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .didFinishProcessingDuplicates, object: self)
+                }
+            }
+            
             // Update the history token using the last transaction.
             if let token = transactions.last?.token {
                 lastHistoryToken = token
             }
         }
     }
+    
+}
+
+// MARK: - Tags
+
+extension StorageProvider {
+    
+    private func deduplicateAndWait(metaObjectIDs: [NSManagedObjectID]) {
+        let taskContext = persistentContainer.newBackgroundContext()
+        
+        taskContext.performAndWait {
+            for objectID in metaObjectIDs {
+                deduplicate(workoutMeta: objectID, context: taskContext)
+            }
+            
+            do {
+                try taskContext.save()
+            } catch {
+                Log.debug("failed to save deduplicated objects")
+            }
+        }
+    }
+    
+    private func deduplicate(workoutMeta objectID: NSManagedObjectID, context: NSManagedObjectContext) {
+        guard let workout = context.object(with: objectID) as? WorkoutMetadata else {
+            assertionFailure("failed to get valid workout metadata: \(objectID)")
+            return
+        }
+        
+        let identifier = workout.identifier
+        Log.debug("trying to deduplicate workouts for \(identifier)")
+        
+        var workouts = WorkoutMetadata.find(using: identifier, in: context)
+        if workouts.count > 1 {
+            Log.debug("fixing duplicates for: \(identifier)")
+            let isFavorite = workouts.filter({ $0.isFavorite }).isPresent
+            let first = workouts.removeFirst()
+            first.isFavorite = isFavorite
+            workouts.forEach({ context.delete($0) })
+        } else {
+            Log.debug("no duplicates found for \(workout.identifier)")
+        }
+    }
+    
 }

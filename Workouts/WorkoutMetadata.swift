@@ -23,11 +23,16 @@ extension WorkoutMetadata {
         NSFetchRequest<WorkoutMetadata>(entityName: entityName)
     }
     
-    static func find(using identifier: UUID, in context: NSManagedObjectContext) -> WorkoutMetadata? {
+    static func find(using identifier: UUID, in context: NSManagedObjectContext) -> [WorkoutMetadata] {
         context.performAndWait {
             let request = NSFetchRequest<WorkoutMetadata>(entityName: WorkoutMetadata.entityName)
             request.predicate = predicate(for: identifier)
-            return try? context.fetch(request).first
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
@@ -73,6 +78,66 @@ extension WorkoutMetadata {
     
     static func favoritesPredicate() -> NSPredicate {
         NSPredicate(format: "%K == %@", FavoriteKey, NSNumber(value: true))
+    }
+    
+}
+
+// MARK: - Duplicates
+
+extension WorkoutMetadata {
+    
+    static func duplicates(in context: NSManagedObjectContext) -> [UUID] {
+        let identiferExpr = NSExpression(forKeyPath: "identifier")
+        let countExpr = NSExpressionDescription()
+        let countVariableExpr = NSExpression(forVariable: "count")
+        
+        countExpr.name = "count"
+        countExpr.expression = NSExpression(forFunction: "count:", arguments: [identiferExpr])
+        countExpr.expressionResultType = .integer64AttributeType
+        
+        let request = NSFetchRequest<NSDictionary>(entityName: entityName)
+        request.resultType = .dictionaryResultType
+        request.propertiesToGroupBy = [IdentifierKey]
+        request.propertiesToFetch = [IdentifierKey, countExpr]
+        request.havingPredicate = NSPredicate(format: "%@ > 1", countVariableExpr)
+        
+        do {
+            let results = try context.fetch(request)
+            return results.compactMap({ $0["identifier"] as? UUID })
+        } catch {
+            return []
+        }
+    }
+    
+    static func fixDuplicates(in context: NSManagedObjectContext) {
+        context.performAndWait {
+            let duplicates = self.duplicates(in: context)
+            Log.debug("fixing duplicates: \(duplicates)")
+            
+            for identifier in duplicates {
+                fixDuplicate(identifier: identifier, in: context)
+            }
+            
+            if context.hasChanges {
+                do {
+                    try context.save()
+                } catch {
+                    Log.debug("error saving context: \(context)")
+                    context.rollback()
+                }
+            }
+        }
+    }
+    
+    static func fixDuplicate(identifier: UUID, in context: NSManagedObjectContext) {
+        let workouts = find(using: identifier, in: context)
+
+        if let first = workouts.first {
+            first.isFavorite = workouts.filter({ $0.isFavorite }).isPresent
+        }
+
+        let resulting = workouts.dropFirst()
+        resulting.forEach({ context.delete($0) })
     }
     
 }
