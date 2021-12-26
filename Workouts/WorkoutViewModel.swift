@@ -42,6 +42,7 @@ final class WorkoutViewModel: Hashable, Identifiable {
     let avgSpeed: Double
     let avgPace: Double
     let calories: Double
+    let avgHeartRate: Double
     let elevation: Double
     
     // mutable properties
@@ -68,6 +69,7 @@ final class WorkoutViewModel: Hashable, Identifiable {
         avgSpeed = workout.avgSpeed
         avgPace = workout.avgPace
         calories = workout.energyBurned
+        avgHeartRate = workout.avgHeartRate
         elevation = workout.elevationAscended
         coordinates = workout.coordinates
         isPendingLocation = workout.isLocationPending
@@ -110,6 +112,10 @@ extension WorkoutViewModel {
     
     var elevationString: String {
         formattedElevationString(for: elevation, zeroPadding: true)
+    }
+    
+    var avgHeartRateString: String {
+        formattedHeartRateString(for: avgHeartRate)
     }
     
 }

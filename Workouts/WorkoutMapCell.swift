@@ -114,17 +114,29 @@ struct WorkoutMapCell: View {
                 .foregroundColor(.time)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            if manager.viewModel.sport.supportsSplits {
-                Text(manager.viewModel.speedOrPaceString)
+            if manager.viewModel.distance > 0 {
+                if manager.viewModel.sport.supportsSplits {
+                    Text(manager.viewModel.speedOrPaceString)
+                        .font(.fixedBody)
+                        .foregroundColor(manager.viewModel.speedOrPaceColor)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                
+                if manager.viewModel.sport == .cycling && !manager.viewModel.indoor {
+                    Text(manager.viewModel.elevationString)
+                        .font(.fixedBody)
+                        .foregroundColor(.elevation)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                Text(manager.viewModel.calorieString)
                     .font(.fixedBody)
-                    .foregroundColor(manager.viewModel.speedOrPaceColor)
+                    .foregroundColor(.calories)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            
-            if manager.viewModel.sport == .cycling && !manager.viewModel.indoor {
-                Text(manager.viewModel.elevationString)
+                
+                Text(manager.viewModel.avgHeartRateString)
                     .font(.fixedBody)
-                    .foregroundColor(.elevation)
+                    .foregroundColor(.calories)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
