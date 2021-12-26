@@ -95,29 +95,6 @@ class LogManager: ObservableObject {
 
 extension LogManager {
     
-//    private func logInterval(for dateInterval: DateInterval) -> LogInterval {
-//        let dates = Date.dates(from: dateInterval.start, to: dateInterval.end)
-//
-//        var dictionary = [String: LogDay]()
-//        let days: [LogDay] = dates.map { date -> LogDay in
-//            let day = LogDay(date: date, activities: [])
-//            dictionary[date.logKey] = day
-//            return day
-//        }
-//
-//        let request = Self.fetchRequest(for: Sport.supportedSports, interval: dateInterval, ascending: false)
-//        let workouts = (try? context.fetch(request)) ?? [Workout]()
-//
-//        for workout in workouts {
-//            let key = workout.start.logKey
-//            if let day = dictionary[key] {
-//                day.activities.append(workout.logActivity())
-//            }
-//        }
-//
-//        return LogInterval(days: days)
-//    }
-    
     private func fetchIntervals() {
         let filterInterval: DateInterval
         

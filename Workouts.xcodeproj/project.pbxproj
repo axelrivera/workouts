@@ -271,10 +271,6 @@
 		1694BEA42774CC5600E76D82 /* EmptyTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */; };
 		1694BEA52774CC5600E76D82 /* EmptyTagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */; };
 		1696420C260419ED00E68A45 /* FitFileParser in Frameworks */ = {isa = PBXBuildFile; productRef = 1696420B260419ED00E68A45 /* FitFileParser */; };
-		1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421126041A1F00E68A45 /* ZIPFoundation */; };
-		1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 1696421626041A2F00E68A45 /* ZIPFoundation */; };
-		1696424326041B3B00E68A45 /* ZipUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1696424226041B3B00E68A45 /* ZipUtils.swift */; };
-		1696424426041B3B00E68A45 /* ZipUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1696424226041B3B00E68A45 /* ZipUtils.swift */; };
 		1697607B25CB7BCC00CAF544 /* DetailMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697607A25CB7BCC00CAF544 /* DetailMap.swift */; };
 		1697608125CB7EFD00CAF544 /* DetailMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697608025CB7EFD00CAF544 /* DetailMapView.swift */; };
 		169885B6272B822300F02EAF /* TagSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169885B5272B822300F02EAF /* TagSelectorView.swift */; };
@@ -578,7 +574,6 @@
 		1694A51B2733263F00DEAD8B /* MetadataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataProvider.swift; sourceTree = "<group>"; };
 		1694BE9D2773CFE800E76D82 /* TagCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagCloud.swift; sourceTree = "<group>"; };
 		1694BEA32774CC5600E76D82 /* EmptyTagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyTagsView.swift; sourceTree = "<group>"; };
-		1696424226041B3B00E68A45 /* ZipUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipUtils.swift; sourceTree = "<group>"; };
 		1697607A25CB7BCC00CAF544 /* DetailMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMap.swift; sourceTree = "<group>"; };
 		1697608025CB7EFD00CAF544 /* DetailMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailMapView.swift; sourceTree = "<group>"; };
 		169885B5272B822300F02EAF /* TagSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSelectorView.swift; sourceTree = "<group>"; };
@@ -679,7 +674,6 @@
 				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
 				161AF5E3276B646600148C63 /* CloudKit.framework in Frameworks */,
-				1696421726041A2F00E68A45 /* ZIPFoundation in Frameworks */,
 				167D2EEA2611103200A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -694,7 +688,6 @@
 				16FB84BF25F699D400CF22ED /* Charts in Frameworks */,
 				167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */,
 				16CA62812720518B002A2D92 /* CloudKit.framework in Frameworks */,
-				1696421226041A1F00E68A45 /* ZIPFoundation in Frameworks */,
 				167D2EE226110D7300A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -860,7 +853,6 @@
 				16FB84EE25F99C5400CF22ED /* Array+Slice.swift */,
 				16FB84F425F9A50D00CF22ED /* MeasurementConversions.swift */,
 				168EE47A25FFDBBD00D4788D /* RunWalkUtils.swift */,
-				1696424226041B3B00E68A45 /* ZipUtils.swift */,
 				167D2E612604E0BA00A4A299 /* String+Additions.swift */,
 				167D2E9E2607E91500A4A299 /* FileUtils.swift */,
 				165D6491261962390015744C /* SystemUtils.swift */,
@@ -1343,7 +1335,6 @@
 			packageProductDependencies = (
 				160BB06225DD61700059E493 /* FitFileParser */,
 				16FB84C325F699EB00CF22ED /* Charts */,
-				1696421626041A2F00E68A45 /* ZIPFoundation */,
 				167D2EE92611103200A4A299 /* Purchases */,
 				16E4C7D726C1FC8800A4C0E6 /* Polyline */,
 			);
@@ -1367,7 +1358,6 @@
 			packageProductDependencies = (
 				16FB84BE25F699D400CF22ED /* Charts */,
 				1696420B260419ED00E68A45 /* FitFileParser */,
-				1696421126041A1F00E68A45 /* ZIPFoundation */,
 				167D2EE126110D7300A4A299 /* Purchases */,
 				16E4C7D526C1FC6B00A4C0E6 /* Polyline */,
 			);
@@ -1424,7 +1414,6 @@
 			packageReferences = (
 				16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */,
 				1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */,
-				1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */,
 			);
@@ -1546,7 +1535,6 @@
 				168C203426DD09210095CC3B /* MKMapView+Additions.swift in Sources */,
 				1602AFB526CA847C0079A6E4 /* MapImage.swift in Sources */,
 				16864BDD2684BFD90005E7D8 /* HeartRateEditView.swift in Sources */,
-				1696424426041B3B00E68A45 /* ZipUtils.swift in Sources */,
 				160BB07925DD61700059E493 /* GarminUtils.swift in Sources */,
 				16FB84F625F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CF273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
@@ -1747,7 +1735,6 @@
 				168C203326DD09210095CC3B /* MKMapView+Additions.swift in Sources */,
 				1602AFB426CA847C0079A6E4 /* MapImage.swift in Sources */,
 				16864BDC2684BFD90005E7D8 /* HeartRateEditView.swift in Sources */,
-				1696424326041B3B00E68A45 /* ZipUtils.swift in Sources */,
 				16755EE225BBAD93002E73BA /* GarminUtils.swift in Sources */,
 				16FB84F525F9A50D00CF22ED /* MeasurementConversions.swift in Sources */,
 				16F5B6CE273EE508005152E0 /* WorkoutsFilterView.swift in Sources */,
@@ -2259,14 +2246,6 @@
 				minimumVersion = 1.4.3;
 			};
 		};
-		1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.12;
-			};
-		};
 		16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/raphaelmor/Polyline.git";
@@ -2305,16 +2284,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
-		};
-		1696421126041A1F00E68A45 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
-		};
-		1696421626041A2F00E68A45 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1696421026041A1F00E68A45 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
 		};
 		16E4C7D526C1FC6B00A4C0E6 /* Polyline */ = {
 			isa = XCSwiftPackageProductDependency;

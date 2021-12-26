@@ -151,7 +151,6 @@ struct WorkoutsContentView: View {
                         .environmentObject(purchaseManager)
                 case .add:
                     ImportView()
-                        .environmentObject(ImportManager())
                 }
             }
             .alert(item: $activeAlert) { alert in

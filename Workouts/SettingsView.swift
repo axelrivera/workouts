@@ -57,7 +57,7 @@ struct SettingsView: View {
                 Section(header: Text("Better Workouts"), footer: footerView()) {
                     Button("About Rivera Labs", action: { activeSheet = .website(urlString: URLStrings.about) })
                     Button("Review on the App Store", action: reviewAction)
-                    Button("Privacy Policy", action: { activeSheet = .website(urlString: URLStrings.privacy, reader: false) })
+                    Button("Privacy Policy", action: { activeSheet = .website(urlString: URLStrings.privacy) })
                     HStack {
                         Text("Version")
                             .foregroundColor(.secondary)
@@ -88,6 +88,7 @@ struct SettingsView: View {
                         .environmentObject(purchaseManager)
                 case .website(let url, let reader):
                     SafariView(urlString: url, entersReaderIfAvailable: reader)
+                        .ignoresSafeArea(.all, edges: .bottom)
                 case .feedback:
                     MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
                         .navigationBarTitleDisplayMode(.inline)

@@ -18,23 +18,14 @@ struct PaywallItem: Identifiable, Hashable {
 extension PaywallItem {
     
     static func items() -> [PaywallItem] {
-        [tags, workoutLog, laps, heartRate, progress, files, more]
-    }
-    
-    static var tags: PaywallItem {
-        PaywallItem(
-            imageName: "tag",
-            imageColor: .green,
-            title: "Tag Management",
-            description: "Add tags to let you keep track of detailed metrics for bikes, shoes, workout types and more."
-        )
+        [workoutLog, progress, metrics, laps, heartRate, more]
     }
     
     static var workoutLog: PaywallItem {
         PaywallItem(
             imageName: "calendar",
             imageColor: .accentColor,
-            title: "Activity Log",
+            title: "Training Log",
             description: "Compare your weekly workouts relative to each other by distance or time."
         )
     }
@@ -57,21 +48,21 @@ extension PaywallItem {
         )
     }
     
-    static var progress: PaywallItem {
+    static var metrics: PaywallItem {
         PaywallItem(
-            imageName: "chart.bar.fill",
-            imageColor: .green,
-            title: "Progress Charts",
-            description: "Keep track of your progress using weekly and monthly charts."
+            imageName: "sum",
+            imageColor: .purple,
+            title: "Additional Metrics",
+            description: "Analyze your metrics using multiple time frames in Tags and Progress sections."
         )
     }
     
-    static var files: PaywallItem {
+    static var progress: PaywallItem {
         PaywallItem(
-            imageName: "square.and.arrow.down",
-            imageColor: .purple,
-            title: "File Imports",
-            description: "Manually import FIT files recorded from your cycling computer or smartwatch."
+            imageName: "chart.line.uptrend.xyaxis",
+            imageColor: .green,
+            title: "Progress Charts",
+            description: "Keep track of your progress using weekly and monthly charts."
         )
     }
     

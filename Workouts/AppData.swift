@@ -53,6 +53,7 @@ struct Emails {
 }
 
 enum GlobalError: Error {
+    case data
     case database
 }
 

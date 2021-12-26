@@ -10,14 +10,9 @@ import SwiftUI
 struct NoWorkoutsView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 5.0) {
-            HStack(spacing: 5.0) {
-                Image(systemName: "exclamationmark.triangle")
-                    .foregroundColor(.red)
-
-                Text("No Workouts")
-                    .font(.body)
-                    .foregroundColor(.red)
-            }
+            Image(systemName: "heart.slash.fill")
+                .font(.largeTitle)
+                .foregroundColor(.red)
             
             Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
                 .font(.footnote)

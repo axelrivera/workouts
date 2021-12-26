@@ -13,8 +13,14 @@ struct ContentView: View {
         var id: String { rawValue }
     }
     
+    enum ActiveCoverSheet: Hashable, Identifiable {
+        case add(url: URL)
+        var id: Self { self }
+    }
+    
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.managedObjectContext) var viewContext
+    @Environment(\.presentationMode) var presentationMode
     
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var logManager: LogManager
@@ -22,6 +28,7 @@ struct ContentView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     
     @State private var selected = Tabs.workouts
+    @State private var activeCoverSheet: ActiveCoverSheet?
     
     var body: some View {
         TabView(selection: $selected) {
@@ -41,6 +48,12 @@ struct ContentView: View {
                 .tabItem { Label("Tags", systemImage: "tag") }
                 .tag(Tabs.tags)
             
+        }
+        .onOpenURL { url in
+            Log.debug("trying to open url: \(url)")
+            presentationMode.wrappedValue.dismiss()
+            selected = .workouts
+            activeCoverSheet = .add(url: url)
         }
         .onboardingOverlay()
         .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
@@ -67,6 +80,12 @@ struct ContentView: View {
             @unknown default:
                 Log.debug("unknown state")
                 assertionFailure()
+            }
+        }
+        .fullScreenCover(item: $activeCoverSheet) { item in
+            switch item {
+            case .add(let url):
+                ImportView(openURL: url)
             }
         }
     }

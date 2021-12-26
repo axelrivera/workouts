@@ -18,7 +18,6 @@ struct WorkoutDataStore {
         case system(Error)
     }
         
-    let availableActivityTypes: [HKWorkoutActivityType] = [.cycling, .running, .walking]
     static let shared = WorkoutDataStore()
     
     private let healthStore = HealthData.shared.healthStore
@@ -240,33 +239,6 @@ extension WorkoutDataStore {
         }
         
         return dictionary.compactMapValues({ $0 })
-    }
-    
-    private var workoutsDirectory: URL {
-        FileUtils.workoutImportDirectory
-    }
-    
-    private func saveWorkoutImportFile(_ file: WorkoutImport) {
-        guard let fileURL = file.fileURL else { return }
-        
-        let fileName = String(format: "%@.zip", file.uuidString)
-        let destinationURL = workoutsDirectory.appendingPathComponent(fileName)
-        
-        let fileManager = FileManager.default
-        do {
-            try createWorkoutsDirectory() // try to create directory if it doesn't exist
-            try fileManager.zipItem(at: fileURL, to: destinationURL)
-        } catch {
-            Log.debug("failed to write workout file \(destinationURL.path), error: \(error.localizedDescription)")
-        }
-    }
-    
-    private func createWorkoutsDirectory() throws {
-        try FileManager.default.createDirectory(
-            at: workoutsDirectory,
-            withIntermediateDirectories: true,
-            attributes: nil
-        )
     }
     
 }

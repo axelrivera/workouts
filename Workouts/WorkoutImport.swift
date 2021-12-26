@@ -99,12 +99,10 @@ class WorkoutImport: ObservableObject, Identifiable, Hashable {
         start = .init(valueType: .date, value: Date().timeIntervalSince1970)
     }
     
-    init?(fileURL: URL) {
-        guard let fit = FitFile(file: fileURL) else { return nil }
-        guard let sport = fit.messages(forMessageType: .sport).first else { return nil }
-        guard let session = fit.messages(forMessageType: .session).first else { return nil }
+    init?(fitFile: FitFile) {
+        guard let sport = fitFile.messages(forMessageType: .sport).first else { return nil }
+        guard let session = fitFile.messages(forMessageType: .session).first else { return nil }
         
-        self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
         status = self.sport.isImportSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
@@ -138,10 +136,10 @@ class WorkoutImport: ObservableObject, Identifiable, Hashable {
         maxTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "max_temperature"))
         
         // Records
-        records = fit.messages(forMessageType: .record).compactMap { .init(message: $0) }
+        records = fitFile.messages(forMessageType: .record).compactMap { .init(message: $0) }
         
         // Events
-        events = fit.messages(forMessageType: .event).compactMap { (message) -> Event? in
+        events = fitFile.messages(forMessageType: .event).compactMap { (message) -> Event? in
             Event(message: message)
         }
     }

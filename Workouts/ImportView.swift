@@ -6,27 +6,23 @@
 //
 
 import SwiftUI
+import FitFileParser
 
 struct ImportView: View {
-    enum ActiveSheet: Identifiable {
-        case document
-        var id: Int { hashValue }
-    }
-    
     enum ActiveAlert: Identifiable {
         case dismiss
         var id: Int { hashValue }
     }
     
     @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var importManager: ImportManager = ImportManager()
+    var openURL: URL? = nil
     
     @State private var isProcessingDocuments = false
     
-    @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
     @State private var shouldFetchWritePermission = false
+    @State private var showDocumentPicker = false
         
     var body: some View {
         NavigationView {
@@ -38,21 +34,15 @@ struct ImportView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
                 .listStyle(PlainListStyle())
-                .modifier(ImportEmptyModifier(importState: importManager.state, isActive: purchaseManager.isActive))
+                .modifier(ImportEmptyModifier(importState: importManager.state))
                 
                 Spacer()
                 
                 RoundButton(text: "Add FIT Files", action: addAction)
                     .disabled(importManager.isImportDisabled)
                     .padding()
-                    .opacity(purchaseManager.isActive ? 1.0 : 0.0)
             }
-            .opacity(purchaseManager.isActive ? 1.0 : 0.5)
-            .paywallButtonOverlay(sample: false)
             .onAppear { requestWritingAuthorizationIfNeeded() }
-            .onChange(of: purchaseManager.isActive, perform: { isActive in
-                requestWritingAuthorizationIfNeeded()
-            })
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -62,15 +52,17 @@ struct ImportView: View {
                     }
                 }
             }
-            .sheet(item: $activeSheet, onDismiss: onSheetDismiss) { item in
-                switch item {
-                case .document:
-                    DocumentPicker(forOpeningContentTypes: [.fitDocument, .zip]) { urls in
-                        importManager.state = .processing
-                        importManager.processDocuments(at: urls) {
-                            importManager.state = urls.isEmpty ? .empty : .ok
-                        }
+            .fileImporter(isPresented: $showDocumentPicker, allowedContentTypes: [.fitDocument], allowsMultipleSelection: true) { result in
+                switch result {
+                case .success(let urls):
+                    importManager.state = .processing
+                    
+                    let documents = urls.map({ FitDocument(fileURL: $0) })
+                    importManager.processDocuments(at: documents) {
+                        importManager.state = urls.isEmpty ? .empty : .ok
                     }
+                case .failure(let error):
+                    Log.debug("failed to show document importer: \(error.localizedDescription)")
                 }
             }
             .alert(item: $activeAlert) { item in
@@ -95,7 +87,8 @@ private extension ImportView {
         importManager.requestWritingAuthorization { success in
             DispatchQueue.main.async {
                 if success {
-                    activeSheet = .document
+                    //activeSheet = .document
+                    showDocumentPicker = true
                 } else {
                     importManager.state = .notAuthorized
                 }
@@ -104,8 +97,24 @@ private extension ImportView {
     }
     
     func requestWritingAuthorizationIfNeeded() {
-        guard purchaseManager.isActive else { return }
-        importManager.requestWritingAuthorization { Log.debug("writing authorization succeeded: \($0)") }
+        importManager.requestAuthorizationStatus { success in
+            guard success else {
+                Log.debug("request authorization failed")
+                return
+            }
+            
+            if let url = openURL {
+                let document = FitDocument(fileURL: url)
+                
+                DispatchQueue.main.async {
+                    importManager.state = .processing
+                    importManager.processDocuments(at: [document]) {
+                        importManager.state = .ok
+                    }
+                }
+            }
+        }
+        
     }
     
     func onSheetDismiss() {
@@ -133,11 +142,8 @@ struct ImportView_Previews: PreviewProvider {
         manager.loadSampleWorkouts()
         return manager
     }()
-    
-    static let purchaseManager = IAPManagerPreview.manager(isActive: false)
-    
+        
     static var previews: some View {
         ImportView(importManager: importManager)
-            .environmentObject(purchaseManager)
     }
 }

@@ -10,10 +10,12 @@ import HealthKit
 
 enum Sport: String, Identifiable, CaseIterable {
     case cycling, running, walking, other
-    case hiking, yoga, pilates
-    case tennis
-    case coreTraining, mixedCardio, highIntensityIntervalTraining, traditionalStrengthTraining, elliptical
-    case crossTraining, functionalStrengthTraining
+    case hiking, yoga, pilates, mindAndBody, cooldown
+    case tennis, pickleball, squash
+    case traditionalStrengthTraining, functionalStrengthTraining
+    case coreTraining, mixedCardio, highIntensityIntervalTraining, elliptical, rowing
+    case crossTraining
+    case socialDance, dance, danceInspiredTraining, cardioDance
     
     var id: String { rawValue }
     
@@ -104,14 +106,16 @@ enum Sport: String, Identifiable, CaseIterable {
             return .running
         case .walking, .hiking:
             return .walking
-        case .yoga, .pilates, .coreTraining:
+        case .yoga, .pilates, .coreTraining, .mindAndBody, .cooldown:
             return .brown
-        case .tennis:
-            return .green
-        case .mixedCardio, .highIntensityIntervalTraining, .crossTraining:
+        case .tennis, .pickleball, .squash:
+            return Color(.systemOrange)
+        case .mixedCardio, .highIntensityIntervalTraining, .crossTraining, .cardioDance:
             return .pink
-        case .functionalStrengthTraining, .traditionalStrengthTraining, .elliptical:
+        case .functionalStrengthTraining, .traditionalStrengthTraining, .elliptical, .rowing:
             return .purple
+        case .socialDance, .dance, .danceInspiredTraining:
+            return Color(.systemIndigo)
         default: return .sport
         }
     }
@@ -156,36 +160,30 @@ enum Sport: String, Identifiable, CaseIterable {
     
     var activityType: HKWorkoutActivityType {
         switch self {
-        case .cycling:
-            return .cycling
-        case .running:
-            return .running
-        case .walking:
-            return .walking
-        case .hiking:
-            return .hiking
-        case .yoga:
-            return .yoga
-        case .pilates:
-            return .pilates
-        case .tennis:
-            return .tennis
-        case .coreTraining:
-            return .coreTraining
-        case .mixedCardio:
-            return .mixedCardio
-        case .highIntensityIntervalTraining:
-            return .highIntensityIntervalTraining
-        case .traditionalStrengthTraining:
-            return .traditionalStrengthTraining
-        case .elliptical:
-            return .elliptical
-        case .crossTraining:
-            return .crossTraining
-        case .functionalStrengthTraining:
-            return .functionalStrengthTraining
-        case .other:
-            return .other
+        case .cycling: return .cycling
+        case .running: return .running
+        case .walking: return .walking
+        case .hiking: return .hiking
+        case .yoga: return .yoga
+        case .pilates: return .pilates
+        case .mindAndBody: return .mindAndBody
+        case .cooldown: return .cooldown
+        case .tennis: return .tennis
+        case .pickleball: return .pickleball
+        case .squash: return .squash
+        case .coreTraining: return .coreTraining
+        case .mixedCardio: return .mixedCardio
+        case .highIntensityIntervalTraining: return .highIntensityIntervalTraining
+        case .traditionalStrengthTraining: return .traditionalStrengthTraining
+        case .elliptical: return .elliptical
+        case .rowing: return .rowing
+        case .socialDance: return .socialDance
+        case .dance: return .socialDance
+        case .danceInspiredTraining: return .socialDance
+        case .cardioDance: return .cardioDance
+        case .crossTraining: return .crossTraining
+        case .functionalStrengthTraining: return .functionalStrengthTraining
+        case .other: return .other
         }
     }
     
@@ -196,14 +194,23 @@ enum Sport: String, Identifiable, CaseIterable {
         .hiking,
         .yoga,
         .pilates,
+        .mindAndBody,
+        .cooldown,
         .tennis,
+        .pickleball,
+        .squash,
+        .traditionalStrengthTraining,
+        .functionalStrengthTraining,
         .coreTraining,
         .mixedCardio,
         .highIntensityIntervalTraining,
-        .traditionalStrengthTraining,
         .elliptical,
+        .rowing,
         .crossTraining,
-        .functionalStrengthTraining
+        .socialDance,
+        .dance,
+        .danceInspiredTraining,
+        .cardioDance
     ]
     
     static let indoorOutdoorList: [Sport] = [.running, .cycling, .walking]
@@ -216,55 +223,36 @@ enum Sport: String, Identifiable, CaseIterable {
 
 extension HKWorkoutActivityType {
     
-    static let availableActivityTypes: [HKWorkoutActivityType] = [
-        .cycling,
-        .running,
-        .walking,
-        .hiking,
-        .yoga,
-        .pilates,
-        .tennis,
-        .coreTraining,
-        .mixedCardio,
-        .highIntensityIntervalTraining,
-        .traditionalStrengthTraining,
-        .elliptical,
-        .crossTraining,
-        .functionalStrengthTraining
-    ]
+    static var availableActivityTypes: [HKWorkoutActivityType] = {
+        Sport.supportedSports.map({ $0.activityType })
+    }()
     
     func sport() -> Sport {
         switch self {
-        case .cycling:
-            return .cycling
-        case .running:
-            return .running
-        case .walking:
-            return .walking
-        case .hiking:
-            return .hiking
-        case .yoga:
-            return .yoga
-        case .pilates:
-            return .pilates
-        case .tennis:
-            return .tennis
-        case .coreTraining:
-            return .coreTraining
-        case .mixedCardio:
-            return .mixedCardio
-        case .highIntensityIntervalTraining:
-            return .highIntensityIntervalTraining
-        case .traditionalStrengthTraining:
-            return .traditionalStrengthTraining
-        case .elliptical:
-            return .elliptical
-        case .crossTraining:
-            return .crossTraining
-        case .functionalStrengthTraining:
-            return .functionalStrengthTraining
-        default:
-            return .other
+        case .cycling: return .cycling
+        case .running: return .running
+        case .walking: return .walking
+        case .hiking: return .hiking
+        case .yoga: return .yoga
+        case .pilates: return .pilates
+        case .mindAndBody: return .mindAndBody
+        case .cooldown: return .cooldown
+        case .tennis: return .tennis
+        case .pickleball: return .pickleball
+        case .squash: return .squash
+        case .coreTraining: return .coreTraining
+        case .mixedCardio: return .mixedCardio
+        case .highIntensityIntervalTraining: return .highIntensityIntervalTraining
+        case .traditionalStrengthTraining: return .traditionalStrengthTraining
+        case .elliptical: return .elliptical
+        case .rowing: return .rowing
+        case .socialDance: return .socialDance
+        case .dance: return .socialDance
+        case .danceInspiredTraining: return .socialDance
+        case .cardioDance: return .cardioDance
+        case .crossTraining: return .crossTraining
+        case .functionalStrengthTraining: return .functionalStrengthTraining
+        default: return .other
         }
     }
     
