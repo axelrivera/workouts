@@ -52,17 +52,19 @@ extension WorkoutMetadata {
     }
     
     static func favorites(in context: NSManagedObjectContext) -> [UUID] {
-        do {
-            let request = NSFetchRequest<NSDictionary>(entityName: WorkoutMetadata.entityName)
-            request.predicate = favoritesPredicate()
-            request.resultType = .dictionaryResultType
-            request.propertiesToFetch = ["identifier"]
-                        
-            return try context.fetch(request).compactMap { dictionary in
-                dictionary["identifier"] as? UUID
+        context.performAndWait {
+            do {
+                let request = NSFetchRequest<NSDictionary>(entityName: WorkoutMetadata.entityName)
+                request.predicate = favoritesPredicate()
+                request.resultType = .dictionaryResultType
+                request.propertiesToFetch = ["identifier"]
+                            
+                return try context.fetch(request).compactMap { dictionary in
+                    dictionary["identifier"] as? UUID
+                }
+            } catch {
+                return []
             }
-        } catch {
-            return []
         }
     }
         

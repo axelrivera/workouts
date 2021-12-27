@@ -125,13 +125,15 @@ extension LogManager {
             return day
         }
         
-        let request = Self.fetchRequest(for: sports, interval: filterInterval, ascending: false)
-        let workouts = (try? context.fetch(request)) ?? [Workout]()
-        
-        for workout in workouts {
-            let key = workout.start.logKey
-            if let day = dictionary[key] {
-                day.activities.append(workout.logActivity())
+        context.performAndWait {
+            let request = Self.fetchRequest(for: sports, interval: filterInterval, ascending: false)
+            let workouts = (try? context.fetch(request)) ?? [Workout]()
+            
+            for workout in workouts {
+                let key = workout.start.logKey
+                if let day = dictionary[key] {
+                    day.activities.append(workout.logActivity())
+                }
             }
         }
         
@@ -162,10 +164,12 @@ extension LogManager {
     }
     
     private var firstWorkoutDate: Date? {
-        let request = Self.fetchRequest(for: [], interval: nil, ascending: true)
-        request.fetchLimit = 1
-        let workouts = (try? context.fetch(request)) ?? [Workout]()
-        return workouts.first?.start
+        context.performAndWait {
+            let request = Self.fetchRequest(for: [], interval: nil, ascending: true)
+            request.fetchLimit = 1
+            let workouts = (try? context.fetch(request)) ?? [Workout]()
+            return workouts.first?.start
+        }
     }
     
     // MARK: Filters

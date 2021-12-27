@@ -107,22 +107,26 @@ extension Tag {
     }
     
     static func find(using uuid: UUID, in context: NSManagedObjectContext) -> Tag? {
-        let request = request()
-        request.returnsObjectsAsFaults = false
-        request.predicate = predicate(for: uuid)
-        return try? context.fetch(request).first
+        context.performAndWait {
+            let request = request()
+            request.returnsObjectsAsFaults = false
+            request.predicate = predicate(for: uuid)
+            return try? context.fetch(request).first
+        }
     }
     
     static func find(uuids: [UUID], in context: NSManagedObjectContext) -> [Tag] {
-        let request = request()
-        request.returnsObjectsAsFaults = false
-        request.predicate = NSPredicate(format: "%K IN %@", UUIDKey, uuids)
-        request.sortDescriptors = [sortedByPositionDescriptor()]
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let request = request()
+            request.returnsObjectsAsFaults = false
+            request.predicate = NSPredicate(format: "%K IN %@", UUIDKey, uuids)
+            request.sortDescriptors = [sortedByPositionDescriptor()]
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     

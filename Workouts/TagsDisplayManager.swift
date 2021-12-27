@@ -52,16 +52,18 @@ extension TagsDisplayManager {
     }
     
     func viewModel(forTag uuid: UUID) throws -> TagEditViewModel {
-        guard let tag = Tag.find(using: uuid, in: context) else {
-            throw TagError.notFound
+        try context.performAndWait {
+            guard let tag = Tag.find(using: uuid, in: context) else {
+                throw TagError.notFound
+            }
+            return tag.editViewModel()
         }
-        return tag.editViewModel()
     }
     
     func archiveTag(for uuid: UUID) throws {
-        guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
-        
         try context.performAndWait {
+            guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
+            
             tag.archiveTag()
             try context.save()
             context.refresh(tag, mergeChanges: true)
@@ -69,12 +71,12 @@ extension TagsDisplayManager {
     }
     
     func restoreTag(for uuid: UUID) throws {
-        guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
-        
-        let totalTagsWithName = tagProvider.numberOfTags(with: tag.name)
-        let updateName = totalTagsWithName > 0
-        
         try context.performAndWait {
+            guard let tag = Tag.find(using: uuid, in: context) else { throw TagManagerError.notFound }
+            
+            let totalTagsWithName = tagProvider.numberOfTags(with: tag.name)
+            let updateName = totalTagsWithName > 0
+            
             if updateName {
                 let newName = String(
                     format: "%@ - Restored %@",

@@ -19,100 +19,116 @@ final class WorkoutTagProvider {
 extension WorkoutTagProvider {
     
     func allWorkoutTags() -> [WorkoutTag] {
-        let request = WorkoutTag.request()
-        request.predicate = WorkoutTag.activePredicate()
-        request.returnsObjectsAsFaults = false
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let request = WorkoutTag.request()
+            request.predicate = WorkoutTag.activePredicate()
+            request.returnsObjectsAsFaults = false
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
     func workoutTags(forWorkout workout: UUID) -> [WorkoutTag] {
-        let request = WorkoutTag.request()
-        request.predicate = WorkoutTag.activePredicate(forWorkout: workout)
-        request.returnsObjectsAsFaults = false
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let request = WorkoutTag.request()
+            request.predicate = WorkoutTag.activePredicate(forWorkout: workout)
+            request.returnsObjectsAsFaults = false
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
     func workoutTags(forTag tag: UUID) -> [WorkoutTag] {
-        let request = WorkoutTag.request()
-        request.predicate = WorkoutTag.activePredicate(forTag: tag)
-        request.returnsObjectsAsFaults = false
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let request = WorkoutTag.request()
+            request.predicate = WorkoutTag.activePredicate(forTag: tag)
+            request.returnsObjectsAsFaults = false
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
     func visibleTags(forWorkout workout: UUID) -> [Tag] {
-        let ids = workoutTags(forWorkout: workout).map { $0.tagId }
-        let request = Self.visibleTagsFetchRequest(using: ids)
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let ids = workoutTags(forWorkout: workout).map { $0.tagId }
+            let request = Self.visibleTagsFetchRequest(using: ids)
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
     func activeTags(forWorkout workout: UUID) -> [Tag] {
-        let ids = workoutTags(forWorkout: workout).map { $0.tagId }
-        let request = Self.activeTagsFetchRequest(using: ids)
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let ids = workoutTags(forWorkout: workout).map { $0.tagId }
+            let request = Self.activeTagsFetchRequest(using: ids)
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     
     func workoutIdentifiers(forTag tag: UUID) -> [UUID] {
-        let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
-        request.predicate = WorkoutTag.activePredicate(forTag: tag)
-        request.returnsObjectsAsFaults = false
-        request.resultType = .dictionaryResultType
-        request.propertiesToFetch = ["workoutId"]
-        
-        do {
-            let dictionaries = try context.fetch(request)
-            return dictionaries.compactMap { (dictionary) -> UUID? in
-                return dictionary["workoutId"] as? UUID
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
+            request.predicate = WorkoutTag.activePredicate(forTag: tag)
+            request.returnsObjectsAsFaults = false
+            request.resultType = .dictionaryResultType
+            request.propertiesToFetch = ["workoutId"]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> UUID? in
+                    return dictionary["workoutId"] as? UUID
+                }
+            } catch {
+                return []
             }
-        } catch {
-            return []
         }
     }
     
     func workoutIdentifiers(forTags tags: [UUID]) -> [UUID] {
-        let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
-        request.predicate = WorkoutTag.activePredicate(forTags: tags)
-        request.returnsObjectsAsFaults = false
-        request.resultType = .dictionaryResultType
-        request.propertiesToFetch = ["workoutId"]
-        
-        do {
-            let dictionaries = try context.fetch(request)
-            return dictionaries.compactMap { (dictionary) -> UUID? in
-                return dictionary["workoutId"] as? UUID
+        context.performAndWait {
+            let request = NSFetchRequest<NSDictionary>(entityName: WorkoutTag.entityName)
+            request.predicate = WorkoutTag.activePredicate(forTags: tags)
+            request.returnsObjectsAsFaults = false
+            request.resultType = .dictionaryResultType
+            request.propertiesToFetch = ["workoutId"]
+            
+            do {
+                let dictionaries = try context.fetch(request)
+                return dictionaries.compactMap { (dictionary) -> UUID? in
+                    return dictionary["workoutId"] as? UUID
+                }
+            } catch {
+                return []
             }
-        } catch {
-            return []
         }
     }
     
     func workouts(forTag tag: UUID) -> [Workout] {
-        let ids = workoutIdentifiers(forTag: tag)
-        return Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: context)
+        context.performAndWait {
+            let ids = workoutIdentifiers(forTag: tag)
+            return Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: context)
+        }
     }
     
     func addWorkoutTag(for workout: UUID, tag: UUID) throws {

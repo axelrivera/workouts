@@ -49,10 +49,12 @@ extension MetadataProvider {
     }
     
     func unfavoriteWorkout(for identifier: UUID) throws {
-        let workout = try fetchWorkout(identifier: identifier)
-        workout.isFavorite = false
-        workout.favoriteDate = nil
-        try context.save()
+        try context.performAndWait {
+            let workout = try fetchWorkout(identifier: identifier)
+            workout.isFavorite = false
+            workout.favoriteDate = nil
+            try context.save()
+        }
     }
     
 }

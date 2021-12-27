@@ -303,23 +303,25 @@ extension Workout {
     }
     
     static func fetchWorkoutsWithRemoteIdentifiers(_ ids: [UUID], in context: NSManagedObjectContext, sorted: Bool = false) -> [Workout] {
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            notMarkedForLocalDeletionPredicate,
-            predicateForIdentifiers(ids)
-        ])
-        
-        let request = defaultFetchRequest()
-        request.predicate = predicate
-        request.returnsObjectsAsFaults = false
-        
-        if sorted {
-            request.sortDescriptors = [sortedByDateDescriptor()]
-        }
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
+        context.performAndWait {
+            let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                notMarkedForLocalDeletionPredicate,
+                predicateForIdentifiers(ids)
+            ])
+            
+            let request = defaultFetchRequest()
+            request.predicate = predicate
+            request.returnsObjectsAsFaults = false
+            
+            if sorted {
+                request.sortDescriptors = [sortedByDateDescriptor()]
+            }
+            
+            do {
+                return try context.fetch(request)
+            } catch {
+                return []
+            }
         }
     }
     

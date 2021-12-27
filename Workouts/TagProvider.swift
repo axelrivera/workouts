@@ -29,18 +29,22 @@ extension TagProvider {
     }
     
     func activeTags(gearTypes: [Tag.GearType]) -> [Tag] {
-        do {
-            return try context.fetch(activeFetchRequest(gearTypes: gearTypes))
-        } catch {
-            return []
+        context.performAndWait {
+            do {
+                return try context.fetch(activeFetchRequest(gearTypes: gearTypes))
+            } catch {
+                return []
+            }
         }
     }
     
     func archivedTags() -> [Tag] {
-        do {
-            return try context.fetch(archivedFetchRequest())
-        } catch {
-            return []
+        context.performAndWait {
+            do {
+                return try context.fetch(archivedFetchRequest())
+            } catch {
+                return []
+            }
         }
     }
     
@@ -48,18 +52,22 @@ extension TagProvider {
      The number of tags. Used for tag name input validation.
      */
     func numberOfTags(with tagName: String) -> Int {
-        do {
-            return try context.count(for: activeFetchRequest(name: tagName))
-        } catch {
-            return 0
+        context.performAndWait {
+            do {
+                return try context.count(for: activeFetchRequest(name: tagName))
+            } catch {
+                return 0
+            }
         }
     }
     
     var totalActiveTags: Int {
-        do {
-            return try context.count(for: activeFetchRequest())
-        } catch {
-            return 0
+        context.performAndWait {
+            do {
+                return try context.count(for: activeFetchRequest())
+            } catch {
+                return 0
+            }
         }
     }
     
@@ -70,7 +78,9 @@ extension TagProvider {
 extension TagProvider {
     
     func addTag(viewModel: TagEditViewModel, position: Int?) {
-        Self.addTag(viewModel: viewModel, position: position, context: context)
+        context.performAndWait {
+            Self.addTag(viewModel: viewModel, position: position, context: context)
+        }
     }
     
 }
@@ -84,23 +94,25 @@ extension TagProvider {
     }
     
     static func createDefaultTags(in context: NSManagedObjectContext) {
-        let viewModels = [
-            Tag.addViewModel(name: "My Bike", gearType: .bike, color: .accentColor),
-            Tag.addViewModel(name: "My Shoes", gearType: .shoes, color: .ruby),
-            Tag.addViewModel(name: "Workout", gearType: .none, color: .amber),
-            Tag.addViewModel(name: "Commute", gearType: .none, color: .citrine),
-            Tag.addViewModel(name: "Long Run", gearType: .shoes, color: .emerald)
-        ]
-        
-        viewModels.enumerated().forEach { (index, viewModel) in
-            addTag(viewModel: viewModel, position: index, context: context)
-        }
-        
-        do {
-            try context.save()
-            Log.debug("created initial tags")
-        } catch {
-            Log.debug("failed to save tags")
+        context.performAndWait {
+            let viewModels = [
+                Tag.addViewModel(name: "My Bike", gearType: .bike, color: .accentColor),
+                Tag.addViewModel(name: "My Shoes", gearType: .shoes, color: .ruby),
+                Tag.addViewModel(name: "Workout", gearType: .none, color: .amber),
+                Tag.addViewModel(name: "Commute", gearType: .none, color: .citrine),
+                Tag.addViewModel(name: "Long Run", gearType: .shoes, color: .emerald)
+            ]
+            
+            viewModels.enumerated().forEach { (index, viewModel) in
+                addTag(viewModel: viewModel, position: index, context: context)
+            }
+            
+            do {
+                try context.save()
+                Log.debug("created initial tags")
+            } catch {
+                Log.debug("failed to save tags")
+            }
         }
     }
     

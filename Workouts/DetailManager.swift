@@ -232,9 +232,11 @@ extension DetailManager {
     func updateZones(maxHeartRate: Int, values: [Int]) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
         guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
-                
-        workout.updateHeartRateZones(with: maxHeartRate, values: values)
-        context.saveOrRollback()
+        
+        context.performAndWait {
+            workout.updateHeartRateZones(with: maxHeartRate, values: values)
+            context.saveOrRollback()
+        }
 
         let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
         let zones: [HRZoneSummary]
