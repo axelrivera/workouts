@@ -79,7 +79,6 @@ struct TagsAddView: View {
                         }
                     }
                     
-                    
                     if viewModel.mode == .add {
                         if viewModel.availableGearTypes.isPresent {
                             Section(footer: Text("Gear Type cannot be edited later.")) {
