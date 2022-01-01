@@ -82,7 +82,7 @@ extension StatsSummary: WorkoutSummary {
     var title: String {
         switch timeframe {
         case .week:
-            return formattedMonthDayRangeString(start: interval.start, end: interval.end)
+            return formattedRangeString(start: interval.start, end: interval.end)
         case .month:
             return formattedMonthYearString(for: interval.start)
         case .year:

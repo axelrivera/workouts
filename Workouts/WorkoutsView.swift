@@ -207,6 +207,24 @@ struct WorkoutsContentView: View {
                                 Button(action: { activeAlert = .tagConfirmation }) {
                                     Label("Tag All", systemImage: "tag")
                                 }
+                                
+                                Picker("Sort By", selection: $filterManager.sortBy) {
+                                    ForEach(WorkoutsFilterManager.SortBy.allCases, id: \.self) { sort in
+                                        HStack {
+                                            Text(sort.title)
+                                            if filterManager.sortBy == sort {
+                                                Spacer()
+                                                Image(systemName: filterManager.sortAscending ? "chevron.up" : "chevron.down")
+                                            }
+                                        }
+                                    }
+                                }
+                                .onChange(of: filterManager.sortBy) { newValue in
+                                    refreshFilter()
+                                }
+                                .onChange(of: filterManager.sortAscending) { newValue in
+                                    refreshFilter()
+                                }
                             } label: {
                                 HStack {
                                     // adding HStack to as workaround for image dissapearing in some cases
@@ -251,6 +269,7 @@ extension WorkoutsContentView {
             withAnimation {
                 filterManager.updateTotals()
                 workouts.nsPredicate = filterManager.filterPredicate()
+                workouts.nsSortDescriptors = filterManager.filterSort()
             }
         }
     }

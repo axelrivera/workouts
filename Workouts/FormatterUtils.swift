@@ -132,15 +132,26 @@ func formattedTimeString(for date: Date?) -> String {
     return DateFormatter.time.string(from: date)
 }
 
-func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
+func formattedRangeString(start: Date?, end: Date?) -> String {
     guard let start = start else { return "n/a" }
-    let formatter = start.year() == Date().year() ? DateFormatter.monthDay : DateFormatter.medium
-    
-    var strings = [formatter.string(from: start)]
-    if let end = end {
-        strings.append(formatter.string(from: end))
+    guard let end = end else {
+        return DateFormatter.medium.string(from: start)
     }
-    return strings.joined(separator: " - ")
+    
+    
+    // date format: MMM dd YYYY
+    let startMonth = DateFormatter.shortMonth.string(from: start)
+    let startDay = DateFormatter.day.string(from: start)
+
+    let endMonth = DateFormatter.shortMonth.string(from: end)
+    let endDay = DateFormatter.day.string(from: end)
+    let endYear = "\(end.year())"
+
+    if startMonth == endMonth {
+        return String(format: "%@ %@﹣%@, %@", startMonth, startDay, endDay, endYear)
+    } else {
+        return String(format: "%@ %@﹣%@ %@, %@", startMonth, startDay, endMonth, endDay, endYear)
+    }
 }
 
 func formattedMonthYearString(for date: Date?) -> String {
@@ -155,6 +166,7 @@ func formattedFullDateString(for date: Date?) -> String {
 
 func formattedTimeRangeString(start: Date?, end: Date?) -> String {
     guard let start = start else { return "n/a" }
+    
     var strings = [ DateFormatter.localizedString(from: start, dateStyle: .none, timeStyle: .short) ]
     if let end = end {
         strings.append(DateFormatter.localizedString(from: end, dateStyle: .none, timeStyle: .short))
@@ -393,9 +405,33 @@ extension DateFormatter {
         return formatter
     }()
     
+    static let year: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "YYYY"
+        return formatter
+    }()
+    
     static let month: DateFormatter = {
        let formatter = DateFormatter()
         formatter.dateFormat = "MMMM"
+        return formatter
+    }()
+    
+    static let shortMonth: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        return formatter
+    }()
+    
+    static let day: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd"
+        return formatter
+    }()
+    
+    static let range: DateFormatter = {
+       let formatter = DateFormatter()
+        formatter.dateFormat = "MMM/dd/YYYY"
         return formatter
     }()
     
