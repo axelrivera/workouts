@@ -1920,7 +1920,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1949,7 +1949,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2098,7 +2098,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD -D PRODUCTION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
@@ -2127,7 +2127,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 2.0.1;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
