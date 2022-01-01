@@ -12,6 +12,7 @@ struct LogFilterView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
+    @Binding var availableSports: [Sport]
     @Binding var dateFilter: DateFilter
     @Binding var filterYear: String
     @Binding var years: [String]
@@ -36,8 +37,8 @@ struct LogFilterView: View {
                     }
                 }
                 
-                Section(header: Text("Workout")) {
-                    ForEach(Sport.supportedSports) { sport in
+                Section(header: header("Workout")) {
+                    ForEach(availableSports) { sport in
                         Button(action: { togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
                                 Image(systemName: isSportSelected(sport) ? "checkmark.circle.fill" : "circle")
@@ -47,6 +48,7 @@ struct LogFilterView: View {
                         }
                     }
                 }
+                .textCase(nil)
             }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
@@ -56,6 +58,15 @@ struct LogFilterView: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    func header(_ title: String) -> some View {
+        Text(title)
+            .font(.headline)
+            .foregroundColor(.primary)
+            .padding([.top, .bottom])
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
     
 }
@@ -84,6 +95,7 @@ struct LogFilterView_Previews: PreviewProvider {
     
     static var previews: some View {
         LogFilterView(
+            availableSports: $sports,
             dateFilter: $dateFilter,
             filterYear: $filterYear,
             years: $years,

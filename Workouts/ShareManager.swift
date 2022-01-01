@@ -231,16 +231,16 @@ extension ShareManager {
     func generateMapOutline(for coordinates: [CLLocationCoordinate2D]) async throws -> UIImage? {
         if coordinates.isEmpty { return nil }
         guard let region = MKCoordinateRegion(coordinates: coordinates) else { return nil }
-        
+
         let size = CGSize(width: WORKOUT_ROUTE_IMAGE_WIDTH, height: WORKOUT_ROUTE_IMAGE_WIDTH)
         let options = MKMapSnapshotter.Options()
         options.region = region
         options.size = size
         options.showsBuildings = false
-        
+
         let snapshotter = MKMapSnapshotter(options: options)
         let snapshot = try await snapshotter.start()
-        
+
         let image = UIGraphicsImageRenderer(size: size).image { _ in
             let points = coordinates.map { snapshot.point(for: $0) }
 
@@ -264,22 +264,22 @@ extension ShareManager {
         guard style == .map else { return nil }
         if coordinates.isEmpty { return nil }
         guard let region = MKCoordinateRegion.workoutShareRegion(for: coordinates) else { return nil }
-        
+
         let userInterfaceStyle: UIUserInterfaceStyle = UIUserInterfaceStyle(colorScheme)
         let colorSchemeCollection = UITraitCollection(userInterfaceStyle: userInterfaceStyle)
         let scaleCollection = UITraitCollection(displayScale: 2.0)
-        
+
         let size = CGSize(width: WORKOUT_CARD_WIDTH, height: WORKOUT_CARD_WIDTH)
         let options = MKMapSnapshotter.Options()
         options.region = region
         options.size = size
         options.traitCollection = UITraitCollection(traitsFrom: [colorSchemeCollection, scaleCollection])
         options.showsBuildings = false
-        
+
         let snapshotter = MKMapSnapshotter(options: options)
         let snapshot = try await snapshotter.start()
         let mapImage = snapshot.image
-        
+
         let image = UIGraphicsImageRenderer(size: size).image { _ in
             mapImage.draw(at: .zero)
 

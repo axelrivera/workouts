@@ -37,6 +37,13 @@ struct AppSettings {
         static let maxHeartRate = "arn_max_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
         static let workoutsQueryAnchor = "arn_workouts_query_anchor"
+        static let yearToDateTimeframe = "arn_year_to_date_timeframe"
+        static let allTimeTimeframe = "arn_all_time_timeframe"
+        static let tagsTimeframe = "arn_tag_timeframe"
+    }
+    
+    struct RemoteKeys {
+        static let initialTagsReady = "arn_app_initial_tags_ready"
     }
 
     static func synchronize() {
@@ -50,7 +57,16 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
+
+    private static func timeframeForKey(_ key: String) -> StatsTimelineManager.Timeframe? {
+        let string = objectForKey(key) as? String ?? ""
+        return StatsTimelineManager.Timeframe(rawValue: string)
+    }
     
+    private static func setTimeframe(_ value: StatsTimelineManager.Timeframe, forKey: String) {
+        setValue(value.rawValue, for: forKey)
+    }
+        
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int
     
@@ -74,6 +90,21 @@ struct AppSettings {
         
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
+    
+    static var yearToDateTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.yearToDateTimeframe) ?? .month }
+        set { setTimeframe(newValue, forKey: Keys.yearToDateTimeframe) }
+    }
+    
+    static var allTimeTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.allTimeTimeframe) ?? .year }
+        set { setTimeframe(newValue, forKey: Keys.allTimeTimeframe) }
+    }
+    
+    static var tagsTimeframe: StatsTimelineManager.Timeframe {
+        get { timeframeForKey(Keys.tagsTimeframe) ?? .year }
+        set { setTimeframe(newValue, forKey: Keys.tagsTimeframe )}
+    }
     
     static var shareSettings: ShareSettings {
         get {

@@ -125,30 +125,3 @@ extension HKWorkout {
     }
     
 }
-
-extension HKWorkoutActivityType {
-    
-    func sport() -> Sport {
-        switch self {
-        case .cycling:
-            return .cycling
-        case .running:
-            return .running
-        case .walking:
-            return .walking
-        default:
-            return .other
-        }
-    }
-    
-    var isCycling: Bool {
-        self == .cycling
-    }
-    
-    var isRunningWalking: Bool {
-        Self.runninWalkingActivities.contains(self)
-    }
-    
-    static let runninWalkingActivities: [HKWorkoutActivityType] = [.running, .walking]
-    
-}

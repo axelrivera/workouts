@@ -7,6 +7,8 @@
 
 import UniformTypeIdentifiers
 import CoreServices
+import UIKit
+import FitFileParser
 
 extension UTType {
     static var fitDocument: UTType {
@@ -14,12 +16,14 @@ extension UTType {
     }
 }
 
-extension URL {
+class FitDocument: UIDocument {
     
-    var isZipFile: Bool {
-        guard let resourceValues = try? self.resourceValues(forKeys: [URLResourceKey.typeIdentifierKey]),
-              let typeID = resourceValues.typeIdentifier else { return false }
-        return UTType(typeID) == UTType.zip
+    var fitFile: FitFile?
+   
+    override func load(fromContents contents: Any, ofType typeName: String?) throws {
+        if let data = contents as? Data {
+            fitFile = FitFile(data: data)
+        }
     }
     
 }

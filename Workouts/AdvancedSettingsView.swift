@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct AdvancedSettingsView: View {
     enum ActiveAlert: Identifiable {
@@ -13,6 +14,7 @@ struct AdvancedSettingsView: View {
         var id: Int { hashValue }
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     
     @State private var activeAlert: ActiveAlert?
@@ -30,6 +32,10 @@ struct AdvancedSettingsView: View {
                     Text("Reset Maps")
                 }
             }
+            
+            Section(footer: Text("Clear tags from existing workouts.")) {
+                NavigationLink("Tags", destination: TagsResetView())
+            }
         }
         .disabled(workoutManager.isProcessingRemoteData)
         .overlay(processOverlay())
@@ -42,11 +48,15 @@ struct AdvancedSettingsView: View {
                 let message = "This action will reset and regenerate your local workout data from Apple Health."
                 
                 let action = {
-                    NotificationCenter.default.post(
-                        name: .shouldFetchRemoteData,
-                        object: nil,
-                        userInfo: [ Notification.regenerateDataKey: true ]
-                    )
+                    DispatchQueue.main.async {
+                        WorkoutMetadata.fixDuplicates(in: viewContext)
+                        
+                        NotificationCenter.default.post(
+                            name: .shouldFetchRemoteData,
+                            object: nil,
+                            userInfo: [ Notification.regenerateDataKey: true ]
+                        )
+                    }
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
@@ -66,10 +76,7 @@ struct AdvancedSettingsView: View {
     
     @ViewBuilder func processOverlay() -> some View {
         if workoutManager.isProcessingRemoteData {
-            ProcessView(
-                title: "Processing Workouts",
-                value: $workoutManager.processingRemoteDataValue
-            )
+            HUDView()
         }
     }
 }

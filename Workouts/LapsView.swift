@@ -213,7 +213,7 @@ struct LapsView_Previews: PreviewProvider {
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
     
     static let detailManager: DetailManager = {
-        let manager = DetailManager(viewModel: workout.detailViewModel)
+        let manager = DetailManager(viewModel: workout.detailViewModel, context: viewContext)
         manager.processWorkout()
         manager.isProcessingLaps = true
         return manager

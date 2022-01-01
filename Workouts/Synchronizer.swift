@@ -11,20 +11,24 @@ import HealthKit
 class Synchronizer {
     let context: NSManagedObjectContext
     let importer: RemoteImporter
+    let updator: RemoteUpdator
         
     var isAuthorizedToFetchWorkouts = false
     var anchor: HKQueryAnchor?
+    
+    var resetAnchor: Bool = false
     var regenerate: Bool = false
     var isFetchingWorkouts = false
     
     init(context: NSManagedObjectContext) {
         self.context = context
         self.importer = RemoteImporter(context: context)
+        self.updator = RemoteUpdator(context: context)
         self.anchor = AppSettings.workoutsQueryAnchor
         addObservers()
     }
     
-    func fetchLatestWorkouts(resetAnchor: Bool = false, regenerate: Bool = false) async {
+    private func fetchLatestWorkouts() async {
         // reset anchor even if is fetching
         // request will be ignored but anchor will be respected on next fetch
         if resetAnchor {
@@ -32,25 +36,25 @@ class Synchronizer {
             AppSettings.workoutsQueryAnchor = anchor
         }
 
-        self.regenerate = regenerate
-
-        if isFetchingWorkouts {
-            Log.debug("ignore remote data fetch - already fetching workouts")
-            return
-        }
-
         guard isAuthorizedToFetchWorkouts else {
             Log.debug("ignore remote data fetch - not authorized yet")
             return
         }
         
+        // import workouts first
         Log.debug("importing workouts")
         self.isFetchingWorkouts = true
         let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
         
+        // save anchor and regenerate flat before processing
         AppSettings.workoutsQueryAnchor = newAnchor
         self.anchor = newAnchor
         self.regenerate = false
+        
+        // update heart rate and location data
+        await updator.updatePendingWorkouts()
+        
+        // reset fetching flag last
         self.isFetchingWorkouts = false
     }
     
@@ -67,15 +71,25 @@ extension Synchronizer {
         if let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool {
             isAuthorizedToFetchWorkouts = isAuthorized
         }
-
+        
         // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
         let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? self.regenerate
         let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
         
+        self.regenerate = regenerate
+        self.resetAnchor = resetAnchor
+        
+        // this prevents the task from being called twice
+        // regenerate and resetAnchor are set before to cache the values in case of multiple requests
+        if isFetchingWorkouts {
+            Log.debug("ignore remote data fetch - already fetching workouts")
+            return
+        }
+        
         let _ = context.performAndWait {
             Task {
                 Log.debug("fetching remote data")
-                await fetchLatestWorkouts(resetAnchor: resetAnchor, regenerate: regenerate)
+                await fetchLatestWorkouts()
             }
         }
     }
@@ -96,15 +110,18 @@ extension Notification.Name {
     static var didInsertRemoteData = Notification.Name("arn_did_insert_remote_data")
     static var willBeginProcessingRemoteData = Notification.Name("arn_will_begin_processing_remote_data")
     static var didFinishProcessingRemoteData = Notification.Name("arn_did_finish_processing_remote_data")
+    static var willBeginProcessingRemoteLocationData = Notification.Name("arn_will_begin_processing_remote_location_data")
+    static var didFinishProcessingRemoteLocationData = Notification.Name("arn_did_finish_processing_remote_location_data")
+    static var didUpdateRemoteLocationData = Notification.Name("arn_did_update_remote_location_data")
     
 }
 
 extension Notification {
     
     static var isAuthorizedToFetchRemoteDataKey = "arn_is_authorized_to_fetch_remote_data"
-    static var totalRemoteWorkoutsKey = "arn_total_remote_workouts"
     static var remoteWorkoutKey = "arn_remote_workout"
     static var resetAnchorKey = "arn_reset_anchor"
     static var regenerateDataKey = "arn_regenerate_data"
+    static var coordinatesKey = "arn_coordinates"
     
 }

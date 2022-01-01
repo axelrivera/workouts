@@ -32,13 +32,62 @@ extension DataProvider {
         
     }
     
-    static func fetchRequest(sport: Sport?, interval: DateInterval?) -> FetchRequest<Workout> {
+    static func fetchRequest(sports: [Sport]) -> FetchRequest<Workout> {
         let request = Workout.defaultFetchRequest()
-        request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+        request.predicate = Workout.activePredicate(sports: sports, interval: nil)
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 10
+        return FetchRequest(fetchRequest: request, animation: .default)
+    }
+    
+    static func fetchRequest(sport: Sport?, interval: DateInterval?, identifiers: [UUID] = []) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = Workout.activePredicate(sport: sport, interval: interval, identifiers: identifiers)
         request.sortDescriptors = [Workout.sortedByDateDescriptor()]
         request.fetchBatchSize = 10
         
         return FetchRequest(fetchRequest: request, animation: .default)
+    }
+    
+    static func fetchFetquest(for predicate: NSPredicate) -> FetchRequest<Workout> {
+        let request = Workout.defaultFetchRequest()
+        request.predicate = predicate
+        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
+        request.fetchBatchSize = 10
+        
+        return FetchRequest(fetchRequest: request, animation: .default)
+    }
+    
+    func totalWorkouts(sport: Sport?, interval: DateInterval?) -> Int {
+        do {
+            let request = Workout.defaultFetchRequest()
+            request.predicate = Workout.activePredicate(sport: sport, interval: interval)
+            return try context.count(for: request)
+        } catch {
+            return 0
+        }
+    }
+    
+}
+
+// MARK: - Workouts
+
+extension DataProvider {
+    
+    func workoutIdentifiers(for predicate: NSPredicate) -> [UUID] {
+        do {
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = predicate
+            request.resultType = .dictionaryResultType
+            request.propertiesToFetch = ["remoteIdentifier"]
+            request.returnsObjectsAsFaults = false
+            
+            return try context.fetch(request).compactMap { dictionary in
+                dictionary["remoteIdentifier"] as? UUID
+            }
+        } catch {
+            return []
+        }
     }
     
 }
@@ -49,6 +98,14 @@ extension DataProvider {
     
     enum DataError: Error {
         case missingPropertyDictionary
+        case failure
+    }
+    
+    static func fetchRequest(for identifiers: [UUID]) -> NSFetchRequest<NSFetchRequestResult> {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
+        request.returnsObjectsAsFaults = false
+        request.predicate = Workout.predicateForIdentifiers(identifiers)
+        return request
     }
     
     static func fetchRequestForSport(sport: Sport?, interval: DateInterval?) -> NSFetchRequest<NSFetchRequestResult> {
@@ -60,54 +117,92 @@ extension DataProvider {
     
 }
 
-// MARK: - Recent Workouts
-
-extension DataProvider {
-    
-    func recentWorkouts() -> [Workout] {
-        let request = Workout.defaultFetchRequest()
-        request.returnsObjectsAsFaults = false
-        request.predicate = Workout.activePredicate(sport: nil, interval: DateInterval.lastTwoWeeks())
-        request.sortDescriptors = [Workout.sortedByDateDescriptor()]
-        
-        do {
-            return try context.fetch(request)
-        } catch {
-            return []
-        }
-    }
-    
-}
-
 // MARK: - Summary
 
 extension DataProvider {
     
     var totalWorkouts: Int {
-        let request = Workout.sortedFetchRequest
-        do {
-            return try context.count(for: request)
-        } catch {
-            return 0
+        context.performAndWait {
+            let request = Workout.sortedFetchRequest
+            do {
+                return try context.count(for: request)
+            } catch {
+                return 0
+            }
         }
     }
     
-    func fetchStatsSummary(sport: Sport?, interval: DateInterval) throws -> [String: Any] {
-        let distanceDesc = expressionDescription(for: .distance, function: .sum)
-        let durationDesc = expressionDescription(for: .duration, function: .sum)
-        let elevationDesc = expressionDescription(for: .elevation, function: .sum)
-        let energyDesc = expressionDescription(for: .energyBurned, function: .sum)
-        let maxDistanceDesc = expressionDescription(for: .longestDistance, function: .max)
-        let maxElevationDesc = expressionDescription(for: .highestElevation, function: .max)
-        
-        let request = Self.fetchRequestForSport(sport: sport, interval: interval)
-        request.resultType = .dictionaryResultType
-        request.propertiesToFetch = [
-            distanceDesc, durationDesc, elevationDesc, energyDesc, maxDistanceDesc, maxElevationDesc
-        ]
-        
-        var resultDictionary = [String: Any]()
+    func dateRangeForActiveWorkouts() -> ClosedRange<Date> {
         context.performAndWait {
+            let request = Workout.defaultFetchRequest()
+            request.predicate = Workout.activePredicate(sport: nil, interval: nil)
+            request.sortDescriptors = [Workout.sortedByDateDescriptor(ascending: true)]
+            
+            do {
+                let workouts = try context.fetch(request)
+                let start = workouts.first?.start ?? Date()
+                let end = workouts.last?.start ?? start
+                return start...end
+            } catch {
+                let date = Date()
+                return date...date
+            }
+        }
+    }
+    
+    func fetchTotalDistanceAndDuration(for predicate: NSPredicate) -> (total: Int, distance: Double, duration: Double) {
+        context.performAndWait {
+            let distance = expressionDescription(for: .distance, function: .sum)
+            let duration = expressionDescription(for: .duration, function: .sum)
+
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
+            request.returnsObjectsAsFaults = false
+            request.resultType = .dictionaryResultType
+            request.predicate = predicate
+            request.propertiesToFetch = [distance, duration]
+            
+            do {
+                let count = try context.count(for: request)
+                let results = try context.fetch(request)
+                guard let first = results.first, let dictionary = first as? [String: Double] else {
+                    throw DataError.missingPropertyDictionary
+                }
+                
+                let distance: Double = dictionary[Name.distance.key] ?? 0
+                let duration: Double = dictionary[Name.duration.key] ?? 0
+                return (count, distance, duration)
+            } catch {
+                return (0, 0, 0)
+            }
+        }
+    }
+    
+    func fetchStatsSummary(for identifiers: [UUID]) throws -> [String: Any] {
+        try fetchStatsSummary(for: Workout.predicateForIdentifiers(identifiers))
+    }
+    
+    func fetchStatsSummary(for predicate: NSPredicate) throws -> [String: Any] {
+        try context.performAndWait {
+            let distance = expressionDescription(for: .distance, function: .sum)
+            let avgDistance = expressionDescription(for: .avgDistance, function: .avg)
+            let duration = expressionDescription(for: .duration, function: .sum)
+            let avgDuration = expressionDescription(for: .avgDuration, function: .avg)
+            let elevation = expressionDescription(for: .elevation, function: .sum)
+            let avgElevation = expressionDescription(for: .avgElevation, function: .avg)
+            let energy = expressionDescription(for: .energyBurned, function: .sum)
+            let avgEnergy = expressionDescription(for: .avgEnergyBurned, function: .avg)
+            
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
+            request.returnsObjectsAsFaults = false
+            request.resultType = .dictionaryResultType
+            request.predicate = predicate
+            
+            request.propertiesToFetch = [
+                distance, avgDistance, duration, avgDuration, elevation, avgElevation, energy, avgEnergy
+            ]
+            
+            var resultDictionary = [String: Any]()
+            
             do {
                 let count = try context.count(for: request)
                 let results = try context.fetch(request)
@@ -120,18 +215,20 @@ extension DataProvider {
             } catch {
                 resultDictionary = [String: Any]()
             }
-        }
-        
-        if resultDictionary.isEmpty {
-            throw DataError.missingPropertyDictionary
-        } else {
-            return resultDictionary
+            
+            if resultDictionary.isEmpty {
+                throw DataError.missingPropertyDictionary
+            } else {
+                return resultDictionary
+            }
         }
     }
     
 }
 
 // MARK: - Helper Methods
+
+typealias StatsProperties = DataProvider.Name
 
 extension DataProvider {
     
@@ -141,6 +238,7 @@ extension DataProvider {
         
         static let sum = Function(rawValue: "sum:")
         static let max = Function(rawValue: "max:")
+        static let avg = Function(rawValue: "average:")
     }
     
     struct Name: RawRepresentable, Equatable {
@@ -149,11 +247,13 @@ extension DataProvider {
         
         static let count = Name(rawValue: "count")
         static let distance = Name(rawValue: "distance")
+        static let avgDistance = Name(rawValue: "avgDistance")
         static let duration = Name(rawValue: "movingTime")
+        static let avgDuration = Name(rawValue: "avgDuration")
         static let elevation = Name(rawValue: "elevation")
+        static let avgElevation = Name(rawValue: "avgElevation")
         static let energyBurned = Name(rawValue: "energyBurned")
-        static let longestDistance = Name(rawValue: "longestDistance")
-        static let highestElevation = Name(rawValue: "highestElevation")
+        static let avgEnergyBurned = Name(rawValue: "avgEnergyBurned")
         
         var key: String {
             return rawValue
@@ -161,10 +261,14 @@ extension DataProvider {
         
         var property: String {
             switch self {
-            case .elevation, .highestElevation:
+            case .elevation, .avgElevation:
                 return "elevationAscended"
-            case .longestDistance:
+            case .avgDistance:
                 return "distance"
+            case .avgDuration:
+                return "movingTime"
+            case .avgEnergyBurned:
+                return "energyBurned"
             default:
                 return rawValue
             }

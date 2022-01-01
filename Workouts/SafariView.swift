@@ -19,6 +19,7 @@ struct SafariView: UIViewControllerRepresentable {
     func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
         let configuration = SFSafariViewController.Configuration()
         configuration.entersReaderIfAvailable = entersReaderIfAvailable ?? true
+        configuration.barCollapsingEnabled = false
         return SFSafariViewController(url: url, configuration: configuration)
     }
 

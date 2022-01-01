@@ -30,13 +30,11 @@ struct WorkoutCellViewModel: Identifiable, Hashable {
     let avgPace: Double
     let calories: Double
     let elevation: Double
+    let includesLocation: Bool
+    let isLocationPending: Bool
 }
 
 extension WorkoutCellViewModel {
-    
-    var includesLocation: Bool {
-        !coordinates.isEmpty
-    }
     
     func dateString(shortDay: Bool = false) -> String {
         formattedRelativeDateString(for: date, shortDay: shortDay, showTime: true)
@@ -91,7 +89,9 @@ extension Workout {
             avgSpeed: avgSpeed,
             avgPace: avgPace,
             calories: energyBurned,
-            elevation: elevationAscended
+            elevation: elevationAscended,
+            includesLocation: coordinates.isPresent,
+            isLocationPending: isLocationPending
         )
     }
     

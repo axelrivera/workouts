@@ -34,14 +34,14 @@ struct Constants {
     static let defaultChartSampleInSeconds = 10
     static let defaultWeight: Double = 81.6466 // Use default weight of 180 lbs (81.6466 Kg)
     static let cornerRadius: CGFloat = 12.0
-}
-
-struct WorkoutConstants {
-    static let availableActivityTypes: [HKWorkoutActivityType] = [.cycling, .running, .walking]
+    static let cachedWorkoutImageWidth: CGFloat = 390.0
+    static let cachedWorkoutImageHeight: CGFloat = 200.0
+    static let cachedWorkoutImageScaleFactor = cachedWorkoutImageHeight / cachedWorkoutImageWidth
+    static let cachedWorkoutImageSize = CGSize(width: cachedWorkoutImageWidth, height: cachedWorkoutImageHeight)
 }
 
 struct URLStrings {
-    static let faq = "https://mobile.betterworkouts.app"
+    static let faq = "https://betterworkouts.app/faq/"
     static let about = "https://betterworkouts.app/about/"
     static let privacy = "https://betterworkouts.app/privacy/"
     static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"
@@ -51,4 +51,10 @@ struct URLStrings {
 struct Emails {
     static let support = "feedback@betterworkouts.app"
 }
+
+enum GlobalError: Error {
+    case data
+    case database
+}
+
 

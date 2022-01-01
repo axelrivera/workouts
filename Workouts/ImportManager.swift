@@ -24,7 +24,7 @@ class ImportManager: ObservableObject {
     @Published var isProcessingImports = false
     @Published var state = State.empty
     
-    private var urls = [URL]()
+    private var documents = [FitDocument]()
     
     private lazy var importQueue: OperationQueue = {
         let queue = OperationQueue()
@@ -133,27 +133,21 @@ extension ImportManager {
         importQueue.cancelAllOperations()
     }
     
-    func processDocuments(at urls: [URL], completionHandler: @escaping (() -> Void)) {
-        self.urls = urls
+    func processDocuments(at documents: [FitDocument], completionHandler: @escaping (() -> Void)) {
+        self.documents = documents
         workouts = [WorkoutImport]()
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task(priority: .userInitiated) {
             var workouts = [WorkoutImport]()
-            for url in urls {
-                var tmpURL: URL?
-                if url.isZipFile {
-                    tmpURL = unzipFitFile(url: url)
-                } else {
-                    tmpURL = url
-                }
+            for document in documents {
+                await document.open()
                 
-                guard let fileURL = tmpURL,
-                      let workout = WorkoutImport(fileURL: fileURL) else {
-                    workouts.append(WorkoutImport(invalidFilename: url.lastPathComponent))
-                    continue
+                if let fitFile = await document.fitFile, let workout = WorkoutImport(fitFile: fitFile) {
+                    workouts.append(workout)
+                } else {
+                    let fileURL = await document.fileURL
+                    workouts.append(WorkoutImport(invalidFilename: fileURL.lastPathComponent))
                 }
-                                
-                workouts.append(workout)
             }
             
             let sortedWorkouts = workouts.sorted(by: { (lhs, rhs) -> Bool in
@@ -175,8 +169,11 @@ extension ImportManager {
         
         workout.status = .processing
         let operation = ImportOperation(workout: workout)
+        let start = Date()
         operation.completionBlock = {
             DispatchQueue.main.async {
+                let end = Date()
+                Log.debug("finished importing: \(end.timeIntervalSince(start)) sec")
                 self.isProcessingImports = !self.importQueue.operations.isEmpty
             }
         }

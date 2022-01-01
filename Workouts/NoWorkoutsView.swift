@@ -9,26 +9,55 @@ import SwiftUI
 
 struct NoWorkoutsView: View {
     var body: some View {
-        VStack(alignment: .center, spacing: 20.0) {
-            Text("No Workouts")
-                .font(.title)
-                .foregroundColor(.secondary)
-            Image(systemName: "exclamationmark.triangle")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100, alignment: .center)
+        VStack(alignment: .center, spacing: 5.0) {
+            Image(systemName: "heart.slash.fill")
+                .font(.largeTitle)
                 .foregroundColor(.red)
-            Text("There are no workouts available or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
-                .foregroundColor(.secondary)
+            
+            Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
+                .font(.footnote)
+                .foregroundColor(.black)
                 .multilineTextAlignment(.center)
-                .padding(.bottom)
         }
-        .padding()
+        .padding([.top, .bottom], CGFloat(10.0))
+        .frame(maxWidth: .infinity)
+        .background(Color.yellow.opacity(0.5))
+        .background(.regularMaterial)
     }
 }
 
+struct ProcessingLocationView: View {
+    
+    var body: some View {
+        VStack(spacing: 5.0) {
+            HStack(spacing: 10.0) {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                Text("Processing Location Data")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+            }
+            Text("Some data may not be available while processing")
+                .font(.footnote)
+                .foregroundColor(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+        }
+        .padding([.top, .bottom], CGFloat(10.0))
+        .frame(maxWidth: .infinity)
+        .background(Color.red.opacity(0.5))
+        .background(.regularMaterial)
+    }
+    
+}
+
 struct NoWorkoutsView_Previews: PreviewProvider {
+    
     static var previews: some View {
-        NoWorkoutsView()
+        NavigationView {
+            VStack {
+                NoWorkoutsView()
+                ProcessingLocationView()
+            }
+        }
     }
 }

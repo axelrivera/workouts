@@ -100,11 +100,11 @@ struct WorkoutAnalysisButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-        .foregroundColor(.white)
-        .padding()
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 120.0, alignment: .leading)
-        .background(configuration.isPressed ? Color.selectedCell : Color.accentColor)
-        .cornerRadius(12.0)
+          .foregroundColor(.white)
+          .padding()
+          .frame(minWidth: 0, maxWidth: .infinity, minHeight: 120.0, alignment: .leading)
+          .background(configuration.isPressed ? Color.selectedCell : Color.accentColor)
+          .cornerRadius(12.0)
   }
 
 }
@@ -113,9 +113,9 @@ struct WorkoutMapButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Self.Configuration) -> some View {
     configuration.label
-        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
-        .overlay(configuration.isPressed ? Color.black.opacity(0.3) : Color.clear)
-        .cornerRadius(12.0)
+          .frame(minWidth: 0, maxWidth: .infinity, minHeight: 200.0, alignment: .center)
+          .overlay(configuration.isPressed ? Color.black.opacity(0.3) : Color.clear)
+          .cornerRadius(12.0)
   }
 
 }

@@ -9,80 +9,215 @@ import SwiftUI
 import CoreData
 
 struct WorkoutsView: View {
-    enum ActiveSheet: Identifiable {
-        case settings
+    @Environment(\.managedObjectContext) var viewContext
+    
+    var body: some View {
+        WorkoutsContentView(filterManager: WorkoutsFilterManager(context: viewContext))
+    }
+}
+
+struct WorkoutsContentView: View {
+    enum ActiveCoverSheet: Hashable, Identifiable {
+        case settings, add
+        var id: Self { self }
+    }
+    
+    enum ActiveSheet: Hashable, Identifiable {
+        case filter
+        case tagsToAll
+        case tags(identifier: UUID, sport: Sport)
+        var id: Self { self }
+    }
+    
+    enum ActiveAlert: Identifiable {
+        case tagConfirmation
         var id: Int { hashValue }
     }
     
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
-    @Binding var sport: Sport?
+    @StateObject var filterManager: WorkoutsFilterManager
+    
+    var fetchRequest: FetchRequest<Workout>
+    var workouts: FetchedResults<Workout> { fetchRequest.wrappedValue }
     
     @State private var activeSheet: ActiveSheet?
+    @State private var activeCoverSheet: ActiveCoverSheet?
+    @State private var activeAlert: ActiveAlert?
+    
     @State private var selectedWorkout: UUID?
-    @State private var isEmpty = false
         
-    init(sport: Binding<Sport?>) {
-        _sport = sport
+    init(filterManager: WorkoutsFilterManager) {
+        _filterManager = StateObject(wrappedValue: filterManager)
+        fetchRequest = DataProvider.fetchFetquest(for: filterManager.filterPredicate())
     }
     
-    func detailDestination(viewModel: WorkoutDetailViewModel) -> some View {
-        DetailView(detailManager: DetailManager(viewModel: viewModel))
+    var filterImageName: String {
+        filterManager.isFilterActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
+    }
+    
+    func isFavorite(_ identifier: UUID) -> Bool {
+        workoutManager.storage.isWorkoutFavorite(identifier)
     }
             
     var body: some View {
         NavigationView {
             ScrollView {
-                LazyVStack(spacing: 0.0) {
-                    WorkoutFilter(sport: sport, interval: nil, isEmpty: $isEmpty) { workout in
-                        NavigationLink(
-                            tag: workout.workoutIdentifier,
-                            selection: $selectedWorkout,
-                            destination: { detailDestination(viewModel: workout.detailViewModel) }) {
-                            WorkoutMapCell(viewModel: workout.cellViewModel)
-                                .padding()
+                LazyVStack(spacing: 0.0, pinnedViews: [.sectionHeaders]) {
+                    Section(header: sectionHeader()) {
+                        ForEach(workouts, id: \.objectID) { workout in
+                            NavigationLink(
+                                tag: workout.workoutIdentifier,
+                                selection: $selectedWorkout,
+                                destination: { DetailView(viewModel: workout.detailViewModel) }) {
+                                    WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
+                            }
+                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
+                                    workoutManager.storage.refreshAllWorkouts()
+                                }
+                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)) { notification in
+                                    workoutManager.storage.refreshAllWorkouts()
+                                }
+                                .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
+                                    if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
+                                       viewModel.id == workout.workoutIdentifier {
+                                        viewContext.refresh(workout, mergeChanges: true)
+                                    }
+                                    
+                            }
+                            .contextMenu {
+                                if isFavorite(workout.workoutIdentifier) {
+                                    Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
+                                        Label("Unfavorite", systemImage: "heart.slash")
+                                    }
+                                } else {
+                                    Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
+                                        Label("Favorite", systemImage: "heart")
+                                    }
+                                }
+                                
+                                Button(action: { activeSheet = .tags(identifier: workout.workoutIdentifier, sport: workout.sport) }) {
+                                    Label("Tags", systemImage: "tag")
+                                }
+                            }
+                            .buttonStyle(WorkoutPlainButtonStyle())
+                            Divider()
                         }
-                        .buttonStyle(WorkoutPlainButtonStyle())
-                        Divider()
                     }
                 }
             }
             .overlay(emptyOverlay())
+            .overlay(processOverlay())
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)) { _ in
+                refreshFilter()
+            }
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { activeSheet = .settings }) {
+                    Button(action: { activeCoverSheet = .settings }) {
                        Image(systemName: "gearshape")
                     }
                 }
                 
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button(action: {
-                            self.sport = nil
-                        }, label: {
-                            Text("All Workouts")
-                        })
-
-                        Divider()
-
-                        ForEach(Sport.supportedSports) { sport in
-                            Button(action: {
-                                self.sport = sport
-                            }, label: {
-                                Text(sport.title)
-                            })
-                        }
-                    } label: {
-                        Text(sport?.title ?? "All Workouts")
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button(action: { activeCoverSheet = .add}) {
+                        Image(systemName: "plus")
+                    }
+                    .disabled(isAddDisabled)
+                    
+                    Button(action: { activeSheet = .filter }) {
+                        Image(systemName: filterImageName)
                     }
                 }
             }
-            .fullScreenCover(item: $activeSheet) { item in
+            .sheet(item: $activeSheet) { item in
+                switch item {
+                case .filter:
+                    WorkoutsFilterView()
+                        .environmentObject(filterManager)
+                case .tagsToAll:
+                    WorkoutsTagSelectorView()
+                case .tags(let identifier, let sport):
+                    TagSelectorView(tagManager: TagManager(context: viewContext, sport: sport, workoutIdentifier: identifier)) {
+                        WorkoutStorage.resetTags(forID: identifier)
+                    }
+                }
+            }
+            .fullScreenCover(item: $activeCoverSheet) { item in
                 switch item {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
+                case .add:
+                    ImportView()
+                }
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .tagConfirmation:
+                    return Alert(
+                        title: Text("Apply Tags"),
+                        message: Text("Apply tags to all \(workouts.count.formatted()) results in filter? Some tags may be ignored based on gear type."),
+                        primaryButton: Alert.Button.default(Text("Continue"), action: { activeSheet = .tagsToAll }),
+                        secondaryButton: Alert.Button.cancel(Text("Cancel"))
+                    )
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func sectionHeader() -> some View {
+        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading || workoutManager.showNoWorkoutsAlert {
+            VStack(spacing: 0) {
+                if workoutManager.showUpdatingRemoteLocationDataLoading {
+                    ProcessingLocationView()
+                }
+                
+                if workoutManager.showNoWorkoutsAlert {
+                    NoWorkoutsView()
+                }
+                
+                if filterManager.isFilterActive {
+                    VStack(alignment: .leading, spacing: 15.0) {
+                        HStack(spacing: 20.0) {
+                            Text("\(workouts.count.formatted()) Workouts")
+                            Spacer()
+                            Text(filterManager.distanceString)
+                                .foregroundColor(.distance)
+                            Text(filterManager.durationString)
+                                .foregroundColor(.time)
+                        }
+                        .font(.fixedBody)
+                        .foregroundColor(.secondary)
+                        
+                        HStack {
+                            Button("Reset Filter", role: .destructive, action: resetFilter)
+                            Spacer()
+                            Menu {
+                                Button(action: filterManager.favoriteAll) {
+                                    Label("Favorite All", systemImage: "heart")
+                                }
+                                
+                                Button(action: filterManager.unfavoriteAll) {
+                                    Label("Unfavorite All", systemImage: "heart.slash")
+                                }
+                                
+                                Button(action: { activeAlert = .tagConfirmation }) {
+                                    Label("Tag All", systemImage: "tag")
+                                }
+                            } label: {
+                                HStack {
+                                    // adding HStack to as workaround for image dissapearing in some cases
+                                    Image(systemName: "ellipsis.circle")
+                                }
+                            }
+                        }
+                    }
+                    .padding([.leading, .trailing])
+                    .padding([.top, .bottom], CGFloat(10.0))
+                    .background(.regularMaterial)
                 }
             }
         }
@@ -90,29 +225,43 @@ struct WorkoutsView: View {
     
     @ViewBuilder
     func emptyOverlay() -> some View {
-        if isEmpty {
-            VStack(spacing: 15.0) {
-                Image(systemName: "heart.slash.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.red)
-                
-                Text("No Workouts")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                
-                Text("Better Workouts imports Health data stored by the Workout app on your Apple Watch.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.red)
-                
-                Text("Go to the Health app and give Better Workouts permission to read your workout data.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
+        if workouts.isEmpty {
+            Text("No Workouts")
+                .font(.title2)
+                .foregroundColor(.secondary)
         }
     }
+    
+    @ViewBuilder
+    func processOverlay() -> some View {
+        if workoutManager.showProcessingRemoteDataLoading || filterManager.isProcessingActions {
+            HUDView()
+        }
+    }
+}
+
+extension WorkoutsContentView {
+    
+    var isAddDisabled: Bool {
+        !workoutManager.isAuthorized || workoutManager.isProcessing
+    }
+        
+    func refreshFilter() {
+        DispatchQueue.main.async {
+            withAnimation {
+                filterManager.updateTotals()
+                workouts.nsPredicate = filterManager.filterPredicate()
+            }
+        }
+    }
+    
+    func resetFilter() {
+        withAnimation {
+            filterManager.reset()
+        }
+        refreshFilter()
+    }
+    
 }
 
 struct WorkoutsView_Previews: PreviewProvider {
@@ -120,18 +269,17 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable
+        manager.showNoWorkoutsAlert = true
         return manager
     }()
     
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
-    
-    @State static var sport: Sport?
-    
+        
     static var previews: some View {
-        WorkoutsView(sport: $sport)
+        WorkoutsView()
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(workoutManager)
             .environmentObject(purchaseManager)
-            .preferredColorScheme(.light)
+            .preferredColorScheme(.dark)
     }
 }

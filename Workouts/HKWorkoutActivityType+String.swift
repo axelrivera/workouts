@@ -61,7 +61,7 @@ extension HKWorkoutActivityType {
         case .tableTennis:                  return "Table Tennis"
         case .tennis:                       return "Tennis"
         case .trackAndField:                return "Track and Field"
-        case .traditionalStrengthTraining:  return "Traditional Strength Training"
+        case .traditionalStrengthTraining:  return "Strength Training"
         case .volleyball:                   return "Volleyball"
         case .walking:                      return "Walking"
         case .waterFitness:                 return "Water Fitness"
@@ -76,7 +76,7 @@ extension HKWorkoutActivityType {
         case .crossCountrySkiing:           return "Cross Country Skiing"
         case .downhillSkiing:               return "Downhill Skiing"
         case .flexibility:                  return "Flexibility"
-        case .highIntensityIntervalTraining:    return "High Intensity Interval Training"
+        case .highIntensityIntervalTraining:    return "HIIT"
         case .jumpRope:                     return "Jump Rope"
         case .kickboxing:                   return "Kickboxing"
         case .pilates:                      return "Pilates"
@@ -94,6 +94,12 @@ extension HKWorkoutActivityType {
         // iOS 13
         case .discSports:                   return "Disc Sports"
         case .fitnessGaming:                return "Fitness Gaming"
+        
+        // iOS 14
+        case .cardioDance:                  return "Cardio Dance"
+        case .socialDance:                  return "Social Dance"
+        case .pickleball:                   return "Pickleball"
+        case .cooldown:                     return "Cooldown"
 
         // Catch-all
         default:                            return "Other"
