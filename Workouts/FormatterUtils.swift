@@ -134,10 +134,11 @@ func formattedTimeString(for date: Date?) -> String {
 
 func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
     guard let start = start else { return "n/a" }
+    let formatter = start.year() == Date().year() ? DateFormatter.monthDay : DateFormatter.medium
     
-    var strings = [DateFormatter.monthDay.string(from: start)]
+    var strings = [formatter.string(from: start)]
     if let end = end {
-        strings.append(DateFormatter.monthDay.string(from: end))
+        strings.append(formatter.string(from: end))
     }
     return strings.joined(separator: " - ")
 }
