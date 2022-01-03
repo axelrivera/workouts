@@ -327,7 +327,7 @@ struct DetailGridView: View {
             Group {
                 Text(text)
                 Text(detail)
-                    .font(.largeTitle)
+                    .font(.fixedLargeTitle)
                     .foregroundColor(detailColor)
                     .minimumScaleFactor(0.5)
             }

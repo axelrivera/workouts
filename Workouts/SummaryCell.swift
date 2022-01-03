@@ -76,6 +76,7 @@ struct SummaryCell: View {
                                 Color.clear
                             } else {
                                 Text(object.text)
+                                    .font(.fixedBody)
                                     .foregroundColor(object.color)
                             }
                         }
