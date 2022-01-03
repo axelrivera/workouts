@@ -227,10 +227,9 @@ struct WorkoutsContentView: View {
                                 }
                             } label: {
                                 Image(systemName: "ellipsis.circle")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 18.0, height: 18.0, alignment: .center)
+                                    .foregroundColor(.secondary)
                             }
+                            .id(UUID())
                         }
                     }
                     .padding([.leading, .trailing])
