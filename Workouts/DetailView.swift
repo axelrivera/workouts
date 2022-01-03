@@ -278,8 +278,8 @@ extension DetailContentView {
     }
     
     var avgSpeedString: String {
-        guard workout.displayAvgSpeed > 0 else { return "-- \(speedUnit)" }
-        return formattedSpeedString(for: workout.displayAvgSpeed)
+        guard workout.avgMovingSpeed > 0 else { return "-- \(speedUnit)" }
+        return formattedSpeedString(for: workout.avgMovingSpeed)
     }
     
     var avgCadenceString: String {

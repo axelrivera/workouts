@@ -78,10 +78,6 @@ extension WorkoutDetailViewModel {
         duration - movingTime
     }
     
-    var displayAvgSpeed: Double {
-        shouldUseMovingTime ? avgMovingSpeed : avgSpeed
-    }
-    
     var detailTitle: String {
         switch sport {
         case .cycling:
