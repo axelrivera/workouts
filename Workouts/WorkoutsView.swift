@@ -226,10 +226,10 @@ struct WorkoutsContentView: View {
                                     refreshFilter()
                                 }
                             } label: {
-                                HStack {
-                                    // adding HStack to as workaround for image dissapearing in some cases
-                                    Image(systemName: "ellipsis.circle")
-                                }
+                                Image(systemName: "ellipsis.circle")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 18.0, height: 18.0, alignment: .center)
                             }
                         }
                     }
