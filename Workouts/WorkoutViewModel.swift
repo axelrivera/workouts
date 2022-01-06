@@ -78,6 +78,16 @@ final class WorkoutViewModel: Hashable, Identifiable {
 
 extension WorkoutViewModel {
     
+    enum DisplayType {
+        case cyclingDistance, runningWalkingDistance, other
+    }
+    
+    func displayType() -> DisplayType {
+        if sport.isCycling && distance > 0 { return .cyclingDistance }
+        if sport.isWalkingOrRunning && distance > 0 { return .runningWalkingDistance }
+        return .other
+    }
+    
     func dateString(shortDay: Bool = false) -> String {
         formattedRelativeDateString(for: date, shortDay: shortDay, showTime: true)
     }
@@ -90,11 +100,19 @@ extension WorkoutViewModel {
         formattedHoursMinutesPrettyString(for: duration)
     }
     
+    var speedString: String {
+        formattedSpeedString(for: avgSpeed)
+    }
+    
+    var paceString: String {
+        formattedRunningWalkingPaceString(for: avgPace)
+    }
+    
     var speedOrPaceString: String {
         if sport == .cycling {
-            return formattedSpeedString(for: avgSpeed)
+            return speedString
         } else {
-            return formattedRunningWalkingPaceString(for: avgPace)
+            return paceString
         }
     }
     
