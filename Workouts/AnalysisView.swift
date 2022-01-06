@@ -22,7 +22,7 @@ struct AnalysisView: View {
     @State private var activeSheet: ActiveSheet?
     
     var localizedAvgSpeed: Double? {
-        nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
+        nativeSpeedToLocalizedUnit(for: workout.avgMovingSpeed)
     }
     
     var workout: WorkoutDetailViewModel {
