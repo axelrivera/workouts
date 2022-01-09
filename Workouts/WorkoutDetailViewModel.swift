@@ -117,7 +117,7 @@ extension WorkoutDetailViewModel {
             maxSpeed: workout.maxSpeed,
             avgCyclingCadence: workout.avgCyclingCadence,
             maxCyclingCadence: workout.maxCyclingCadence,
-            avgPace: workout.avgPace,
+            avgPace: workout.avgMovingPace,
             elevationAscended: workout.elevationAscended,
             elevationDescended: workout.elevationDescended,
             energyBurned: workout.energyBurned,

@@ -67,7 +67,7 @@ final class WorkoutViewModel: Hashable, Identifiable {
         distance = workout.distance
         duration = workout.movingTime
         avgSpeed = workout.avgMovingSpeed
-        avgPace = workout.avgPace
+        avgPace = workout.avgMovingPace
         calories = workout.energyBurned
         avgHeartRate = workout.avgHeartRate
         elevation = workout.elevationAscended
