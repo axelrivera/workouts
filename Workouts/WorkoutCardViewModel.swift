@@ -47,8 +47,10 @@ struct WorkoutCardViewModel {
     let duration: String
     let distance: String?
     let speed: String?
+    let maxSpeed: String?
     let pace: String?
     let heartRate: String?
+    let maxHeartRate: String?
     let elevation: String?
     let calories: String?
     let coordinates: [CLLocationCoordinate2D]
@@ -84,8 +86,10 @@ extension WorkoutCardViewModel {
             duration: "",
             distance: "",
             speed: nil,
+            maxSpeed: nil,
             pace: nil,
             heartRate: nil,
+            maxHeartRate: nil,
             elevation: nil,
             calories: nil,
             coordinates: []
@@ -105,8 +109,10 @@ extension WorkoutCardViewModel {
             duration: "2h 30m",
             distance: "30.0 mi",
             speed: nil,
+            maxSpeed: nil,
             pace: nil,
             heartRate: nil,
+            maxHeartRate: nil,
             elevation: "800 ft",
             calories: nil,
             coordinates: sampleCoordinates()

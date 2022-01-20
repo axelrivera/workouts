@@ -10,10 +10,6 @@ import SwiftUI
 struct WorkoutCard: View {
     @ObservedObject var shareManager: ShareManager
     
-    var showBranding: Bool {
-        !shareManager.removeBranding
-    }
-    
     var body: some View {
         if shareManager.style == .map && shareManager.viewModel.includesLocation {
             WorkoutMapCard(
@@ -22,16 +18,15 @@ struct WorkoutCard: View {
                 backgroundImage: shareManager.mapImage,
                 showTitle: shareManager.showTitle,
                 showDate: shareManager.showDate,
-                showBranding: showBranding
+                mapColor: shareManager.mapColor
             )
         } else {
-            WorkoutColorCard(
+            WorkoutPhotoCard(
                 viewModel: shareManager.viewModel,
                 metric: shareManager.selectedMetric,
-                color: shareManager.backgroundColor,
-                location: shareManager.locationString,
-                routeImage: shareManager.routeImage,
-                showBranding: showBranding
+                backgroundImage: shareManager.backgroundImage,
+                showTitle: shareManager.showTitle,
+                showDate: shareManager.showDate
             )
         }
     }

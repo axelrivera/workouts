@@ -41,6 +41,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos when sharing workouts</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Display your workout activity and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
