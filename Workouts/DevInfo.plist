@@ -40,13 +40,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Take photos when sharing workouts.</string>
+	<string>Take photos when sharing workouts</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Review your workout activity.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Write new or imported workouts.</string>
+	<string>Write new or imported workouts</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>To save photos when whering a workout.</string>
+	<string>Save and open photos when sharing workouts</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
