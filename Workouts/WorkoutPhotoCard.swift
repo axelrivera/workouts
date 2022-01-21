@@ -58,11 +58,11 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
                 }
                 
                 HStack(spacing: CGFloat(20.0)) {
-                    if let distance = viewModel.distance {
+                    if let distance = viewModel.distance, showDistance {
                         metricView(text: distanceTitle, detail: distance)
                     }
 
-                    metricView(text: "Time", detail: viewModel.duration)
+                    metricView(text: timeTitle, detail: viewModel.duration)
                     
                     if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
                         metricView(text: text, detail: detail)
@@ -96,6 +96,17 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
+    var timeTitle: String {
+        if let _ = viewModel.distance, showDistance {
+            return "Time"
+        }
+        
+        if showTitle {
+            return "Time"
+        } else {
+            return viewModel.sport.altName
+        }
+    }
 }
 
 struct WorkoutPhotoShadowModifier: ViewModifier {

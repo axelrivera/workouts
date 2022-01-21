@@ -99,6 +99,10 @@ class ShareManager: ObservableObject {
             self.selectedMetric = selectedMetric ?? Self.defaultMetric(for: viewModel.sport)
             self.viewModel = viewModel
             
+            if !viewModel.includesLocation {
+                self.style = .photo
+            }
+            
             // cached values
             self.darkMapImage = darkMapImage
             self.lightMapImage = lightMapImage

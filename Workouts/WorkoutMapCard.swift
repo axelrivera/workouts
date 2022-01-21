@@ -135,7 +135,7 @@ extension WorkoutMapCard {
     }
     
     var paceColor: Color {
-        color(named: "PaceColor")
+        color(named: "CadenceColor")
     }
     
     var timeColor: Color {

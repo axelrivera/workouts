@@ -63,7 +63,7 @@ extension ShareDetailView {
         } else if sport.isWalkingOrRunning {
             return Metric.runningMetrics
         } else {
-            return []
+            return Metric.otherMetrics
         }
     }
     

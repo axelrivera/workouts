@@ -51,4 +51,8 @@ extension WorkoutSharable {
         }
     }
     
+    var showDistance: Bool {
+        viewModel.sport.isCycling || viewModel.sport.isWalkingOrRunning
+    }
+    
 }

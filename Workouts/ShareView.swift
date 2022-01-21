@@ -54,6 +54,16 @@ struct ShareView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .transition(.move(edge: .leading))
                         .overlay {
+                            if shareManager.style == .photo && shareManager.backgroundOriginalImage == nil {
+                                VStack(spacing: 10.0) {
+                                    Image(systemName: "photo")
+                                        .font(.largeTitle)
+                                    Text("No Photo")
+                                }
+                                .foregroundColor(.secondary)
+                            }
+                        }
+                        .overlay {
                             if shareManager.isGeneratingImage {
                                 HUDView()
                             }

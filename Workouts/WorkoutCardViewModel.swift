@@ -19,6 +19,7 @@ extension WorkoutCardViewModel {
         static let cyclingMetrics: [Metric] = [.none, .speed, .heartRate, .elevation, .calories]
         static let runningMetrics: [Metric] = [.none, .pace, .heartRate, .calories]
         static let indoorMetrics: [Metric] = [.none, .heartRate, .calories]
+        static let otherMetrics: [Metric] = [.none, .heartRate, .calories]
         
         private static let titleDictionary: [Metric: String] = [
             .none: "No Metric",
