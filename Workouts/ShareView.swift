@@ -52,6 +52,7 @@ struct ShareView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .aspectRatio(contentMode: .fit)
                         .fixedSize(horizontal: false, vertical: true)
+                        .border(Color.divider, width: 1.0)
                         .transition(.move(edge: .leading))
                         .overlay {
                             if shareManager.style == .photo && shareManager.backgroundOriginalImage == nil {
@@ -60,7 +61,7 @@ struct ShareView: View {
                                         .font(.largeTitle)
                                     Text("No Photo")
                                 }
-                                .foregroundColor(.secondary)
+                                .foregroundColor(.white.opacity(0.7))
                             }
                         }
                         .overlay {
@@ -122,7 +123,7 @@ struct ShareView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    Button("Close", action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
@@ -246,6 +247,6 @@ extension ShareView {
 struct ShareView_Previews: PreviewProvider {
     static var previews: some View {
         ShareView(viewModel: WorkoutCardViewModel.preview())
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.light)
     }
 }

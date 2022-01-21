@@ -21,7 +21,7 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
     
     var body: some View {
         ZStack(alignment: .top) {
-            Color.black
+            Color(UIColor.darkGray)
             
             if let backgroundImage = backgroundImage {
                 Image(uiImage: backgroundImage)
