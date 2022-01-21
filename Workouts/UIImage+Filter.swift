@@ -9,13 +9,13 @@ import UIKit
 
 enum PhotoFilterType: String, Hashable, Identifiable,  CaseIterable {
     case original = "original"
-    case sephia = "CISepiaTone"
     case chrome = "CIPhotoEffectChrome"
     case fade = "CIPhotoEffectFade"
     case instant = "CIPhotoEffectInstant"
     case mono = "CIPhotoEffectMono"
     case noir = "CIPhotoEffectNoir"
     case process = "CIPhotoEffectProcess"
+    case sephia = "CISepiaTone"
     case tonal = "CIPhotoEffectTonal"
     case transfer =  "CIPhotoEffectTransfer"
     
@@ -24,13 +24,13 @@ enum PhotoFilterType: String, Hashable, Identifiable,  CaseIterable {
     var name: String {
         switch self {
         case .original: return "Original"
-        case .sephia: return "Sephia"
         case .chrome: return "Chrome"
         case .fade: return "Fade"
         case .instant: return "Instant"
         case .mono: return "Mono"
         case .noir: return "Noir"
         case .process: return "Process"
+        case .sephia: return "Sephia"
         case .tonal: return "Tonal"
         case .transfer: return "Transfer"
         }
