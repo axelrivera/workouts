@@ -117,7 +117,7 @@ class ShareManager: ObservableObject {
         } else if sport.isWalkingOrRunning {
             return .pace
         } else {
-            return .none
+            return .calories
         }
     }
     
@@ -188,6 +188,7 @@ extension ShareManager {
             styleValue: style.rawValue,
             cyclingMetricValue: viewModel.sport.isCycling ? selectedMetric.rawValue : settings.cyclingMetricValue,
             runningMetricValue: viewModel.sport.isWalkingOrRunning ? selectedMetric.rawValue : settings.runningMetricValue,
+            otherMetricValue: viewModel.sport.isOther ? selectedMetric.rawValue : settings.otherMetricValue,
             showTitle: showTitle,
             showDate: showDate
         )

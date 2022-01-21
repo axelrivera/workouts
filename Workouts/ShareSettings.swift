@@ -11,6 +11,7 @@ struct ShareSettings: Codable {
     let styleValue: String
     let cyclingMetricValue: String?
     let runningMetricValue: String?
+    let otherMetricValue: String?
     let showTitle: Bool
     let showDate: Bool
     
@@ -28,13 +29,18 @@ struct ShareSettings: Codable {
         return WorkoutCardViewModel.Metric(rawValue: value)
     }
     
+    var otherMetric: WorkoutCardViewModel.Metric? {
+        guard let value = otherMetricValue else { return nil }
+        return WorkoutCardViewModel.Metric(rawValue: value)
+    }
+    
     func metric(for sport: Sport) -> WorkoutCardViewModel.Metric? {
         if sport.isCycling {
             return cyclingMetric
         } else if sport.isWalkingOrRunning {
             return runningMetric
         } else {
-            return nil
+            return otherMetric
         }
     }
 }
@@ -46,6 +52,7 @@ extension ShareSettings {
             styleValue: ShareManager.ShareStyle.map.rawValue,
             cyclingMetricValue: nil,
             runningMetricValue: nil,
+            otherMetricValue: nil,
             showTitle: true,
             showDate: true
         )
