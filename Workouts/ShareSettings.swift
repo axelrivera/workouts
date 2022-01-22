@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ShareSettings: Codable {
     let styleValue: String
+    let mapColorValue: String
     let cyclingMetricValue: String?
     let runningMetricValue: String?
     let otherMetricValue: String?
@@ -17,6 +18,10 @@ struct ShareSettings: Codable {
     
     var style: ShareManager.ShareStyle {
         ShareManager.ShareStyle(rawValue: styleValue) ?? .map
+    }
+    
+    var mapColor: ShareManager.MapColor {
+        ShareManager.MapColor(rawValue: mapColorValue) ?? .dark
     }
     
     var cyclingMetric: WorkoutCardViewModel.Metric? {
@@ -50,6 +55,7 @@ extension ShareSettings {
     static func defaultValue() -> ShareSettings {
         ShareSettings(
             styleValue: ShareManager.ShareStyle.map.rawValue,
+            mapColorValue: ShareManager.MapColor.dark.rawValue,
             cyclingMetricValue: nil,
             runningMetricValue: nil,
             otherMetricValue: nil,

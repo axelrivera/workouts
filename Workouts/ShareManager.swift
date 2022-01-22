@@ -73,6 +73,7 @@ class ShareManager: ObservableObject {
         
         self.settings = settings
         style = settings.style
+        mapColor = settings.mapColor
         selectedMetric = .none
         showTitle = settings.showTitle
         showDate = settings.showDate
@@ -186,6 +187,7 @@ extension ShareManager {
     func updateSettings() {
         let newSettings = ShareSettings(
             styleValue: style.rawValue,
+            mapColorValue: mapColor.rawValue,
             cyclingMetricValue: viewModel.sport.isCycling ? selectedMetric.rawValue : settings.cyclingMetricValue,
             runningMetricValue: viewModel.sport.isWalkingOrRunning ? selectedMetric.rawValue : settings.runningMetricValue,
             otherMetricValue: viewModel.sport.isOther ? selectedMetric.rawValue : settings.otherMetricValue,
