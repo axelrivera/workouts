@@ -313,6 +313,8 @@
 		16A2F54E25EDD52B0010F01D /* AnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A2F54D25EDD52B0010F01D /* AnalysisView.swift */; };
 		16A2F54F25EDD52B0010F01D /* AnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A2F54D25EDD52B0010F01D /* AnalysisView.swift */; };
 		16A3A5EA25B8F477003D1AB2 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A3A5E925B8F477003D1AB2 /* Log.swift */; };
+		16A5268827D0614700B4FBD3 /* StatsContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A5268727D0614700B4FBD3 /* StatsContainer.swift */; };
+		16A5268927D0614700B4FBD3 /* StatsContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A5268727D0614700B4FBD3 /* StatsContainer.swift */; };
 		16A544F126B5C2E800CB6160 /* WorkoutCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544F026B5C2E800CB6160 /* WorkoutCell.swift */; };
 		16A544F226B5C2E800CB6160 /* WorkoutCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A544F026B5C2E800CB6160 /* WorkoutCell.swift */; };
 		16A544F726B6461100CB6160 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 16A544F626B6461100CB6160 /* Launch Screen.storyboard */; };
@@ -601,6 +603,7 @@
 		16A2F51A25EB0FD10010F01D /* Array+Chunked.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Chunked.swift"; sourceTree = "<group>"; };
 		16A2F54D25EDD52B0010F01D /* AnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisView.swift; sourceTree = "<group>"; };
 		16A3A5E925B8F477003D1AB2 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		16A5268727D0614700B4FBD3 /* StatsContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainer.swift; sourceTree = "<group>"; };
 		16A544F026B5C2E800CB6160 /* WorkoutCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCell.swift; sourceTree = "<group>"; };
 		16A544F626B6461100CB6160 /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
 		16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLogRow.swift; sourceTree = "<group>"; };
@@ -707,6 +710,7 @@
 		160BB05125DC2C110059E493 /* Stats */ = {
 			isa = PBXGroup;
 			children = (
+				16A5268727D0614700B4FBD3 /* StatsContainer.swift */,
 				168E0D0C276E9F8300DA3913 /* StatsTimelineManager.swift */,
 				160BB05225DC2C2C0059E493 /* StatsView.swift */,
 				16864BEA268E950C0005E7D8 /* StatsRecentView.swift */,
@@ -1555,6 +1559,7 @@
 				160BB07C25DD61700059E493 /* Sport.swift in Sources */,
 				160BB07D25DD61700059E493 /* Color+Additions.swift in Sources */,
 				167D2ED9260C103000A4A299 /* PaywallView.swift in Sources */,
+				16A5268927D0614700B4FBD3 /* StatsContainer.swift in Sources */,
 				1620B03326982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CB26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
 				16208BFA26D4207600693530 /* ActivitySheet.swift in Sources */,
@@ -1755,6 +1760,7 @@
 				16E8323925D4B06200382545 /* Sport.swift in Sources */,
 				1645B92625B350BB00B04478 /* Color+Additions.swift in Sources */,
 				167D2ED8260C103000A4A299 /* PaywallView.swift in Sources */,
+				16A5268827D0614700B4FBD3 /* StatsContainer.swift in Sources */,
 				1620B03226982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CA26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
 				16208BF926D4207500693530 /* ActivitySheet.swift in Sources */,
