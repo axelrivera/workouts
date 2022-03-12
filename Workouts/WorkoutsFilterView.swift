@@ -142,6 +142,25 @@ struct WorkoutsFilterView: View {
                     }
                     .textCase(nil)
                 }
+                
+                Section(header: header("Sort By")) {
+                    ForEach(WorkoutsFilterManager.SortBy.allCases, id: \.self) { sort in
+                        Button(action: { manager.toggleSort(sort) }) {
+                            HStack(spacing: CGFloat(15.0)) {
+                                Image(systemName: manager.sortBy == sort ? "checkmark.circle" : "circle")
+                                    .foregroundColor(.accentColor)
+                                Text(sort.title)
+                                if manager.sortBy == sort {
+                                    Spacer()
+                                    Image(systemName: manager.sortAscending ? "chevron.up" : "chevron.down")
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                            .foregroundColor(.primary)
+                        }
+                    }
+                }
+                .textCase(nil)
             }
             .interactiveDismissDisabled()
             .onAppear {
@@ -209,6 +228,7 @@ struct WorkoutsFilterView_Previews: PreviewProvider {
     
     static var previews: some View {
         WorkoutsFilterView()
+            .environment(\.managedObjectContext, viewContext)
             .environmentObject(manager)
             .preferredColorScheme(.dark)
     }

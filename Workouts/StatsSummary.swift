@@ -82,7 +82,7 @@ extension StatsSummary: WorkoutSummary {
     var title: String {
         switch timeframe {
         case .week:
-            return formattedMonthDayRangeString(start: interval.start, end: interval.end)
+            return formattedRangeString(start: interval.start, end: interval.end)
         case .month:
             return formattedMonthYearString(for: interval.start)
         case .year:
@@ -131,11 +131,11 @@ extension StatsSummary {
         }
     }
     
-    static var lastTwelveWeeks: [DateInterval] {
+    static var lastThirteenWeeks: [DateInterval] {
         var date = Date()
         
         var intervals = [DateInterval]()
-        for _ in 0 ..< 12 {
+        for _ in 0 ..< 13 {
             let start = date.workoutWeekStart
             let end = date.workoutWeekEnd
             
@@ -148,11 +148,11 @@ extension StatsSummary {
         return intervals
     }
     
-    static var lastTwelveMonths: [DateInterval] {
+    static var lastThirteenMonths: [DateInterval] {
         var date = Date()
         
         var intervals = [DateInterval]()
-        for _ in 0 ..< 12 {
+        for _ in 0 ..< 13 {
             let start = date.startOfMonth
             let end = date.endOfMonth
             
@@ -269,7 +269,7 @@ extension StatsSummary {
     }
     
     static func weeklySamples() -> [StatsSummary] {
-        lastTwelveWeeks.map { interval in
+        lastThirteenWeeks.map { interval in
             let dictionary: [String: Any] = [
                 "count": Int.random(in: 1...10),
                 "distance": Double.random(in: 25000...50000),
@@ -279,11 +279,11 @@ extension StatsSummary {
             ]
             
             return StatsSummary(sport: .cycling, timeframe: .week, interval: interval, dictionary: dictionary)
-        }
+        }.dropLast()
     }
     
     static func monthlySamples() -> [StatsSummary] {
-        lastTwelveMonths.map { interval in
+        lastThirteenMonths.map { interval in
             let dictionary: [String: Any] = [
                 "count": Int.random(in: 5...30),
                 "distance": Double.random(in: 500000...1000000),
@@ -293,7 +293,7 @@ extension StatsSummary {
             ]
             
             return StatsSummary(sport: .cycling, timeframe: .week, interval: interval, dictionary: dictionary)
-        }
+        }.dropLast()
     }
     
 }

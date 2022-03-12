@@ -253,10 +253,6 @@ extension Workout {
         NSPredicate(format: "%K == %@", IndoorKey, NSNumber(booleanLiteral: indoor))
     }
     
-    static func sortedByDateDescriptor(ascending: Bool = false) -> NSSortDescriptor {
-        NSSortDescriptor(keyPath: \Workout.start, ascending: ascending)
-    }
-    
     static var notMarkedForLocalDeletionPredicate: NSPredicate {
         NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
     }
@@ -287,6 +283,20 @@ extension Workout {
     
     static func distantFuturePredicate() -> NSPredicate {
         NSPredicate(format: "%K > %@", Date.distantFuture as NSDate)
+    }
+    
+    // MARK: Sort Descriptors
+    
+    static func sortedByDateDescriptor(ascending: Bool = false) -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Workout.start, ascending: ascending)
+    }
+    
+    static func sortedByDistanceDescriptor(ascending: Bool = false) -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Workout.distance, ascending: ascending)
+    }
+    
+    static func sortedByDurationDescriptor(ascending: Bool = false) -> NSSortDescriptor {
+        NSSortDescriptor(keyPath: \Workout.movingTime, ascending: ascending)
     }
     
     // MARK: Reqeusts

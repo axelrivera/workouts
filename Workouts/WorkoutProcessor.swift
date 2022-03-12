@@ -156,11 +156,7 @@ extension WorkoutProcessor {
         workout.totalDistance?.doubleValue(for: .meter()) ?? 0
     }
     
-    private func avgSpeed() -> Double {
-        if let speed = workout.avgSpeed?.doubleValue(for: .metersPerSecond()) {
-            return speed
-        }
-        
+    private func avgSpeed() -> Double {        
         guard workout.totalElapsedTime > 0 else { return 0 }
         let distance = totalDistance()
         return distance / workout.totalElapsedTime

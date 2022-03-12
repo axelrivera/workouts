@@ -51,6 +51,10 @@ enum Sport: String, Identifiable, CaseIterable {
         self == .walking
     }
     
+    var isOther: Bool {
+        !isCycling && !isWalkingOrRunning
+    }
+    
     var isSpeedSport: Bool {
         Self.speedSports.contains(self)
     }

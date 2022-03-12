@@ -102,44 +102,91 @@ struct WorkoutMapCell: View {
     @ViewBuilder
     func statsView() -> some View {
         HStack {
-            if manager.viewModel.distance > 0 {
-                Text(manager.viewModel.distanceString)
-                    .font(.fixedBody)
-                    .foregroundColor(.distance)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            
-            Text(manager.viewModel.durationString)
-                .font(.fixedBody)
-                .foregroundColor(.time)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            if manager.viewModel.distance > 0 {
-                if manager.viewModel.sport.supportsSplits {
-                    Text(manager.viewModel.speedOrPaceString)
-                        .font(.fixedBody)
-                        .foregroundColor(manager.viewModel.speedOrPaceColor)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            switch manager.viewModel.displayType() {
+            case .cyclingDistance:
+                distanceText()
+                durationText()
+                speedText()
+                
+                if !manager.viewModel.indoor {
+                    elevationText()
+                }
+            case .runningWalkingDistance:
+                distanceText()
+                durationText()
+                paceText()
+                
+                if !manager.viewModel.indoor {
+                    elevationText()
+                }
+            case .other:
+                durationText()
+                
+                if manager.viewModel.avgHeartRate > 0 {
+                    heartRateText()
                 }
                 
-                if manager.viewModel.sport == .cycling && !manager.viewModel.indoor {
-                    Text(manager.viewModel.elevationString)
-                        .font(.fixedBody)
-                        .foregroundColor(.elevation)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                if manager.viewModel.calories > 0 {
+                    caloriesText()
                 }
-            } else {
-                Text(manager.viewModel.calorieString)
-                    .font(.fixedBody)
-                    .foregroundColor(.calories)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Text(manager.viewModel.avgHeartRateString)
-                    .font(.fixedBody)
-                    .foregroundColor(.calories)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+    
+    @ViewBuilder
+    func distanceText() -> some View {
+        Text(manager.viewModel.distanceString)
+            .font(.fixedBody)
+            .foregroundColor(.distance)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func durationText() -> some View {
+        Text(manager.viewModel.durationString)
+            .font(.fixedBody)
+            .foregroundColor(.time)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func speedText() -> some View {
+        Text(manager.viewModel.speedString)
+            .font(.fixedBody)
+            .foregroundColor(.speed)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func paceText() -> some View {
+        Text(manager.viewModel.paceString)
+            .font(.fixedBody)
+            .foregroundColor(.pace)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func caloriesText() -> some View {
+        Text(manager.viewModel.calorieString)
+            .font(.fixedBody)
+            .foregroundColor(.calories)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func heartRateText() -> some View {
+        Text(manager.viewModel.avgHeartRateString)
+            .font(.fixedBody)
+            .foregroundColor(.calories)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func elevationText() -> some View {
+        Text(manager.viewModel.elevationString)
+            .font(.fixedBody)
+            .foregroundColor(.elevation)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
     
     func processNotification(_ notification: Notification) {

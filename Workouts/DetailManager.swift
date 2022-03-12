@@ -305,9 +305,11 @@ extension DetailManager {
             date: formattedWorkoutShareDateString(for: detail.start),
             duration: formattedHoursMinutesPrettyString(for: detail.totalTime),
             distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
-            speed: detail.avgSpeed > 0 ? formattedSpeedString(for: detail.avgSpeed) : nil,
+            speed: detail.avgMovingSpeed > 0 ? formattedSpeedString(for: detail.avgMovingSpeed) : nil,
+            maxSpeed: detail.maxSpeed > 0 ? formattedSpeedString(for: detail.maxSpeed) : nil,
             pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
             heartRate: detail.avgHeartRate > 0 ? formattedHeartRateString(for: detail.avgHeartRate) : nil,
+            maxHeartRate: detail.maxHeartRate > 0 ? formattedHeartRateString(for: detail.maxHeartRate) : nil,
             elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
             calories: detail.energyBurned > 0 ? formattedCaloriesString(for: detail.energyBurned) : nil,
             coordinates: detail.coordinates

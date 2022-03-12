@@ -36,17 +36,19 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>54</string>
+	<string>68</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos when sharing workouts</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Display your workout activity and metrics.</string>
+	<string>Display your workout activity and metrics</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Save workouts imported from FIT files.</string>
+	<string>Save workouts imported from FIT files</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>To save photos when whering a workout.</string>
+	<string>Save and open photos when sharing workouts</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

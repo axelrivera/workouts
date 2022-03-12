@@ -22,7 +22,7 @@ struct AnalysisView: View {
     @State private var activeSheet: ActiveSheet?
     
     var localizedAvgSpeed: Double? {
-        nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
+        nativeSpeedToLocalizedUnit(for: workout.avgMovingSpeed)
     }
     
     var workout: WorkoutDetailViewModel {
@@ -47,26 +47,18 @@ struct AnalysisView: View {
                         if detailManager.speedValues.isPresent {
                             chartArea(
                                 valueType: .speed,
-                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
+                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgMovingSpeed),
                                 supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
                                 values: detailManager.speedValues, avgValue: localizedAvgSpeed,
                                 accentColor: .speed
                             )
                         } else {
-                            rowForText("Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
+                            rowForText("Avg Speed", detail: formattedSpeedString(for: workout.avgMovingSpeed), detailColor: .speed)
                             
                             if workout.maxSpeed > 0 {
                                 rowForText("Max Speed", detail: formattedSpeedString(for: workout.maxSpeed), detailColor: .speed)
                             }
                             
-                        }
-                        
-                        if workout.avgMovingSpeed > 0 {
-                            rowForText(
-                                "Avg Moving Speed",
-                                detail: formattedSpeedString(for: workout.avgMovingSpeed),
-                                detailColor: .speed
-                            )
                         }
                     }
                 }

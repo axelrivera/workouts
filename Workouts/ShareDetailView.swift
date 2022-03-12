@@ -26,36 +26,9 @@ struct ShareDetailView: View {
                     }
                 }
                 
-                if shareManager.style == .map && shareManager.viewModel.includesLocation {
-                    Section(header: Text("Map Color")) {
-                        Picker("Map Background", selection: $shareManager.mapColor) {
-                            ForEach(MapColor.allCases, id: \.self) { color in
-                                Text(color.title)
-                            }
-                        }
-                        .pickerStyle(SegmentedPickerStyle())
-                        .padding([.top, .bottom], CGFloat(5.0))
-                    }
-                    
-                    Section {
-                        Toggle("Show Title", isOn: $shareManager.showTitle)
-                        Toggle("Show Date", isOn: $shareManager.showDate)
-                    }
-                } else {
-                    Section(header: Text("Background Color")) {
-                        WorkoutColorPicker(selectedColor: $shareManager.backgroundColor) { newColor in
-                            Log.debug("selected color: \(newColor)")
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .padding([.top, .bottom], CGFloat(10.0))
-                    }
-                    
-                    if shareManager.viewModel.includesLocation {
-                        Section {
-                            Toggle("Show Location", isOn: $shareManager.showLocation)
-                            Toggle("Show Route Outline", isOn: $shareManager.showRoute)
-                        }
-                    }
+                Section {
+                    Toggle("Show Title", isOn: $shareManager.showTitle)
+                    Toggle("Show Date", isOn: $shareManager.showDate)
                 }
             }
             .navigationTitle("Sharing Details")
@@ -90,7 +63,7 @@ extension ShareDetailView {
         } else if sport.isWalkingOrRunning {
             return Metric.runningMetrics
         } else {
-            return []
+            return Metric.otherMetrics
         }
     }
     
@@ -99,7 +72,7 @@ extension ShareDetailView {
 struct ShareDetailView_Previews: PreviewProvider {
     static var manager: ShareManager = {
         let manager = ShareManager()
-        manager.style = .color
+        manager.style = .photo
         return manager
     }()
     

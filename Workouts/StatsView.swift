@@ -147,9 +147,11 @@ extension StatsView {
                 
                 HStack(spacing: 10.0) {
                     Text(stats.countLabel)
+                        .font(.fixedBody)
                         .foregroundColor(.primary)
                     Divider()
                     Text(avgLabel(forTimeframe: stats.timeframe))
+                        .font(.fixedBody)
                         .foregroundColor(.secondary)
                     Spacer()
                     NavigationLink(destination: destination(forTimeframe: stats.timeframe)) {

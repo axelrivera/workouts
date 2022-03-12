@@ -71,9 +71,10 @@ extension StatsManager {
             let availableSports = Workout.availableSports(in: self.dataProvider.context)
             
             let weekly = self.fetchSummary(for: .week)
-            let recentWeekly = self.fetchRecentSummary(for: .week)
+            let weeklySummaries = self.fetchRecentSummary(for: .week)
+            let recentWeekly = Array(weeklySummaries.dropLast())
 
-            let avgWeeklyValues = recentWeekly.dropFirst()
+            let avgWeeklyValues = weeklySummaries.dropFirst()
             let totalWeekly = Double(avgWeeklyValues.count)
             
             var avgWeeklyTotal: Double?
@@ -91,9 +92,10 @@ extension StatsManager {
             }
             
             let monthly = self.fetchSummary(for: .month)
-            let recentMonthly = self.fetchRecentSummary(for: .month)
+            let monthlySummaries = self.fetchRecentSummary(for: .month)
+            let recentMonthly = Array(monthlySummaries.dropLast())
             
-            let avgMonthlyValues = recentMonthly.dropFirst()
+            let avgMonthlyValues = monthlySummaries.dropFirst()
             let totalMonthly = Double(avgMonthlyValues.count)
             
             var avgMontlyTotal: Double?
@@ -158,9 +160,9 @@ extension StatsManager {
         
         switch timeframe {
         case .week:
-            intervals = StatsSummary.lastTwelveWeeks
+            intervals = StatsSummary.lastThirteenWeeks
         case .month:
-            intervals = StatsSummary.lastTwelveMonths
+            intervals = StatsSummary.lastThirteenMonths
         default:
             break
         }

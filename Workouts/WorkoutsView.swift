@@ -180,7 +180,7 @@ struct WorkoutsContentView: View {
                 }
                 
                 if filterManager.isFilterActive {
-                    VStack(alignment: .leading, spacing: 15.0) {
+                    VStack(alignment: .leading, spacing: 10.0) {
                         HStack(spacing: 20.0) {
                             Text("\(workouts.count.formatted()) Workouts")
                             Spacer()
@@ -207,17 +207,40 @@ struct WorkoutsContentView: View {
                                 Button(action: { activeAlert = .tagConfirmation }) {
                                     Label("Tag All", systemImage: "tag")
                                 }
-                            } label: {
-                                HStack {
-                                    // adding HStack to as workaround for image dissapearing in some cases
-                                    Image(systemName: "ellipsis.circle")
+                                
+                                Picker("Sort By", selection: $filterManager.sortBy) {
+                                    ForEach(WorkoutsFilterManager.SortBy.allCases, id: \.self) { sort in
+                                        HStack {
+                                            Text(sort.title)
+                                            if filterManager.sortBy == sort {
+                                                Spacer()
+                                                Image(systemName: filterManager.sortAscending ? "chevron.up" : "chevron.down")
+                                            }
+                                        }
+                                    }
                                 }
+                            } label: {
+                                ZStack(alignment: .center) {
+                                    Circle()
+                                        .fill(.secondary)
+                                        .frame(width: 25.0, height: 25.0, alignment: .center)
+                                    Image(systemName: "ellipsis")
+                                        .font(.fixedBody)
+                                }
+                                .foregroundColor(.primary)
                             }
+                            .id(UUID())
                         }
                     }
                     .padding([.leading, .trailing])
                     .padding([.top, .bottom], CGFloat(10.0))
-                    .background(.regularMaterial)
+                    .background(.ultraThickMaterial)
+                    .onChange(of: filterManager.sortBy) { newValue in
+                        refreshFilter()
+                    }
+                    .onChange(of: filterManager.sortAscending) { newValue in
+                        refreshFilter()
+                    }
                 }
             }
         }
@@ -251,6 +274,7 @@ extension WorkoutsContentView {
             withAnimation {
                 filterManager.updateTotals()
                 workouts.nsPredicate = filterManager.filterPredicate()
+                workouts.nsSortDescriptors = filterManager.filterSort()
             }
         }
     }
@@ -269,7 +293,7 @@ struct WorkoutsView_Previews: PreviewProvider {
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable
-        manager.showNoWorkoutsAlert = true
+        manager.showNoWorkoutsAlert = false
         return manager
     }()
     

@@ -8,11 +8,13 @@
 import SwiftUI
 
 let WORKOUT_CARD_WIDTH: CGFloat = 540.0
-let WORKOUT_ROUTE_IMAGE_WIDTH: CGFloat = 250.0
 
 protocol WorkoutSharable {
     var viewModel: WorkoutCardViewModel { get }
-    var showBranding: Bool { get }
+    var metric: WorkoutCardViewModel.Metric { get }
+    var backgroundImage: UIImage? { get }
+    var showTitle: Bool { get }
+    var showDate: Bool { get }
 }
 
 extension WorkoutSharable {
@@ -40,5 +42,17 @@ extension WorkoutSharable {
     }
     
     var defaultOpacity: Double { 0.75 }
+    
+    var distanceTitle: String {
+        if showTitle {
+            return "Distance"
+        } else {
+            return viewModel.sport.altName
+        }
+    }
+    
+    var showDistance: Bool {
+        viewModel.sport.isCycling || viewModel.sport.isWalkingOrRunning
+    }
     
 }

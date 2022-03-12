@@ -278,8 +278,8 @@ extension DetailContentView {
     }
     
     var avgSpeedString: String {
-        guard workout.displayAvgSpeed > 0 else { return "-- \(speedUnit)" }
-        return formattedSpeedString(for: workout.displayAvgSpeed)
+        guard workout.avgMovingSpeed > 0 else { return "-- \(speedUnit)" }
+        return formattedSpeedString(for: workout.avgMovingSpeed)
     }
     
     var avgCadenceString: String {
@@ -327,7 +327,7 @@ struct DetailGridView: View {
             Group {
                 Text(text)
                 Text(detail)
-                    .font(.largeTitle)
+                    .font(.fixedLargeTitle)
                     .foregroundColor(detailColor)
                     .minimumScaleFactor(0.5)
             }

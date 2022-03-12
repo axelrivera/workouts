@@ -94,7 +94,7 @@ struct StatsTimelineView_Previews: PreviewProvider {
         return manager
     }()
     
-    static var purchaseManager = IAPManagerPreview.manager(isActive: false)
+    static var purchaseManager = IAPManagerPreview.manager(isActive: true)
         
     static var previews: some View {
         NavigationView {

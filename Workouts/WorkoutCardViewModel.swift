@@ -19,6 +19,7 @@ extension WorkoutCardViewModel {
         static let cyclingMetrics: [Metric] = [.none, .speed, .heartRate, .elevation, .calories]
         static let runningMetrics: [Metric] = [.none, .pace, .heartRate, .calories]
         static let indoorMetrics: [Metric] = [.none, .heartRate, .calories]
+        static let otherMetrics: [Metric] = [.none, .heartRate, .calories]
         
         private static let titleDictionary: [Metric: String] = [
             .none: "No Metric",
@@ -47,8 +48,10 @@ struct WorkoutCardViewModel {
     let duration: String
     let distance: String?
     let speed: String?
+    let maxSpeed: String?
     let pace: String?
     let heartRate: String?
+    let maxHeartRate: String?
     let elevation: String?
     let calories: String?
     let coordinates: [CLLocationCoordinate2D]
@@ -84,8 +87,10 @@ extension WorkoutCardViewModel {
             duration: "",
             distance: "",
             speed: nil,
+            maxSpeed: nil,
             pace: nil,
             heartRate: nil,
+            maxHeartRate: nil,
             elevation: nil,
             calories: nil,
             coordinates: []
@@ -105,8 +110,10 @@ extension WorkoutCardViewModel {
             duration: "2h 30m",
             distance: "30.0 mi",
             speed: nil,
+            maxSpeed: nil,
             pace: nil,
             heartRate: nil,
+            maxHeartRate: nil,
             elevation: "800 ft",
             calories: nil,
             coordinates: sampleCoordinates()

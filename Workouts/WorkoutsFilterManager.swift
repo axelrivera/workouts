@@ -30,7 +30,26 @@ final class WorkoutsFilterManager: ObservableObject {
         }
     }
     
+    enum SortBy: String, Hashable, Identifiable, CaseIterable {
+        case date, distance, duration
+        var id: String { rawValue }
+        
+        var title: String { rawValue.capitalized }
+    }
+    
     private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
+    
+    @Published var sortBy = SortBy.date {
+        willSet {
+            if sortBy == newValue {
+                sortAscending.toggle()
+            } else {
+                sortAscending = false
+            }
+        }
+    }
+    
+    @Published var sortAscending = false
     
     @Published var supportedSports = [Sport]()
     @Published var sports = Set<Sport>()
@@ -98,24 +117,28 @@ final class WorkoutsFilterManager: ObservableObject {
 extension WorkoutsFilterManager {
     
     func loadSports() {
-        context.perform { [weak self] in
+        DispatchQueue.global(qos: .userInteractive).async {  [weak self] in
             guard let self = self else { return }
-                
-            let sports = Workout.availableSports(in: self.context)
-            DispatchQueue.main.async {
-                self.supportedSports = sports
+            
+            self.context.perform {
+                let sports = Workout.availableSports(in: self.context)
+                DispatchQueue.main.async {
+                    self.supportedSports = sports
+                }
             }
         }
     }
     
     func count() -> Int {
-        let request = Workout.defaultFetchRequest()
-        request.predicate = filterPredicate()
-        
-        do {
-            return try context.count(for: request)
-        } catch {
-            return 0
+        context.performAndWait {
+            let request = Workout.defaultFetchRequest()
+            request.predicate = filterPredicate()
+
+            do {
+                return try context.count(for: request)
+            } catch {
+                return 0
+            }
         }
     }
     
@@ -154,6 +177,8 @@ extension WorkoutsFilterManager {
         minDistance = ""
         tags = fetchTags()
         selectedTags = Set<TagLabelViewModel>()
+        sortBy = .date
+        sortAscending = false
     }
     
     func isSportSelected(_ sport: Sport) -> Bool {
@@ -168,6 +193,12 @@ extension WorkoutsFilterManager {
                 sports.insert(sport)
             }
             reloadTags()
+        }
+    }
+    
+    func toggleSort(_ sortBy: SortBy) {
+        withAnimation {
+            self.sortBy = sortBy
         }
     }
     
@@ -381,6 +412,21 @@ extension WorkoutsFilterManager {
     
     var isUsingIdentifiers: Bool {
         showFavorites || selectedTags.isPresent
+    }
+    
+    func filterSort() -> [NSSortDescriptor] {
+        if isFilterActive {
+            switch sortBy {
+            case .distance:
+                return [Workout.sortedByDistanceDescriptor(ascending: sortAscending)]
+            case .duration:
+                return [Workout.sortedByDurationDescriptor(ascending: sortAscending)]
+            case .date:
+                return [Workout.sortedByDateDescriptor(ascending: sortAscending)]
+            }
+        } else {
+            return [Workout.sortedByDateDescriptor()]
+        }
     }
     
     func filterPredicate() -> NSPredicate {

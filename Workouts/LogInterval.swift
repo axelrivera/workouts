@@ -36,11 +36,7 @@ extension LogInterval {
     
     var header: String {
         guard let interval = interval else { return "n/a" }
-        return String(
-            format: "%@ - %@",
-            DateFormatter.medium.string(from: interval.start),
-            DateFormatter.medium.string(from: interval.end)
-        )
+        return formattedRangeString(start: interval.start, end: interval.end)
     }
 
     var start: Date? {

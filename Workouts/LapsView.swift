@@ -177,7 +177,7 @@ extension LapsView {
     }
     
     var selectedAvgSpeed: String {
-        let value = selectedLap?.avgSpeed ?? detailManager.detail.avgSpeed
+        let value = selectedLap?.avgSpeed ?? detailManager.detail.avgMovingSpeed
         guard value > 0 else { return "--" }
         return formattedLapSpeedString(for: value)
     }
