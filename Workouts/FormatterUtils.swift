@@ -181,7 +181,7 @@ func distanceUnitString() -> String {
 }
 
 func speedUnitString() -> String {
-    Locale.isMetric() ? "mph": "km/hr"
+    Locale.isMetric() ? "km/hr" : "mph"
 }
 
 enum DistanceMode {
