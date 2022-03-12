@@ -27,6 +27,25 @@ struct WorkoutDataStore {
     }
 }
 
+extension WorkoutDataStore.DataError: LocalizedError {
+    
+    var errorDescription: String? {
+        switch self {
+        case .missingData:
+            return "missing data"
+        case .missingValue:
+            return "missing value"
+        case .failure:
+            return "failure"
+        case .sportNotSupported:
+            return "sport not supported"
+        case .system(let error):
+            return "system error: \(error.localizedDescription)"
+        }
+    }
+    
+}
+
 extension WorkoutDataStore {
     
     func dataError(_ error: DataError, system: Error?) -> DataError {
@@ -104,24 +123,34 @@ extension WorkoutDataStore {
                 }
                 
                 let locations = workoutImport.locations
-                routeBuilder.insertRouteData(locations) { (success, error) in
-                    if let error = error {
-                        completionHandler(.failure(dataError(.failure, system: error)))
-                        return
+                if locations.isEmpty {
+                    builder.finishWorkout { workout, error in
+                        if let error = error {
+                            completionHandler(.failure(dataError(.failure, system: error)))
+                        } else {
+                            completionHandler(.success(true))
+                        }
                     }
-                    
-                    builder.finishWorkout { (workout, error) in
-                        guard let workout = workout else {
+                } else {
+                    routeBuilder.insertRouteData(locations) { (success, error) in
+                        if let error = error {
                             completionHandler(.failure(dataError(.failure, system: error)))
                             return
                         }
                         
-                        routeBuilder.finishRoute(with: workout, metadata: nil) { (route, error) in
-                            if let error = error {
-                                completionHandler(.failure(DataError.system(error)))
+                        builder.finishWorkout { (workout, error) in
+                            guard let workout = workout else {
+                                completionHandler(.failure(dataError(.failure, system: error)))
                                 return
                             }
-                            completionHandler(.success(true))
+                            
+                            routeBuilder.finishRoute(with: workout, metadata: nil) { (route, error) in
+                                if let error = error {
+                                    completionHandler(.failure(DataError.system(error)))
+                                } else {
+                                    completionHandler(.success(true))
+                                }                                
+                            }
                         }
                     }
                 }
@@ -133,7 +162,7 @@ extension WorkoutDataStore {
         var samples = [HKSample]()
         
         for (prevRecord, record) in zip(records, records.dropFirst()) {
-            if let sample = distanceSampleFor(record: record, prevRecord: prevRecord, sport: sport, indoor: indoor) {
+            if let sample = distanceSampleFor(record: record, prevRecord: prevRecord, sport: sport) {
                 samples.append(sample)
             }
             
@@ -145,15 +174,14 @@ extension WorkoutDataStore {
         return samples
     }
     
-    private func distanceSampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record, sport: Sport, indoor: Bool) -> HKSample? {
-        if indoor { return nil }
+    private func distanceSampleFor(record: WorkoutImport.Record, prevRecord: WorkoutImport.Record, sport: Sport) -> HKSample? {
         guard sport.hasDistanceSamples else { return nil }
         
         var quantityType: HKQuantityType?
         switch sport {
         case .cycling:
             quantityType = .distanceCycling()
-        case .walking, .running:
+        case .walking, .running, .hiking:
             quantityType = .distanceWalkingRunning()
         default:
             quantityType = nil
