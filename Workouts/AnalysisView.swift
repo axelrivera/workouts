@@ -16,14 +16,13 @@ struct AnalysisView: View {
     }
     
     @Environment(\.presentationMode) var presentationMode
-    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var detailManager: DetailManager
     @EnvironmentObject var purchaseManager: IAPManager
     
     @State private var activeSheet: ActiveSheet?
     
     var localizedAvgSpeed: Double? {
-        nativeSpeedToLocalizedUnit(for: workout.avgSpeed)
+        nativeSpeedToLocalizedUnit(for: workout.avgMovingSpeed)
     }
     
     var workout: WorkoutDetailViewModel {
@@ -48,26 +47,18 @@ struct AnalysisView: View {
                         if detailManager.speedValues.isPresent {
                             chartArea(
                                 valueType: .speed,
-                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgSpeed),
+                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgMovingSpeed),
                                 supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
                                 values: detailManager.speedValues, avgValue: localizedAvgSpeed,
                                 accentColor: .speed
                             )
                         } else {
-                            rowForText("Avg Speed", detail: formattedSpeedString(for: workout.avgSpeed), detailColor: .speed)
+                            rowForText("Avg Speed", detail: formattedSpeedString(for: workout.avgMovingSpeed), detailColor: .speed)
                             
                             if workout.maxSpeed > 0 {
                                 rowForText("Max Speed", detail: formattedSpeedString(for: workout.maxSpeed), detailColor: .speed)
                             }
                             
-                        }
-                        
-                        if workout.avgMovingSpeed > 0 {
-                            rowForText(
-                                "Avg Moving Speed",
-                                detail: formattedSpeedString(for: workout.avgMovingSpeed),
-                                detailColor: .speed
-                            )
                         }
                     }
                 }
@@ -193,7 +184,7 @@ extension AnalysisView {
     
     func saveZones(heartRate: Int, values: [Int]) {
         Task(priority: .userInitiated) {
-            await detailManager.updateZones(maxHeartRate: heartRate, values: values, context: viewContext)
+            await detailManager.updateZones(maxHeartRate: heartRate, values: values)
             activeSheet = nil
         }
     }
@@ -276,7 +267,7 @@ struct DetailAnalysisView_Previews: PreviewProvider {
     static var previews: some View {
         AnalysisView()
             .environment(\.managedObjectContext, viewContext)
-            .environmentObject(DetailManager(viewModel: workout.detailViewModel))
+            .environmentObject(DetailManager(viewModel: workout.detailViewModel, context: viewContext))
             .environmentObject(purchaseManager)
             .colorScheme(.dark)
         

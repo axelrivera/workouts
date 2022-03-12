@@ -29,6 +29,8 @@ struct HealthProvider {
     
 }
 
+// MARK: - Predicates
+
 // MARK: - Async/Await Methods
 
 extension HealthProvider {
@@ -168,7 +170,7 @@ extension HealthProvider {
 extension HealthProvider {
     
     func defaultActivitiesPredicate() -> NSPredicate {
-        predicateForActivities(WorkoutConstants.availableActivityTypes)
+        predicateForActivities(HKWorkoutActivityType.availableActivityTypes)
     }
     
     func predicateForActivities(_ activities: [HKWorkoutActivityType]) -> NSPredicate {

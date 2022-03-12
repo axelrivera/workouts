@@ -177,7 +177,7 @@ extension LapsView {
     }
     
     var selectedAvgSpeed: String {
-        let value = selectedLap?.avgSpeed ?? detailManager.detail.avgSpeed
+        let value = selectedLap?.avgSpeed ?? detailManager.detail.avgMovingSpeed
         guard value > 0 else { return "--" }
         return formattedLapSpeedString(for: value)
     }
@@ -213,7 +213,7 @@ struct LapsView_Previews: PreviewProvider {
     static let workout = StorageProvider.sampleWorkout(moc: viewContext)
     
     static let detailManager: DetailManager = {
-        let manager = DetailManager(viewModel: workout.detailViewModel)
+        let manager = DetailManager(viewModel: workout.detailViewModel, context: viewContext)
         manager.processWorkout()
         manager.isProcessingLaps = true
         return manager

@@ -27,6 +27,7 @@ func formattedHoursMinutesSecondsDurationString(for duration: Double?) -> String
 
 func formattedChartDurationString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
@@ -38,10 +39,33 @@ func formattedChartDurationString(for duration: Double?) -> String {
 
 func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
-        return String(format: "%dh %02dm", h, m)
+        return String(format: "%@h %02dm", h.formatted(), m)
+    } else {
+        return String(format: "%dm %02ds", m, s)
+    }
+}
+
+func formattedHoursMinutesPrettyStringInTags(for duration: Double?) -> String {
+    let seconds = Int(duration ?? 0)
+    guard seconds > 0 else {
+        return String(format: "0m")
+    }
+    
+    let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
+    
+    if h > 0 {
+        if h > 1_000 {
+            return String(format: "%@h", h.formatted())
+        } else {
+            return String(format: "%dh %02dm", h, m)
+        }
     } else {
         return String(format: "%dm %02ds", m, s)
     }
@@ -108,14 +132,26 @@ func formattedTimeString(for date: Date?) -> String {
     return DateFormatter.time.string(from: date)
 }
 
-func formattedMonthDayRangeString(start: Date?, end: Date?) -> String {
+func formattedRangeString(start: Date?, end: Date?) -> String {
     guard let start = start else { return "n/a" }
-    
-    var strings = [DateFormatter.monthDay.string(from: start)]
-    if let end = end {
-        strings.append(DateFormatter.monthDay.string(from: end))
+    guard let end = end else {
+        return DateFormatter.medium.string(from: start)
     }
-    return strings.joined(separator: " - ")
+    
+    
+    // date format: MMM dd YYYY
+    let startMonth = DateFormatter.shortMonth.string(from: start)
+    let startDay = DateFormatter.day.string(from: start)
+
+    let endMonth = DateFormatter.shortMonth.string(from: end)
+    let endDay = DateFormatter.day.string(from: end)
+    let endYear = "\(end.year())"
+
+    if startMonth == endMonth {
+        return String(format: "%@ %@﹣%@, %@", startMonth, startDay, endDay, endYear)
+    } else {
+        return String(format: "%@ %@﹣%@ %@, %@", startMonth, startDay, endMonth, endDay, endYear)
+    }
 }
 
 func formattedMonthYearString(for date: Date?) -> String {
@@ -130,6 +166,7 @@ func formattedFullDateString(for date: Date?) -> String {
 
 func formattedTimeRangeString(start: Date?, end: Date?) -> String {
     guard let start = start else { return "n/a" }
+    
     var strings = [ DateFormatter.localizedString(from: start, dateStyle: .none, timeStyle: .short) ]
     if let end = end {
         strings.append(DateFormatter.localizedString(from: end, dateStyle: .none, timeStyle: .short))
@@ -144,7 +181,7 @@ func distanceUnitString() -> String {
 }
 
 func speedUnitString() -> String {
-    Locale.isMetric() ? "mph": "km/hr"
+    Locale.isMetric() ? "km/hr" : "mph"
 }
 
 enum DistanceMode {
@@ -166,12 +203,26 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     }
 }
 
+func formattedDistanceStringInTags(for meters: Double) -> String {
+    let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
+    if conversion.value > 10_000 {
+        return MeasurementFormatter.roundedDistance.string(from: measurement)
+    } else {
+        return MeasurementFormatter.distanceCompact.string(from: conversion)
+    }
+}
+
 func formattedLapDistanceString(for meters: Double?) -> String {
     guard let meters = meters, meters > 0 else { return "0 \(distanceUnitString())" }
     let measurement = Measurement<UnitLength>(value: meters, unit: .meters)
     let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
     
-    return MeasurementFormatter.distanceLap.string(from: conversion)
+    if conversion.value > 0.9 {
+        return MeasurementFormatter.distanceLap.string(from: conversion)
+    } else {
+        return MeasurementFormatter.distanceLapFraction.string(from: conversion)
+    }
 }
 
 func formattedSpeedString(for metersPerSecond: Double?) -> String {
@@ -194,13 +245,13 @@ func formattedRunningWalkingPaceUnitString() -> String {
 }
 
 func formattedRunningWalkingPaceString(for duration: Double?) -> String {
-    let duration = duration ?? 0
+    guard let duration = duration else { return "0:00 \(formattedRunningWalkingPaceUnitString())"}
     let pace = formattedPaceString(for: duration)
     return String(format: "%@ %@", pace, formattedRunningWalkingPaceUnitString())
 }
 
 func formattedPaceString(for duration: Double?) -> String {
-    guard let duration = duration, duration > 0 else { return "" }
+    guard let duration = duration, duration > 0 else { return "0:00" }
     let (m, s) = secondsToMinutesSeconds(seconds: Int(duration))
     return String(format: "%d:%02d", m, s)
 }
@@ -354,9 +405,33 @@ extension DateFormatter {
         return formatter
     }()
     
+    static let year: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "YYYY"
+        return formatter
+    }()
+    
     static let month: DateFormatter = {
        let formatter = DateFormatter()
         formatter.dateFormat = "MMMM"
+        return formatter
+    }()
+    
+    static let shortMonth: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        return formatter
+    }()
+    
+    static let day: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd"
+        return formatter
+    }()
+    
+    static let range: DateFormatter = {
+       let formatter = DateFormatter()
+        formatter.dateFormat = "MMM/dd/YYYY"
         return formatter
     }()
     
@@ -386,12 +461,20 @@ extension NumberFormatter {
     static let distance: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 0
+        formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 2
         return formatter
     }()
     
     static let distanceLap: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 1
+        return formatter
+    }()
+    
+    static let distanceLapFraction: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.minimumFractionDigits = 0
@@ -456,6 +539,14 @@ extension MeasurementFormatter {
     static let distanceLap: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.numberFormatter = NumberFormatter.distanceLap
+        formatter.unitStyle = .medium
+        formatter.unitOptions = .providedUnit
+        return formatter
+    }()
+    
+    static let distanceLapFraction: MeasurementFormatter = {
+        let formatter = MeasurementFormatter()
+        formatter.numberFormatter = NumberFormatter.distanceLapFraction
         formatter.unitStyle = .medium
         formatter.unitOptions = .providedUnit
         return formatter

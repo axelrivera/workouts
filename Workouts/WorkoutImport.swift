@@ -10,7 +10,9 @@ import CoreLocation
 import FitFileParser
 import HealthKit
 
-extension WorkoutImport.Status: Equatable {
+extension WorkoutImport.Status: Equatable, Identifiable, Hashable {
+    
+    var id: Self { self }
     
     static func ==(lhs: WorkoutImport.Status, rhs: WorkoutImport.Status) -> Bool {
         switch (lhs, rhs) {
@@ -33,7 +35,7 @@ extension WorkoutImport.Status: Equatable {
     
 }
 
-class WorkoutImport: ObservableObject, Identifiable {
+class WorkoutImport: ObservableObject, Identifiable, Hashable {
     enum Status {
         case new, processing, processed, notSupported, failed, invalid(file: String)
     }
@@ -42,6 +44,10 @@ class WorkoutImport: ObservableObject, Identifiable {
     
     var uuidString: String {
         id.uuidString
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
     
     @Published var status: Status
@@ -93,14 +99,12 @@ class WorkoutImport: ObservableObject, Identifiable {
         start = .init(valueType: .date, value: Date().timeIntervalSince1970)
     }
     
-    init?(fileURL: URL) {
-        guard let fit = FitFile(file: fileURL) else { return nil }
-        guard let sport = fit.messages(forMessageType: .sport).first else { return nil }
-        guard let session = fit.messages(forMessageType: .session).first else { return nil }
+    init?(fitFile: FitFile) {
+        guard let sport = fitFile.messages(forMessageType: .sport).first else { return nil }
+        guard let session = fitFile.messages(forMessageType: .session).first else { return nil }
         
-        self.fileURL = fileURL
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
-        status = self.sport.isSupported ? .new : .notSupported
+        status = self.sport.isImportSupported ? .new : .notSupported
         indoor = Self.isIndoor(subsport: sport.interpretedField(key: "sub_sport")?.name ?? "")
                 
         timestamp = .init(valueType: .date, field: session.interpretedField(key: "timestamp"))
@@ -113,7 +117,6 @@ class WorkoutImport: ObservableObject, Identifiable {
         totalDescent = .init(valueType: .altitude, field: session.interpretedField(key: "total_descent"))
         minAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "min_altitude"))
         maxAltitude = .init(valueType: .altitude, field: session.interpretedField(key: "max_altitude"))
-        
         
         totalDistance = .init(valueType: .distance, field: session.interpretedField(key: "total_distance"))
         avgSpeed = .init(valueType: .speed, field: session.interpretedField(key: "avg_speed"))
@@ -133,10 +136,10 @@ class WorkoutImport: ObservableObject, Identifiable {
         maxTemperature = .init(valueType: .temperature, field: session.interpretedField(key: "max_temperature"))
         
         // Records
-        records = fit.messages(forMessageType: .record).map { .init(message: $0) }
+        records = fitFile.messages(forMessageType: .record).compactMap { .init(message: $0) }
         
         // Events
-        events = fit.messages(forMessageType: .event).compactMap { (message) -> Event? in
+        events = fitFile.messages(forMessageType: .event).compactMap { (message) -> Event? in
             Event(message: message)
         }
     }
@@ -286,7 +289,7 @@ extension WorkoutImport {
     
     static func isFileSupported(fit: FitFile) -> Bool {
         guard let field = fit.messages(forMessageType: .sport).first?.interpretedField(key: "sport") else { return false }
-        return Sport(string: field.name ?? "").isSupported
+        return Sport(string: field.name ?? "").isImportSupported
     }
     
 }

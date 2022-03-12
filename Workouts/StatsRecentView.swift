@@ -38,14 +38,13 @@ extension StatsRecentView {
     
 }
 
-struct StatsRecentView: View {
-    @EnvironmentObject var purchaseManager: IAPManager
+struct StatsRecentView: View {    
+    private let options: [Options] = [.distance, .calories, .elevation]
+    @State private var option = Options.distance
     
-    let options: [Options] = [.distance, .calories, .elevation]
-    @State var option = Options.distance
-    
-    var timeframe: StatsSummary.Timeframe
-    var summaries: [StatsSummary]
+    let timeframe: StatsSummary.Timeframe
+    let sport: Sport?
+    let summaries: [StatsSummary]
     
     @State private var values = [Double]()
     
@@ -76,15 +75,15 @@ struct StatsRecentView: View {
             
             
             List(summaries, id: \.self) { summary in
-                NavigationLink(destination: destination(for: summary)) {
+                NavigationLink(destination: StatsWorkoutsView(identifiers: summary.workouts, title: summary.title)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 5.0) {
-                            Text(summary.dateRangeHeader)
+                            Text(summary.title)
                                 .font(.fixedTitle3)
                                 .foregroundColor(summary.isCurrentInterval ? .time : .primary)
                             
                             HStack {
-                                Text(summary.timeString)
+                                Text(summary.durationString)
                                     .foregroundColor(.time)
                                 
                                 Divider()
@@ -105,20 +104,31 @@ struct StatsRecentView: View {
             }
             .zIndex(0.0)
             .listStyle(PlainListStyle())
+            .overlay(emptyOverlay())
         }
         .paywallButtonOverlay()
         .navigationTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text(timeframe.recentTitle)
+                        .font(.system(size: 13.0, weight: .semibold, design: .default))
+                    Text(sport?.activityName ?? "All Workouts")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
-}
-
-extension StatsRecentView {
     
-    func destination(for summary: StatsSummary) -> some View {
-        StatsWorkoutsView(sport: summary.sport, interval: summary.interval)
-            .navigationTitle(summary.dateRangeHeader)
+    @ViewBuilder
+    func emptyOverlay() -> some View {
+        if summaries.isEmpty {
+            Text("No Workouts")
+                .foregroundColor(.secondary)
+        }
     }
-    
 }
 
 extension StatsRecentView {
@@ -169,7 +179,7 @@ extension StatsRecentView {
         summaries.map { (summary) -> ChartInterval in
             ChartInterval(
                 xValue: summary.interval.start.timeIntervalSince1970,
-                yValue: summary.energyBurned
+                yValue: summary.calories
             )
         }.reversed()
     }
@@ -190,7 +200,7 @@ struct StatsRecentView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            StatsRecentView(timeframe: .week, summaries: summaries)
+            StatsRecentView(timeframe: .week, sport: .cycling, summaries: summaries)
                 .environmentObject(IAPManagerPreview.manager(isActive: true))
                 .preferredColorScheme(.dark)
         }

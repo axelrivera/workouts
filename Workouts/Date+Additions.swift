@@ -133,6 +133,38 @@ extension Date {
         return dates
     }
     
+    static func weekIntervals(from fromDate: Date, to toDate: Date) -> [DateInterval] {
+        var intervals = [DateInterval]()
+        var date = fromDate.workoutWeekStart
+        let newToDate = toDate.workoutWeekEnd
+        
+        while date < newToDate {
+            let start = date
+            let end = date.workoutWeekEnd
+            let interval = DateInterval(start: start, end: end)
+            intervals.append(interval)
+            date = end.addingTimeInterval(1).workoutWeekStart
+        }
+        
+        return intervals
+    }
+    
+    static func monthIntervals(from fromDate: Date, to toDate: Date) -> [DateInterval] {
+        var intervals = [DateInterval]()
+        var date = fromDate.startOfMonth
+        let newToDate = toDate.endOfMonth
+        
+        while date <= newToDate {
+            let start = date
+            let end = date.endOfMonth
+            let interval = DateInterval(start: start, end: end)
+            intervals.append(interval)
+            guard let newDate = Calendar.current.date(byAdding: .month, value: 1, to: date) else { break }
+            date = newDate.startOfMonth
+        }
+        return intervals
+    }
+    
 }
 
 extension Date {
@@ -157,6 +189,12 @@ extension DateInterval {
     static func lastTwelveMonths() -> DateInterval {
         let end = Date()
         let start = Calendar.current.date(byAdding: .month, value: -11, to: end)!.startOfMonth
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func lastSixMonths() -> DateInterval {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .month, value: -5, to: end)!.startOfMonth
         return DateInterval(start: start, end: end)
     }
     

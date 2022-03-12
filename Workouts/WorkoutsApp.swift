@@ -14,9 +14,10 @@ import SwiftUI
 #error("preventing debug version from overriding production release")
 #endif
 
+let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
+
 @main
 struct WorkoutsApp: App {
-    
     let purchaseManager = IAPManager()
     // Instanciate LogManager and StatsManager first because they have observers that may depend from other singletons
     let logManager: LogManager
@@ -25,16 +26,22 @@ struct WorkoutsApp: App {
     let workoutDataStore: WorkoutDataStore
     let storageProvider = StorageProvider()
     let workoutManager: WorkoutManager
+    let tagManager: TagManager
     let synchronizer: Synchronizer
     
     init() {
+        AppSettings.workoutsQueryAnchor = nil
+        let context = storageProvider.persistentContainer.viewContext
         workoutDataStore = WorkoutDataStore.shared
-        logManager = LogManager(context: storageProvider.persistentContainer.viewContext)
-        statsManager = StatsManager(context: storageProvider.persistentContainer.viewContext)
-        workoutManager = WorkoutManager(context: storageProvider.persistentContainer.viewContext)
+        logManager = LogManager(context: context)
+        statsManager = StatsManager(context: context)
+        workoutManager = WorkoutManager(context: context)
+        tagManager = TagManager(context: context)
         
         let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
         backgroundContext.automaticallyMergesChangesFromParent = true
+        backgroundContext.transactionAuthor = APP_TRANSACTION_AUTHOR_NAME
+        
         synchronizer = Synchronizer(context: backgroundContext)
     }
     
@@ -46,6 +53,7 @@ struct WorkoutsApp: App {
                 .environmentObject(logManager)
                 .environmentObject(statsManager)
                 .environmentObject(purchaseManager)
+                .environmentObject(tagManager)
         }
     }
 }

@@ -13,6 +13,11 @@ extension NSManagedObject {
         String(describing: Self.self)
     }
     
+//    static func fetchRequest<Object>() -> NSFetchRequest<Object> {
+//        let request: NSFetchRequest<Object> = NSFetchRequest(entityName: entityName)
+//        return request
+//    }
+    
 }
 
 extension NSManagedObjectContext {
@@ -30,7 +35,6 @@ extension NSManagedObjectContext {
     
     func batchDeleteObjects() {
         Workout.batchDeleteObjectsMarkedForDeletion(in: self)
-        Sample.batchDeleteOrphanedObjects(in: self)
     }
     
 }

@@ -9,8 +9,6 @@ import CoreData
 import HealthKit
 
 class RemoteImporter {
-    static let BATCH_SIZE = 50
-    
     private let context: NSManagedObjectContext
     private lazy var downloader = WorkoutsDownloader()
     
@@ -19,46 +17,54 @@ class RemoteImporter {
     }
     
     func importLatestWorkouts(anchor: HKQueryAnchor?, regenerate: Bool) async -> HKQueryAnchor? {
+        if let anchor = anchor {
+            Log.debug("fetch latest workouts with anchor: \(anchor)")
+        } else {
+            Log.debug("fetch latest workouts -- no anchor")
+        }
+        
         let (remoteWorkouts, deleted, newAnchor) = await downloader.fethLatestWorkouts(anchor: anchor)
-        
         var responseAnchor: HKQueryAnchor? = newAnchor
-        let totalWorkouts = remoteWorkouts.count
         
-        Log.debug("total workouts: \(totalWorkouts)")
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: .willBeginProcessingRemoteData,
+                object: nil
+            )
+        }
         
         if deleted.isPresent {
             deleteWorkouts(with: deleted, context: context)
             context.saveOrRollback()
         }
         
-        DispatchQueue.main.async {
-            let userInfo = [Notification.totalRemoteWorkoutsKey: totalWorkouts]
-            NotificationCenter.default.post(
-                name: .willBeginProcessingRemoteData,
-                object: nil,
-                userInfo: userInfo
-            )
-        }
-        
         for remoteWorkout in remoteWorkouts {
             if let workout = Workout.find(using: remoteWorkout.uuid, in: context) {
                 if regenerate {
                     Log.debug("regenerating existing workout: \(remoteWorkout.uuid)")
-                    let object = await WorkoutProcessor.object(for: remoteWorkout)
-                    Workout.updateValues(for: workout, object: object, in: context)
+                    let object = await WorkoutProcessor.insertObject(for: remoteWorkout)
+                    Workout.updateValues(for: workout, object: object, isLocationPending: true, in: context)
                 } else {
                     Log.debug("skipping existing workout: \(remoteWorkout.uuid)")
                 }
             } else {
                 Log.debug("inserting workout: \(remoteWorkout.uuid)")
-                let object = await WorkoutProcessor.object(for: remoteWorkout)
-                Workout.insert(into: context, object: object, regenerate: regenerate)
+                let object = await WorkoutProcessor.insertObject(for: remoteWorkout)
+                Workout.insert(into: context, object: object)
+                
+                let tags = Tag.defaultTags(sport: object.sport, in: context)
+                tags.forEach { tag in
+                    WorkoutTag.insert(into: context, workout: object.identifier, tag: tag)
+                }
             }
             
+            let identifier = remoteWorkout.uuid
+            let userInfo: [String: Any] = [Notification.remoteWorkoutKey: identifier]
+            
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil)
+                NotificationCenter.default.post(name: .didInsertRemoteData, object: nil, userInfo: userInfo)
             }
-        }
+        } 
         
         do {
             if context.hasChanges {
@@ -70,7 +76,7 @@ class RemoteImporter {
         }
         
         context.refreshAllObjects()
-        
+                
         DispatchQueue.main.async {
             Log.debug("LOG - send finish processing remote data notification")
             NotificationCenter.default.post(

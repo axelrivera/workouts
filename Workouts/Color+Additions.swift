@@ -26,6 +26,8 @@ extension Color {
     static let darkGray = Color(UIColor.darkGray)
     static let lightGray = Color(UIColor.lightGray)
     static let systemYellow = Color(UIColor.systemYellow)
+    
+    static let colorPickerBorder = Color("ColorPickerBorder")
 }
 
 // MARK: Asset Colors
@@ -60,7 +62,12 @@ extension Color {
     static let obsidian = Color(hex: "000000")
     
     static var workoutColors: [Color] = {
-        [.accentColor, .ruby, .amber, .citrine, .emerald, .amazonite, apatite, saphire, lolite, .amethyst, .graphite, .obsidian]
+        [accentColor, ruby, amber, citrine, emerald, amazonite, apatite, saphire, lolite, amethyst, graphite, obsidian]
+    }()
+    
+    static var tagColors: [Color] = {
+        [accentColor, ruby, amber, citrine, emerald, apatite,
+         lolite, pink, purple, brown , orange, mint]
     }()
     
 }

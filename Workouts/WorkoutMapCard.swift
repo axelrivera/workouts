@@ -8,11 +8,14 @@
 import SwiftUI
 
 struct WorkoutMapCard: View, WorkoutSharable {
+    static let headerHeight: CGFloat = 80.0
+    static let footerHeight: CGFloat = 80.0
+    
     private let contentPadding = EdgeInsets(
         top: CGFloat(10.0),
-        leading: CGFloat(20.0),
+        leading: CGFloat(10.0),
         bottom: CGFloat(10.0),
-        trailing: CGFloat(20.0)
+        trailing: CGFloat(10.0)
     )
     
     let viewModel: WorkoutCardViewModel
@@ -20,88 +23,164 @@ struct WorkoutMapCard: View, WorkoutSharable {
     var backgroundImage: UIImage?
     var showTitle = true
     var showDate = true
-    var showBranding: Bool = true
+    var mapColor = ShareManager.MapColor.dark
     
     var body: some View {
-        ZStack(alignment: .top) {
-            if let image = backgroundImage {
-                Image(uiImage: image)
-            } else {
-                Color.systemFill
-            }
-            
-            VStack(alignment: .leading, spacing: 10.0) {
-                if showTitle || showDate {
-                    HStack(alignment: .lastTextBaseline) {
-                        if showTitle {
-                            Text(viewModel.title)
-                                .font(.system(size: 22.0, weight: .bold))
-                                .shadow(radius: CGFloat(2.0))
-                            
-                            Spacer()
-                        }
+        ZStack(alignment: .bottom) {
+            VStack(spacing: 0.0) {
+                ZStack {
+                    backgroundColor
+                    
+                    HStack(alignment: .bottom) {
+                        Image(uiImage: UIImage(named: "bw_logo_horizontal")!)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 36.0)
+                        Spacer()
                         
-                        if let date = viewModel.date, showDate {
-                            Text(date)
-                                .font(.system(size: 18.0))
-                                .shadow(radius: CGFloat(2.0))
-                                .padding(.bottom, CGFloat(3.0))
+                        if showTitle || showDate {
+                            VStack(alignment: .trailing, spacing: 2.0) {
+                                if showTitle {
+                                    Text(viewModel.title)
+                                        .font(.system(size: 20.0))
+                                }
+
+                                if let date = viewModel.date, showDate {
+                                    Text(date)
+                                        .font(.system(size: 18.0))
+                                        .foregroundColor(secondaryColor)
+                                }
+                            }
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding([.leading, .trailing], 20.0)
                 }
+                .frame(maxHeight: Self.headerHeight, alignment: .center)
                 
-                HStack {
-                    if let distance = viewModel.distance {
-                        metricView(text: distanceTitle, detail: distance)
-                    }
-
-                    metricView(text: "Time", detail: viewModel.duration)
-
-                    if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
-                        metricView(text: text, detail: detail)
+                Group {
+                    if let image = backgroundImage {
+                        Image(uiImage: image)
+                    } else {
+                        Color.systemFill
                     }
                 }
+                .frame(maxHeight: .infinity, alignment: .top)
+                
+                ZStack {
+                    backgroundColor
+                    
+                    HStack(spacing: 20.0) {
+                        if let distance = viewModel.distance {
+                            metricView(text: distanceTitle, detail: distance, color: .distance)
+                        }
+
+                        metricView(text: "Time", detail: viewModel.duration, color: timeColor)
+                        
+                        if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
+                            metricView(text: text, detail: detail, color: color(for: metric))
+                            
+                            if let maxSpeed = viewModel.maxSpeed, metric == .speed {
+                                metricView(text: "Max Speed", detail: maxSpeed, color: speedColor)
+                            } else if let maxHR = viewModel.maxHeartRate, metric == .heartRate {
+                                metricView(text: ("Max HR"), detail: maxHR, color: .calories)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding([.leading, .trailing], 20.0)
+                }
+                .frame(maxHeight: Self.footerHeight, alignment: .bottom)
             }
-            .padding(contentPadding)
-            .background(Color.black.opacity(0.5))
         }
-        .foregroundColor(.white)
+        .foregroundColor(foregroundColor)
+        .background(backgroundColor)
         .frame(width: size.width, height: size.height, alignment: .top)
-        .overlay(brandingOverlay(), alignment: .bottomTrailing)
     }
     
     @ViewBuilder
-    func metricView(text: String, detail: String) -> some View {
-        VStack(alignment: .leading) {
+    func metricView(text: String, detail: String, color: Color? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 5.0) {
             Text(text)
                 .font(.system(size: 18.0))
-                .shadow(radius: CGFloat(2.0))
             Text(detail)
-                .font(.system(size: 22.0, weight: .bold))
-                .shadow(radius: CGFloat(2.0))
+                .font(.system(size: 22.0, weight: .medium))
+                .foregroundColor(color ?? foregroundColor)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    
-    @ViewBuilder
-    func brandingOverlay() -> some View {
-        if showBranding {
-            Text("Shared with betterworkouts.app")
-                .font(.system(size: 18.0))
-                .foregroundColor(.white)
-                .padding(EdgeInsets(top: CGFloat(5.0), leading: CGFloat(15.0), bottom: CGFloat(5.0), trailing: CGFloat(15.0)))
-                .background(Color.darkGray)
-        }
     }
 }
 
 extension WorkoutMapCard {
     
-    var distanceTitle: String {
-        if showTitle {
-            return "Distance"
-        } else {
-            return viewModel.sport.altName
+    func colorTrait(for style: UIUserInterfaceStyle) -> UITraitCollection {
+        UITraitCollection(userInterfaceStyle: style)
+    }
+    
+    func color(named: String) -> Color {
+        let color = UIColor(named: named)!
+        let resultColor: UIColor
+        
+        switch mapColor {
+        case .light:
+            resultColor = color.resolvedColor(with: colorTrait(for: .light))
+        case .dark:
+            resultColor = color.resolvedColor(with: colorTrait(for: .dark))
+        }
+        return Color(uiColor: resultColor)
+    }
+    
+    var speedColor: Color {
+        color(named: "SpeedColor")
+    }
+    
+    var paceColor: Color {
+        color(named: "CadenceColor")
+    }
+    
+    var timeColor: Color {
+        color(named: "TimeColor")
+    }
+    
+    func color(for metric: WorkoutCardViewModel.Metric) -> Color {
+        switch metric {
+        case .speed:
+            return speedColor
+        case .pace:
+            return paceColor
+        case .heartRate, .calories:
+            return .calories
+        case .elevation:
+            return .elevation
+        default:
+            return foregroundColor
+        }
+    }
+    
+    var foregroundColor: Color {
+        switch mapColor {
+        case .dark:
+            return .white
+        case .light:
+            return .black
+        }
+    }
+    
+    var secondaryColor: Color {
+        switch mapColor {
+        case .dark:
+            return Color(uiColor: UIColor(red: 235/255, green: 235/255, blue: 245/255, alpha: 0.6))
+        case .light:
+            return Color(uiColor: UIColor(red: 60/255, green: 60/255, blue: 67/255, alpha: 0.6))
+        }
+    }
+    
+    var backgroundColor: Color {
+        switch mapColor {
+        case .dark:
+            return .black
+        case .light:
+            return .white
         }
     }
     
@@ -117,8 +196,10 @@ struct WorkoutMapCard_Previews: PreviewProvider {
             duration: "2h 30m",
             distance: "30 mi",
             speed: "15.0 mph",
+            maxSpeed: "30 mph",
             pace: nil,
             heartRate: "145 bpm",
+            maxHeartRate: "180 bpm",
             elevation: "1,000 ft",
             calories: "500 cal",
             coordinates: sampleCoordinates()
@@ -132,8 +213,9 @@ struct WorkoutMapCard_Previews: PreviewProvider {
     }()
     
     static var previews: some View {
-        WorkoutMapCard(viewModel: viewModel)
+        WorkoutMapCard(viewModel: viewModel, mapColor: .dark)
             .padding()
+            .background(Color.red)
             .previewLayout(.sizeThatFits)
     }
 }

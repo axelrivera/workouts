@@ -8,37 +8,43 @@
 import SwiftUI
 
 struct WorkoutColorPicker: View {
-    private static let width: Double = 50.0
+    private let columns = Array(repeating: GridItem(.adaptive(minimum: 50.0, maximum: 75.0)), count: 6)
     
-    private let data = Color.workoutColors
-    private let width: Double = Self.width
-
-    private let rows = [
-        GridItem(.fixed(Self.width))
-    ]
-    
+    var colors = Color.workoutColors
     @Binding var selectedColor: Color
     var selectedAction: (_ color: Color) -> Void
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHGrid(rows: rows, alignment: .top, spacing: 20.0) {
-                ForEach(data, id: \.self) { color in
-                    Button(action: { selectColor(color) }) {
-                        Rectangle()
-                            .fill(color)
-                            .frame(width: CGFloat(width), height: CGFloat(width))
-                            .border(selectedColor == color ? .yellow : .white, width: 2.0)
-                    }
+        LazyVGrid(columns: columns, alignment: .center, spacing: 20.0) {
+            ForEach(colors, id: \.self) { color in
+                Button(action: { selectColor(color) }) {
+                    Circle()
+                        .stroke(color == selectedColor ? Color.yellow : Color.colorPickerBorder, lineWidth: 3.0)
+                        .background(Circle().fill(color))
+                        .frame(minWidth: 30.0, maxWidth: .infinity, minHeight: 40.0, maxHeight: .infinity, alignment: .center)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .frame(height: CGFloat(width))
         }
-        .padding([.top, .bottom], CGFloat(5.0))
+        .frame(maxWidth: .infinity, minHeight: 100.0, maxHeight: 120.0)
     }
     
     func selectColor(_ color: Color) {
         selectedColor = color
         selectedAction(color)
+    }
+}
+
+struct WorkoutColorPicker_Previews: PreviewProvider {
+    @State static var selectedColor = Color.accentColor
+    
+    static var previews: some View {
+        Form {
+            WorkoutColorPicker(selectedColor: $selectedColor) { color in
+                
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .preferredColorScheme(.dark)
     }
 }

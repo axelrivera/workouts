@@ -149,21 +149,13 @@ struct WorkoutLogItem: View {
     func destinationView() -> some View {
         if let identifier = day.remoteIdentifiers.first, day.totalActivities == 1 {
             if let workout = Workout.find(using: identifier, in: viewContext) {
-                DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))
+                DetailView(viewModel: workout.detailViewModel)
             } else {
                 Text("No Workout")
             }
         } else {
-            List {
-                WorkoutFilter(identifiers: day.remoteIdentifiers, isEmpty: .constant(false)) { workout in
-                    NavigationLink(destination: DetailView(detailManager: DetailManager(viewModel: workout.detailViewModel))) {
-                        WorkoutPlainCell(viewModel: workout.detailViewModel)
-                    }
-                }
-            }
-            .listStyle(PlainListStyle())
-            .navigationTitle("Workouts")
-            .navigationBarTitleDisplayMode(.inline)
+            StatsWorkoutsView(identifiers: day.remoteIdentifiers)
+                .navigationTitle("Workouts")
         }
     }
 }
@@ -172,12 +164,22 @@ extension WorkoutLogItem {
     
     @ViewBuilder
     func bubbleOverlay() -> some View {
-        if day.hasActivities {
-            Text(text)
-                .font(.system(size: 10))
-                .foregroundColor(.white)
-                .minimumScaleFactor(0.9)
-                .padding(3)
+        if displayType == .distance {
+            if day.distance > 0 {
+                Text(text)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.9)
+                    .padding(3)
+            }
+        } else {
+            if day.hasActivities {
+                Text(text)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.9)
+                    .padding(3)
+            }
         }
     }
     
@@ -205,6 +207,10 @@ extension WorkoutLogItem {
     
     var scaleFactor: CGFloat {
         guard day.hasActivities else { return 0.1 }
+        
+        if displayType == .distance && day.distance == 0 {
+            return 0.3
+        }
         
         let preferredSport = day.distancePreferredSport
         switch displayType {

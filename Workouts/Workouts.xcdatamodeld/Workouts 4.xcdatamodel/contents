@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21C52" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Tag" representedClassName="Tag" syncable="YES">
+        <attribute name="archivedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="color" optional="YES" attributeType="Transformable" valueTransformerName="ColorTransformer" customClassName="UIKit.UIColor"/>
+        <attribute name="deletedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="gearTypeValue" optional="YES" attributeType="String"/>
+        <attribute name="isArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isDefault" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="position" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="uuid" type="Binary" order="ascending"/>
+            <fetchIndexElement property="position" type="Binary" order="ascending"/>
+            <fetchIndexElement property="deletedDate" type="Binary" order="ascending"/>
+            <fetchIndexElement property="archivedDate" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isDefault" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isArchived" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="Workout" representedClassName="Workout" syncable="YES">
+        <attribute name="appIdentifier" optional="YES" attributeType="String"/>
+        <attribute name="avgCyclingCadence" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="avgHeartRate" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="avgMovingPace" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="avgMovingSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="avgPace" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="avgSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="coordinatesValue" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayOfWeek" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="device" optional="YES" attributeType="String"/>
+        <attribute name="distance" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="elevationAscended" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="elevationDescended" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="end" attributeType="Date" defaultDateTimeInterval="643864620" usesScalarValueType="NO"/>
+        <attribute name="energyBurned" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="indoor" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isLocationPending" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="locationCity" optional="YES" attributeType="String"/>
+        <attribute name="locationState" optional="YES" attributeType="String"/>
+        <attribute name="markedForDeletionDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="maxCyclingCadence" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="maxElevation" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="maxHeartRate" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="maxSpeed" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="minElevation" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="movingTime" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="remoteIdentifier" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="showMap" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="source" optional="YES" attributeType="String"/>
+        <attribute name="sportValue" optional="YES" attributeType="String"/>
+        <attribute name="start" attributeType="Date" defaultDateTimeInterval="643864800" usesScalarValueType="NO"/>
+        <attribute name="totalRetries" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="zoneMaxHeartRate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zoneValue1" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zoneValue2" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zoneValue3" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zoneValue4" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zoneValue5" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <fetchedProperty name="metadata" optional="YES">
+            <fetchRequest name="fetchedPropertyFetchRequest" entity="WorkoutMetadata" predicateString="$FETCH_SOURCE.remoteIdentifier == identifier"/>
+        </fetchedProperty>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="start" type="Binary" order="descending"/>
+            <fetchIndexElement property="remoteIdentifier" type="Binary" order="ascending"/>
+            <fetchIndexElement property="dayOfWeek" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="remoteIdentifier"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="WorkoutMetadata" representedClassName="WorkoutMetadata" syncable="YES">
+        <attribute name="favoriteDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="identifier" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="identifier" type="Binary" order="ascending"/>
+            <fetchIndexElement property="isFavorite" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <entity name="WorkoutTag" representedClassName="WorkoutTag" syncable="YES">
+        <attribute name="deletedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="tagId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="workoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <fetchIndex name="byPropertyIndex">
+            <fetchIndexElement property="tagId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="workoutId" type="Binary" order="ascending"/>
+            <fetchIndexElement property="deletedDate" type="Binary" order="ascending"/>
+        </fetchIndex>
+    </entity>
+    <configuration name="Cloud" usedWithCloudKit="YES">
+        <memberEntity name="WorkoutMetadata"/>
+        <memberEntity name="Tag"/>
+        <memberEntity name="WorkoutTag"/>
+    </configuration>
+    <configuration name="Local">
+        <memberEntity name="Workout"/>
+    </configuration>
+    <elements>
+        <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="665"/>
+        <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
+        <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
+    </elements>
+</model>

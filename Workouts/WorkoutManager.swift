@@ -8,31 +8,53 @@
 import SwiftUI
 import Combine
 import CoreData
+import CoreLocation
 
 class WorkoutManager: ObservableObject {
+    let LOADING_WAIT_IN_SECONDS = 2.0
+    
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
+    private(set) var metaProvider: MetadataProvider
+    private(set) var tagProvider: TagProvider
+    private(set) var storage: WorkoutStorage
     
     private let authProvider = HealthAuthProvider.shared
     private let healthProvider = HealthProvider.shared
-    
-    @Published var sport: Sport?
-    @Published var isWorkoutsVisible = false
-    @Published var selectedWorkout: UUID?
-    
-    @Published var isProcessingRemoteData = false
-    @Published var processingRemoteDataValue: Double = 0
-    @Published var totalProcessingWorkouts = 0
-    private var totalPendingWorkouts = 0
         
+    @Published var sport: Sport?
+
+    @Published var showDateFilter = false
+    @Published var filterByfavorites = false
+    @Published var filterBySports = Set<Sport>()
+    @Published var filterByStartDate = Date()
+    @Published var filterByEndDate = Date()
+    @Published var filterByMinDistance: Double = 0
+    @Published var filterByMaxDistance: Double = 0
+    
+    var processingRemoteDataTimestamp: Date?
+    @Published var isProcessingRemoteData = false
+    @Published var showProcessingRemoteDataLoading = false
+    
+    var updatingRemoteLocationDataTimestamp: Date?
+    @Published var isUpdatingRemoteLocationData = false
+    @Published var showUpdatingRemoteLocationDataLoading = false
+    
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
-    @Published var recentWorkouts = [Workout]()
+
+    @Published var showNoWorkoutsAlert = false
+    
+    var isProcessing: Bool {
+        isProcessingRemoteData || isUpdatingRemoteLocationData
+    }
     
     init(context: NSManagedObjectContext) {
         self.context = context
         dataProvider = DataProvider(context: context)
-        recentWorkouts = dataProvider.recentWorkouts()
+        metaProvider = MetadataProvider(context: context)
+        tagProvider = TagProvider(context: context)
+        storage = WorkoutStorage(context: context)
         addObservers()
     }
     
@@ -42,7 +64,7 @@ class WorkoutManager: ObservableObject {
     
     // MARK: - Methods
     
-    func requestHealthaStatus() async {
+    func requestHealthStatus() async {
         let shouldRequestStatus = await authProvider.shouldRequestStatus()
         if shouldRequestStatus {
             DispatchQueue.main.async {
@@ -52,6 +74,7 @@ class WorkoutManager: ObservableObject {
         } else {
             Log.debug("request status not required")
             refreshWorkouts(isAuthorized: isAuthorized)
+            validateHealthPermissions()
         }
     }
     
@@ -87,18 +110,47 @@ class WorkoutManager: ObservableObject {
         NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
     }
     
-    func fetchRecentWorkouts() {
-        let workouts = dataProvider.recentWorkouts()
-        
-        DispatchQueue.main.async {
-            withAnimation {
-                self.recentWorkouts = workouts
+    var totalWorkouts: Int {
+        dataProvider.totalWorkouts(sport: sport, interval: nil)
+    }
+    
+    func validateHealthPermissions() {
+        Task(priority: .userInitiated) {
+            do {
+                let total = try await healthProvider.totalWorkouts()
+                DispatchQueue.main.async {
+                    self.showNoWorkoutsAlert = total == 0
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showNoWorkoutsAlert = true
+                }
             }
         }
     }
     
-    var showImportProgress: Bool {
-        isProcessingRemoteData && totalProcessingWorkouts > 5
+}
+
+// MARK: - Metadata
+
+extension WorkoutManager {
+    
+    func toggleFavorite(_ identifier: UUID) {
+        var isFavorite = storage.isWorkoutFavorite(identifier)
+
+        do {
+            if isFavorite {
+                try metaProvider.unfavoriteWorkout(for: identifier)
+                isFavorite = false
+            } else {
+                try metaProvider.favoriteWorkout(for: identifier)
+                isFavorite = true
+            }
+
+            storage.set(isFavorite: isFavorite, forID: identifier)
+        } catch {
+            Log.debug("favorite toggle error for id - \(identifier): \(error.localizedDescription)")
+        }
     }
     
 }
@@ -108,6 +160,8 @@ class WorkoutManager: ObservableObject {
 extension WorkoutManager {
     
     private func addObservers() {
+        // Inserting Workouts
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(willProcessWorkouts),
@@ -128,23 +182,49 @@ extension WorkoutManager {
             name: .didFinishProcessingRemoteData,
             object: nil
         )
+        
+        // Updating Location Data
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willStartUpdatingLocation),
+            name: .willBeginProcessingRemoteLocationData,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didUpdateLocation),
+            name: .didUpdateRemoteLocationData,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didFinishUpdatingLocation),
+            name: .didFinishProcessingRemoteLocationData,
+            object: nil
+        )
     }
     
     private func removeObservers() {
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
+        
+        NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteLocationData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didUpdateRemoteLocationData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteLocationData, object: nil)
     }
+    
+    // MARK: - Inserting Workouts
     
     @objc
     private func willProcessWorkouts(_ notification: Notification) {
-        let processing = notification.userInfo?[Notification.totalRemoteWorkoutsKey] as? Int ?? 0
+        processingRemoteDataTimestamp = Date()
         
         DispatchQueue.main.async {
             withAnimation {
-                self.totalProcessingWorkouts = processing
-                self.totalPendingWorkouts = processing
-                self.processingRemoteDataValue = 0.0
                 self.isProcessingRemoteData = true
             }
         }
@@ -152,23 +232,75 @@ extension WorkoutManager {
     
     @objc
     private func didInsertWorkout(_ notification: Notification) {
-        totalPendingWorkouts -= 1
-        let current = totalProcessingWorkouts - totalPendingWorkouts
-        let value = Double(current) / Double(totalProcessingWorkouts)
+        let now = Date()
+        let date = processingRemoteDataTimestamp ?? now
+        let waitTime = now.timeIntervalSince(date)
         
-        DispatchQueue.main.async {
-            self.processingRemoteDataValue = value
+        if waitTime > LOADING_WAIT_IN_SECONDS && !showProcessingRemoteDataLoading {
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.showProcessingRemoteDataLoading = true
+                }
+            }
         }
     }
     
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
+        processingRemoteDataTimestamp = nil
+        validateHealthPermissions()
+        
         DispatchQueue.main.async {
             withAnimation {
-                self.totalProcessingWorkouts = 0
-                self.totalPendingWorkouts = 0
-                self.processingRemoteDataValue = 0.0
                 self.isProcessingRemoteData = false
+                self.showProcessingRemoteDataLoading = false
+            }
+        }
+    }
+    
+    // MARK: - Updating Location Data
+    
+    @objc
+    func willStartUpdatingLocation(_ notification: Notification) {
+        updatingRemoteLocationDataTimestamp = Date()
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isUpdatingRemoteLocationData = true
+            }
+        }
+    }
+    
+    @objc
+    func didUpdateLocation(_ notification: Notification) {
+        let now = Date()
+        let date = updatingRemoteLocationDataTimestamp ?? now
+        let waitTime = now.timeIntervalSince(date)
+        
+        if waitTime > LOADING_WAIT_IN_SECONDS && !showUpdatingRemoteLocationDataLoading {
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.showUpdatingRemoteLocationDataLoading = true
+                }
+            }
+        }
+        
+        let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID
+        let coordinates = notification.userInfo?[Notification.coordinatesKey] as? [CLLocationCoordinate2D]
+
+        if let remoteIdentifier = remoteIdentifier, let coordinates = coordinates {
+            self.storage.set(coordinates: coordinates, forID: remoteIdentifier)
+        }
+    }
+    
+    @objc
+    func didFinishUpdatingLocation(_ notification: Notification) {
+        updatingRemoteLocationDataTimestamp = nil
+        
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isUpdatingRemoteLocationData = false
+                self.showUpdatingRemoteLocationDataLoading = false
             }
         }
     }

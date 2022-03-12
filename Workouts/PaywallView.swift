@@ -8,7 +8,13 @@
 import SwiftUI
 
 struct PaywallView: View {
+    enum AlertSheet: Identifiable, Hashable {
+        case error(message: String)
+        var id: Self { self }
+    }
+    
     @Environment(\.presentationMode) var presentationMode
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var purchaseManager: IAPManager
     @State private var isProcessing = false
     
@@ -25,6 +31,7 @@ struct PaywallView: View {
     }
     
     @State private var items = PaywallItem.items()
+    @State private var activeAlert: AlertSheet?
     
     @ViewBuilder
     func headerView() -> some View {
@@ -112,6 +119,16 @@ struct PaywallView: View {
                     Button("Not Now", action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .error(let message):
+                    return Alert(
+                        title: Text("Purchase Error"),
+                        message: Text(message),
+                        dismissButton: Alert.Button.cancel(Text("Ok"))
+                    )
+                }
+            }
         }
     }
     
@@ -125,9 +142,11 @@ extension PaywallView {
             withAnimation { self.isPurchasing = false }
             switch result {
             case .success:
+                viewContext.refreshAllObjects()
                 presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("purchase failed: \(error.localizedDescription)")
+                activeAlert = .error(message: error.localizedDescription)
             }
         }
     }
@@ -141,6 +160,7 @@ extension PaywallView {
                 presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("restore failed: \(error.localizedDescription)")
+                activeAlert = .error(message: error.localizedDescription)
             }
         }
     }

@@ -13,7 +13,7 @@ import CoreData
 
 class DetailManager: ObservableObject {
     enum DetailError: Error {
-        case lap
+        case lap, metadata
     }
     
     @Published var isProcessingAnalysis: Bool = false
@@ -36,16 +36,22 @@ class DetailManager: ObservableObject {
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
     @Published private(set) var lapsDictionary = [LapDistance: [WorkoutLap]]()
-        
-    var distanceSamples: [Quantity]?
     
-    private var context: NSManagedObjectContext?
-    private var _workout: Workout?
-    
-    var detail: WorkoutDetailViewModel
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
             
-    init(viewModel: WorkoutDetailViewModel) {
+    var distanceSamples: [Quantity]?
+        
+    var detail: WorkoutDetailViewModel
+    var context: NSManagedObjectContext
+    private let metaProvider: MetadataProvider
+    private let workoutTagProvider: WorkoutTagProvider
+    
+    init(viewModel: WorkoutDetailViewModel, context: NSManagedObjectContext) {
         self.detail = viewModel
+        self.context = context
+        metaProvider = MetadataProvider(context: context)
+        workoutTagProvider = WorkoutTagProvider(context: context)
     }
     
     lazy var provider: HealthProvider = {
@@ -85,13 +91,21 @@ extension DetailManager {
         
     func processWorkout() {
         DispatchQueue.main.async {
-            withAnimation {
-                self.isProcessingAnalysis = true
-                self.isProcessingLaps = true
-            }
+            self.isProcessingAnalysis = true
+            self.isProcessingLaps = true
         }
-                
+
         Task(priority: .userInitiated) {
+            context.performAndWait {
+                let isFavorite = self.metaProvider.isFavorite(self.detail.id)
+                let tags: [TagLabelViewModel] = self.workoutTagProvider.visibleTags(forWorkout: self.detail.id).map({ $0.viewModel() })
+
+                DispatchQueue.main.async {
+                    self.isFavorite = isFavorite
+                    self.tags = tags
+                }
+            }
+            
             await process()
             await processLaps()
         }
@@ -100,15 +114,14 @@ extension DetailManager {
     private func process() async {
         do {
             guard let remoteWorkout = try? await remoteWorkout() else { return }
-
+            
             let locations = (try? await provider.fetchLocations(for: remoteWorkout)) ?? []
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
             let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
             let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
-            
-            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(avgCadence: avgCadence)
+            let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(duration: detail.movingTime, avgCadence: avgCadence)
             
             let paceValues: [ChartInterval]
             let bestPace: Double
@@ -138,7 +151,7 @@ extension DetailManager {
             let locationAltitudes = locations.altitudeValues()
             let maxElevation = locationAltitudes.max() ?? 0
             let minElevation = locationAltitudes.min() ?? 0
-
+            
             DispatchQueue.main.async {
                 self.speedValues = speed
                 self.paceValues = paceValues
@@ -216,12 +229,14 @@ extension DetailManager {
         }
     }
     
-    func updateZones(maxHeartRate: Int, values: [Int], context: NSManagedObjectContext) async {
+    func updateZones(maxHeartRate: Int, values: [Int]) async {
         guard let remoteWorkout = try? await remoteWorkout() else { return }
         guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
-                
-        workout.updateHeartRateZones(with: maxHeartRate, values: values)
-        context.saveOrRollback()
+        
+        context.performAndWait {
+            workout.updateHeartRateZones(with: maxHeartRate, values: values)
+            context.saveOrRollback()
+        }
 
         let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
         let zones: [HRZoneSummary]
@@ -239,6 +254,45 @@ extension DetailManager {
         }
     }
     
+    func fetchWorkout() throws -> WorkoutMetadata {
+        return try metaProvider.fetchWorkout(identifier: detail.id)
+    }
+    
+    func fetchTags() -> [TagLabelViewModel] {
+        workoutTagProvider.visibleTags(forWorkout: detail.id).map({ $0.viewModel() })
+    }
+    
+    func reloadTags() {
+        WorkoutStorage.resetTags(forID: detail.id)
+        
+        let tags = fetchTags()
+        DispatchQueue.main.async {
+            withAnimation {
+                self.tags = tags
+            }
+        }
+    }
+    
+    func toggleFavorite() throws {
+        let identifier = detail.id
+        
+        var isFavorite = self.isFavorite
+        if isFavorite {
+            try metaProvider.unfavoriteWorkout(for: identifier)
+            isFavorite = false
+        } else {
+            try metaProvider.favoriteWorkout(for: identifier)
+            isFavorite = true
+        }
+        
+        WorkoutStorage.updateFavorite(isFavorite, forID: identifier)
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isFavorite = isFavorite
+            }
+        }
+    }
+    
 }
 
 extension DetailManager {
@@ -251,9 +305,11 @@ extension DetailManager {
             date: formattedWorkoutShareDateString(for: detail.start),
             duration: formattedHoursMinutesPrettyString(for: detail.totalTime),
             distance: detail.distance > 0 ? formattedDistanceString(for: detail.distance) : nil,
-            speed: detail.avgSpeed > 0 ? formattedSpeedString(for: detail.avgSpeed) : nil,
+            speed: detail.avgMovingSpeed > 0 ? formattedSpeedString(for: detail.avgMovingSpeed) : nil,
+            maxSpeed: detail.maxSpeed > 0 ? formattedSpeedString(for: detail.maxSpeed) : nil,
             pace: detail.avgPace > 0 ? formattedRunningWalkingPaceString(for: detail.avgPace) : nil,
             heartRate: detail.avgHeartRate > 0 ? formattedHeartRateString(for: detail.avgHeartRate) : nil,
+            maxHeartRate: detail.maxHeartRate > 0 ? formattedHeartRateString(for: detail.maxHeartRate) : nil,
             elevation: detail.elevationAscended > 0 ? formattedElevationString(for: detail.elevationAscended) : nil,
             calories: detail.energyBurned > 0 ? formattedCaloriesString(for: detail.energyBurned) : nil,
             coordinates: detail.coordinates
