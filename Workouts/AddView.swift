@@ -37,8 +37,8 @@ struct AddView: View {
         NavigationView {
             Form {
                 Picker("Activity", selection: $selectedSport) {
-                    ForEach(0 ..< Sports.titles.count) {
-                        Text(Sports.titles[$0])
+                    ForEach(Sports.titles, id: \.self) { title in
+                        Text(title)
                     }
                 }
 

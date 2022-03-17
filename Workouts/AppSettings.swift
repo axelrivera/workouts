@@ -40,6 +40,7 @@ struct AppSettings {
         static let yearToDateTimeframe = "arn_year_to_date_timeframe"
         static let allTimeTimeframe = "arn_all_time_timeframe"
         static let tagsTimeframe = "arn_tag_timeframe"
+        static let dashboardStartDate = "arn_dashboard_start_date"
     }
     
     struct RemoteKeys {
@@ -104,6 +105,24 @@ struct AppSettings {
     static var tagsTimeframe: StatsTimelineManager.Timeframe {
         get { timeframeForKey(Keys.tagsTimeframe) ?? .year }
         set { setTimeframe(newValue, forKey: Keys.tagsTimeframe )}
+    }
+    
+    static var dashboardStartDate: Date? {
+        get {
+            if let string = objectForKey(Keys.dashboardStartDate) as? String {
+                return ISO8601DateFormatter().date(from: string)
+            } else {
+                return nil
+            }
+        }
+        set {
+            if let date = newValue {
+                let string = ISO8601DateFormatter().string(from: date)
+                setValue(string, for: Keys.dashboardStartDate)
+            } else {
+                setValue(nil, for: Keys.dashboardStartDate)
+            }
+        }
     }
     
     static var shareSettings: ShareSettings {

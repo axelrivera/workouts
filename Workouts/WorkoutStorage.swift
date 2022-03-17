@@ -64,7 +64,7 @@ extension WorkoutStorage {
             workouts[workout.workoutIdentifier] = viewModel
             
             DispatchQueue.main.async {
-                postNotification(forViewModel: viewModel)
+                self.postNotification(forViewModel: viewModel)
             }
         }
     }
@@ -76,7 +76,7 @@ extension WorkoutStorage {
                 viewModel.tags = workoutTagProvider.visibleTags(forWorkout: id).map({ $0.viewModel() })
                 
                 DispatchQueue.main.async {
-                    postNotification(forViewModel: viewModel)
+                    self.postNotification(forViewModel: viewModel)
                 }
             }
         }
@@ -100,7 +100,7 @@ extension WorkoutStorage {
                 resetImages(forID: id)
                 viewModel.coordinates = coordinates
                 DispatchQueue.main.async {
-                    postNotification(forViewModel: viewModel)
+                    self.postNotification(forViewModel: viewModel)
                 }
             }
         }
@@ -194,7 +194,7 @@ extension WorkoutStorage {
             if let viewModel = workouts[id] {
                 viewModel.isFavorite = isFavorite
                 DispatchQueue.main.async {
-                    postNotification(forViewModel: viewModel)
+                    self.postNotification(forViewModel: viewModel)
                 }
             }
         }
@@ -205,7 +205,7 @@ extension WorkoutStorage {
             if let viewModel = workouts[id] {
                 viewModel.tags = tags
                 DispatchQueue.main.async {
-                    postNotification(forViewModel: viewModel)
+                    self.postNotification(forViewModel: viewModel)
                 }
             }
         }
@@ -217,7 +217,7 @@ extension WorkoutStorage {
             if let viewModel = workouts[id] {
                 viewModel.tags = tags
                 DispatchQueue.main.async {
-                    postNotification(forViewModel: viewModel)
+                    self.postNotification(forViewModel: viewModel)
                 }
             }
         }

@@ -186,6 +186,31 @@ extension Date {
 
 extension DateInterval {
     
+    var isSameDay: Bool {
+        start.startOfDay == end.startOfDay
+    }
+    
+    var isFullWeek: Bool {
+        let startOfWeek = start.workoutWeekStart
+        let endOfWeek = startOfWeek.workoutWeekEnd
+        let calendar = Calendar.current
+        return calendar.isDate(startOfWeek, inSameDayAs: start) && calendar.isDate(endOfWeek, inSameDayAs: end)
+    }
+    
+    var isFullMonth: Bool {
+        let startOfMonth = start.startOfMonth
+        let endOfMonth = startOfMonth.endOfMonth
+        let calendar = Calendar.current
+        return calendar.isDate(startOfMonth, inSameDayAs: start) && calendar.isDate(endOfMonth, inSameDayAs: end)
+    }
+    
+    var isFullYear: Bool {
+        let startOfYear = start.startOfYear
+        let endOfYear = startOfYear.endOfYear
+        let calendar = Calendar.current
+        return calendar.isDate(startOfYear, inSameDayAs: start) && calendar.isDate(endOfYear, inSameDayAs: end)
+    }
+    
     static func lastTwelveMonths() -> DateInterval {
         let end = Date()
         let start = Calendar.current.date(byAdding: .month, value: -11, to: end)!.startOfMonth
@@ -195,6 +220,12 @@ extension DateInterval {
     static func lastSixMonths() -> DateInterval {
         let end = Date()
         let start = Calendar.current.date(byAdding: .month, value: -5, to: end)!.startOfMonth
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func lastThreeMonths() -> DateInterval {
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .month, value: -2, to: end)!.startOfMonth
         return DateInterval(start: start, end: end)
     }
     

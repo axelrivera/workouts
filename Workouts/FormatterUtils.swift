@@ -37,7 +37,7 @@ func formattedChartDurationString(for duration: Double?) -> String {
     }
 }
 
-func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
+func formattedHoursMinutesPrettyString(for duration: Double?, showSeconds: Bool = true) -> String {
     let seconds = Int(duration ?? 0)
     guard seconds > 0 else {
         return String(format: "0m")
@@ -46,9 +46,17 @@ func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
-        return String(format: "%@h %02dm", h.formatted(), m)
+        if m == 0 {
+            return String(format: "%@h", h.formatted())
+        } else {
+            return String(format: "%@h %02dm", h.formatted(), m)
+        }
     } else {
-        return String(format: "%dm %02ds", m, s)
+        if showSeconds && s > 0 {
+            return String(format: "%dm %02ds", m, s)
+        } else {
+            return String(format: "%dm", m)
+        }
     }
 }
 
@@ -138,7 +146,6 @@ func formattedRangeString(start: Date?, end: Date?) -> String {
         return DateFormatter.medium.string(from: start)
     }
     
-    
     // date format: MMM dd YYYY
     let startMonth = DateFormatter.shortMonth.string(from: start)
     let startDay = DateFormatter.day.string(from: start)
@@ -201,6 +208,13 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     default:
         return MeasurementFormatter.distance.string(from: conversion)
     }
+}
+
+func formattedSwimmingDistance(for meters: Double?) -> String {
+    let distance = meters ?? 0
+    let measurement = Measurement<UnitLength>(value: distance, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .yards)
+    return MeasurementFormatter.roundedDistance.string(from: conversion)
 }
 
 func formattedDistanceStringInTags(for meters: Double) -> String {

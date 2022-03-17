@@ -63,7 +63,15 @@ extension HealthAuthProvider {
             HKSeriesType.workoutRoute(),
             HKQuantityType.distanceCycling(),
             HKQuantityType.distanceWalkingRunning(),
+            HKQuantityType.distanceWheelchair(),
+            HKQuantityType.pushCount(),
+            HKQuantityType.distanceSwimming(),
+            HKQuantityType.swimmingStrokeCount(),
+            HKQuantityType.distanceDownhillSnowSports(),
             HKQuantityType.activeEnergyBurned(),
+            HKQuantityType.flightsClimbed(),
+            HKQuantityType.stepCount(),
+            HKQuantityType.exerciseTime(),
             HKQuantityType.heartRate(),
         ]
     }

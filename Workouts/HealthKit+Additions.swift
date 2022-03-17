@@ -18,8 +18,40 @@ extension HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .distanceWalkingRunning)!
     }
     
+    static func distanceWheelchair() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .distanceWheelchair)!
+    }
+    
+    static func pushCount() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .pushCount)!
+    }
+    
+    static func distanceSwimming() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .distanceSwimming)!
+    }
+    
+    static func swimmingStrokeCount() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .swimmingStrokeCount)!
+    }
+    
+    static func distanceDownhillSnowSports() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .distanceDownhillSnowSports)!
+    }
+    
     static func activeEnergyBurned() -> HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .activeEnergyBurned)!
+    }
+    
+    static func exerciseTime() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .appleExerciseTime)!
+    }
+    
+    static func stepCount() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .stepCount)!
+    }
+    
+    static func flightsClimbed() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .flightsClimbed)!
     }
     
     static func heartRate() -> HKQuantityType {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case workouts, log, stats
+        case workouts, log, stats, dashboard
         var id: String { rawValue }
     }
     
@@ -27,7 +27,7 @@ struct ContentView: View {
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
     
-    @State private var selected = Tabs.workouts
+    @State private var selected = Tabs.stats
     @State private var activeCoverSheet: ActiveCoverSheet?
     
     var body: some View {
@@ -43,6 +43,10 @@ struct ContentView: View {
             StatsContainer()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
+            
+            DashboardView()
+                .tabItem { Label("Dashboard", systemImage: "rectangle.grid.2x2") }
+                .tag(Tabs.dashboard)
         }
         .onOpenURL { url in
             Log.debug("trying to open url: \(url)")

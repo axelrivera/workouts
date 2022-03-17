@@ -19,7 +19,7 @@ struct LogWeekView: View {
     var body: some View {
         VStack(alignment: .leading) {            
             HStack(spacing: 5) {
-                ForEach(0 ..< distances.count) { index in
+                ForEach(0 ..< distances.count, id: \.self) { index in
                     Button(action: {}) {
                         VStack {
                             LogBubble(color: .cycling, scaleFactor: 0.8)

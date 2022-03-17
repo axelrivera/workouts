@@ -61,13 +61,7 @@ final class WorkoutsFilterManager: ObservableObject {
     
     @Published var dateRange: ClosedRange<Date>
     
-    @Published var startDate: Date = Date() {
-        willSet {
-            if newValue > endDate {
-                
-            }
-        }
-    }
+    @Published var startDate: Date = Date()
     @Published var endDate: Date = Date()
     
     @Published var minDistance: String = ""

@@ -26,10 +26,7 @@ struct HealthProvider {
     }
     
     let isAvailable = HKHealthStore.isHealthDataAvailable()
-    
 }
-
-// MARK: - Predicates
 
 // MARK: - Async/Await Methods
 

@@ -27,7 +27,7 @@ struct WeightInputView: View {
                 }
                 
                 Picker(selection: $selectedIndex, label: Text("Picker"), content: {
-                    ForEach(0 ..< weights.count) { index in
+                    ForEach(0 ..< weights.count, id: \.self) { index in
                         Text(formattedLocalizedWeightString(for: Double(weights[index])))
                     }
                 })
