@@ -83,7 +83,8 @@ extension DashboardActivityViewModel {
     
     var formattedDistance: String? {
         guard distance > 0 else { return nil }
-        return formattedDistanceString(for: distance, mode: .compact, zeroPadding: true)
+        let distanceMode: DistanceMode = distance > 0 && distance < 1 ? .default : .compact
+        return formattedDistanceString(for: distance, mode: distanceMode, zeroPadding: true)
     }
     
     var formattedDuration: String? {

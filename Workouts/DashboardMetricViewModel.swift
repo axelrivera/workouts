@@ -30,7 +30,8 @@ extension DashboardMetricViewModel {
             let intValue = Int(value)
             return intValue.formatted()
         case .cyclingDistance, .walkingRunningDistance, .downhillSnowSportsDistance, .wheelchairDistance:
-            return formattedDistanceString(for: value, mode: .compact, zeroPadding: true)
+            let distanceMode: DistanceMode = value > 0 && value < 1 ? .default : .compact
+            return formattedDistanceString(for: value, mode: distanceMode, zeroPadding: true)
         case .swimmingDistance:
             return formattedSwimmingDistance(for: value)
         }

@@ -10,9 +10,7 @@ import SwiftUI
 struct DashboardCard: View {
     let PADDING: CGFloat = 30
     let OPACITY: CGFloat = 0.5
-    
-    let WORKOUTS_HEIGHT: CGFloat = 450
-    
+        
     let metrics: [DashboardMetricViewModel]
     let workout: DashboardWorkoutViewModel
     
@@ -42,7 +40,7 @@ struct DashboardCard: View {
                 
                 if workout.isVisible {
                     workoutView()
-                        .frame(height: WORKOUTS_HEIGHT)
+                        .frame(height: preferredWorkoutHeight)
                 }
             }
             
@@ -198,16 +196,32 @@ extension DashboardCard {
     
 }
 
+extension DashboardCard {
+    
+    var preferredWorkoutHeight: CGFloat {
+        if workout.total.value == 1 {
+            return 350
+        } else if workout.total.value == 2 {
+            return 400
+        } else {
+            return 450
+        }
+    }
+    
+}
+
 struct DashboardCard_Previews: PreviewProvider {
     static let metrics = DashboardMetricViewModel.cardSample
     static let activities = DashboardActivityViewModel.sample
     
+    static let TOTAL: Double = 3
+    
     static let workout = DashboardWorkoutViewModel(
         title: "January 2022",
         subtitle: "Fitness Stats",
-        total: DashboardMetricViewModel(metric: .workouts, value: 99),
+        total: DashboardMetricViewModel(metric: .workouts, value: TOTAL),
         duration: DashboardMetricViewModel(metric: .workoutTime, value: 3600),
-        activities: activities
+        activities: Array(activities.prefix(Int(TOTAL)))
     )
     
     static var previews: some View {

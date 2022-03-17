@@ -180,7 +180,7 @@ extension DashboardViewManager {
     
     func load(showLoading: Bool = true) async throws {
         if showLoading {
-            if lastInterval == nil || lastInterval != currentInterval {
+            if lastInterval == nil || currentInterval == .range || lastInterval != currentInterval {
                 Log.debug("previous: \(String(describing: lastInterval)), current: \(currentInterval)")
                 
                 DispatchQueue.main.async {
