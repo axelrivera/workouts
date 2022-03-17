@@ -102,9 +102,11 @@ extension DashboardCard {
                     Text("TOP WORKOUTS")
                         .foregroundColor(.white)
                         .bold()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.leading, .trailing], CGFloat(PADDING))
                     
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
                 .background(workout.total.metric.color)
             }
             .font(.system(size: 42))
