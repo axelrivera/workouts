@@ -27,7 +27,7 @@ struct ContentView: View {
     @EnvironmentObject var statsManager: StatsManager
     @EnvironmentObject var purchaseManager: IAPManager
     
-    @State private var selected = Tabs.stats
+    @State private var selected = Tabs.workouts
     @State private var activeCoverSheet: ActiveCoverSheet?
     
     var body: some View {
