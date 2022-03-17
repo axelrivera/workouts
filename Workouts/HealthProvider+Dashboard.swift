@@ -64,9 +64,13 @@ extension HealthProvider {
     }
     
     private func fetchWorkoutData(for interval: DateInterval, completionHandler: @escaping (Result<WorkoutData, Error>) -> Void) {
+        let intervalPredicate = Self.predicateForInterval(interval)
+        let durationPredicate = HKQuery.predicateForWorkouts(with: .greaterThan, duration: 0)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [intervalPredicate, durationPredicate])
+        
         let query = HKSampleQuery(
             sampleType: .workoutType(),
-            predicate: Self.predicateForInterval(interval),
+            predicate: predicate,
             limit: HKObjectQueryNoLimit,
             sortDescriptors: nil
         ) { query, samples, error in
@@ -114,10 +118,12 @@ extension HealthProvider {
     private func fetchActivityTypeData(for activity: HKWorkoutActivityType, interval: DateInterval, completionHandler: @escaping (Result<ActivityTypeData, Error>) -> Void) {
         let activityPredicate = HKQuery.predicateForWorkouts(with: activity)
         let datePredicate = Self.predicateForInterval(interval)
+        let durationPredicate = HKQuery.predicateForWorkouts(with: .greaterThan, duration: 0)
         
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             activityPredicate,
-            datePredicate
+            datePredicate,
+            durationPredicate
         ])
         
         let query = HKSampleQuery(

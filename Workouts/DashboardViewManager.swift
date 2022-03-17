@@ -261,7 +261,7 @@ extension DashboardViewManager {
             }
             
             for await viewModel in group {
-                if viewModel.total > 0 {
+                if viewModel.duration > 0 {
                     activities.append(viewModel)
                 }
             }
