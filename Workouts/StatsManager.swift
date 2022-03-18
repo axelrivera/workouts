@@ -185,6 +185,15 @@ extension StatsManager {
         return summaries
     }
     
+    var yearToDateInterval: DateInterval {
+        let now = Date()
+        return DateInterval(start: now.startOfYear, end: now.endOfDay)
+    }
+    
+    var allTimeDateInterval: DateInterval {
+        dataProvider.dateIntervalForActiveWorkouts()
+    }
+    
 }
 
 // MARK: Previews

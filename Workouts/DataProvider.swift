@@ -134,7 +134,7 @@ extension DataProvider {
         }
     }
     
-    func dateRangeForActiveWorkouts() -> ClosedRange<Date> {
+    func dateIntervalForActiveWorkouts() -> DateInterval {
         context.performAndWait {
             let request = Workout.defaultFetchRequest()
             request.predicate = Workout.activePredicate(sport: nil, interval: nil)
@@ -144,10 +144,10 @@ extension DataProvider {
                 let workouts = try context.fetch(request)
                 let start = workouts.first?.start ?? Date()
                 let end = workouts.last?.start ?? start
-                return start...end
+                return DateInterval(start: start, end: end)
             } catch {
                 let date = Date()
-                return date...date
+                return DateInterval(start: date.startOfDay, end: date.endOfDay)
             }
         }
     }

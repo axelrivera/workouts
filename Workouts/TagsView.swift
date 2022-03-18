@@ -45,7 +45,7 @@ struct TagsContentView: View {
     var body: some View {
         LazyVStack(spacing: 0) {
             ForEach(tags, id: \.id) { viewModel in
-                NavigationLink(destination: StatsTimelineView(displayType: .tag(tag: viewModel))) {
+                NavigationLink(destination: destination(for: viewModel)) {
                     SummaryCell(viewModel: viewModel, active: true)
                         .padding([.leading, .trailing])
                         .padding([.top, .bottom], CGFloat(10.0))
@@ -101,6 +101,18 @@ struct TagsContentView: View {
         if tags.isEmpty {
             EmptyTagsView(displayType: .tags, onCreate: { reload() })
         }
+    }
+    
+    @ViewBuilder
+    func destination(for viewModel: TagSummaryViewModel) -> some View {
+        StatsTimelineView(
+            title: viewModel.title,
+            subtitle: viewModel.gearType == .none ? "Tag" : viewModel.gearType.rawValue.capitalized,
+            sport: nil,
+            interval: manager.dataProvider.dateIntervalForActiveWorkouts(),
+            timeframe: .year,
+            identifiers: manager.workoutTagProvider.workoutIdentifiers(forTag: viewModel.id)
+        )
     }
     
 }

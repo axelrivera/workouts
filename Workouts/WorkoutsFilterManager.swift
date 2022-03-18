@@ -98,7 +98,9 @@ final class WorkoutsFilterManager: ObservableObject {
         self.workoutTagProvider = WorkoutTagProvider(context: context)
                 
         // Dates
-        dateRange = dataProvider.dateRangeForActiveWorkouts()
+        let dateInterval = dataProvider.dateIntervalForActiveWorkouts()
+        dateRange = dateInterval.start ... dateInterval.end
+        
         let interval = DateInterval.lastSixMonths()
         startDate = interval.start
         endDate = interval.end

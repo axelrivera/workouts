@@ -10,137 +10,28 @@ import CoreData
 import SwiftUI
 
 final class StatsTimelineManager: ObservableObject {
-    enum DisplayType: Hashable, Identifiable {
-        case yearToDate(sport: Sport?), allTime(sport: Sport?), tag(tag: TagSummaryViewModel)
-        var id: Int { hashValue }
-        
-        var cases: [Timeframe] {
-            switch self {
-            case .yearToDate:
-                return Timeframe.yearToDateCases
-            case .allTime:
-                return Timeframe.allTimeCases
-            case .tag:
-                return Timeframe.tagCases
-            }
-        }
-        
-        var sport: Sport? {
-            switch self {
-            case .yearToDate(let sport):
-                return sport
-            case .allTime(let sport):
-                return sport
-            case .tag(let tag):
-                if tag.gearType == .bike {
-                    return .cycling
-                } else if tag.gearType == .shoes {
-                    return .running
-                } else {
-                    return nil
-                }
-            }
-        }
-        
-        var tagId: UUID? {
-            switch self {
-            case .tag(let tag):
-                return tag.id
-            default:
-                return nil
-            }
-        }
-        
-        var title: String {
-            switch self {
-            case .yearToDate:
-                return "Year to Date"
-            case .allTime:
-                return "All Time"
-            case .tag(let tag):
-                return tag.title
-            }
-        }
-        
-        var subtitle: String {
-            switch self {
-            case .yearToDate(let sport):
-                return sport?.activityName ?? "All Workouts"
-            case .allTime(let sport):
-                return sport?.activityName ?? "All Workouts"
-            case .tag(tag: let tag):
-                if tag.gearType == .none {
-                    return "Tag"
-                } else {
-                    return tag.gearType.rawValue.capitalized
-                }
-            }
-        }
-    }
-    
-    enum Timeframe: String, Hashable, Identifiable {
-        case year, month, week
-        var id: String { rawValue }
-        
-        var title: String {
-            switch self {
-            case .year:
-                return "By Year"
-            case .month:
-                return "By Month"
-            case .week:
-                return "By Week"
-            }
-        }
-        
-        static let yearToDateCases: [Timeframe] = [.month, .week]
-        static let allTimeCases: [Timeframe] = [.year, .month]
-        static let tagCases: [Timeframe] = [.year, .month, .week]
-    }
-    
     private let context: NSManagedObjectContext
     private let dataProvider: DataProvider
     private let workoutTagProvider: WorkoutTagProvider
     
-    let displayType: DisplayType
-    
+    let interval: DateInterval
     var sport: Sport?
     var identifiers = [UUID]()
     @Published var stats = [StatsSummary]()
-    @Published var timeframe: Timeframe = .month {
+    @Published var timeframe: StatsSummary.Timeframe {
         didSet {
-            switch displayType {
-            case .allTime:
-                AppSettings.allTimeTimeframe = timeframe
-            case .yearToDate:
-                AppSettings.yearToDateTimeframe = timeframe
-            case .tag:
-                AppSettings.tagsTimeframe = timeframe
-            }
-            
             reload()
         }
     }
     
-    init(displayType: DisplayType, context: NSManagedObjectContext) {
+    init(sport: Sport?, interval: DateInterval, timeframe: StatsSummary.Timeframe, identifiers: [UUID] = [UUID](), context: NSManagedObjectContext) {
         self.context = context
         self.dataProvider = DataProvider(context: context)
         self.workoutTagProvider = WorkoutTagProvider(context: context)
-        self.displayType = displayType
-        self.sport = displayType.sport
-        
-        if let tag = displayType.tagId {
-            identifiers = workoutTagProvider.workoutIdentifiers(forTag: tag)
-        }
-        
-        switch displayType {
-        case .allTime:
-            timeframe = AppSettings.allTimeTimeframe
-        case .yearToDate:
-            timeframe = AppSettings.yearToDateTimeframe
-        case .tag:
-            timeframe = AppSettings.tagsTimeframe
-        }
+        self.interval = interval
+        self.timeframe = timeframe
+        self.sport = sport
+        self.identifiers = identifiers
     }
     
     func reload() {
@@ -156,6 +47,8 @@ final class StatsTimelineManager: ObservableObject {
                     stats = self.fetchMonthlyStats()
                 case .year:
                     stats = self.fetchYearlyStats()
+                default:
+                    stats = []
                 }
                 
                 DispatchQueue.main.async {
@@ -165,34 +58,20 @@ final class StatsTimelineManager: ObservableObject {
         }
     }
     
+    var menuOptions: [StatsSummary.Timeframe] {
+        if timeframe == .year {
+            return []
+        } else {
+            return [.month, .week]
+        }
+    }
+    
 }
 
 extension StatsTimelineManager {
     
-    var currentDateRange: ClosedRange<Date> {
-        switch displayType {
-        case .allTime:
-            return dataProvider.dateRangeForActiveWorkouts()
-        case .yearToDate:
-            let now = Date()
-            return now.startOfYear ... now
-        case .tag:
-            return dataProvider.dateRangeForActiveWorkouts()
-        }
-    }
-    
-    func fetchTagggedWorkouts() -> [UUID] {
-        switch displayType {
-        case .tag(let tag):
-            return workoutTagProvider.workoutIdentifiers(forTag: tag.id)
-        default:
-            return []
-        }
-    }
-    
     func fetchWorkouts(forInterval interval: DateInterval) -> [UUID] {
-        if let _ = displayType.tagId {
-            if identifiers.isEmpty { return [] }
+        if identifiers.isPresent {
             let predicate = Workout.activePredicate(sport: nil, interval: interval, identifiers: identifiers)
             return dataProvider.workoutIdentifiers(for: predicate)
         } else {
@@ -203,9 +82,8 @@ extension StatsTimelineManager {
     }
     
     func fetchYearlyStats() -> [StatsSummary] {
-        let range = currentDateRange
-        let startYear = range.lowerBound.year()
-        let endYear = range.upperBound.year()
+        let startYear = interval.start.year()
+        let endYear = interval.end.year()
         
         let years = Array(startYear ... endYear)
         let stats = years.compactMap { (year) -> StatsSummary? in
@@ -230,8 +108,7 @@ extension StatsTimelineManager {
     }
     
     func fetchMonthlyStats() -> [StatsSummary] {
-        let range = currentDateRange
-        let intervals = Date.monthIntervals(from: range.lowerBound, to: range.upperBound)
+        let intervals = Date.monthIntervals(from: interval.start, to: interval.end)
         
         let stats = intervals.compactMap { (interval) -> StatsSummary? in
             let workouts = fetchWorkouts(forInterval: interval)
@@ -252,8 +129,7 @@ extension StatsTimelineManager {
     }
     
     func fetchWeeklyStats() -> [StatsSummary] {
-        let range = currentDateRange
-        let intervals = Date.weekIntervals(from: range.lowerBound, to: range.upperBound)
+        let intervals = Date.weekIntervals(from: interval.start, to: interval.end)
         
         let stats = intervals.compactMap { (interval) -> StatsSummary? in
             let workouts = fetchWorkouts(forInterval: interval)

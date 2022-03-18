@@ -151,9 +151,23 @@ extension StatsView {
                 summaries: summaries(forTimeframe: timeframe)
             )
         case .yearToDate:
-            StatsTimelineView(displayType: .yearToDate(sport: statsManager.sport))
+            StatsTimelineView(
+                title: "Year to Date",
+                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                sport: statsManager.sport,
+                interval: statsManager.yearToDateInterval,
+                timeframe: .month,
+                identifiers: []
+            )
         case .allTime:
-            StatsTimelineView(displayType: .allTime(sport: statsManager.sport))
+            StatsTimelineView(
+                title: "All Time",
+                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                sport: statsManager.sport,
+                interval: statsManager.allTimeDateInterval,
+                timeframe: .year,
+                identifiers: []
+            )
         default:
             EmptyView()
         }

@@ -58,15 +58,6 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
-
-    private static func timeframeForKey(_ key: String) -> StatsTimelineManager.Timeframe? {
-        let string = objectForKey(key) as? String ?? ""
-        return StatsTimelineManager.Timeframe(rawValue: string)
-    }
-    
-    private static func setTimeframe(_ value: StatsTimelineManager.Timeframe, forKey: String) {
-        setValue(value.rawValue, for: forKey)
-    }
         
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int
@@ -91,21 +82,6 @@ struct AppSettings {
         
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
-    
-    static var yearToDateTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.yearToDateTimeframe) ?? .month }
-        set { setTimeframe(newValue, forKey: Keys.yearToDateTimeframe) }
-    }
-    
-    static var allTimeTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.allTimeTimeframe) ?? .year }
-        set { setTimeframe(newValue, forKey: Keys.allTimeTimeframe) }
-    }
-    
-    static var tagsTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.tagsTimeframe) ?? .year }
-        set { setTimeframe(newValue, forKey: Keys.tagsTimeframe )}
-    }
     
     static var dashboardStartDate: Date? {
         get {
