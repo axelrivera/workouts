@@ -291,7 +291,7 @@ extension DashboardViewManager {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let view = DashboardCard(metrics: cardMetrics, workout: workout)
-            self.image = view.takeScreenshot(origin: .zero, size: workout.size)
+            self.image = view.takeScreenshot(origin: .zero, size: workout.size, scale: 1.0)
             
             withAnimation() {
                 self.isLoading = false

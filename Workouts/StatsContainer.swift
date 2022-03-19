@@ -27,33 +27,15 @@ struct StatsContainer: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                Picker("Page", selection: $page) {
-                    ForEach(Page.allCases, id: \.self) { page in
-                        Text(page.rawValue.capitalized)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding([.leading, .trailing])
-                .padding([.top, .bottom], 10.0)
-                .background(Material.bar)
-                
-                ScrollView {
-                    switch page {
-                    case .summary:
-                        StatsView()
-                    case .tags:
-                        TagsView()
-                    }
-                }
+            ScrollView {
+                StatsView()
             }
             .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(StackNavigationViewStyle())
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeCover = .settings }) {
-                       Image(systemName: "gearshape")
+                        Image(systemName: "gearshape")
                     }
                 }
             }

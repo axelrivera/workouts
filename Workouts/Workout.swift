@@ -21,6 +21,7 @@ private let StartDateKey = "start"
 private let EndDateKey = "end"
 private let IndoorKey = "indoor"
 private let DayOfWeekKey = "dayOfWeek"
+private let DurationKey = "duration"
 
 private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
 private let ZoneValue1Key = "zoneValue1"
@@ -257,6 +258,10 @@ extension Workout {
         NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
     }
     
+    static var activeDurationPredicate: NSPredicate {
+        NSPredicate(format: "%K > %@", DurationKey, NSNumber(value: 0))
+    }
+    
     static var locationPendingPredicate: NSPredicate {
         NSPredicate(format: "%K == %@", IsLocationPendingKey, NSNumber(booleanLiteral: true))
     }
@@ -371,8 +376,12 @@ extension Workout {
     
     static func availableSports(in context: NSManagedObjectContext) -> [Sport] {
         context.performAndWait {
+            let predicate = NSCompoundPredicate(
+                andPredicateWithSubpredicates: [notMarkedForLocalDeletionPredicate, activeDurationPredicate]
+            )
+            
             let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
-            request.predicate = notMarkedForLocalDeletionPredicate
+            request.predicate = predicate
             request.resultType = .dictionaryResultType
             request.returnsObjectsAsFaults = false
             request.returnsDistinctResults = true

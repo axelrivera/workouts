@@ -24,7 +24,7 @@ struct StatsView: View {
             
             Divider()
             
-            NavigationLink(destination: destination(forTimeframe: .yearToDate)) {
+            NavigationLink(destination: timelineDestination(forTimeframe: .yearToDate)) {
                 SummaryCell(viewModel: statsManager.yearStats, active: true)
                     .padding([.leading, .trailing])
                     .padding([.top, .bottom], CGFloat(10.0))
@@ -33,7 +33,7 @@ struct StatsView: View {
             
             Divider()
                                 
-            NavigationLink(destination: destination(forTimeframe: .allTime)) {
+            NavigationLink(destination: timelineDestination(forTimeframe: .allTime)) {
                 SummaryCell(viewModel: statsManager.allStats, active: true)
                     .padding([.leading, .trailing])
                     .padding([.top, .bottom], CGFloat(10.0))
@@ -43,8 +43,6 @@ struct StatsView: View {
         .padding([.top, .bottom])
         .onChange(of: workoutManager.isProcessingRemoteData) { isProcessing in
             if isProcessing { return }
-            
-            Log.debug("refreshing stats and current data")
             statsManager.refresh()
         }
         .toolbar {
@@ -110,7 +108,6 @@ extension StatsView {
         }
     }
     
-    @ViewBuilder
     func recentSummary(stats: StatsSummary) -> some View {
         VStack(spacing: SECTION_SPACING) {
             VStack(alignment: .leading, spacing: 5.0) {
@@ -127,8 +124,8 @@ extension StatsView {
                         .font(.fixedBody)
                         .foregroundColor(.secondary)
                     Spacer()
-                    NavigationLink(destination: destination(forTimeframe: stats.timeframe)) {
-                        Text("See More")
+                    NavigationLink(destination: recentDestination(for: stats)) {
+                        Text("Show More")
                     }
                 }
             }
@@ -141,15 +138,17 @@ extension StatsView {
         .padding([.leading, .trailing])
     }
     
+    func recentDestination(for stats: StatsSummary) -> some View {
+        StatsRecentView(
+            timeframe: stats.timeframe,
+            sport: statsManager.sport,
+            summaries: summaries(forTimeframe: stats.timeframe)
+        )
+    }
+        
     @ViewBuilder
-    func destination(forTimeframe timeframe: StatsSummary.Timeframe) -> some View {
+    func timelineDestination(forTimeframe timeframe: StatsSummary.Timeframe) -> some View {
         switch timeframe {
-        case .week, .month:
-            StatsRecentView(
-                timeframe: timeframe,
-                sport: statsManager.sport,
-                summaries: summaries(forTimeframe: timeframe)
-            )
         case .yearToDate:
             StatsTimelineView(
                 title: "Year to Date",

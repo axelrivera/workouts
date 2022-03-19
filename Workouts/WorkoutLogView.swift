@@ -68,7 +68,7 @@ struct WorkoutLogView: View {
             }
             .overlay(emptyOverlay())
             .paywallButtonOverlay()
-            .navigationTitle("Training Log")
+            .navigationTitle("Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

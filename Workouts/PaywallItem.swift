@@ -25,7 +25,7 @@ extension PaywallItem {
         PaywallItem(
             imageName: "calendar",
             imageColor: .accentColor,
-            title: "Training Log",
+            title: "Training Calendar",
             description: "Compare your weekly workouts relative to each other by distance or time."
         )
     }

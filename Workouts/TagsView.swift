@@ -22,6 +22,11 @@ struct TagsContentView: View {
         var id: Self { self }
     }
     
+    enum ActiveCover: Identifiable {
+        case settings
+        var id: Int { hashValue }
+    }
+    
     enum ActiveAlert: Identifiable {
         case error
         var id: Int { hashValue }
@@ -39,59 +44,78 @@ struct TagsContentView: View {
     
     @State private var tags = [TagSummaryViewModel]()
     
-    @State private var activeSheet: ActiveSheet?
+    @State private var activeCover: ActiveCover?
     @State private var activeAlert: ActiveAlert?
+    @State private var activeSheet: ActiveSheet?
     
     var body: some View {
-        LazyVStack(spacing: 0) {
-            ForEach(tags, id: \.id) { viewModel in
-                NavigationLink(destination: destination(for: viewModel)) {
-                    SummaryCell(viewModel: viewModel, active: true)
-                        .padding([.leading, .trailing])
-                        .padding([.top, .bottom], CGFloat(10.0))
-                }
-                .contextMenu {
-                    Button(action: { editTag(viewModel.id) }) {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                }
-                .buttonStyle(WorkoutPlainButtonStyle())
-                Divider()
-            }
-        }
-        .onAppear { reload() }
-        .overlay(emptyView())
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    ForEach(TagPickerSegment.allCases) { segment in
-                        Button(action: { currentSegment = segment }) {
-                            Text(segment.title)
-                            if currentSegment == segment {
-                                Image(systemName: "checkmark")
+        NavigationView {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(tags, id: \.id) { viewModel in
+                        NavigationLink(destination: destination(for: viewModel)) {
+                            SummaryCell(viewModel: viewModel, active: true)
+                                .padding([.leading, .trailing])
+                                .padding([.top, .bottom], CGFloat(10.0))
+                        }
+                        .contextMenu {
+                            Button(action: { editTag(viewModel.id) }) {
+                                Label("Edit", systemImage: "pencil")
                             }
                         }
+                        .buttonStyle(WorkoutPlainButtonStyle())
+                        Divider()
                     }
-                } label: {
-                    Text(currentSegment.title)
                 }
             }
-        }
-        .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
-            switch item {
-            case .edit(let viewModel):
-                TagsAddView(viewModel: viewModel, isInsert: false)
-                    .environmentObject(TagManager(context: viewContext))
+            .onAppear { reload() }
+            .overlay(emptyView())
+            .navigationTitle("Tags")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { activeCover = .settings }) {
+                       Image(systemName: "gearshape")
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        ForEach(TagPickerSegment.allCases) { segment in
+                            Button(action: { currentSegment = segment }) {
+                                Text(segment.title)
+                                if currentSegment == segment {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    } label: {
+                        Text(currentSegment.title)
+                    }
+                }
             }
-        }
-        .alert(item: $activeAlert) { alert in
-            switch alert {
-            case .error:
-                return Alert(
-                    title: Text("Tag Error"),
-                    message: Text("Error processing action."),
-                    dismissButton: Alert.Button.cancel(Text("Ok"))
-                )
+            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
+                switch item {
+                case .edit(let viewModel):
+                    TagsAddView(viewModel: viewModel, isInsert: false)
+                        .environmentObject(TagManager(context: viewContext))
+                }
+            }
+            .fullScreenCover(item: $activeCover) { item in
+                switch item {
+                case .settings:
+                    SettingsView()
+                        .environmentObject(purchaseManager)
+                }
+            }
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .error:
+                    return Alert(
+                        title: Text("Tag Error"),
+                        message: Text("Error processing action."),
+                        dismissButton: Alert.Button.cancel(Text("Ok"))
+                    )
+                }
             }
         }
     }

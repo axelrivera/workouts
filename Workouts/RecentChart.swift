@@ -48,8 +48,7 @@ extension RecentChart {
         leftAxis.gridLineDashLengths = [5, 5]
         leftAxis.drawLimitLinesBehindDataEnabled = true
         leftAxis.drawZeroLineEnabled = false
-//        leftAxis.axisMaximum = 200
-//        leftAxis.axisMinimum = 90
+        leftAxis.axisMinimum = 0.0
         
         chartView.rightAxis.enabled = false
     

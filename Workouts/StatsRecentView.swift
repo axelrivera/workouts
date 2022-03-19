@@ -7,41 +7,7 @@
 
 import SwiftUI
 
-extension StatsRecentView {
-    
-    enum Options: String, Identifiable, CaseIterable {
-        case distance, calories, elevation
-        var id: String { rawValue }
-        
-        var title: String {
-            switch self {
-            case .distance:
-                return "Distance"
-            case .calories:
-                return "Calories"
-            case .elevation:
-                return "Elevation"
-            }
-        }
-        
-        var color: Color {
-            switch self {
-            case .distance:
-                return .distance
-            case .calories:
-                return .calories
-            case .elevation:
-                return .elevation
-            }
-        }
-    }
-    
-}
-
-struct StatsRecentView: View {    
-    private let options: [Options] = [.distance, .calories, .elevation]
-    @State private var option = Options.distance
-    
+struct StatsRecentView: View {
     let timeframe: StatsSummary.Timeframe
     let sport: Sport?
     let summaries: [StatsSummary]
@@ -49,63 +15,50 @@ struct StatsRecentView: View {
     @State private var values = [Double]()
     
     var body: some View {
-        VStack(spacing: 0.0) {
-            VStack(spacing: 10.0) {
-                Picker(selection: $option, label: Text("Select Option")) {
-                    ForEach(options, id: \.self) {
-                        Text($0.title)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                
-                RecentChart(
-                    values: valuesForSelectedOption(),
-                    lineColor: option.color,
-                    yAxisFormatter: chartFormatterForSelectedOption()
-                )
-                .frame(maxWidth: .infinity, maxHeight: 200.0)
-            }
-            .padding([.top, .leading, .trailing])
-            .padding(.bottom, 5.0)
-            .background(Color.secondarySystemBackground)
-            .zIndex(2.0)
-            
-            Divider()
-                .zIndex(3.0)
-            
-            
-            List(summaries, id: \.self) { summary in
-                NavigationLink(destination: StatsWorkoutsView(identifiers: summary.workouts, title: summary.title)) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 5.0) {
-                            Text(summary.title)
-                                .font(.fixedTitle3)
-                                .foregroundColor(summary.isCurrentInterval ? .time : .primary)
-                            
-                            HStack {
-                                Text(summary.durationString)
-                                    .foregroundColor(.time)
+        ScrollView {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section(header: headerView()) {
+                    ForEach(summaries, id: \.self) { summary in
+                        NavigationLink(destination: StatsWorkoutsView(identifiers: summary.workouts, title: summary.title)) {
+                            VStack(spacing: 10.0) {
+                                HStack {
+                                    Text(summary.title)
+                                        .font(.fixedTitle3)
+                                        .foregroundColor(summary.isCurrentInterval ? .time : .primary)
+                                    
+                                    Spacer()
+                                    
+                                    Text(summary.countLabel)
+                                        .foregroundColor(.secondary)
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
+                                }
                                 
-                                Divider()
-                                
-                                Text(summary.countLabel)
-                                    .foregroundColor(.secondary)
+                                HStack {
+                                    Text(summary.distanceString)
+                                        .workoutCellLabelStyle(color: .distance)
+                                    
+                                    Text(summary.durationString)
+                                        .workoutCellLabelStyle(color: .time)
+                                    
+                                    Text(summary.caloriesString)
+                                        .workoutCellLabelStyle(color: .calories)
+                                    
+                                    Text(summary.elevationString)
+                                        .workoutCellLabelStyle(color: .elevation)
+                                    
+                                }
                             }
-                            .font(.fixedBody)
+                            .padding([.top, .bottom], CGFloat(10))
+                            .padding([.leading, .trailing])
                         }
-                        
-                        Spacer()
-                        
-                        Text(stringForSelectedOption(in: summary))
-                            .font(.title2)
-                            .foregroundColor(option.color)
+                        .buttonStyle(WorkoutPlainButtonStyle())
+                        Divider()
                     }
                 }
             }
-            .zIndex(0.0)
-            .listStyle(PlainListStyle())
-            .overlay(emptyOverlay())
         }
+        .overlay(emptyOverlay())
         .paywallButtonOverlay()
         .navigationTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -122,6 +75,32 @@ struct StatsRecentView: View {
         }
     }
     
+    func headerView() -> some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Text(rangeString)
+                    .font(.headline)
+                
+                Spacer()
+                
+                Text(distanceString)
+                    .foregroundColor(.distance)
+            }
+            .padding([.leading, .trailing])
+            .frame(maxWidth: .infinity)
+            
+            RecentChart(
+                values: distanceChartIntervals,
+                lineColor: .distance,
+                yAxisFormatter: UnitValueFormatter(unit: .distance)
+            )
+            .padding([.leading, .trailing])
+            .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
+        }
+        .padding(.top)
+        .background(Material.bar)
+    }
+    
     @ViewBuilder
     func emptyOverlay() -> some View {
         if summaries.isEmpty {
@@ -133,37 +112,14 @@ struct StatsRecentView: View {
 
 extension StatsRecentView {
     
-    func chartFormatterForSelectedOption() -> UnitValueFormatter {
-        switch option {
-        case .distance:
-            return UnitValueFormatter(unit: .distance)
-        case .calories:
-            return UnitValueFormatter(unit: .calories)
-        case .elevation:
-            return UnitValueFormatter(unit: .elevation)
-        }
+    private var rangeString: String {
+        guard let start = summaries.last?.interval.start, let end = summaries.first?.interval.end else { return "No Workouts" }
+        return formattedRangeString(start: start, end: end)
     }
     
-    func valuesForSelectedOption() -> [ChartInterval] {
-        switch option {
-        case .distance:
-            return distanceChartIntervals
-        case .calories:
-            return caloriesChartIntervals
-        case .elevation:
-            return elevationChartIntervals
-        }
-    }
-    
-    func stringForSelectedOption(in summary: StatsSummary) -> String {
-        switch option {
-        case .distance:
-            return summary.distanceString
-        case .calories:
-            return summary.caloriesString
-        case .elevation:
-            return summary.elevationString
-        }
+    private var distanceString: String {
+        let total: Double = summaries.reduce(0) { $0 + $1.distance }
+        return formattedDistanceString(for: total, mode: .compact, zeroPadding: true)
     }
     
     private var distanceChartIntervals: [ChartInterval] {
@@ -175,24 +131,6 @@ extension StatsRecentView {
         }.reversed()
     }
     
-    private var caloriesChartIntervals: [ChartInterval] {
-        summaries.map { (summary) -> ChartInterval in
-            ChartInterval(
-                xValue: summary.interval.start.timeIntervalSince1970,
-                yValue: summary.calories
-            )
-        }.reversed()
-    }
-    
-    private var elevationChartIntervals: [ChartInterval] {
-        summaries.map { (summary) -> ChartInterval in
-            ChartInterval(
-                xValue: summary.interval.start.timeIntervalSince1970,
-                yValue: nativeAltitudeToLocalizedUnit(for: summary.elevation)
-            )
-        }.reversed()
-    }
-    
 }
 
 struct StatsRecentView_Previews: PreviewProvider {
@@ -200,9 +138,13 @@ struct StatsRecentView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            StatsRecentView(timeframe: .week, sport: .cycling, summaries: summaries)
-                .environmentObject(IAPManagerPreview.manager(isActive: true))
-                .preferredColorScheme(.dark)
+            StatsRecentView(
+                timeframe: .week,
+                sport: .cycling,
+                summaries: summaries
+            )
+            .environmentObject(IAPManagerPreview.manager(isActive: true))
+            .preferredColorScheme(.dark)
         }
     }
 }

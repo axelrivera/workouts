@@ -9,7 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case workouts, log, stats, dashboard
+        case workouts
+        case log
+        case stats
+        case dashboard
+        case tags
+        
         var id: String { rawValue }
     }
     
@@ -37,7 +42,7 @@ struct ContentView: View {
                 .tag(Tabs.workouts)
 
             WorkoutLogView()
-                .tabItem { Label("Training", systemImage: "calendar") }
+                .tabItem { Label("Calendar", systemImage: "calendar") }
                 .tag(Tabs.log)
 
             StatsContainer()
@@ -47,6 +52,10 @@ struct ContentView: View {
             DashboardView()
                 .tabItem { Label("Dashboard", systemImage: "rectangle.grid.2x2") }
                 .tag(Tabs.dashboard)
+            
+            TagsView()
+                .tabItem { Label("Tags", systemImage: "tag") }
+                .tag(Tabs.tags)
         }
         .onOpenURL { url in
             Log.debug("trying to open url: \(url)")
