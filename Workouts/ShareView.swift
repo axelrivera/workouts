@@ -236,10 +236,25 @@ extension ShareView {
     
     func sheetView() -> AnyView {
         if let image = shareManager.sharedImage {
-            return AnyView(ActivitySheet(items: [image]))
+            return AnyView(ActivitySheet(image: image, imageType: imageType, imageName: imageName))
         } else {
             return AnyView(Text("Image Missing"))
         }
+    }
+    
+    var imageType: ActivitySheet.ImageType {
+        switch shareManager.style {
+        case .map:
+            return .png
+        case .photo:
+            return .jpg
+        }
+    }
+    
+    var imageName: String {
+        let date = Date()
+        let timestamp = Int(date.timeIntervalSince1970)
+        return String(format: "Workout_%@", timestamp as NSNumber)
     }
     
 }

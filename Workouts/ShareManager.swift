@@ -215,12 +215,17 @@ extension ShareManager {
         guard style == .map else { return nil }
         if coordinates.isEmpty { return nil }
         guard let region = MKCoordinateRegion(coordinates: coordinates) else { return nil }
-
+        
         let userInterfaceStyle: UIUserInterfaceStyle = UIUserInterfaceStyle(colorScheme)
         let colorSchemeCollection = UITraitCollection(userInterfaceStyle: userInterfaceStyle)
-        let scaleCollection = UITraitCollection(displayScale: 2.0)
+        let scaleCollection = UITraitCollection(displayScale: 1.0)
 
-        let size = CGSize(width: WORKOUT_CARD_WIDTH, height: WORKOUT_CARD_WIDTH - (WorkoutMapCard.footerHeight + WorkoutMapCard.headerHeight))
+        let width = WORKOUT_CARD_WIDTH
+        let height = WORKOUT_CARD_WIDTH - (WorkoutMapCard.footerHeight + WorkoutMapCard.headerHeight)
+        let newWidth = trunc(width / 2.0)
+        let newHeight = trunc(height / 2.0)
+        
+        let size = CGSize(width: newWidth, height: newHeight)
         let options = MKMapSnapshotter.Options()
         options.region = region
         options.size = size
@@ -247,7 +252,7 @@ extension ShareManager {
 
             // stroke it
 
-            path.lineWidth = 5.0
+            path.lineWidth = 5
             UIColor(.accentColor).setStroke()
             path.stroke()
         }

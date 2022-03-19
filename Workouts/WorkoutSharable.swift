@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-let WORKOUT_CARD_WIDTH: CGFloat = 540.0
+let WORKOUT_CARD_WIDTH: CGFloat = 1080
 
 protocol WorkoutSharable {
     var viewModel: WorkoutCardViewModel { get }

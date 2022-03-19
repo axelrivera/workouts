@@ -211,10 +211,16 @@ extension DashboardView {
     
     func activityView() -> AnyView {
         if let image = manager.image {
-            return AnyView(ActivitySheet(items: [image]))
+            return AnyView(ActivitySheet(image: image, imageType: .png, imageName: imageName))
         } else {
             return AnyView(Text("Image Missing"))
         }
+    }
+    
+    var imageName: String {
+        let date = Date()
+        let timestamp = Int(date.timeIntervalSince1970)
+        return String(format: "HealthStats_%@", timestamp as NSNumber)
     }
     
 }

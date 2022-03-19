@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct WorkoutMapCard: View, WorkoutSharable {
-    static let headerHeight: CGFloat = 80.0
-    static let footerHeight: CGFloat = 80.0
+    static let headerHeight: CGFloat = 160
+    static let footerHeight: CGFloat = 160
     
     private let contentPadding = EdgeInsets(
-        top: CGFloat(10.0),
-        leading: CGFloat(10.0),
-        bottom: CGFloat(10.0),
-        trailing: CGFloat(10.0)
+        top: CGFloat(20),
+        leading: CGFloat(20),
+        bottom: CGFloat(20),
+        trailing: CGFloat(20)
     )
     
     let viewModel: WorkoutCardViewModel
@@ -34,33 +34,36 @@ struct WorkoutMapCard: View, WorkoutSharable {
                     HStack(alignment: .bottom) {
                         Image(uiImage: UIImage(named: "bw_logo_horizontal")!)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(height: 36.0)
+                            .scaledToFit()
+                            .frame(height: 72)
+                        
                         Spacer()
                         
                         if showTitle || showDate {
-                            VStack(alignment: .trailing, spacing: 2.0) {
+                            VStack(alignment: .trailing, spacing: 4) {
                                 if showTitle {
                                     Text(viewModel.title)
-                                        .font(.system(size: 20.0))
+                                        .font(.system(size: 40))
                                 }
 
                                 if let date = viewModel.date, showDate {
                                     Text(date)
-                                        .font(.system(size: 18.0))
+                                        .font(.system(size: 36))
                                         .foregroundColor(secondaryColor)
                                 }
                             }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding([.leading, .trailing], 20.0)
+                    .padding([.leading, .trailing], 40)
                 }
                 .frame(maxHeight: Self.headerHeight, alignment: .center)
                 
                 Group {
                     if let image = backgroundImage {
                         Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
                     } else {
                         Color.systemFill
                     }
@@ -70,7 +73,7 @@ struct WorkoutMapCard: View, WorkoutSharable {
                 ZStack {
                     backgroundColor
                     
-                    HStack(spacing: 20.0) {
+                    HStack(spacing: 40) {
                         if let distance = viewModel.distance {
                             metricView(text: distanceTitle, detail: distance, color: .distance)
                         }
@@ -88,7 +91,7 @@ struct WorkoutMapCard: View, WorkoutSharable {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding([.leading, .trailing], 20.0)
+                    .padding([.leading, .trailing], 40)
                 }
                 .frame(maxHeight: Self.footerHeight, alignment: .bottom)
             }
@@ -100,11 +103,11 @@ struct WorkoutMapCard: View, WorkoutSharable {
     
     @ViewBuilder
     func metricView(text: String, detail: String, color: Color? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 5.0) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(text)
-                .font(.system(size: 18.0))
+                .font(.system(size: 36))
             Text(detail)
-                .font(.system(size: 22.0, weight: .medium))
+                .font(.system(size: 44, weight: .medium))
                 .foregroundColor(color ?? foregroundColor)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -149,15 +149,21 @@ func formattedRangeString(start: Date?, end: Date?) -> String {
     // date format: MMM dd YYYY
     let startMonth = DateFormatter.shortMonth.string(from: start)
     let startDay = DateFormatter.day.string(from: start)
+    let startYear = "\(start.year())"
 
     let endMonth = DateFormatter.shortMonth.string(from: end)
     let endDay = DateFormatter.day.string(from: end)
     let endYear = "\(end.year())"
+    
+    Log.debug("start - month: \(startMonth), \(startDay), \(startYear)")
+    Log.debug("end - month: \(endMonth), \(endDay), \(endYear)")
 
-    if startMonth == endMonth {
+    if startMonth == endMonth && startYear == endYear {
         return String(format: "%@ %@﹣%@, %@", startMonth, startDay, endDay, endYear)
-    } else {
+    } else if startYear == endYear {
         return String(format: "%@ %@﹣%@ %@, %@", startMonth, startDay, endMonth, endDay, endYear)
+    } else {
+        return String(format: "%@ %@, %@ ﹣ %@ %@, %@", startMonth, startDay, startYear, endMonth, endDay, endYear)
     }
 }
 
@@ -444,9 +450,15 @@ extension DateFormatter {
     }()
     
     static let range: DateFormatter = {
-       let formatter = DateFormatter()
+        let formatter = DateFormatter()
         formatter.dateFormat = "MMM/dd/YYYY"
         return formatter
+    }()
+    
+    static let file: DateFormatter = {
+        let formatter = DateFormatter()
+         formatter.dateFormat = "MM_dd_YYYY"
+         return formatter
     }()
     
     static let monthDay: DateFormatter = {

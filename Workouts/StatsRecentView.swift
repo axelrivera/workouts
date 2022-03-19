@@ -23,12 +23,12 @@ struct StatsRecentView: View {
                             VStack(spacing: 10.0) {
                                 HStack {
                                     Text(summary.title)
-                                        .font(.fixedTitle3)
+                                        .font(.fixedHeadline)
                                         .foregroundColor(summary.isCurrentInterval ? .time : .primary)
                                     
                                     Spacer()
                                     
-                                    Text(summary.countLabel)
+                                    Text(summary.total.formatted())
                                         .foregroundColor(.secondary)
                                     Image(systemName: "chevron.right")
                                         .foregroundColor(.secondary)
@@ -46,7 +46,6 @@ struct StatsRecentView: View {
                                     
                                     Text(summary.elevationString)
                                         .workoutCellLabelStyle(color: .elevation)
-                                    
                                 }
                             }
                             .padding([.top, .bottom], CGFloat(10))
@@ -79,7 +78,8 @@ struct StatsRecentView: View {
         VStack(alignment: .leading) {
             HStack {
                 Text(rangeString)
-                    .font(.headline)
+                    .font(.fixedBody)
+                    .bold()
                 
                 Spacer()
                 
