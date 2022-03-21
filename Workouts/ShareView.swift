@@ -236,13 +236,13 @@ extension ShareView {
     
     func sheetView() -> AnyView {
         if let image = shareManager.sharedImage {
-            return AnyView(ActivitySheet(image: image, imageType: imageType, imageName: imageName))
+            return AnyView(ImageActivitySheet(image: image, imageType: imageType, imageName: imageName))
         } else {
             return AnyView(Text("Image Missing"))
         }
     }
     
-    var imageType: ActivitySheet.ImageType {
+    var imageType: ImageActivitySheet.ImageType {
         switch shareManager.style {
         case .map:
             return .png

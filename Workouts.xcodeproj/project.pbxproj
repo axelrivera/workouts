@@ -89,8 +89,8 @@
 		16208BF126D3C8E700693530 /* WorkoutCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BEF26D3C8E700693530 /* WorkoutCard.swift */; };
 		16208BF626D3E76300693530 /* Coordinates+Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF526D3E76300693530 /* Coordinates+Sample.swift */; };
 		16208BF726D3E76300693530 /* Coordinates+Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF526D3E76300693530 /* Coordinates+Sample.swift */; };
-		16208BF926D4207500693530 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF826D4207500693530 /* ActivitySheet.swift */; };
-		16208BFA26D4207600693530 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF826D4207500693530 /* ActivitySheet.swift */; };
+		16208BF926D4207500693530 /* ImageActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF826D4207500693530 /* ImageActivitySheet.swift */; };
+		16208BFA26D4207600693530 /* ImageActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BF826D4207500693530 /* ImageActivitySheet.swift */; };
 		16208BFC26D4253600693530 /* View+Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BFB26D4253600693530 /* View+Snapshot.swift */; };
 		16208BFD26D4253600693530 /* View+Snapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16208BFB26D4253600693530 /* View+Snapshot.swift */; };
 		1620B03226982BA60037004A /* PaywallModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1620B03126982BA60037004A /* PaywallModifier.swift */; };
@@ -359,6 +359,8 @@
 		16B321CE26C121C1007CCE70 /* LapsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B321CC26C121C1007CCE70 /* LapsView.swift */; };
 		16B321D326C127D1007CCE70 /* LapDistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B321D226C127D1007CCE70 /* LapDistance.swift */; };
 		16B321D426C127D1007CCE70 /* LapDistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B321D226C127D1007CCE70 /* LapDistance.swift */; };
+		16B5904B27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
+		16B5904C27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
 		16C03D7D26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16C03D7E26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16C03D8026C3F63F004F50DC /* MovingTimeProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7F26C3F63F004F50DC /* MovingTimeProcessor.swift */; };
@@ -498,7 +500,7 @@
 		16208BEC26D3C81900693530 /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
 		16208BEF26D3C8E700693530 /* WorkoutCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCard.swift; sourceTree = "<group>"; };
 		16208BF526D3E76300693530 /* Coordinates+Sample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Coordinates+Sample.swift"; sourceTree = "<group>"; };
-		16208BF826D4207500693530 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
+		16208BF826D4207500693530 /* ImageActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageActivitySheet.swift; sourceTree = "<group>"; };
 		16208BFB26D4253600693530 /* View+Snapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Snapshot.swift"; sourceTree = "<group>"; };
 		1620B03126982BA60037004A /* PaywallModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallModifier.swift; sourceTree = "<group>"; };
 		1624055A2739F2C600FC4864 /* WorkoutCacheObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCacheObject.swift; sourceTree = "<group>"; };
@@ -650,6 +652,7 @@
 		16B321C926C047E4007CCE70 /* WorkoutLap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutLap.swift; sourceTree = "<group>"; };
 		16B321CC26C121C1007CCE70 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		16B321D226C127D1007CCE70 /* LapDistance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapDistance.swift; sourceTree = "<group>"; };
+		16B5904A27E81B580083D869 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
 		16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calendar+Interval.swift"; sourceTree = "<group>"; };
 		16C03D7F26C3F63F004F50DC /* MovingTimeProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovingTimeProcessor.swift; sourceTree = "<group>"; };
 		16CA62802720518B002A2D92 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
@@ -1153,7 +1156,8 @@
 				165D647F261957310015744C /* WebContent.swift */,
 				165D648526195D140015744C /* SafariView.swift */,
 				165D649A261B51D20015744C /* MailView.swift */,
-				16208BF826D4207500693530 /* ActivitySheet.swift */,
+				16208BF826D4207500693530 /* ImageActivitySheet.swift */,
+				16B5904A27E81B580083D869 /* ActivitySheet.swift */,
 				167B75D02799823E00C20049 /* ImagePicker.swift */,
 			);
 			name = Sheets;
@@ -1636,7 +1640,7 @@
 				16A5268927D0614700B4FBD3 /* StatsContainer.swift in Sources */,
 				1620B03326982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CB26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
-				16208BFA26D4207600693530 /* ActivitySheet.swift in Sources */,
+				16208BFA26D4207600693530 /* ImageActivitySheet.swift in Sources */,
 				165BE37426E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
 				16D1364F275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				160BB07F25DD61700059E493 /* RoundButton.swift in Sources */,
@@ -1741,6 +1745,7 @@
 				167D2E692605428200A4A299 /* SyncOperation.swift in Sources */,
 				16D861EA2715CCB200C09AC5 /* WatchOnboarding.swift in Sources */,
 				160BB09825DD61700059E493 /* WorkoutImport+Metadata.swift in Sources */,
+				16B5904C27E81B580083D869 /* ActivitySheet.swift in Sources */,
 				1668F99E26DE4F5800393322 /* ShareDetailView.swift in Sources */,
 				16A5451F26BADE7900CB6160 /* Font+Additions.swift in Sources */,
 				1602AFA326C6DB320079A6E4 /* WorkoutSampleFilter.swift in Sources */,
@@ -1847,7 +1852,7 @@
 				16A5268827D0614700B4FBD3 /* StatsContainer.swift in Sources */,
 				1620B03226982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CA26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
-				16208BF926D4207500693530 /* ActivitySheet.swift in Sources */,
+				16208BF926D4207500693530 /* ImageActivitySheet.swift in Sources */,
 				165BE37326E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
 				16D1364E275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				16682B6525CF3E1900FC9317 /* RoundButton.swift in Sources */,
@@ -1952,6 +1957,7 @@
 				167D2E682605428200A4A299 /* SyncOperation.swift in Sources */,
 				16D861E92715CCB200C09AC5 /* WatchOnboarding.swift in Sources */,
 				16A0661525C4A60D00019096 /* WorkoutImport+Metadata.swift in Sources */,
+				16B5904B27E81B580083D869 /* ActivitySheet.swift in Sources */,
 				1668F99D26DE4F5800393322 /* ShareDetailView.swift in Sources */,
 				16A5451E26BADE7900CB6160 /* Font+Additions.swift in Sources */,
 				1602AFA226C6DB320079A6E4 /* WorkoutSampleFilter.swift in Sources */,

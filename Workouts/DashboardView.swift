@@ -63,6 +63,7 @@ struct DashboardView: View {
                 }
                 .padding()
             }
+            .overlay(overlayView())
             .task {
                 try? await manager.load()
             }
@@ -113,10 +114,23 @@ struct DashboardView: View {
 
 extension DashboardView {
     
+    var showEmptyHUD: Bool {
+        manager.isLoading && manager.metrics.isEmpty
+    }
+    
+    var showHUD: Bool {
+        manager.isLoading && manager.metrics.isPresent
+    }
+    
     @ViewBuilder
     func overlayView() -> some View {
-        if manager.isLoading {
-            HUDView()
+        if showEmptyHUD {
+            VStack(spacing: CGFloat(10)) {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                Text("LOADING")
+                    .font(.caption)
+            }
         }
     }
     
@@ -128,7 +142,7 @@ extension DashboardView {
             if showButton {
                 Spacer()
                 
-                if manager.isLoading {
+                if showHUD {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
                 } else {
@@ -211,7 +225,7 @@ extension DashboardView {
     
     func activityView() -> AnyView {
         if let image = manager.image {
-            return AnyView(ActivitySheet(image: image, imageType: .png, imageName: imageName))
+            return AnyView(ImageActivitySheet(image: image, imageType: .png, imageName: imageName))
         } else {
             return AnyView(Text("Image Missing"))
         }
