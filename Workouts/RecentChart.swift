@@ -10,6 +10,7 @@ import Charts
 
 struct RecentChart: UIViewRepresentable {
     var values: [ChartInterval]
+    var avgValue: Double?
     var lineColor = Color.distance
     var circleColor = Color.primary
     var yAxisFormatter: UnitValueFormatter? = nil
@@ -19,6 +20,7 @@ extension RecentChart {
     
     func makeUIView(context: Context) -> LineChartView {
         let chartView = LineChartView()
+        chartView.isUserInteractionEnabled = false
         chartView.chartDescription.enabled = false
         chartView.dragEnabled = false
         chartView.setScaleEnabled(false)
@@ -64,9 +66,13 @@ extension RecentChart {
         var dataSets = [LineChartDataSet]()
         
         var dataEntries = [ChartDataEntry]()
+        var avgEntries = [ChartDataEntry]()
         
         values.forEach { (value) in
             dataEntries.append(ChartDataEntry(x: value.xValue, y: value.yValue))
+            if let avgValue = avgValue, avgValue > 0 {
+                avgEntries.append(ChartDataEntry(x: value.xValue, y: avgValue))
+            }
         }
         
         let dataSet = LineChartDataSet(entries: dataEntries, label: "")
@@ -77,41 +83,27 @@ extension RecentChart {
         dataSet.drawCirclesEnabled = true
         dataSet.circleRadius = 5.0
         dataSet.setCircleColor(UIColor(lineColor))
-//        dataSet.circleHoleRadius = 3.0
-//        dataSet.circleHoleColor = UIColor(lineColor)
         
         dataSets.append(dataSet)
+        
+        if !avgEntries.isEmpty {
+            let avgDataSet = LineChartDataSet(entries: avgEntries, label: "")
+            avgDataSet.setColor(UIColor(.distance).withAlphaComponent(0.5))
+            avgDataSet.drawValuesEnabled = false
+            avgDataSet.lineWidth = 2.0
+            avgDataSet.lineDashLengths = [3, 3]
+            avgDataSet.drawCirclesEnabled = false
+
+            dataSets.append(avgDataSet)
+        }
         
         let data = LineChartData(dataSets: dataSets)
         view.data = data
     }
     
-//    func makeCoordinator() -> Coordinator {
-//        Coordinator(self)
-//    }
-    
 }
 
-//extension RecentChart {
-//
-//    class Coordinator: NSObject, ChartViewDelegate {
-//        var parent: RecentChart
-//
-//        init(_ parent: RecentChart) {
-//            self.parent = parent
-//        }
-//
-//        func chartValueNothingSelected(_ chartView: ChartViewBase) {
-//            Log.debug("nothing selected")
-//        }
-//
-//        func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
-//            Log.debug("entry: \(highlight.dataIndex)")
-//        }
-//
-//    }
-//
-//}
+
 
 struct RecentChart_Previews: PreviewProvider {
     static var values: [ChartInterval] = {
@@ -125,7 +117,7 @@ struct RecentChart_Previews: PreviewProvider {
     
     static var previews: some View {
         VStack {
-            RecentChart(values: values, lineColor: .distance)
+            RecentChart(values: values, avgValue: 100, lineColor: .distance)
                 .frame(maxWidth: .infinity, maxHeight: 200.0)
         }
         .preferredColorScheme(.dark)

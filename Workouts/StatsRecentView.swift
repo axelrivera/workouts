@@ -11,6 +11,7 @@ struct StatsRecentView: View {
     let timeframe: StatsSummary.Timeframe
     let sport: Sport?
     let summaries: [StatsSummary]
+    let avgValue: Double
     
     @State private var values = [Double]()
     
@@ -91,6 +92,7 @@ struct StatsRecentView: View {
             
             RecentChart(
                 values: distanceChartIntervals,
+                avgValue: avgValue,
                 lineColor: .distance,
                 yAxisFormatter: UnitValueFormatter(unit: .distance)
             )
@@ -141,7 +143,8 @@ struct StatsRecentView_Previews: PreviewProvider {
             StatsRecentView(
                 timeframe: .week,
                 sport: .cycling,
-                summaries: summaries
+                summaries: summaries,
+                avgValue: 100
             )
             .environmentObject(IAPManagerPreview.manager(isActive: true))
             .preferredColorScheme(.dark)

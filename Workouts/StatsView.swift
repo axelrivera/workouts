@@ -97,6 +97,17 @@ extension StatsView {
         }
     }
     
+    func avgDistance(forTimeframe timeframe: StatsSummary.Timeframe) -> Double {
+        switch timeframe {
+        case .week:
+            return nativeDistanceToLocalizedUnit(for: statsManager.avgWeeklyDistance)
+        case .month:
+            return nativeDistanceToLocalizedUnit(for: statsManager.avgMonthlyDistance)
+        default:
+            return 0
+        }
+    }
+    
     func summaries(forTimeframe timeframe: StatsSummary.Timeframe) -> [StatsSummary] {
         switch timeframe {
         case .week:
@@ -142,7 +153,8 @@ extension StatsView {
         StatsRecentView(
             timeframe: stats.timeframe,
             sport: statsManager.sport,
-            summaries: summaries(forTimeframe: stats.timeframe)
+            summaries: summaries(forTimeframe: stats.timeframe),
+            avgValue: avgDistance(forTimeframe: stats.timeframe)
         )
     }
         
