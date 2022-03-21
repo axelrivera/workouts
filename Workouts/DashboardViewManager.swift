@@ -10,16 +10,20 @@ import Combine
 
 extension DashboardViewManager {
     enum IntervalType: String, Hashable, Identifiable, CaseIterable {
-        case today, week, month, year, all, range
+        case today, yesterday, week, prevWeek, month, prevMonth, year, prevYear, all, range
         
         var id: String { rawValue }
         
         var title: String {
             switch self {
             case .today: return "Today"
+            case .yesterday: return "Yesterday"
             case .week: return "Current Week"
+            case .prevWeek: return "Last Week"
             case .month: return "Current Month"
-            case .year: return "Year to Date"
+            case .prevMonth: return "Last Month"
+            case .year: return "Current Year"
+            case .prevYear: return "Last Year"
             case .all: return "All Time"
             case .range: return "Dates"
             }
@@ -52,9 +56,11 @@ final class DashboardViewManager: ObservableObject {
     
     init() {
         originDate = AppSettings.dashboardStartDate
-        let interval = DateInterval.lastThreeMonths()
-        startDate = interval.start
-        endDate = interval.end
+        currentInterval = IntervalType(rawValue: AppSettings.dashboardInterval) ?? .month
+        
+        let dateInterval = DateInterval.lastThreeMonths()
+        startDate = dateInterval.start
+        endDate = dateInterval.end
         
         cancellable = Timer.publish(every: TIMER_INTERVAL, on: .current, in: .common)
             .autoconnect()
@@ -86,13 +92,13 @@ extension DashboardViewManager {
     var rangeString: String {
         let dateInterval = currentDateInterval()
         switch currentInterval {
-        case .today:
+        case .today, .yesterday:
             return DateFormatter.longDayShortMonthFormatter.string(from: dateInterval.start)
-        case .week:
+        case .week, .prevWeek:
             return formattedRangeString(start: dateInterval.start, end: dateInterval.end)
-        case .month:
+        case .month, .prevMonth:
             return formattedMonthYearString(for: dateInterval.start)
-        case .year:
+        case .year, .prevYear:
             return DateFormatter.year.string(from: dateInterval.start)
         case .all:
             let start = originDate ?? appleWatchDate
@@ -116,13 +122,13 @@ extension DashboardViewManager {
     var subheaderString: String {
         let dateInterval = currentDateInterval()
         switch currentInterval {
-        case .today:
+        case .today, .yesterday:
             return "Daily Stats"
-        case .week:
+        case .week, .prevWeek:
             return "Weekly Stats"
-        case .month:
+        case .month, .prevMonth:
             return "Monthly Stats"
-        case .year:
+        case .year, .prevYear:
             return "Yearly Stats"
         case .all:
             return "All Time Stats"
@@ -149,18 +155,35 @@ extension DashboardViewManager {
         case .today:
             start = Date().startOfDay
             end = Date().endOfDay
+        case .yesterday:
+            let yesterday = Date().dayBefore
+            start = yesterday.startOfDay
+            end = yesterday.endOfDay
         case .week:
             start = Date().workoutWeekStart
             end = Date().workoutWeekEnd
+        case .prevWeek:
+            let interval = DateInterval.prevWeek()
+            start = interval.start
+            end = interval.end
         case .month:
             start = Date().startOfMonth
             end = Date().endOfMonth
+        case .prevMonth:
+            let interval = DateInterval.prevMonth()
+            start = interval.start
+            end = interval.end
         case .year:
             start = Date().startOfYear
             end = Date().endOfYear
+        case .prevYear:
+            let interval = DateInterval.prevYear()
+            start = interval.start
+            end = interval.end
         case .all:
             start = originDate ?? appleWatchDate
             end = Date().endOfDay
+            
         case .range:
             if endDate < startDate {
                 endDate = startDate
@@ -287,6 +310,7 @@ extension DashboardViewManager {
             activities: Array(sortedActivities.prefix(3))
         )
         
+        AppSettings.dashboardInterval = currentInterval.rawValue
         lastInterval = currentInterval
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

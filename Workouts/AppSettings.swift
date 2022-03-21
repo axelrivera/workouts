@@ -41,6 +41,7 @@ struct AppSettings {
         static let allTimeTimeframe = "arn_all_time_timeframe"
         static let tagsTimeframe = "arn_tag_timeframe"
         static let dashboardStartDate = "arn_dashboard_start_date"
+        static let dashboardInterval = "arn_dashboard_interval"
     }
     
     struct RemoteKeys {
@@ -100,6 +101,9 @@ struct AppSettings {
             }
         }
     }
+    
+    @Settings(Keys.dashboardInterval, defaultValue: DashboardViewManager.IntervalType.month.rawValue)
+    static var dashboardInterval: String
     
     static var shareSettings: ShareSettings {
         get {

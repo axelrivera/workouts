@@ -256,4 +256,22 @@ extension DateInterval {
         return DateInterval(start: start, end: Date())
     }
     
+    static func prevWeek() -> DateInterval {
+        let start = Date().workoutWeekStart.addingTimeInterval(-1).workoutWeekStart
+        let end = start.workoutWeekEnd
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func prevMonth() -> DateInterval {
+        let start = Calendar.current.date(byAdding: .month, value: -1, to: Date())!.startOfMonth
+        let end = start.endOfMonth
+        return DateInterval(start: start, end: end)
+    }
+    
+    static func prevYear() -> DateInterval {
+        let start = Calendar.current.date(byAdding: .year, value: -1, to: Date())!.startOfYear
+        let end = start.endOfYear
+        return DateInterval(start: start, end: end)
+    }
+    
 }
