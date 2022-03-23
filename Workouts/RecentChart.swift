@@ -32,6 +32,8 @@ extension RecentChart {
         let legend = chartView.legend
         legend.form = .none
         
+        let gridColor = UIColor(.secondary).withAlphaComponent(0.2)
+        
         let xAxis = chartView.xAxis
         xAxis.labelPosition = .bottom
         xAxis.labelTextColor = .label
@@ -40,6 +42,7 @@ extension RecentChart {
         xAxis.centerAxisLabelsEnabled = false
         xAxis.drawAxisLineEnabled = true
         xAxis.drawGridLinesEnabled = true
+        xAxis.gridColor = gridColor
         xAxis.valueFormatter = MonthValueFormatter()
         
         let leftAxis = chartView.leftAxis
@@ -48,9 +51,14 @@ extension RecentChart {
         leftAxis.drawLabelsEnabled = true
         leftAxis.drawGridLinesEnabled = true
         leftAxis.gridLineDashLengths = [5, 5]
+        leftAxis.gridColor = gridColor
         leftAxis.drawLimitLinesBehindDataEnabled = true
-        leftAxis.drawZeroLineEnabled = false
+        leftAxis.drawZeroLineEnabled = true
         leftAxis.axisMinimum = 0.0
+        
+        if let max = values.map( { $0.yValue }).max() {
+            leftAxis.axisMaximum = max * 1.2
+        }
         
         chartView.rightAxis.enabled = false
     
@@ -66,13 +74,46 @@ extension RecentChart {
         var dataSets = [LineChartDataSet]()
         
         var dataEntries = [ChartDataEntry]()
+        var lastDataEntries = [ChartDataEntry]()
         var avgEntries = [ChartDataEntry]()
         
-        values.forEach { (value) in
-            dataEntries.append(ChartDataEntry(x: value.xValue, y: value.yValue))
+        let showLastEntries = values.count > 2
+        
+        if showLastEntries {
+            lastDataEntries = values.map { value in
+                ChartDataEntry(x: value.xValue, y: value.yValue)
+            }
+        }
+        
+        values.enumerated().forEach { (index, value) in
+            let isLast = index == values.count - 1
+            var yValue: Double
+            
+            if showLastEntries && isLast {
+                yValue = Double.nan
+            } else {
+                yValue = value.yValue
+            }
+            
+            dataEntries.append(ChartDataEntry(x: value.xValue, y: yValue))
+            
             if let avgValue = avgValue, avgValue > 0 {
                 avgEntries.append(ChartDataEntry(x: value.xValue, y: avgValue))
             }
+        }
+        
+        if lastDataEntries.isPresent {
+            let lastDataSet = LineChartDataSet(entries: lastDataEntries, label: "")
+            lastDataSet.setColor(UIColor(lineColor))
+            lastDataSet.drawValuesEnabled = false
+            lastDataSet.lineWidth = 2.0
+            lastDataSet.lineDashLengths = [3, 2]
+            lastDataSet.drawFilledEnabled = false
+            lastDataSet.drawCirclesEnabled = true
+            lastDataSet.circleRadius = 5.0
+            lastDataSet.setCircleColor(UIColor(lineColor))
+
+            dataSets.append(lastDataSet)
         }
         
         let dataSet = LineChartDataSet(entries: dataEntries, label: "")
@@ -83,15 +124,15 @@ extension RecentChart {
         dataSet.drawCirclesEnabled = true
         dataSet.circleRadius = 5.0
         dataSet.setCircleColor(UIColor(lineColor))
-        
+
         dataSets.append(dataSet)
         
         if !avgEntries.isEmpty {
             let avgDataSet = LineChartDataSet(entries: avgEntries, label: "")
-            avgDataSet.setColor(UIColor(.distance).withAlphaComponent(0.5))
+            avgDataSet.setColor(UIColor(.apatite))
             avgDataSet.drawValuesEnabled = false
-            avgDataSet.lineWidth = 2.0
-            avgDataSet.lineDashLengths = [3, 3]
+            avgDataSet.lineWidth = 1.0
+            avgDataSet.lineDashLengths = [5, 3]
             avgDataSet.drawCirclesEnabled = false
 
             dataSets.append(avgDataSet)
@@ -99,11 +140,14 @@ extension RecentChart {
         
         let data = LineChartData(dataSets: dataSets)
         view.data = data
+        
+        if let last = self.values.last {
+            Log.debug("last with x: \(last.xValue), y: \(last.yValue)")
+            view.xAxis.axisMaximum = last.xValue
+        }
     }
     
 }
-
-
 
 struct RecentChart_Previews: PreviewProvider {
     static var values: [ChartInterval] = {
