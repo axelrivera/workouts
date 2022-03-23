@@ -14,7 +14,8 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
     let OPACITY = 0.9
     
     let viewModel: WorkoutCardViewModel
-    var metric: WorkoutCardViewModel.Metric = .none
+    var metric1: WorkoutCardViewModel.Metric = .none
+    var metric2: WorkoutCardViewModel.Metric = .none
     var backgroundImage: UIImage?
     var showTitle = false
     var showDate: Bool = false
@@ -71,14 +72,12 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
 
                     metricView(text: timeTitle, detail: viewModel.duration)
                     
-                    if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
+                    if let text = metric1.displayTitle, let detail = viewModel.value(for: metric1) {
                         metricView(text: text, detail: detail)
-                        
-                        if let maxSpeed = viewModel.maxSpeed, metric == .speed {
-                            metricView(text: "Max Speed", detail: maxSpeed)
-                        } else if let maxHR = viewModel.maxHeartRate, metric == .heartRate {
-                            metricView(text: ("Max HR"), detail: maxHR)
-                        }
+                    }
+                    
+                    if let text = metric2.displayTitle, let detail = viewModel.value(for: metric2) {
+                        metricView(text: text, detail: detail)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -155,7 +154,8 @@ struct WorkoutColorCard_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutPhotoCard(
             viewModel: viewModel,
-            metric: .speed,
+            metric1: .speed,
+            metric2: .maxSpeed,
             backgroundImage: backgroundImage,
             showTitle: true,
             showDate: true

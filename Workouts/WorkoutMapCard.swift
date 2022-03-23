@@ -19,7 +19,8 @@ struct WorkoutMapCard: View, WorkoutSharable {
     )
     
     let viewModel: WorkoutCardViewModel
-    var metric: WorkoutCardViewModel.Metric = .none
+    var metric1: WorkoutCardViewModel.Metric = .none
+    var metric2: WorkoutCardViewModel.Metric = .none
     var backgroundImage: UIImage?
     var showTitle = true
     var showDate = true
@@ -80,14 +81,12 @@ struct WorkoutMapCard: View, WorkoutSharable {
 
                         metricView(text: "Time", detail: viewModel.duration, color: timeColor)
                         
-                        if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
-                            metricView(text: text, detail: detail, color: color(for: metric))
-                            
-                            if let maxSpeed = viewModel.maxSpeed, metric == .speed {
-                                metricView(text: "Max Speed", detail: maxSpeed, color: speedColor)
-                            } else if let maxHR = viewModel.maxHeartRate, metric == .heartRate {
-                                metricView(text: ("Max HR"), detail: maxHR, color: .calories)
-                            }
+                        if let text = metric1.displayTitle, let detail = viewModel.value(for: metric1) {
+                            metricView(text: text, detail: detail, color: color(for: metric1))
+                        }
+                        
+                        if let text = metric2.displayTitle, let detail = viewModel.value(for: metric2) {
+                            metricView(text: text, detail: detail, color: color(for: metric2))
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -147,11 +146,11 @@ extension WorkoutMapCard {
     
     func color(for metric: WorkoutCardViewModel.Metric) -> Color {
         switch metric {
-        case .speed:
+        case .speed, .maxSpeed:
             return speedColor
         case .pace:
             return paceColor
-        case .heartRate, .calories:
+        case .heartRate, .maxHeartRate, .calories:
             return .calories
         case .elevation:
             return .elevation

@@ -11,7 +11,8 @@ let WORKOUT_CARD_WIDTH: CGFloat = 1080
 
 protocol WorkoutSharable {
     var viewModel: WorkoutCardViewModel { get }
-    var metric: WorkoutCardViewModel.Metric { get }
+    var metric1: WorkoutCardViewModel.Metric { get }
+    var metric2: WorkoutCardViewModel.Metric { get }
     var backgroundImage: UIImage? { get }
     var showTitle: Bool { get }
     var showDate: Bool { get }
