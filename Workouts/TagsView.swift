@@ -132,7 +132,7 @@ struct TagsContentView: View {
         StatsTimelineView(
             title: viewModel.title,
             subtitle: viewModel.gearType == .none ? "Tag" : viewModel.gearType.rawValue.capitalized,
-            sport: nil,
+            sport: viewModel.gearType.displaySport,
             interval: manager.dataProvider.dateIntervalForActiveWorkouts(),
             timeframe: .year,
             identifiers: manager.workoutTagProvider.workoutIdentifiers(forTag: viewModel.id)

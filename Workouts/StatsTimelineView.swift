@@ -12,7 +12,7 @@ struct StatsTimelineView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     let title: String
-    let subtitle: String
+    let subtitle: String?
     let sport: Sport?
     let interval: DateInterval
     let timeframe: StatsSummary.Timeframe
@@ -40,7 +40,7 @@ struct StatsTimelineView: View {
 
 struct StatsTimelineContentView: View {
     let title: String
-    let subtitle: String
+    let subtitle: String?
     @StateObject var manager: StatsTimelineManager
     @EnvironmentObject var purchaseManager: IAPManager
     
@@ -65,12 +65,16 @@ struct StatsTimelineContentView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack {
+                if let subtitle = subtitle {
+                    VStack {
+                        Text(title)
+                            .font(.system(size: 13.0, weight: .semibold, design: .default))
+                        Text(subtitle)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
                     Text(title)
-                        .font(.system(size: 13.0, weight: .semibold, design: .default))
-                    Text(subtitle)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
                 }
             }
 
@@ -96,8 +100,8 @@ struct StatsTimelineContentView: View {
     func activityDestination(stats: StatsSummary) -> some View {
         if manager.timeframe == .year {
             StatsTimelineView(
-                title: title,
-                subtitle: subtitle,
+                title: stats.title,
+                subtitle: nil,
                 sport: manager.sport,
                 interval: stats.interval,
                 timeframe: .month,

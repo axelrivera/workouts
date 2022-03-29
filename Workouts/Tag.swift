@@ -20,14 +20,14 @@ extension Tag {
         case none, bike, shoes
         var id: String { rawValue }
         
-        var sports: [Sport] {
+        var displaySport: Sport? {
             switch self {
+            case .none:
+                return nil
             case .bike:
-                return [.cycling]
+                return .cycling
             case .shoes:
-                return [.walking, .cycling]
-            default:
-                return []
+                return .running
             }
         }
         
