@@ -48,7 +48,7 @@ struct WorkoutsApp: App {
         synchronizer = Synchronizer(context: backgroundContext)
         
         AnalyticsManager.shared.captureInstallOrUpdate()
-        AnalyticsManager.shared.captureOpen(isBackground: false)
+        AnalyticsManager.shared.captureOpen(isBackground: false, isPro: purchaseManager.isActive)
     }
     
     @SceneBuilder var body: some Scene {

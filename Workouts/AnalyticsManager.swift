@@ -61,8 +61,20 @@ extension AnalyticsManager {
         }
     }
     
-    func captureOpen(isBackground: Bool) {
-        capture(.opened, properties: ["from_background": isBackground])
+    func captureOpen(isBackground: Bool, isPro: Bool) {
+        capture(.opened, properties: ["from_background": isBackground, "$set": ["is_pro": isPro]])
+    }
+    
+    func purchase(source: String, price: Double, displayPrice: String, identifier: String) {
+        let properties: [String: Any] = [
+            "source": source,
+            "price": price,
+            "display_price": displayPrice,
+            "product": identifier,
+            "$set": ["is_pro": true]
+        ]
+        
+        capture(.purchased, properties: properties)
     }
     
     func sharedWorkout(style: ShareManager.ShareStyle, metric1: WorkoutCardViewModel.Metric, metric2: WorkoutCardViewModel.Metric) {

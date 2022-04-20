@@ -114,14 +114,12 @@ extension IAPManager {
             do {
                 try await purchase(product)
                 
-                let properties: [String: Any] = [
-                    "source": source.rawValue,
-                    "price": NSDecimalNumber(decimal: product.price).doubleValue,
-                    "display_price": product.displayPrice,
-                    "product": product.id
-                ]
-                
-                AnalyticsManager.shared.capture(.purchased, properties: properties)
+                AnalyticsManager.shared.purchase(
+                    source: source.rawValue,
+                    price: NSDecimalNumber(decimal: product.price).doubleValue,
+                    displayPrice: product.displayPrice,
+                    identifier: product.id
+                )
                 
                 DispatchQueue.main.async {
                     completionHandler(.success(true))
