@@ -22,7 +22,7 @@ final class AnalyticsManager {
         
     init() {        
         let configuration = PHGPostHogConfiguration(apiKey: API_KEY, host: HOST)
-        configuration.captureApplicationLifecycleEvents = true
+        configuration.captureApplicationLifecycleEvents = false
         configuration.recordScreenViews = false
 
         PHGPostHog.setup(with: configuration)
@@ -85,7 +85,7 @@ extension AnalyticsManager {
     }
     
     func sharedDashboard(filter: DashboardViewManager.IntervalType) {
-        capture(.sharedWorkout, properties: ["filter": filter.rawValue])
+        capture(.sharedDashboard, properties: ["filter": filter.rawValue])
     }
     
     func saveTag(source: TagSource, isNew: Bool) {

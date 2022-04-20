@@ -91,7 +91,6 @@ private extension ImportView {
         importManager.requestWritingAuthorization { success in
             DispatchQueue.main.async {
                 if success {
-                    //activeSheet = .document
                     AnalyticsManager.shared.capture(.addWorkoutFile)
                     showDocumentPicker = true
                 } else {
