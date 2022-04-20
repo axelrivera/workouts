@@ -29,7 +29,10 @@ struct Settings<T> {
 }
 
 struct AppSettings {
-    static let CURRENT_VERSION: Int = 2
+    static var CURRENT_VERSION: Int = {
+        let (_, build) = systemVersionAndBuild()
+        return Int(build) ?? 0
+    }()
     
     struct Keys {
         static let version = "arn_app_version"
