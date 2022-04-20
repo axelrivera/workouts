@@ -8,11 +8,6 @@
 import SwiftUI
 
 struct StatsContainer: View {
-    enum Page: String, Identifiable, CaseIterable {
-        case summary, tags
-        var id: String { rawValue }
-    }
-    
     enum ActiveCover: Identifiable {
         case settings
         var id: Int { hashValue }
@@ -23,7 +18,6 @@ struct StatsContainer: View {
     @EnvironmentObject var statsManager: StatsManager
     
     @State var activeCover: ActiveCover?
-    @State var page: Page = .summary
     
     var body: some View {
         NavigationView {

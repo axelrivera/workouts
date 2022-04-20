@@ -30,8 +30,9 @@ struct LapsView: View {
                     }
                 }
             }
+            .onAppear { AnalyticsManager.shared.logPage(.workoutSplits) }
             .overlay(overlayView())
-            .paywallButtonOverlay(sample: false)
+            .paywallButtonOverlay(source: .workoutSplits, sample: false)
             .navigationTitle("Splits")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

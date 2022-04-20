@@ -219,10 +219,8 @@
 		167D2EA92608E1C100A4A299 /* WeightInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EA72608E1C100A4A299 /* WeightInputView.swift */; };
 		167D2ED8260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
 		167D2ED9260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
-		167D2EE226110D7300A4A299 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = 167D2EE126110D7300A4A299 /* Purchases */; };
 		167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 167D2EE626110DB300A4A299 /* StoreKit.framework */; };
 		167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 167D2EE626110DB300A4A299 /* StoreKit.framework */; };
-		167D2EEA2611103200A4A299 /* Purchases in Frameworks */ = {isa = PBXBuildFile; productRef = 167D2EE92611103200A4A299 /* Purchases */; };
 		167D2EEC2611104800A4A299 /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EEB2611104800A4A299 /* IAPManager.swift */; };
 		167D2EED2611104800A4A299 /* IAPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EEB2611104800A4A299 /* IAPManager.swift */; };
 		16864BCB268363C80005E7D8 /* HRZonesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16864BCA268363C80005E7D8 /* HRZonesView.swift */; };
@@ -361,6 +359,12 @@
 		16B321D426C127D1007CCE70 /* LapDistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B321D226C127D1007CCE70 /* LapDistance.swift */; };
 		16B5904B27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
 		16B5904C27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
+		16BAD10A280E1FF000D1ADCC /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 16BAD109280E1FF000D1ADCC /* PostHog */; };
+		16BAD10C280E203900D1ADCC /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BAD10B280E203900D1ADCC /* AnalyticsManager.swift */; };
+		16BAD10D280E203900D1ADCC /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BAD10B280E203900D1ADCC /* AnalyticsManager.swift */; };
+		16BAD10F280E233A00D1ADCC /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 16BAD10E280E233A00D1ADCC /* PostHog */; };
+		16BAD111280EDBFA00D1ADCC /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 16BAD110280EDBFA00D1ADCC /* Products.storekit */; };
+		16BAD112280EDBFA00D1ADCC /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 16BAD110280EDBFA00D1ADCC /* Products.storekit */; };
 		16C03D7D26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16C03D7E26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16C03D8026C3F63F004F50DC /* MovingTimeProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7F26C3F63F004F50DC /* MovingTimeProcessor.swift */; };
@@ -653,6 +657,8 @@
 		16B321CC26C121C1007CCE70 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		16B321D226C127D1007CCE70 /* LapDistance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapDistance.swift; sourceTree = "<group>"; };
 		16B5904A27E81B580083D869 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
+		16BAD10B280E203900D1ADCC /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
+		16BAD110280EDBFA00D1ADCC /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calendar+Interval.swift"; sourceTree = "<group>"; };
 		16C03D7F26C3F63F004F50DC /* MovingTimeProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovingTimeProcessor.swift; sourceTree = "<group>"; };
 		16CA62802720518B002A2D92 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
@@ -712,10 +718,10 @@
 				160BB09A25DD61700059E493 /* HealthKit.framework in Frameworks */,
 				16E4C7D826C1FC8800A4C0E6 /* Polyline in Frameworks */,
 				16FB84C425F699EB00CF22ED /* Charts in Frameworks */,
+				16BAD10F280E233A00D1ADCC /* PostHog in Frameworks */,
 				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
 				161AF5E3276B646600148C63 /* CloudKit.framework in Frameworks */,
-				167D2EEA2611103200A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -726,10 +732,10 @@
 				1696420C260419ED00E68A45 /* FitFileParser in Frameworks */,
 				16E4C7D626C1FC6B00A4C0E6 /* Polyline in Frameworks */,
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
+				16BAD10A280E1FF000D1ADCC /* PostHog in Frameworks */,
 				16FB84BF25F699D400CF22ED /* Charts in Frameworks */,
 				167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */,
 				16CA62812720518B002A2D92 /* CloudKit.framework in Frameworks */,
-				167D2EE226110D7300A4A299 /* Purchases in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -916,6 +922,7 @@
 			children = (
 				167B75D62799AAC300C20049 /* image_preview.jpg */,
 				161FDB7525B34DF000929433 /* Workouts.entitlements */,
+				16BAD110280EDBFA00D1ADCC /* Products.storekit */,
 				161FDB6925B34D4E00929433 /* Assets.xcassets */,
 				167C43C827DE387300949F8F /* FontAwesome.xcassets */,
 				160BB0A325DD61700059E493 /* DevInfo.plist */,
@@ -1346,6 +1353,7 @@
 				16A065F125C37F1500019096 /* DetailManager.swift */,
 				1678145825DF4B120012531D /* StatsManager.swift */,
 				167D2EEB2611104800A4A299 /* IAPManager.swift */,
+				16BAD10B280E203900D1ADCC /* AnalyticsManager.swift */,
 				165BE36E26E4D6DA00C3F36B /* ShareManager.swift */,
 				16DE5BEB272F39C6006FF803 /* TagManager.swift */,
 			);
@@ -1414,8 +1422,8 @@
 			packageProductDependencies = (
 				160BB06225DD61700059E493 /* FitFileParser */,
 				16FB84C325F699EB00CF22ED /* Charts */,
-				167D2EE92611103200A4A299 /* Purchases */,
 				16E4C7D726C1FC8800A4C0E6 /* Polyline */,
+				16BAD10E280E233A00D1ADCC /* PostHog */,
 			);
 			productName = Workouts;
 			productReference = 160BB0A225DD61700059E493 /* Workouts Dev.app */;
@@ -1437,8 +1445,8 @@
 			packageProductDependencies = (
 				16FB84BE25F699D400CF22ED /* Charts */,
 				1696420B260419ED00E68A45 /* FitFileParser */,
-				167D2EE126110D7300A4A299 /* Purchases */,
 				16E4C7D526C1FC6B00A4C0E6 /* Polyline */,
+				16BAD109280E1FF000D1ADCC /* PostHog */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Better Workouts.app */;
@@ -1493,8 +1501,8 @@
 			packageReferences = (
 				16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */,
 				1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */,
-				167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 				16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */,
+				16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			productRefGroup = 161FDB6325B34D4B00929433 /* Products */;
 			projectDirPath = "";
@@ -1516,6 +1524,7 @@
 				16A544F826B6461100CB6160 /* Launch Screen.storyboard in Resources */,
 				160BB0C125DD65DA0059E493 /* Assets.xcassets in Resources */,
 				167C43CA27DE387300949F8F /* FontAwesome.xcassets in Resources */,
+				16BAD112280EDBFA00D1ADCC /* Products.storekit in Resources */,
 				160BB09D25DD61700059E493 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1527,6 +1536,7 @@
 				167C43C927DE387300949F8F /* FontAwesome.xcassets in Resources */,
 				16A544F726B6461100CB6160 /* Launch Screen.storyboard in Resources */,
 				160BB0BA25DD65C40059E493 /* Assets.xcassets in Resources */,
+				16BAD111280EDBFA00D1ADCC /* Products.storekit in Resources */,
 				161FDB6D25B34D4E00929433 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1546,6 +1556,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16BAD10D280E203900D1ADCC /* AnalyticsManager.swift in Sources */,
 				160BB06525DD61700059E493 /* TimeSelectView.swift in Sources */,
 				16864BE9268A32320005E7D8 /* HRZoneSummary.swift in Sources */,
 				16240562273A0F4500FC4864 /* WorkoutTag.swift in Sources */,
@@ -1758,6 +1769,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16BAD10C280E203900D1ADCC /* AnalyticsManager.swift in Sources */,
 				1645B92525B350BB00B04478 /* TimeSelectView.swift in Sources */,
 				16864BE8268A32320005E7D8 /* HRZoneSummary.swift in Sources */,
 				16240561273A0F4500FC4864 /* WorkoutTag.swift in Sources */,
@@ -2026,7 +2038,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2055,7 +2067,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2204,7 +2216,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD -D PRODUCTION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
@@ -2233,7 +2245,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.2;
+				MARKETING_VERSION = 2.2.3;
 				OTHER_SWIFT_FLAGS = "-D PRODUCTION_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
@@ -2336,20 +2348,20 @@
 				minimumVersion = 1.4.0;
 			};
 		};
-		167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.10.7;
-			};
-		};
 		1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/roznet/FitFileParser.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.4.3;
+			};
+		};
+		16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 		16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */ = {
@@ -2376,20 +2388,20 @@
 			package = 160BB06325DD61700059E493 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
 		};
-		167D2EE126110D7300A4A299 /* Purchases */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */;
-			productName = Purchases;
-		};
-		167D2EE92611103200A4A299 /* Purchases */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 167D2EE026110D7300A4A299 /* XCRemoteSwiftPackageReference "purchases-ios" */;
-			productName = Purchases;
-		};
 		1696420B260419ED00E68A45 /* FitFileParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
+		};
+		16BAD109280E1FF000D1ADCC /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+		16BAD10E280E233A00D1ADCC /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 		16E4C7D526C1FC6B00A4C0E6 /* Polyline */ = {
 			isa = XCSwiftPackageProductDependency;

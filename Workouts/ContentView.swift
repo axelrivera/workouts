@@ -71,6 +71,10 @@ struct ContentView: View {
         .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
             reloadData()
         }
+        .onReceive(NotificationCenter.Publisher.foregroundPublisher()) { _ in
+            purchaseManager.reload()
+            AnalyticsManager.shared.captureOpen(isBackground: true)
+        }
         .onChange(of: scenePhase) { phase in
             switch phase {
             case .active:

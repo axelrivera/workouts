@@ -50,6 +50,7 @@ struct HeartRateEditView: View {
                         .accentColor(.red)
                 }
             }
+            .onAppear { AnalyticsManager.shared.logPage(.editHRZones)}
             .navigationTitle("Edit Zones")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

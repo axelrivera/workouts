@@ -225,6 +225,7 @@ extension DashboardView {
     
     func activityView() -> AnyView {
         if let image = manager.image {
+            AnalyticsManager.shared.sharedDashboard(filter: manager.currentInterval)
             return AnyView(ImageActivitySheet(image: image, imageType: .png, imageName: imageName))
         } else {
             return AnyView(Text("Image Missing"))

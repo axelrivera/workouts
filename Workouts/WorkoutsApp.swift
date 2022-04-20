@@ -11,7 +11,7 @@ import SwiftUI
 // Can be commented if needed
 
 #if PRODUCTION_DEBUG
-#error("preventing debug version from overriding production release")
+//#error("preventing debug version from overriding production release")
 #endif
 
 let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
@@ -28,8 +28,11 @@ struct WorkoutsApp: App {
     let workoutManager: WorkoutManager
     let tagManager: TagManager
     let synchronizer: Synchronizer
+    let analytics = AnalyticsManager.shared
     
     init() {
+        purchaseManager.reload()
+        
         AppSettings.workoutsQueryAnchor = nil
         let context = storageProvider.persistentContainer.viewContext
         workoutDataStore = WorkoutDataStore.shared
@@ -43,6 +46,9 @@ struct WorkoutsApp: App {
         backgroundContext.transactionAuthor = APP_TRANSACTION_AUTHOR_NAME
         
         synchronizer = Synchronizer(context: backgroundContext)
+        
+        AnalyticsManager.shared.captureInstallOrUpdate()
+        AnalyticsManager.shared.captureOpen(isBackground: false)
     }
     
     @SceneBuilder var body: some Scene {

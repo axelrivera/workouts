@@ -37,6 +37,7 @@ struct DashboardFilterView: View {
                     .textCase(nil)
                 }
             }
+            .onAppear { AnalyticsManager.shared.logPage(.dashboardFilter) }
             .navigationTitle("Select Timeframe")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

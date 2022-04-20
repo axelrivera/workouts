@@ -21,6 +21,8 @@ struct OnboardingModifier: ViewModifier {
                 Color.systemBackground
                     .ignoresSafeArea()
                 OnboardingView {
+                    AnalyticsManager.shared.capture(.onboarded)
+                    
                     Task(priority: .userInitiated) {
                         Log.debug("requesting permission")
                         await workoutManager.requestHealthAuthorization()

@@ -29,7 +29,10 @@ struct Settings<T> {
 }
 
 struct AppSettings {
+    static let CURRENT_VERSION: Int = 2
+    
     struct Keys {
+        static let version = "arn_app_version"
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
         static let shareSettings = "arn_share_settings"
@@ -59,6 +62,9 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
+    
+    @Settings(Keys.version, defaultValue: 0)
+    static var version: Int
         
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int

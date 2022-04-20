@@ -166,6 +166,7 @@ struct WorkoutsFilterView: View {
             .onAppear {
                 manager.loadSports()
                 manager.reloadTags()
+                AnalyticsManager.shared.logPage(.workoutsFilter)
             }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
