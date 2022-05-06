@@ -79,13 +79,22 @@ extension WorkoutProcessor {
     func insertObject() async -> InsertObject {
         let avgHeartRate: Double
         let maxHeartRate: Double
+        let activeEnergy: Double
         
         do {
             (avgHeartRate, maxHeartRate) = try await provider.fetchHeartRateStats(for: workout)
         } catch {
-            Log.debug("fetching heart rate stats failed for workout: \(workout.uuid): \(error.localizedDescription)")
+            Log.debug("fetching heart rate stats failed for workout: \(workout.uuid) - \(error.localizedDescription)")
             avgHeartRate = 0
             maxHeartRate = 0
+            
+        }
+        
+        do {
+            activeEnergy = try await provider.fetchActiveEnergy(for: workout)
+        } catch {
+            Log.debug("fetching energy failed for workout: \(workout.uuid) - \(error.localizedDescription)")
+            activeEnergy = energyBurned()
         }
         
         let movingTime = workout.duration
@@ -111,7 +120,7 @@ extension WorkoutProcessor {
             avgMovingPace: avgMovingPace,
             avgCyclingCadence: avgCyclingCadence(),
             maxCyclingCadence: maxCyclingCadence(),
-            energyBurned: energyBurned(),
+            energyBurned: activeEnergy,
             avgHeartRate: avgHeartRate,
             maxHeartRate: maxHeartRate,
             elevationAscended: elevationAscended(),
@@ -184,7 +193,7 @@ extension WorkoutProcessor {
     }
     
     private func energyBurned() -> Double {
-        workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
+        workout.totalEnergyBurned?.doubleValue(for: .largeCalorie()) ?? 0
     }
     
     private func elevationAscended() -> Double {

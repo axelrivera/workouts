@@ -147,7 +147,7 @@ extension HealthProvider {
             for workout in workouts {
                 distance += workout.totalDistance?.doubleValue(for: .meter()) ?? 0
                 duration += workout.duration
-                calories += workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0
+                calories += workout.totalEnergyBurned?.doubleValue(for: .largeCalorie()) ?? 0
             }
             
             let data = ActivityTypeData(total: total, distance: distance, duration: duration, calories: calories)

@@ -223,11 +223,22 @@ extension WorkoutDataStore {
         guard let start = file.startDate, let end = file.endDate else { return nil }
         guard let energyBurned = file.totalEnergyBurned.caloriesValue else { return nil }
         
+        let sampleStart: Date
+        let sampleEnd: Date
+        
+        if let duration = file.totalElapsedTime.timeValue, duration > 10 {
+            sampleStart = start.addingTimeInterval(1)
+            sampleEnd = end.addingTimeInterval(-1)
+        } else {
+            sampleStart = start
+            sampleEnd = end
+        }
+        
         return HKCumulativeQuantitySample(
             type: .activeEnergyBurned(),
-            quantity: HKQuantity(unit: .kilocalorie(), doubleValue: energyBurned),
-            start: start,
-            end: end
+            quantity: HKQuantity(unit: .largeCalorie(), doubleValue: energyBurned),
+            start: sampleStart,
+            end: sampleEnd
         )
     }
     

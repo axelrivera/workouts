@@ -146,7 +146,7 @@ enum DashboardMetric: Int, Hashable, Identifiable, CaseIterable {
     
     func quantityAndUnit() -> (quantity: HKQuantityType, unit: HKUnit)? {
         switch self {
-        case .activeEnergy: return (.activeEnergyBurned(), .kilocalorie())
+        case .activeEnergy: return (.activeEnergyBurned(), .largeCalorie())
         case .exerciseTime: return (.exerciseTime(), .second())
         case .steps: return (.stepCount(), .count())
         case .flights: return (.flightsClimbed(), .count())
