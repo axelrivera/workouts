@@ -96,7 +96,7 @@ struct TagsContentView: View {
             .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
                 switch item {
                 case .edit(let viewModel):
-                    TagsAddView(viewModel: viewModel, isInsert: false)
+                    TagsAddView(viewModel: viewModel, source: .tags, isInsert: false)
                         .environmentObject(TagManager(context: viewContext))
                 }
             }
@@ -130,6 +130,7 @@ struct TagsContentView: View {
     @ViewBuilder
     func destination(for viewModel: TagSummaryViewModel) -> some View {
         StatsTimelineView(
+            source: .tags,
             title: viewModel.title,
             subtitle: viewModel.gearType == .none ? "Tag" : viewModel.gearType.rawValue.capitalized,
             sport: viewModel.gearType.displaySport,
@@ -137,6 +138,7 @@ struct TagsContentView: View {
             timeframe: .year,
             identifiers: manager.workoutTagProvider.workoutIdentifiers(forTag: viewModel.id)
         )
+        .onAppear { AnalyticsManager.shared.logPage(.tagMetrics) }
     }
     
 }

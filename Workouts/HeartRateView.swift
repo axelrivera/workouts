@@ -97,6 +97,8 @@ struct HeartRateView: View {
 extension HeartRateView {
     
     func saveAction(heartRate: Int, values: [Int]) {
+        AnalyticsManager.shared.capture(.savedHRZone)
+        
         zoneManager.maxHeartRate = Double(heartRate)
         zoneManager.values = values
         AppSettings.maxHeartRate = heartRate
@@ -105,6 +107,8 @@ extension HeartRateView {
     }
     
     func applyAllAction() {
+        AnalyticsManager.shared.capture(.applyAllHRZones)
+        
         let heartRate = AppSettings.maxHeartRate
         let values = AppSettings.heartRateZones
         Workout.batchUpdateHeartRateZones(with: heartRate, values: values, in: managedObjectContext)

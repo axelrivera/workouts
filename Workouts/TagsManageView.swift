@@ -84,10 +84,10 @@ struct TagsManageContentView: View {
         .sheet(item: $activeSheet, onDismiss: reload) { sheet in
             switch sheet {
             case .add:
-                TagsAddView(viewModel: Tag.addViewModel(), isInsert: false)
+                TagsAddView(viewModel: Tag.addViewModel(), source: .manage, isInsert: false)
                     .environmentObject(manager)
             case .edit(let tag):
-                TagsAddView(viewModel: tag.editViewModel(), isInsert: false)
+                TagsAddView(viewModel: tag.editViewModel(), source: .manage, isInsert: false)
                     .environmentObject(manager)
             }
         }

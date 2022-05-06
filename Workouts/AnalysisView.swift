@@ -102,7 +102,7 @@ struct AnalysisView: View {
                         Section(header: zonesHeader()) {
                             HRZonesView(summaries: purchaseManager.isActive ? detailManager.zones : HRZoneSummary.samples())
                                 .padding([.top, .bottom])
-                                .paywallButtonOverlay()
+                                .paywallButtonOverlay(source: .workoutAnalytics)
                                 
                         }
                     }
@@ -150,6 +150,7 @@ struct AnalysisView: View {
                     }
                 }
             }
+            .onAppear { AnalyticsManager.shared.logPage(.workoutAnalysis) }
             .loadingView(isVisible: detailManager.isProcessingAnalysis)
             .listStyle(GroupedListStyle())
             .navigationTitle(workout.analysisTitle)
@@ -193,8 +194,11 @@ extension AnalysisView {
         HStack {
             Text("Heart Rate Zones")
             Spacer()
-            Button("Edit") { activeSheet = .heartRateZones }
-                .disabled(!purchaseManager.isActive)
+            Button("Edit") {
+                AnalyticsManager.shared.capture(.workoutHRZone)
+                activeSheet = .heartRateZones
+            }
+            .disabled(!purchaseManager.isActive)
         }
     }
     

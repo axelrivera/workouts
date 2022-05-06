@@ -97,7 +97,10 @@ struct WorkoutsContentView: View {
                                     }
                                 }
                                 
-                                Button(action: { activeSheet = .tags(identifier: workout.workoutIdentifier, sport: workout.sport) }) {
+                                Button(action: {
+                                    AnalyticsManager.shared.updateWorkoutTags(workouts: true)
+                                    activeSheet = .tags(identifier: workout.workoutIdentifier, sport: workout.sport)
+                                }) {
                                     Label("Tags", systemImage: "tag")
                                 }
                             }
@@ -159,7 +162,13 @@ struct WorkoutsContentView: View {
                     return Alert(
                         title: Text("Apply Tags"),
                         message: Text("Apply tags to all \(workouts.count.formatted()) results in filter? Some tags may be ignored based on gear type."),
-                        primaryButton: Alert.Button.default(Text("Continue"), action: { activeSheet = .tagsToAll }),
+                        primaryButton: Alert.Button.default(
+                            Text("Continue"),
+                            action: {
+                                AnalyticsManager.shared.capture(.tagAll)
+                                activeSheet = .tagsToAll
+                            }
+                        ),
                         secondaryButton: Alert.Button.cancel(Text("Cancel"))
                     )
                 }
@@ -204,7 +213,7 @@ struct WorkoutsContentView: View {
                                     Label("Unfavorite All", systemImage: "heart.slash")
                                 }
                                 
-                                Button(action: { activeAlert = .tagConfirmation }) {
+                                Button(action: {activeAlert = .tagConfirmation }) {
                                     Label("Tag All", systemImage: "tag")
                                 }
                                 

@@ -13,6 +13,8 @@ struct PaywallView: View {
         var id: Self { self }
     }
     
+    let source: AnalyticsManager.PaywallSource
+    
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var purchaseManager: IAPManager
@@ -138,7 +140,7 @@ extension PaywallView {
     
     func purchase() {
         withAnimation { isPurchasing = true }
-        purchaseManager.purchase { result in
+        purchaseManager.purchase(source: source) { result in
             withAnimation { self.isPurchasing = false }
             switch result {
             case .success:
@@ -157,6 +159,7 @@ extension PaywallView {
             withAnimation { self.isRestoring = false }
             switch result {
             case .success:
+                AnalyticsManager.shared.capture(.restoredPurchase)
                 presentationMode.wrappedValue.dismiss()
             case .failure(let error):
                 Log.debug("restore failed: \(error.localizedDescription)")
@@ -170,7 +173,7 @@ extension PaywallView {
 struct PaywallView_Previews: PreviewProvider {
     
     static var previews: some View {
-        PaywallView()
+        PaywallView(source: .settings)
             .environmentObject(IAPManagerPreview.manager(isActive: true))
             .colorScheme(.dark)
     }

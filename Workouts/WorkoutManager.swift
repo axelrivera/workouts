@@ -142,9 +142,11 @@ extension WorkoutManager {
             if isFavorite {
                 try metaProvider.unfavoriteWorkout(for: identifier)
                 isFavorite = false
+                AnalyticsManager.shared.capture(.unfavorited)
             } else {
                 try metaProvider.favoriteWorkout(for: identifier)
                 isFavorite = true
+                AnalyticsManager.shared.capture(.favorited)
             }
 
             storage.set(isFavorite: isFavorite, forID: identifier)

@@ -73,19 +73,11 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
-                
-                #if DEVELOPMENT_BUILD
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Reset IAP", action: purchaseManager.resetMockPurchase)
-                        .tint(.red)
-                        .disabled(!purchaseManager.isActive)
-                }
-                #endif
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .paywall:
-                    PaywallView()
+                    PaywallView(source: .settings)
                         .environmentObject(purchaseManager)
                 case .share:
                     ActivitySheet(items: [URL(string: URLStrings.iTunesURL)!])

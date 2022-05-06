@@ -11,6 +11,7 @@ import CoreData
 struct StatsTimelineView: View {
     @Environment(\.managedObjectContext) var viewContext
     
+    let source: AnalyticsManager.PaywallSource
     let title: String
     let subtitle: String?
     let sport: Sport?
@@ -20,6 +21,7 @@ struct StatsTimelineView: View {
     
     var body: some View {
         StatsTimelineContentView(
+            source: source,
             title: title,
             subtitle: subtitle,
             manager: manager
@@ -39,6 +41,7 @@ struct StatsTimelineView: View {
 }
 
 struct StatsTimelineContentView: View {
+    let source: AnalyticsManager.PaywallSource
     let title: String
     let subtitle: String?
     @StateObject var manager: StatsTimelineManager
@@ -60,7 +63,7 @@ struct StatsTimelineContentView: View {
             .onAppear { manager.reload() }
         }
         .overlay(emptyOverlay())
-        .paywallButtonOverlay()
+        .paywallButtonOverlay(source: source)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -100,6 +103,7 @@ struct StatsTimelineContentView: View {
     func activityDestination(stats: StatsSummary) -> some View {
         if manager.timeframe == .year {
             StatsTimelineView(
+                source: source,
                 title: stats.title,
                 subtitle: nil,
                 sport: manager.sport,
@@ -134,6 +138,7 @@ struct StatsTimelineView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             StatsTimelineView(
+                source: .progress,
                 title: "Timeline Title",
                 subtitle: "Subtitle",
                 sport: .cycling,

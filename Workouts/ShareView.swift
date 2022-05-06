@@ -134,6 +134,13 @@ struct ShareView: View {
                 switch sheet {
                 case .activity:
                     sheetView()
+                        .onAppear {
+                            AnalyticsManager.shared.sharedWorkout(
+                                style: shareManager.style,
+                                metric1: shareManager.selectedMetric1,
+                                metric2: shareManager.selectedMetric2
+                            )
+                        }
                 case .detail:
                     ShareDetailView()
                         .environmentObject(shareManager)

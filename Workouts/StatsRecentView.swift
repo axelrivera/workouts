@@ -59,7 +59,7 @@ struct StatsRecentView: View {
             }
         }
         .overlay(emptyOverlay())
-        .paywallButtonOverlay()
+        .paywallButtonOverlay(source: .progress)
         .navigationTitle(timeframe.recentTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

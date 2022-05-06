@@ -97,6 +97,7 @@ struct DashboardView: View {
                     )
                 case .activity:
                     activityView()
+                        .onAppear { AnalyticsManager.shared.sharedDashboard(filter: manager.currentInterval) }
                 case .metrics:
                     DashboardMetricsView()
                 }

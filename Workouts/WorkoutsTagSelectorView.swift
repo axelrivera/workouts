@@ -71,7 +71,7 @@ struct WorkoutsTagSelectorContent: View {
             .sheet(item: $activeSheet, onDismiss: reload) { item in
                 switch item {
                 case .add:
-                    TagsAddView(viewModel: Tag.addViewModel(), isInsert: true)
+                    TagsAddView(viewModel: Tag.addViewModel(), source: .selector, isInsert: true)
                         .environmentObject(TagManager(context: viewContext))
                 }
             }

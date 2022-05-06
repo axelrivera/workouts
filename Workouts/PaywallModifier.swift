@@ -10,6 +10,7 @@ import SwiftUI
 struct PaywallButtonModifier: ViewModifier {
     @EnvironmentObject var purchaseManager: IAPManager
     
+    let source: AnalyticsManager.PaywallSource
     let sample: Bool
     @State private var isPaywallShowing: Bool = false
     
@@ -26,7 +27,7 @@ struct PaywallButtonModifier: ViewModifier {
              }
         }
         .sheet(isPresented: $isPaywallShowing) {
-            PaywallView()
+            PaywallView(source: source)
                 .environmentObject(purchaseManager)
         }
     }
@@ -35,8 +36,8 @@ struct PaywallButtonModifier: ViewModifier {
 
 extension View {
     
-    func paywallButtonOverlay(sample: Bool = true) -> some View {
-        modifier(PaywallButtonModifier(sample: sample))
+    func paywallButtonOverlay(source: AnalyticsManager.PaywallSource, sample: Bool = true) -> some View {
+        modifier(PaywallButtonModifier(source: source, sample: sample))
     }
     
 }

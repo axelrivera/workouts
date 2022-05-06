@@ -20,4 +20,8 @@ extension NotificationCenter.Publisher {
         NotificationCenter.default.publisher(for: refreshNotification)
     }
     
+    static func foregroundPublisher() -> NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+    }
+    
 }

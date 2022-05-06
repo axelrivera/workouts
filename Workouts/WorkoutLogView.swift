@@ -67,7 +67,7 @@ struct WorkoutLogView: View {
                 })
             }
             .overlay(emptyOverlay())
-            .paywallButtonOverlay()
+            .paywallButtonOverlay(source: .calendar)
             .navigationTitle("Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -83,6 +83,9 @@ struct WorkoutLogView: View {
                             Text(dataType.rawValue.capitalized)
                         }
                     }
+                    .onChange(of: manager.displayType, perform: { newValue in
+                        AnalyticsManager.shared.capture(.changedCalendarDisplay)
+                    })
                     .pickerStyle(SegmentedPickerStyle())
                     .fixedSize()
                     .disabled(!purchaseManager.isActive)

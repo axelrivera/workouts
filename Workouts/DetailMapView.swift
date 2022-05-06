@@ -57,6 +57,7 @@ struct DetailMapView: View {
     var body: some View {
         NavigationView {
             DetailMap(points: .constant(points), mapType: $selectedMapType)
+                .onAppear { AnalyticsManager.shared.logPage(.workoutMap) }
                 .ignoresSafeArea(.all, edges: [.bottom])
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(.inline)

@@ -156,6 +156,13 @@ extension StatsView {
             summaries: summaries(forTimeframe: stats.timeframe),
             avgValue: avgDistance(forTimeframe: stats.timeframe)
         )
+        .onAppear {
+            if stats.timeframe == .week {
+                AnalyticsManager.shared.logPage(.weeklyProgress)
+            } else {
+                AnalyticsManager.shared.logPage(.monthlyProgress)
+            }
+        }
     }
         
     @ViewBuilder
@@ -163,6 +170,7 @@ extension StatsView {
         switch timeframe {
         case .yearToDate:
             StatsTimelineView(
+                source: .progress,
                 title: "Year to Date",
                 subtitle: statsManager.sport?.activityName ?? "All Workouts",
                 sport: statsManager.sport,
@@ -170,8 +178,10 @@ extension StatsView {
                 timeframe: .month,
                 identifiers: []
             )
+            .onAppear { AnalyticsManager.shared.logPage(.yearToDateProgress)}
         case .allTime:
             StatsTimelineView(
+                source: .progress,
                 title: "All Time",
                 subtitle: statsManager.sport?.activityName ?? "All Workouts",
                 sport: statsManager.sport,
@@ -179,6 +189,7 @@ extension StatsView {
                 timeframe: .year,
                 identifiers: []
             )
+            .onAppear { AnalyticsManager.shared.logPage(.allTimeProgress) }
         default:
             EmptyView()
         }

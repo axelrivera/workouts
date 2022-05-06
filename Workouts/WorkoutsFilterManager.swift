@@ -331,6 +331,7 @@ extension WorkoutsFilterManager {
             DispatchQueue.main.async {
                 self.isProcessingActions = false
                 NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+                AnalyticsManager.shared.capture(.favoriteAll)
             }
         }
     }
@@ -355,6 +356,7 @@ extension WorkoutsFilterManager {
             DispatchQueue.main.async {
                 self.isProcessingActions = false
                 NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+                AnalyticsManager.shared.capture(.unfavoriteAll)
             }
         }
     }

@@ -93,13 +93,19 @@ struct DetailContentView: View {
                     
                     if !detailManager.tags.isEmpty {
                         Spacer()
-                        Button("Edit", action: { activeSheet = .tags })
-                            .buttonStyle(.borderless)
+                        Button("Edit", action: {
+                            AnalyticsManager.shared.updateWorkoutTags(workouts: false)
+                            activeSheet = .tags
+                        })
+                        .buttonStyle(.borderless)
                     }
                 }
                 
                 if detailManager.tags.isEmpty {
-                    Button(action: { activeSheet = .tags }) {
+                    Button(action: {
+                        AnalyticsManager.shared.updateWorkoutTags(workouts: false)
+                        activeSheet = .tags
+                    }) {
                         Label("Add Tags", systemImage: "tag")
                             .padding([.top, .bottom], CGFloat(10.0))
                             .frame(maxWidth: .infinity)
@@ -133,7 +139,6 @@ struct DetailContentView: View {
         .navigationBarTitleDisplayMode(.inline)
         .listStyle(PlainListStyle())
         .toolbar {
-            
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 Button(action: toggleFavorite) {
                     Image(systemName: detailManager.isFavorite ? "heart.fill" : "heart")

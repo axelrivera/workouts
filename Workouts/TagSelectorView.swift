@@ -59,7 +59,7 @@ struct TagSelectorView: View {
             .sheet(item: $activeSheet) { item in
                 switch item {
                 case .add:
-                    TagsAddView(viewModel: Tag.addViewModel(sport: tagManager.sport), isInsert: true)
+                    TagsAddView(viewModel: Tag.addViewModel(sport: tagManager.sport), source: .selector, isInsert: true)
                         .environmentObject(tagManager)
                 }
             }

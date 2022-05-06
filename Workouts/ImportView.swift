@@ -29,6 +29,7 @@ struct ImportView: View {
             VStack {
                 List(importManager.workouts, id: \.id) { workout in
                     ImportRow(workout: workout) {
+                        AnalyticsManager.shared.capture(.importedWorkout)
                         importManager.processWorkout(workout)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -42,7 +43,10 @@ struct ImportView: View {
                     .disabled(importManager.isImportDisabled)
                     .padding()
             }
-            .onAppear { requestWritingAuthorizationIfNeeded() }
+            .onAppear {
+                requestWritingAuthorizationIfNeeded(onAppear: true)
+                
+            }
             .navigationTitle("Import Workouts")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -87,7 +91,7 @@ private extension ImportView {
         importManager.requestWritingAuthorization { success in
             DispatchQueue.main.async {
                 if success {
-                    //activeSheet = .document
+                    AnalyticsManager.shared.capture(.addWorkoutFile)
                     showDocumentPicker = true
                 } else {
                     importManager.state = .notAuthorized
@@ -96,7 +100,7 @@ private extension ImportView {
         }
     }
     
-    func requestWritingAuthorizationIfNeeded() {
+    func requestWritingAuthorizationIfNeeded(onAppear: Bool = false) {
         importManager.requestAuthorizationStatus { success in
             guard success else {
                 Log.debug("request authorization failed")
@@ -114,7 +118,6 @@ private extension ImportView {
                 }
             }
         }
-        
     }
     
     func onSheetDismiss() {
