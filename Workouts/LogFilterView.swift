@@ -50,6 +50,7 @@ struct LogFilterView: View {
                 }
                 .textCase(nil)
             }
+            .onAppear { AnalyticsManager.shared.logPage(.calendarFilter) }
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -1,0 +1,33 @@
+{
+  "identifier" : "F64DFF55",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : true,
+      "internalID" : "954A5696",
+      "localizations" : [
+        {
+          "description" : "Better Workouts Pro",
+          "displayName" : "Better Workouts Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "me.axelrivera.Workouts.pro",
+      "referenceName" : "Better Workouts Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 1,
+    "minor" : 2
+  }
+}

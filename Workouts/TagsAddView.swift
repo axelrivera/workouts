@@ -50,6 +50,7 @@ struct TagsAddView: View {
     @State private var activeAlert: ActiveAlert?
     
     @StateObject var viewModel: TagEditViewModel
+    var source: AnalyticsManager.TagSource
     var isInsert: Bool
     
     var isDisabled: Bool {
@@ -187,6 +188,7 @@ extension TagsAddView {
     func saveTag() {
         do {
             try tagManager.addTag(viewModel: viewModel, isInsert: isInsert)
+            AnalyticsManager.shared.saveTag(source: source, isNew: isInsert)
             presentationMode.wrappedValue.dismiss()
         } catch {
             activeAlert = .error(message: error.localizedDescription)
@@ -237,7 +239,7 @@ extension TagsAddView {
         do {
             try tagManager.deleteTag(for: viewModel.uuid)
         } catch {
-            
+            activeAlert = .error(message: "Unable to delete tag.")
         }
     }
     
@@ -254,7 +256,7 @@ struct TagsAddView_Previews: PreviewProvider {
     }()
     
     static var previews: some View {
-        TagsAddView(viewModel: viewModel, isInsert: false)
+        TagsAddView(viewModel: viewModel, source: .manage, isInsert: false)
             .environmentObject(tagManager)
             .preferredColorScheme(.dark)
     }

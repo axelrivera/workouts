@@ -11,17 +11,39 @@ import CoreData
 struct StatsTimelineView: View {
     @Environment(\.managedObjectContext) var viewContext
     
-    let displayType: StatsTimelineManager.DisplayType
+    let source: AnalyticsManager.PaywallSource
+    let title: String
+    let subtitle: String?
+    let sport: Sport?
+    let interval: DateInterval
+    let timeframe: StatsSummary.Timeframe
+    let identifiers: [UUID]
     
     var body: some View {
         StatsTimelineContentView(
-            manager: StatsTimelineManager(displayType: displayType, context: viewContext)
+            source: source,
+            title: title,
+            subtitle: subtitle,
+            manager: manager
+        )
+    }
+    
+    var manager: StatsTimelineManager {
+        StatsTimelineManager(
+            sport: sport,
+            interval: interval,
+            timeframe: timeframe,
+            identifiers: identifiers,
+            context: viewContext
         )
     }
     
 }
 
 struct StatsTimelineContentView: View {
+    let source: AnalyticsManager.PaywallSource
+    let title: String
+    let subtitle: String?
     @StateObject var manager: StatsTimelineManager
     @EnvironmentObject var purchaseManager: IAPManager
     
@@ -29,7 +51,7 @@ struct StatsTimelineContentView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(manager.stats, id: \.id) { stats in
-                    NavigationLink(destination: StatsWorkoutsView(identifiers: stats.workouts, title: stats.title)) {
+                    NavigationLink(destination: activityDestination(stats: stats)) {
                         SummaryCell(viewModel: stats, active: purchaseManager.isActive)
                             .padding([.leading, .trailing])
                             .padding([.top, .bottom], CGFloat(10.0))
@@ -41,40 +63,56 @@ struct StatsTimelineContentView: View {
             .onAppear { manager.reload() }
         }
         .overlay(emptyOverlay())
-        .paywallButtonOverlay()
-        .navigationTitle(manager.displayType.title)
+        .paywallButtonOverlay(source: source)
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                VStack {
-                    Text(manager.displayType.title)
-                        .font(.system(size: 13.0, weight: .semibold, design: .default))
-                    Text(manager.displayType.subtitle)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                if let subtitle = subtitle {
+                    VStack {
+                        Text(title)
+                            .font(.system(size: 13.0, weight: .semibold, design: .default))
+                        Text(subtitle)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    Text(title)
                 }
             }
 
             ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    ForEach(manager.displayType.cases) { item in
-                        Button(action: {
-                            manager.timeframe = item
-                        }, label: {
-                            HStack {
-                                Text(item.title)
-                                if manager.timeframe == item {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
+                if manager.timeframe == .year {
+                    EmptyView()
+                } else {
+                    Menu {
+                        Picker(selection: $manager.timeframe) {
+                            ForEach(manager.menuOptions, id: \.self) { item in
+                                Text(item.menuTitle)
                             }
-                        })
+                        } label: {}
+                    } label: {
+                        Text(manager.timeframe.menuTitle)
                     }
-                } label: {
-                    Text(manager.timeframe.title)
                 }
-                .disabled(!purchaseManager.isActive)
             }
+        }
+    }
+    
+    @ViewBuilder
+    func activityDestination(stats: StatsSummary) -> some View {
+        if manager.timeframe == .year {
+            StatsTimelineView(
+                source: source,
+                title: stats.title,
+                subtitle: nil,
+                sport: manager.sport,
+                interval: stats.interval,
+                timeframe: .month,
+                identifiers: manager.identifiers
+            )
+        } else {
+            StatsWorkoutsView(identifiers: stats.workouts, title: stats.title)
         }
     }
     
@@ -85,6 +123,7 @@ struct StatsTimelineContentView: View {
                 .foregroundColor(.secondary)
         }
     }
+    
 }
 
 struct StatsTimelineView_Previews: PreviewProvider {
@@ -98,7 +137,15 @@ struct StatsTimelineView_Previews: PreviewProvider {
         
     static var previews: some View {
         NavigationView {
-            StatsTimelineView(displayType: .yearToDate(sport: .cycling))
+            StatsTimelineView(
+                source: .progress,
+                title: "Timeline Title",
+                subtitle: "Subtitle",
+                sport: .cycling,
+                interval: DateInterval.lastTwelveMonths(),
+                timeframe: .year,
+                identifiers: []
+            )
         }
         .environment(\.managedObjectContext, viewContext)
         .environmentObject(workoutManager)

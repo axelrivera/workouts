@@ -67,8 +67,8 @@ struct WorkoutLogView: View {
                 })
             }
             .overlay(emptyOverlay())
-            .paywallButtonOverlay()
-            .navigationTitle("Training Log")
+            .paywallButtonOverlay(source: .calendar)
+            .navigationTitle("Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -83,6 +83,9 @@ struct WorkoutLogView: View {
                             Text(dataType.rawValue.capitalized)
                         }
                     }
+                    .onChange(of: manager.displayType, perform: { newValue in
+                        AnalyticsManager.shared.capture(.changedCalendarDisplay)
+                    })
                     .pickerStyle(SegmentedPickerStyle())
                     .fixedSize()
                     .disabled(!purchaseManager.isActive)

@@ -87,7 +87,7 @@ extension TagManager {
                 try context.save()
                 
                 DispatchQueue.main.async {
-                    resetCache()
+                    self.resetCache()
                 }
             } catch {
                 Log.debug("failed to update position for tags")

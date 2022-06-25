@@ -34,6 +34,17 @@ extension StatsSummary {
                 return ""
             }
         }
+        
+        var menuTitle: String {
+            switch self {
+            case .month:
+                return "By Month"
+            case .week:
+                return "By Week"
+            default:
+                return ""
+            }
+        }
     }
     
 }

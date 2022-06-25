@@ -80,7 +80,7 @@ struct LineChart: UIViewRepresentable {
         
         values.forEach { value in
             dataEntries.append(ChartDataEntry(x: value.xValue, y: value.yValue))
-            if let avgValue = avgValue {
+            if let avgValue = avgValue, avgValue > 0 {
                 avgEntries.append(ChartDataEntry(x: value.xValue, y: avgValue))
             }
         }

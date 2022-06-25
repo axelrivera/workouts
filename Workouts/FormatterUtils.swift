@@ -37,7 +37,7 @@ func formattedChartDurationString(for duration: Double?) -> String {
     }
 }
 
-func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
+func formattedHoursMinutesPrettyString(for duration: Double?, showSeconds: Bool = true) -> String {
     let seconds = Int(duration ?? 0)
     guard seconds > 0 else {
         return String(format: "0m")
@@ -46,9 +46,17 @@ func formattedHoursMinutesPrettyString(for duration: Double?) -> String {
     let (h, m, s) = secondsToHoursMinutesSeconds(seconds: seconds)
     
     if h > 0 {
-        return String(format: "%@h %02dm", h.formatted(), m)
+        if m == 0 {
+            return String(format: "%@h", h.formatted())
+        } else {
+            return String(format: "%@h %02dm", h.formatted(), m)
+        }
     } else {
-        return String(format: "%dm %02ds", m, s)
+        if showSeconds && s > 0 {
+            return String(format: "%dm %02ds", m, s)
+        } else {
+            return String(format: "%dm", m)
+        }
     }
 }
 
@@ -138,19 +146,24 @@ func formattedRangeString(start: Date?, end: Date?) -> String {
         return DateFormatter.medium.string(from: start)
     }
     
-    
     // date format: MMM dd YYYY
     let startMonth = DateFormatter.shortMonth.string(from: start)
     let startDay = DateFormatter.day.string(from: start)
+    let startYear = "\(start.year())"
 
     let endMonth = DateFormatter.shortMonth.string(from: end)
     let endDay = DateFormatter.day.string(from: end)
     let endYear = "\(end.year())"
+    
+    Log.debug("start - month: \(startMonth), \(startDay), \(startYear)")
+    Log.debug("end - month: \(endMonth), \(endDay), \(endYear)")
 
-    if startMonth == endMonth {
+    if startMonth == endMonth && startYear == endYear {
         return String(format: "%@ %@﹣%@, %@", startMonth, startDay, endDay, endYear)
-    } else {
+    } else if startYear == endYear {
         return String(format: "%@ %@﹣%@ %@, %@", startMonth, startDay, endMonth, endDay, endYear)
+    } else {
+        return String(format: "%@ %@, %@ ﹣ %@ %@, %@", startMonth, startDay, startYear, endMonth, endDay, endYear)
     }
 }
 
@@ -201,6 +214,13 @@ func formattedDistanceString(for meters: Double?, mode: DistanceMode = .default,
     default:
         return MeasurementFormatter.distance.string(from: conversion)
     }
+}
+
+func formattedSwimmingDistance(for meters: Double?) -> String {
+    let distance = meters ?? 0
+    let measurement = Measurement<UnitLength>(value: distance, unit: .meters)
+    let conversion = measurement.converted(to: Locale.isMetric() ? .meters : .yards)
+    return MeasurementFormatter.roundedDistance.string(from: conversion)
 }
 
 func formattedDistanceStringInTags(for meters: Double) -> String {
@@ -430,9 +450,15 @@ extension DateFormatter {
     }()
     
     static let range: DateFormatter = {
-       let formatter = DateFormatter()
+        let formatter = DateFormatter()
         formatter.dateFormat = "MMM/dd/YYYY"
         return formatter
+    }()
+    
+    static let file: DateFormatter = {
+        let formatter = DateFormatter()
+         formatter.dateFormat = "MM_dd_YYYY"
+         return formatter
     }()
     
     static let monthDay: DateFormatter = {

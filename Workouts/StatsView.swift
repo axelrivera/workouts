@@ -11,100 +11,71 @@ import CoreData
 struct StatsView: View {
     let SECTION_SPACING = 10.0
     
-    enum ActiveSheet: Identifiable {
-        case settings
-        var id: Int { hashValue }
-    }
-    
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @EnvironmentObject var statsManager: StatsManager
-    
-    @State var activeSheet: ActiveSheet?
-    
+        
     var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVStack(spacing: 0.0) {
-                    recentSummary(stats: statsManager.weekStats)
-                        .padding(.bottom)
-                    recentSummary(stats: statsManager.monthStats)
-                        .padding(.bottom)
+        LazyVStack(spacing: 0.0) {
+            recentSummary(stats: statsManager.weekStats)
+                .padding(.bottom)
+            recentSummary(stats: statsManager.monthStats)
+                .padding(.bottom)
+            
+            Divider()
+            
+            NavigationLink(destination: timelineDestination(forTimeframe: .yearToDate)) {
+                SummaryCell(viewModel: statsManager.yearStats, active: true)
+                    .padding([.leading, .trailing])
+                    .padding([.top, .bottom], CGFloat(10.0))
+            }
+            .buttonStyle(WorkoutPlainButtonStyle())
+            
+            Divider()
+                                
+            NavigationLink(destination: timelineDestination(forTimeframe: .allTime)) {
+                SummaryCell(viewModel: statsManager.allStats, active: true)
+                    .padding([.leading, .trailing])
+                    .padding([.top, .bottom], CGFloat(10.0))
+            }
+            .buttonStyle(WorkoutPlainButtonStyle())
+        }
+        .padding([.top, .bottom])
+        .onChange(of: workoutManager.isProcessingRemoteData) { isProcessing in
+            if isProcessing { return }
+            statsManager.refresh()
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(action: {
+                        statsManager.sport = nil
+                    }, label: {
+                        HStack {
+                            Text("All Workouts")
+                            if statsManager.sport == nil {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    })
                     
                     Divider()
-                    
-                    NavigationLink(destination: destination(forTimeframe: .yearToDate)) {
-                        SummaryCell(viewModel: statsManager.yearStats, active: true)
-                            .padding([.leading, .trailing])
-                            .padding([.top, .bottom], CGFloat(10.0))
-                    }
-                    .buttonStyle(WorkoutPlainButtonStyle())
-                    
-                    Divider()
-                                        
-                    NavigationLink(destination: destination(forTimeframe: .allTime)) {
-                        SummaryCell(viewModel: statsManager.allStats, active: true)
-                            .padding([.leading, .trailing])
-                            .padding([.top, .bottom], CGFloat(10.0))
-                    }
-                    .buttonStyle(WorkoutPlainButtonStyle())
-                }
-                .padding([.top, .bottom])
-            }
-            .onChange(of: workoutManager.isProcessingRemoteData) { isProcessing in
-                if isProcessing { return }
-                
-                Log.debug("refreshing stats and current data")
-                statsManager.refresh()
-            }
-            .listStyle(InsetGroupedListStyle())
-            .navigationTitle("Progress")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { activeSheet = .settings }) {
-                       Image(systemName: "gearshape")
-                    }
-                }
-                
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
+                     
+                    ForEach(statsManager.availableSports) { sport in
                         Button(action: {
-                            statsManager.sport = nil
+                            statsManager.sport = sport
                         }, label: {
-                            HStack {
-                                Text("All Workouts")
-                                if statsManager.sport == nil {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
+                            Text(sport.activityName)
+                            if statsManager.sport == sport {
+                                Spacer()
+                                Image(systemName: "checkmark")
                             }
                         })
-                        
-                        Divider()
-                         
-                        ForEach(statsManager.availableSports) { sport in
-                            Button(action: {
-                                statsManager.sport = sport
-                            }, label: {
-                                Text(sport.activityName)
-                                if statsManager.sport == sport {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
-                            })
-                        }
-                    } label: {
-                        Text(statsManager.sport?.activityName ?? "All Workouts")
                     }
+                } label: {
+                    Text(statsManager.sport?.activityName ?? "All Workouts")
                 }
-            }
-        }
-        .navigationViewStyle(StackNavigationViewStyle())
-        .fullScreenCover(item: $activeSheet) { item in
-            switch item {
-            case .settings:
-                SettingsView()
-                    .environmentObject(purchaseManager)
             }
         }
     }
@@ -126,6 +97,17 @@ extension StatsView {
         }
     }
     
+    func avgDistance(forTimeframe timeframe: StatsSummary.Timeframe) -> Double {
+        switch timeframe {
+        case .week:
+            return nativeDistanceToLocalizedUnit(for: statsManager.avgWeeklyDistance)
+        case .month:
+            return nativeDistanceToLocalizedUnit(for: statsManager.avgMonthlyDistance)
+        default:
+            return 0
+        }
+    }
+    
     func summaries(forTimeframe timeframe: StatsSummary.Timeframe) -> [StatsSummary] {
         switch timeframe {
         case .week:
@@ -137,7 +119,6 @@ extension StatsView {
         }
     }
     
-    @ViewBuilder
     func recentSummary(stats: StatsSummary) -> some View {
         VStack(spacing: SECTION_SPACING) {
             VStack(alignment: .leading, spacing: 5.0) {
@@ -154,8 +135,8 @@ extension StatsView {
                         .font(.fixedBody)
                         .foregroundColor(.secondary)
                     Spacer()
-                    NavigationLink(destination: destination(forTimeframe: stats.timeframe)) {
-                        Text("See More")
+                    NavigationLink(destination: recentDestination(for: stats)) {
+                        Text("Show More")
                     }
                 }
             }
@@ -168,19 +149,47 @@ extension StatsView {
         .padding([.leading, .trailing])
     }
     
+    func recentDestination(for stats: StatsSummary) -> some View {
+        StatsRecentView(
+            timeframe: stats.timeframe,
+            sport: statsManager.sport,
+            summaries: summaries(forTimeframe: stats.timeframe),
+            avgValue: avgDistance(forTimeframe: stats.timeframe)
+        )
+        .onAppear {
+            if stats.timeframe == .week {
+                AnalyticsManager.shared.logPage(.weeklyProgress)
+            } else {
+                AnalyticsManager.shared.logPage(.monthlyProgress)
+            }
+        }
+    }
+        
     @ViewBuilder
-    func destination(forTimeframe timeframe: StatsSummary.Timeframe) -> some View {
+    func timelineDestination(forTimeframe timeframe: StatsSummary.Timeframe) -> some View {
         switch timeframe {
-        case .week, .month:
-            StatsRecentView(
-                timeframe: timeframe,
-                sport: statsManager.sport,
-                summaries: summaries(forTimeframe: timeframe)
-            )
         case .yearToDate:
-            StatsTimelineView(displayType: .yearToDate(sport: statsManager.sport))
+            StatsTimelineView(
+                source: .progress,
+                title: "Year to Date",
+                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                sport: statsManager.sport,
+                interval: statsManager.yearToDateInterval,
+                timeframe: .month,
+                identifiers: []
+            )
+            .onAppear { AnalyticsManager.shared.logPage(.yearToDateProgress)}
         case .allTime:
-            StatsTimelineView(displayType: .allTime(sport: statsManager.sport))
+            StatsTimelineView(
+                source: .progress,
+                title: "All Time",
+                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                sport: statsManager.sport,
+                interval: statsManager.allTimeDateInterval,
+                timeframe: .year,
+                identifiers: []
+            )
+            .onAppear { AnalyticsManager.shared.logPage(.allTimeProgress) }
         default:
             EmptyView()
         }
@@ -200,11 +209,16 @@ struct StatsView_Previews: PreviewProvider {
     }()
     
     static var previews: some View {
-        StatsView()
-            .colorScheme(.dark)
-            .environmentObject(StatsManager(context: viewContext))
-            .environmentObject(purchaseManager)
-            .environmentObject(workoutManager)
+        NavigationView {
+            ScrollView {
+                StatsView()
+            }
+            .navigationTitle("Progress")
+        }
+        .colorScheme(.dark)
+        .environmentObject(StatsManager(context: viewContext))
+        .environmentObject(purchaseManager)
+        .environmentObject(workoutManager)
     }
 }
 

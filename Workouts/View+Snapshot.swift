@@ -7,6 +7,17 @@
 
 import SwiftUI
 
+extension CGSize {
+    
+    var scaledSize: CGSize {
+        let scale = UIScreen.main.scale
+        let newWidth = trunc(width / scale)
+        let newHeight = trunc(height / scale)
+        return CGSize(width: newWidth, height: newHeight)
+    }
+    
+}
+
 extension View {
     
     func takeScreenshot(origin: CGPoint, size: CGSize) -> UIImage {
@@ -20,11 +31,13 @@ extension View {
 extension UIView {
     
     var renderedImage: UIImage {
-        let rect = self.bounds
-        UIGraphicsBeginImageContextWithOptions(rect.size, false, 2.0)
-        let renderer = UIGraphicsImageRenderer(bounds: rect, format: UIGraphicsImageRendererFormat())
+        let newSize = self.bounds.size.scaledSize
+        let newRect = CGRect(origin: .zero, size: newSize)
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, UIScreen.main.scale)
+        let renderer = UIGraphicsImageRenderer(bounds: newRect, format: UIGraphicsImageRendererFormat())
         let image = renderer.image { (context) in
-            self.drawHierarchy(in: rect, afterScreenUpdates: true)
+            self.drawHierarchy(in: newRect, afterScreenUpdates: true)
         }
         UIGraphicsEndImageContext()
         return image

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     enum ActiveSheet: Identifiable, Hashable {
-        case paywall, feedback, website(urlString: String, reader: Bool = true)
+        case paywall, feedback, share, website(urlString: String, reader: Bool = true)
         var id: Self { self }
     }
     
@@ -57,6 +57,7 @@ struct SettingsView: View {
                 Section(header: Text("Better Workouts"), footer: footerView()) {
                     Button("About Rivera Labs", action: { activeSheet = .website(urlString: URLStrings.about) })
                     Button("Review on the App Store", action: reviewAction)
+                    Button("Share with Friends", action: { activeSheet = .share })
                     Button("Privacy Policy", action: { activeSheet = .website(urlString: URLStrings.privacy) })
                     HStack {
                         Text("Version")
@@ -72,20 +73,14 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
-                
-                #if DEVELOPMENT_BUILD
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Reset IAP", action: purchaseManager.resetMockPurchase)
-                        .tint(.red)
-                        .disabled(!purchaseManager.isActive)
-                }
-                #endif
             }
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .paywall:
-                    PaywallView()
+                    PaywallView(source: .settings)
                         .environmentObject(purchaseManager)
+                case .share:
+                    ActivitySheet(items: [URL(string: URLStrings.iTunesURL)!])
                 case .website(let url, let reader):
                     SafariView(urlString: url, entersReaderIfAvailable: reader)
                         .ignoresSafeArea(.all, edges: .bottom)

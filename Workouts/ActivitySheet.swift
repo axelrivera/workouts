@@ -1,14 +1,15 @@
 //
 //  ActivitySheet.swift
-//  ActivitySheet
+//  Workouts
 //
-//  Created by Axel Rivera on 8/23/21.
+//  Created by Axel Rivera on 3/20/22.
 //
+
+import Foundation
 
 import SwiftUI
 
 struct ActivitySheet: UIViewControllerRepresentable {
-    
     let items: [Any]
     
     func makeUIViewController(context: Context) -> some UIViewController {

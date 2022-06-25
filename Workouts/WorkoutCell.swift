@@ -64,7 +64,7 @@ struct WorkoutCell_Previews: PreviewProvider {
 
 // MARK: - Workout Cell Additions
 
-private struct WorkoutCellLabel: ViewModifier {
+struct WorkoutCellLabel: ViewModifier {
     var color: Color
     
     func body(content: Content) -> some View {
@@ -77,7 +77,7 @@ private struct WorkoutCellLabel: ViewModifier {
     
 }
 
-private extension View {
+extension View {
     
     func workoutCellLabelStyle(color: Color) -> some View {
         modifier(WorkoutCellLabel(color: color))

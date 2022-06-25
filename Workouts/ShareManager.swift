@@ -43,7 +43,8 @@ class ShareManager: ObservableObject {
     }
     
     @Published var isGeneratingImage = false
-    @Published var selectedMetric: WorkoutCardViewModel.Metric
+    @Published var selectedMetric1: WorkoutCardViewModel.Metric
+    @Published var selectedMetric2: WorkoutCardViewModel.Metric
     @Published var sharedImage: UIImage?
     
     // Map
@@ -74,7 +75,8 @@ class ShareManager: ObservableObject {
         self.settings = settings
         style = settings.style
         mapColor = settings.mapColor
-        selectedMetric = .none
+        selectedMetric1 = .none
+        selectedMetric2 = .none
         showTitle = settings.showTitle
         showDate = settings.showDate
         shouldRefreshImages = true
@@ -92,12 +94,14 @@ class ShareManager: ObservableObject {
     func loadValues(viewModel: WorkoutCardViewModel) async {
         let darkMapImage = try? await generateBackgroundMap(for: viewModel.coordinates, colorScheme: .dark)
         let lightMapImage = try? await generateBackgroundMap(for: viewModel.coordinates, colorScheme: .light)
-        let selectedMetric = settings.metric(for: viewModel.sport)
+        let selectedMetric1 = settings.metric(for: viewModel.sport)
+        let selectedMetric2 = settings.metric2(for: viewModel.sport)
         
-        Log.debug("selected metric: \(String(describing: selectedMetric))")
+        Log.debug("selected metrics - 1: \(String(describing: selectedMetric1)), 2: \(String(describing: selectedMetric2))")
         
         DispatchQueue.main.async {
-            self.selectedMetric = selectedMetric ?? Self.defaultMetric(for: viewModel.sport)
+            self.selectedMetric1 = selectedMetric1 ?? Self.defaultMetric(for: viewModel.sport)
+            self.selectedMetric2 = selectedMetric2 ?? .none
             self.viewModel = viewModel
             
             if !viewModel.includesLocation {
@@ -188,9 +192,12 @@ extension ShareManager {
         let newSettings = ShareSettings(
             styleValue: style.rawValue,
             mapColorValue: mapColor.rawValue,
-            cyclingMetricValue: viewModel.sport.isCycling ? selectedMetric.rawValue : settings.cyclingMetricValue,
-            runningMetricValue: viewModel.sport.isWalkingOrRunning ? selectedMetric.rawValue : settings.runningMetricValue,
-            otherMetricValue: viewModel.sport.isOther ? selectedMetric.rawValue : settings.otherMetricValue,
+            cyclingMetricValue: viewModel.sport.isCycling ? selectedMetric1.rawValue : settings.cyclingMetricValue,
+            runningMetricValue: viewModel.sport.isWalkingOrRunning ? selectedMetric1.rawValue : settings.runningMetricValue,
+            otherMetricValue: viewModel.sport.isOther ? selectedMetric1.rawValue : settings.otherMetricValue,
+            cyclingMetricValue2: viewModel.sport.isCycling ? selectedMetric2.rawValue : settings.cyclingMetricValue2,
+            runningMetricValue2: viewModel.sport.isWalkingOrRunning ? selectedMetric2.rawValue : settings.runningMetricValue2,
+            otherMetricValue2: viewModel.sport.isOther ? selectedMetric2.rawValue : settings.otherMetricValue2,
             showTitle: showTitle,
             showDate: showDate
         )
@@ -215,12 +222,17 @@ extension ShareManager {
         guard style == .map else { return nil }
         if coordinates.isEmpty { return nil }
         guard let region = MKCoordinateRegion(coordinates: coordinates) else { return nil }
-
+        
         let userInterfaceStyle: UIUserInterfaceStyle = UIUserInterfaceStyle(colorScheme)
         let colorSchemeCollection = UITraitCollection(userInterfaceStyle: userInterfaceStyle)
-        let scaleCollection = UITraitCollection(displayScale: 2.0)
+        let scaleCollection = UITraitCollection(displayScale: 1.0)
 
-        let size = CGSize(width: WORKOUT_CARD_WIDTH, height: WORKOUT_CARD_WIDTH - (WorkoutMapCard.footerHeight + WorkoutMapCard.headerHeight))
+        let width = WORKOUT_CARD_WIDTH
+        let height = WORKOUT_CARD_WIDTH - (WorkoutMapCard.footerHeight + WorkoutMapCard.headerHeight)
+        let newWidth = trunc(width / 2.0)
+        let newHeight = trunc(height / 2.0)
+        
+        let size = CGSize(width: newWidth, height: newHeight)
         let options = MKMapSnapshotter.Options()
         options.region = region
         options.size = size
@@ -247,7 +259,7 @@ extension ShareManager {
 
             // stroke it
 
-            path.lineWidth = 5.0
+            path.lineWidth = 5
             UIColor(.accentColor).setStroke()
             path.stroke()
         }

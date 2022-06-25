@@ -25,6 +25,10 @@ extension Font {
         .system(size: 20)
     }
     
+    static var fixedTitle4: Font {
+        .system(size: 18)
+    }
+    
     static var fixedHeadline: Font {
         .system(size: 17, weight: .semibold, design: .default)
     }

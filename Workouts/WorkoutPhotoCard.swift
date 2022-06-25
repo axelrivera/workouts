@@ -14,7 +14,8 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
     let OPACITY = 0.9
     
     let viewModel: WorkoutCardViewModel
-    var metric: WorkoutCardViewModel.Metric = .none
+    var metric1: WorkoutCardViewModel.Metric = .none
+    var metric2: WorkoutCardViewModel.Metric = .none
     var backgroundImage: UIImage?
     var showTitle = false
     var showDate: Bool = false
@@ -30,53 +31,58 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
                     .opacity(0.70)
             }
             
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .bottom, spacing: 10.0) {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(alignment: .bottom, spacing: 20) {
                     Image(uiImage: UIImage(named: "bw_logo_horizontal")!)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(height: 36.0)
+                        .frame(height: 72)
                         .modifier(WorkoutPhotoShadowModifier())
                     
-                    if let date = viewModel.date, showDate {
-                        Spacer()
-                        Text(date)
-                            .font(.system(size: 18.0))
-                            .opacity(OPACITY)
-                            .shadow(radius: CGFloat(2.0))
-                            .modifier(WorkoutPhotoShadowModifier())
+                    Spacer()
+                    
+                    if showTitle || showDate {
+                        VStack(alignment: .trailing, spacing: 4) {
+                            if showTitle {
+                                Text(viewModel.title)
+                                    .font(.system(size: 40))
+                                    .bold()
+                                    .opacity(OPACITY)
+                                    .shadow(radius: CGFloat(2.0))
+                                    .modifier(WorkoutPhotoShadowModifier())
+                            }
+
+                            if let date = viewModel.date, showDate {
+                                Text(date)
+                                    .font(.system(size: 36))
+                                    .opacity(OPACITY)
+                                    .shadow(radius: CGFloat(2.0))
+                                    .modifier(WorkoutPhotoShadowModifier())
+                            }
+                        }
                     }
                 }
                 
                 Spacer()
                 
-                if showTitle {
-                    Text(viewModel.title)
-                        .font(.system(size: 28.0))
-                        .opacity(OPACITY)
-                        .modifier(WorkoutPhotoShadowModifier())
-                }
-                
-                HStack(spacing: CGFloat(20.0)) {
+                HStack(spacing: CGFloat(40)) {
                     if let distance = viewModel.distance, showDistance {
                         metricView(text: distanceTitle, detail: distance)
                     }
 
                     metricView(text: timeTitle, detail: viewModel.duration)
                     
-                    if let text = metric.displayTitle, let detail = viewModel.value(for: metric) {
+                    if let text = metric1.displayTitle, let detail = viewModel.value(for: metric1) {
                         metricView(text: text, detail: detail)
-                        
-                        if let maxSpeed = viewModel.maxSpeed, metric == .speed {
-                            metricView(text: "Max Speed", detail: maxSpeed)
-                        } else if let maxHR = viewModel.maxHeartRate, metric == .heartRate {
-                            metricView(text: ("Max HR"), detail: maxHR)
-                        }
+                    }
+                    
+                    if let text = metric2.displayTitle, let detail = viewModel.value(for: metric2) {
+                        metricView(text: text, detail: detail)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.all, CGFloat(20.0))
+            .padding(.all, CGFloat(40))
         }
         .foregroundColor(.white)
         .frame(width: size.width, height: size.height, alignment: .top)
@@ -84,13 +90,13 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
     
     @ViewBuilder
     func metricView(text: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 5.0) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(text)
-                .font(.system(size: 18.0))
+                .font(.system(size: 38))
                 .opacity(OPACITY)
                 .modifier(WorkoutPhotoShadowModifier())
             Text(detail)
-                .font(.system(size: 22.0, weight: .medium))
+                .font(.system(size: 44, weight: .medium))
                 .modifier(WorkoutPhotoShadowModifier())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -148,7 +154,8 @@ struct WorkoutColorCard_Previews: PreviewProvider {
     static var previews: some View {
         WorkoutPhotoCard(
             viewModel: viewModel,
-            metric: .speed,
+            metric1: .speed,
+            metric2: .maxSpeed,
             backgroundImage: backgroundImage,
             showTitle: true,
             showDate: true

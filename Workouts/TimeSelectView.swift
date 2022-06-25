@@ -23,8 +23,8 @@ struct TimeSelectView: View {
         Form {
             if displayMode == .hourMinuteSecond {
                 Picker("Hours", selection: $selectedHours) {
-                    ForEach(0 ..< hours.count) {
-                        Text("\(hours[$0])")
+                    ForEach(hours, id: \.self) { hour in
+                        Text("\(hour)")
                     }
                 }
                 .pickerStyle(WheelPickerStyle())

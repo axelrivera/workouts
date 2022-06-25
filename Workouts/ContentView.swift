@@ -9,7 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     enum Tabs: String, Identifiable {
-        case workouts, log, stats, tags
+        case workouts
+        case log
+        case stats
+        case dashboard
+        case tags
+        
         var id: String { rawValue }
     }
     
@@ -37,17 +42,20 @@ struct ContentView: View {
                 .tag(Tabs.workouts)
 
             WorkoutLogView()
-                .tabItem { Label("Training", systemImage: "calendar") }
+                .tabItem { Label("Calendar", systemImage: "calendar") }
                 .tag(Tabs.log)
 
-            StatsView()
+            StatsContainer()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
-
+            
+            DashboardView()
+                .tabItem { Label("Dashboard", systemImage: "rectangle.grid.2x2") }
+                .tag(Tabs.dashboard)
+            
             TagsView()
                 .tabItem { Label("Tags", systemImage: "tag") }
                 .tag(Tabs.tags)
-            
         }
         .onOpenURL { url in
             Log.debug("trying to open url: \(url)")
@@ -62,6 +70,10 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
             reloadData()
+        }
+        .onReceive(NotificationCenter.Publisher.foregroundPublisher()) { _ in
+            purchaseManager.reload()
+            AnalyticsManager.shared.captureOpen(isBackground: true, isPro: purchaseManager.isActive)
         }
         .onChange(of: scenePhase) { phase in
             switch phase {

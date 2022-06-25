@@ -10,30 +10,34 @@ import CoreLocation
 
 extension WorkoutCardViewModel {
     enum Metric: String, Identifiable, CaseIterable {
-        case none, speed, pace, heartRate, elevation, calories
+        case none, speed, maxSpeed, pace, heartRate, maxHeartRate, elevation, calories
         var id: String { rawValue }
         
         var title: String { Self.titleDictionary[self]! }
         var displayTitle: String? { Self.displayDictionary[self] }
         
-        static let cyclingMetrics: [Metric] = [.none, .speed, .heartRate, .elevation, .calories]
-        static let runningMetrics: [Metric] = [.none, .pace, .heartRate, .calories]
-        static let indoorMetrics: [Metric] = [.none, .heartRate, .calories]
-        static let otherMetrics: [Metric] = [.none, .heartRate, .calories]
+        static let cyclingMetrics: [Metric] = [.none, .speed, maxSpeed, .heartRate, .maxHeartRate, .elevation, .calories]
+        static let runningMetrics: [Metric] = [.none, .pace, .heartRate, maxHeartRate, .calories]
+        static let indoorMetrics: [Metric] = [.none, .heartRate, maxHeartRate, .calories]
+        static let otherMetrics: [Metric] = [.none, .heartRate, maxHeartRate, .calories]
         
         private static let titleDictionary: [Metric: String] = [
             .none: "No Metric",
-            .speed: "Speed",
+            .speed: "Avg Speed",
+            .maxSpeed: "Max Speed",
             .pace: "Pace",
-            .heartRate: "Heart Rate",
+            .heartRate: "Avg Heart Rate",
+            .maxHeartRate: "Max Heart Rate",
             .elevation: "Elevation",
             .calories: "Calories"
         ]
         
         private static let displayDictionary: [Metric: String] = [
             .speed: "Avg Speed",
+            .maxSpeed: "Max Speed",
             .pace: "Avg Pace",
             .heartRate: "Avg HR",
+            .maxHeartRate: "Max HR",
             .elevation: "Elevation",
             .calories: "Calories"
         ]
@@ -65,10 +69,14 @@ extension WorkoutCardViewModel {
         switch metric {
         case .speed:
             return speed
+        case .maxSpeed:
+            return maxSpeed
         case .pace:
             return pace
         case .heartRate:
             return heartRate
+        case .maxHeartRate:
+            return maxHeartRate
         case .elevation:
             return elevation
         case .calories:

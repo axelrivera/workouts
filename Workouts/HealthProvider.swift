@@ -26,10 +26,7 @@ struct HealthProvider {
     }
     
     let isAvailable = HKHealthStore.isHealthDataAvailable()
-    
 }
-
-// MARK: - Predicates
 
 // MARK: - Async/Await Methods
 
@@ -106,6 +103,19 @@ extension HealthProvider {
                 switch result {
                 case .success(let stats):
                     continuation.resume(returning: stats)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    func fetchActiveEnergy(for workout: HKWorkout) async throws -> Double {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchActiveEnergy(workout: workout) { result in
+                switch result {
+                case .success(let value):
+                    continuation.resume(returning: value)
                 case .failure(let error):
                     continuation.resume(throwing: error)
                 }
@@ -410,6 +420,30 @@ extension HealthProvider {
             let max = statistics.maximumQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
             
             completionHandler(.success((avg, max)))
+        }
+        healthStore.execute(query)
+    }
+    
+    private func fetchActiveEnergy(workout: HKWorkout, completionHandler: @escaping (Result<Double, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictEndDate, .strictEndDate])
+        let source = workout.sourceRevision.source
+        
+        Log.debug("fetching energy for start: \(workout.startDate), end: \(workout.endDate), source: \(source.name)")
+        
+        
+        let query = HKStatisticsQuery(
+            quantityType: .activeEnergyBurned(),
+            quantitySamplePredicate: predicate,
+            options: [.cumulativeSum, .separateBySource]) { (query, statistics, error) in
+            self.healthStore.stop(query)
+            
+            guard let statistics = statistics else {
+                completionHandler(.failure(error ?? HealthError.failure))
+                return
+            }
+                
+            let sum = statistics.sumQuantity(for: source)?.doubleValue(for: HKUnit.largeCalorie()) ?? 0
+            completionHandler(.success(sum))
         }
         healthStore.execute(query)
     }

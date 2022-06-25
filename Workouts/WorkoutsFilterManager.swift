@@ -61,13 +61,7 @@ final class WorkoutsFilterManager: ObservableObject {
     
     @Published var dateRange: ClosedRange<Date>
     
-    @Published var startDate: Date = Date() {
-        willSet {
-            if newValue > endDate {
-                
-            }
-        }
-    }
+    @Published var startDate: Date = Date()
     @Published var endDate: Date = Date()
     
     @Published var minDistance: String = ""
@@ -104,7 +98,9 @@ final class WorkoutsFilterManager: ObservableObject {
         self.workoutTagProvider = WorkoutTagProvider(context: context)
                 
         // Dates
-        dateRange = dataProvider.dateRangeForActiveWorkouts()
+        let dateInterval = dataProvider.dateIntervalForActiveWorkouts()
+        dateRange = dateInterval.start ... dateInterval.end
+        
         let interval = DateInterval.lastSixMonths()
         startDate = interval.start
         endDate = interval.end
@@ -335,6 +331,7 @@ extension WorkoutsFilterManager {
             DispatchQueue.main.async {
                 self.isProcessingActions = false
                 NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+                AnalyticsManager.shared.capture(.favoriteAll)
             }
         }
     }
@@ -359,6 +356,7 @@ extension WorkoutsFilterManager {
             DispatchQueue.main.async {
                 self.isProcessingActions = false
                 NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
+                AnalyticsManager.shared.capture(.unfavoriteAll)
             }
         }
     }

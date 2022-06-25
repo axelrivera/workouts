@@ -14,7 +14,8 @@ struct WorkoutCard: View {
         if shareManager.style == .map && shareManager.viewModel.includesLocation {
             WorkoutMapCard(
                 viewModel: shareManager.viewModel,
-                metric: shareManager.selectedMetric,
+                metric1: shareManager.selectedMetric1,
+                metric2: shareManager.selectedMetric2,
                 backgroundImage: shareManager.mapImage,
                 showTitle: shareManager.showTitle,
                 showDate: shareManager.showDate,
@@ -23,7 +24,8 @@ struct WorkoutCard: View {
         } else {
             WorkoutPhotoCard(
                 viewModel: shareManager.viewModel,
-                metric: shareManager.selectedMetric,
+                metric1: shareManager.selectedMetric1,
+                metric2: shareManager.selectedMetric2,
                 backgroundImage: shareManager.backgroundImage,
                 showTitle: shareManager.showTitle,
                 showDate: shareManager.showDate

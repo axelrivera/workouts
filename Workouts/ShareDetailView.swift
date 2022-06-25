@@ -19,7 +19,13 @@ struct ShareDetailView: View {
         NavigationView {
             Form {
                 Section {
-                    Picker("Display Metric", selection: $shareManager.selectedMetric) {
+                    Picker("Display Metric 1", selection: $shareManager.selectedMetric1) {
+                        ForEach(allMetrics(), id: \.self) { metric in
+                            Text(metric.title)
+                        }
+                    }
+                    
+                    Picker("Display Metric 2", selection: $shareManager.selectedMetric2) {
                         ForEach(allMetrics(), id: \.self) { metric in
                             Text(metric.title)
                         }

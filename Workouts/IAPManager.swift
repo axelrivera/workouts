@@ -6,44 +6,68 @@
 //
 
 import SwiftUI
+import StoreKit
 
-#if PRODUCTION_BUILD
-import Purchases
-#endif
+typealias Transaction = StoreKit.Transaction
 
-class IAPManager: NSObject, ObservableObject {
+class IAPManager: ObservableObject {
     enum Constants {
-        static let apiKey = "NYucELjRYAuIEelhphHUNKTcZYaCoRSH"
-        static let entitlementId = "pro"
-        static let freePrice = 1.99
-        static let freePriceString = "$1.99"
+        static let proIdentifier = "me.axelrivera.Workouts.pro"
     }
     
-    #if PRODUCTION_BUILD
-        
-    @Published var purchaserInfo: Purchases.PurchaserInfo? {
-        didSet {
-            withAnimation {
-                self.isActive = purchaserInfo?.entitlements[Constants.entitlementId]?.isActive == true
+    @Published private(set) var pro: Product?
+    @Published var isActive: Bool = false
+    
+    var updateListenerTask: Task<Void, Error>? = nil
+    
+    init() {
+        updateListenerTask = listenForTransactions()
+    }
+    
+    func reload() {
+        Task {
+            await requestProducts()
+            await refreshPurchase()
+        }
+    }
+    
+    deinit {
+        updateListenerTask?.cancel()
+    }
+    
+    @MainActor
+    func requestProducts() async {
+        do {
+            let storeProducts = try await Product.products(for: [Constants.proIdentifier])
+            
+            if let pro = storeProducts.first {
+                self.pro = pro
+            } else {
+                throw PurchaseError.missingProduct
+            }
+        } catch {
+            Log.debug("product error: \(error.localizedDescription)")
+        }
+    }
+    
+    func listenForTransactions() -> Task<Void, Error> {
+        return Task.detached {
+            //Iterate through any transactions which didn't come from a direct call to `purchase()`.
+            for await result in Transaction.updates {
+                do {
+                    let transaction = try self.checkVerified(result)
+                    
+                    //Deliver content to the user.
+                    await self.updatePurchase(transaction)
+
+                    //Always finish a transaction.
+                    await transaction.finish()
+                } catch {
+                    //StoreKit has a receipt it can read but it failed verification. Don't deliver content to the user.
+                    Log.debug("transaction failed verification: \(error.localizedDescription)")
+                }
             }
         }
-    }
-    @Published var offerings: Purchases.Offerings?
-    
-    #endif
-    
-    @Published var isActive: Bool = false {
-        didSet {
-            #if DEVELOPMENT_BUILD
-            AppSettings.mockPurchaseActive = isActive
-            #endif
-        }
-    }
-    
-    override init() {
-        super.init()
-        registerPurchasesManager()
-        fetchOfferings()
     }
     
 }
@@ -52,71 +76,16 @@ class IAPManager: NSObject, ObservableObject {
 
 extension IAPManager {
     
-    private func registerPurchasesManager() {
-        #if PRODUCTION_BUILD
-        Purchases.logLevel = .info
-        Purchases.configure(withAPIKey: Constants.apiKey)
-        Purchases.shared.delegate = self
-        #else
-        Log.debug("skipping registring purchasing manager")
-        #endif
-    }
-    
-    private func fetchOfferings() {
-        #if PRODUCTION_BUILD
-        Purchases.shared.offerings { (offerings, error) in
-            if let error = error {
-                Log.debug("failed to fetch offierings: \(error.localizedDescription)")
-            }
-            
-            if let offerings = offerings {
-                for offering in offerings.all.values {
-                    if let package = offering.lifetime {
-                        Log.debug("package for id: \(package.identifier), description: \(package)")
-                    } else {
-                        Log.debug("Lifetime package not found for \(offering.identifier)")
-                    }
-                }
-            }
-            
-            self.offerings = offerings
-        }
-        #elseif DEVELOPMENT_BUILD
-        Log.debug("skipping fetching offerings")
-        isActive = AppSettings.mockPurchaseActive
-        #endif
-    }
-    
-    #if PRODUCTION_BUILD
-    
-    var offering: Purchases.Offering? {
-        offerings?.current
-    }
-    
-    var package: Purchases.Package? {
-        offering?.lifetime
-    }
-    
-    #endif
-    
     var packagePrice: Double {
-        #if PRODUCTION_BUILD
-        return package?.product.price.doubleValue ?? 0
-        #elseif DEVELOPMENT_BUILD
-        return Constants.freePrice
-        #else
-        return 0
-        #endif
+        if let pro = pro {
+            return NSDecimalNumber(decimal: pro.price).doubleValue
+        } else {
+            return Double.nan
+        }
     }
     
     var packagePriceString: String {
-        #if PRODUCTION_BUILD
-        return package?.localizedPriceString ?? "n/a"
-        #elseif DEVELOPMENT_BUILD
-        return Constants.freePriceString
-        #else
-        return "FAIL"
-        #endif
+        pro?.displayPrice ?? "n/a"
     }
     
     var packageSupportString: String {
@@ -135,115 +104,139 @@ extension IAPManager {
         }
     }
     
-    var isCurrentOfferAvailable: Bool {
-        #if PRODUCTION_BUILD
-        guard let _ = offering else { return false }
-        return true
-        #elseif DEVELOPMENT_BUILD
-        return true
-        #endif
-    }
-    
-    func purchase(completionHandler: @escaping (Result<Bool, PurchaseError>) -> Void) {
-        #if PRODUCTION_BUILD
-        guard let package = package else {
-            completionHandler(.failure(.packageNotFound))
+    func purchase(source: AnalyticsManager.PaywallSource, completionHandler: @escaping (Result<Bool, PurchaseError>) -> Void) {
+        guard let product = pro else {
+            completionHandler(.failure(PurchaseError.missingProduct))
             return
         }
         
-        Purchases.shared.purchasePackage(package) { (transaction, info, error, userCancelled) in
-            DispatchQueue.main.async {
-                if let error = error {
-                    completionHandler(.failure(.server(error)))
-                    return
-                }
+        Task {
+            do {
+                try await purchase(product)
                 
-                if userCancelled {
-                    completionHandler(.failure(.userCancelled))
-                    return
-                }
+                AnalyticsManager.shared.purchase(
+                    source: source.rawValue,
+                    price: NSDecimalNumber(decimal: product.price).doubleValue,
+                    displayPrice: product.displayPrice,
+                    identifier: product.id
+                )
                 
-                let isActive = info?.entitlements[Constants.entitlementId]?.isActive == true
-                guard isActive else {
-                    completionHandler(.failure(.invalidPurchase))
-                    return
+                DispatchQueue.main.async {
+                    completionHandler(.success(true))
                 }
-                
-                withAnimation {
-                    self.isActive = isActive
+            } catch {
+                DispatchQueue.main.async {
+                    let localError = error as? PurchaseError ?? .server(error)
+                    completionHandler(.failure(localError))
                 }
-                completionHandler(.success(isActive))
             }
         }
-        #elseif DEVELOPMENT_BUILD
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            withAnimation {
-                self.isActive = true
-            }
-            completionHandler(.success(true))
+    }
+    
+    @MainActor
+    func purchase(_ product: Product) async throws {
+        let result = try await product.purchase()
+
+        switch result {
+        case .success(let verification):
+            let transaction = try checkVerified(verification)
+
+            //Deliver content to the user.
+            await updatePurchase(transaction)
+
+            //Always finish a transaction.
+            await transaction.finish()
+        case .pending:
+            break
+        case .userCancelled:
+            throw PurchaseError.userCancelled
+        default:
+            throw PurchaseError.invalidPurchase
         }
-        #endif
+    }
+    
+    @MainActor
+    func refreshPurchase() async {
+        Task {
+            isActive = (try? await isPurchased(Constants.proIdentifier)) ?? false
+        }
+    }
+    
+    func isPurchased(_ productIdentifier: String) async throws -> Bool {
+        //Get the most recent transaction receipt for this `productIdentifier`.
+        guard let result = await Transaction.latest(for: productIdentifier) else {
+            //If there is no latest transaction, the product has not been purchased.
+            return false
+        }
+
+        let transaction = try checkVerified(result)
+
+        //Ignore revoked transactions, they're no longer purchased.
+
+        //For subscriptions, a user can upgrade in the middle of their subscription period. The lower service
+        //tier will then have the `isUpgraded` flag set and there will be a new transaction for the higher service
+        //tier. Ignore the lower service tier transactions which have been upgraded.
+        return transaction.revocationDate == nil && !transaction.isUpgraded
+    }
+    
+    func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+        //Check if the transaction passes StoreKit verification.
+        switch result {
+        case .unverified:
+            //StoreKit has parsed the JWS but failed verification. Don't deliver content to the user.
+            throw PurchaseError.invalidPurchase
+        case .verified(let safe):
+            //If the transaction is verified, unwrap and return it.
+            return safe
+        }
+    }
+    
+    @MainActor
+    func updatePurchase(_ transaction: Transaction) async {
+        withAnimation {
+            if transaction.revocationDate == nil {
+                isActive = true
+            } else {
+                isActive = false
+            }
+        }
     }
     
     func restore(completionHandler: @escaping (Result<Bool, PurchaseError>) -> Void) {
-        #if PRODUCTION_BUILD
-        Purchases.shared.restoreTransactions { (info, error) in
-            DispatchQueue.main.async {
-                if let error = error {
-                    completionHandler(.failure(.server(error)))
-                    return
-                }
+        Task {
+            do {
+                try await AppStore.sync()
+                let isActive = try await isPurchased(Constants.proIdentifier)
                 
-                let isActive = info?.entitlements[Constants.entitlementId]?.isActive == true
                 guard isActive else {
-                    completionHandler(.failure(.invalidPurchase))
-                    return
+                    throw PurchaseError.invalidPurchase
                 }
                 
-                withAnimation {
-                    self.isActive = isActive
+                DispatchQueue.main.async {
+                    withAnimation {
+                        self.isActive = isActive
+                    }
+                    completionHandler(.success(isActive))
                 }
-                completionHandler(.success(isActive))
+            } catch PurchaseError.invalidPurchase {
+                DispatchQueue.main.async {
+                    completionHandler(.failure(.invalidPurchase))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completionHandler(.failure(.server(error)))
+                }
             }
         }
-        #elseif DEVELOPMENT_BUILD
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            withAnimation {
-                self.isActive = true
-            }
-            completionHandler(.success(self.isActive))
-        }
-        #endif
-    }
-    
-    #if DEVELOPMENT_BUILD
-    func resetMockPurchase() {
-        withAnimation {
-            isActive = false
-        }
-    }
-    #endif
-    
-}
-
-// MARK: - Purchases Delegate
-
-#if PRODUCTION_BUILD
-
-extension IAPManager: PurchasesDelegate {
-    
-    func purchases(_ purchases: Purchases, didReceiveUpdated purchaserInfo: Purchases.PurchaserInfo) {
-        self.purchaserInfo = purchaserInfo
     }
     
 }
-
-#endif
 
 // MARK: - Errors
 
 extension IAPManager {
     enum PurchaseError: Error {
+        case missingProduct
         case userCancelled
         case packageNotFound
         case invalidPurchase
@@ -255,6 +248,8 @@ extension IAPManager.PurchaseError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
+        case .missingProduct:
+            return "Missing Product"
         case .userCancelled:
             return "User Cancelled Purchase"
         case .packageNotFound:
@@ -267,16 +262,6 @@ extension IAPManager.PurchaseError: LocalizedError {
     }
     
 }
-
-// MARK: - Helpers
-
-#if PRODUCTION_BUILD
-
-extension Purchases.Package: Identifiable {
-    public var id: String { self.identifier }
-}
-
-#endif
 
 // MARK: - Previews
 

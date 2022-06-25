@@ -22,9 +22,9 @@ struct TagsContentView: View {
         var id: Self { self }
     }
     
-    enum ActiveCover: Hashable, Identifiable {
+    enum ActiveCover: Identifiable {
         case settings
-        var id: Self { self }
+        var id: Int { hashValue }
     }
     
     enum ActiveAlert: Identifiable {
@@ -45,15 +45,15 @@ struct TagsContentView: View {
     @State private var tags = [TagSummaryViewModel]()
     
     @State private var activeCover: ActiveCover?
-    @State private var activeSheet: ActiveSheet?
     @State private var activeAlert: ActiveAlert?
+    @State private var activeSheet: ActiveSheet?
     
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(tags, id: \.id) { viewModel in
-                        NavigationLink(destination: StatsTimelineView(displayType: .tag(tag: viewModel))) {
+                        NavigationLink(destination: destination(for: viewModel)) {
                             SummaryCell(viewModel: viewModel, active: true)
                                 .padding([.leading, .trailing])
                                 .padding([.top, .bottom], CGFloat(10.0))
@@ -93,18 +93,18 @@ struct TagsContentView: View {
                     }
                 }
             }
-            .fullScreenCover(item: $activeCover, onDismiss: { reload() }) { item in
+            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
+                switch item {
+                case .edit(let viewModel):
+                    TagsAddView(viewModel: viewModel, source: .tags, isInsert: false)
+                        .environmentObject(TagManager(context: viewContext))
+                }
+            }
+            .fullScreenCover(item: $activeCover) { item in
                 switch item {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
-                }
-            }
-            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
-                switch item {
-                case .edit(let viewModel):
-                    TagsAddView(viewModel: viewModel, isInsert: false)
-                        .environmentObject(TagManager(context: viewContext))
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -125,6 +125,20 @@ struct TagsContentView: View {
         if tags.isEmpty {
             EmptyTagsView(displayType: .tags, onCreate: { reload() })
         }
+    }
+    
+    @ViewBuilder
+    func destination(for viewModel: TagSummaryViewModel) -> some View {
+        StatsTimelineView(
+            source: .tags,
+            title: viewModel.title,
+            subtitle: viewModel.gearType == .none ? "Tag" : viewModel.gearType.rawValue.capitalized,
+            sport: viewModel.gearType.displaySport,
+            interval: manager.dataProvider.dateIntervalForActiveWorkouts(),
+            timeframe: .year,
+            identifiers: manager.workoutTagProvider.workoutIdentifiers(forTag: viewModel.id)
+        )
+        .onAppear { AnalyticsManager.shared.logPage(.tagMetrics) }
     }
     
 }
@@ -178,9 +192,14 @@ struct TagsView_Previews: PreviewProvider {
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
         
     static var previews: some View {
-        TagsView()
-            .environment(\.managedObjectContext, viewContext)
-            .environmentObject(purchaseManager)
-            .preferredColorScheme(.dark)
+        NavigationView {
+            ScrollView {
+                TagsView()
+            }
+            .navigationTitle("Tags")
+        }
+        .environment(\.managedObjectContext, viewContext)
+        .environmentObject(purchaseManager)
+        .preferredColorScheme(.dark)
     }
 }

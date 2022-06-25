@@ -29,7 +29,13 @@ struct Settings<T> {
 }
 
 struct AppSettings {
+    static var CURRENT_VERSION: Int = {
+        let (_, build) = systemVersionAndBuild()
+        return Int(build) ?? 0
+    }()
+    
     struct Keys {
+        static let version = "arn_app_version"
         static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
         static let shareSettings = "arn_share_settings"
@@ -40,6 +46,8 @@ struct AppSettings {
         static let yearToDateTimeframe = "arn_year_to_date_timeframe"
         static let allTimeTimeframe = "arn_all_time_timeframe"
         static let tagsTimeframe = "arn_tag_timeframe"
+        static let dashboardStartDate = "arn_dashboard_start_date"
+        static let dashboardInterval = "arn_dashboard_interval"
     }
     
     struct RemoteKeys {
@@ -57,15 +65,9 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
-
-    private static func timeframeForKey(_ key: String) -> StatsTimelineManager.Timeframe? {
-        let string = objectForKey(key) as? String ?? ""
-        return StatsTimelineManager.Timeframe(rawValue: string)
-    }
     
-    private static func setTimeframe(_ value: StatsTimelineManager.Timeframe, forKey: String) {
-        setValue(value.rawValue, for: forKey)
-    }
+    @Settings(Keys.version, defaultValue: 0)
+    static var version: Int
         
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int
@@ -91,20 +93,26 @@ struct AppSettings {
     @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
     static var weight: Double
     
-    static var yearToDateTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.yearToDateTimeframe) ?? .month }
-        set { setTimeframe(newValue, forKey: Keys.yearToDateTimeframe) }
+    static var dashboardStartDate: Date? {
+        get {
+            if let string = objectForKey(Keys.dashboardStartDate) as? String {
+                return ISO8601DateFormatter().date(from: string)
+            } else {
+                return nil
+            }
+        }
+        set {
+            if let date = newValue {
+                let string = ISO8601DateFormatter().string(from: date)
+                setValue(string, for: Keys.dashboardStartDate)
+            } else {
+                setValue(nil, for: Keys.dashboardStartDate)
+            }
+        }
     }
     
-    static var allTimeTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.allTimeTimeframe) ?? .year }
-        set { setTimeframe(newValue, forKey: Keys.allTimeTimeframe) }
-    }
-    
-    static var tagsTimeframe: StatsTimelineManager.Timeframe {
-        get { timeframeForKey(Keys.tagsTimeframe) ?? .year }
-        set { setTimeframe(newValue, forKey: Keys.tagsTimeframe )}
-    }
+    @Settings(Keys.dashboardInterval, defaultValue: DashboardViewManager.IntervalType.month.rawValue)
+    static var dashboardInterval: String
     
     static var shareSettings: ShareSettings {
         get {
