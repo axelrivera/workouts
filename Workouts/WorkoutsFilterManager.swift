@@ -444,7 +444,7 @@ extension WorkoutsFilterManager {
         
         if selectedTags.isPresent {
             let tagIds = selectedTags.map { $0.id }
-            let workouts = workoutTagProvider.workoutIdentifiers(forTags: tagIds)
+            let workouts = workoutTagProvider.workoutIdentifiers(allTags: tagIds)
             let active = dataProvider.workoutIdentifiers(for: Workout.activePredicate(for: workouts))
             
             if ids.isEmpty {
