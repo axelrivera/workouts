@@ -118,8 +118,11 @@ extension WorkoutsFilterManager {
             
             self.context.perform {
                 let sports = Workout.availableSports(in: self.context)
+                let interval = self.dataProvider.dateIntervalForActiveWorkouts()
+                
                 DispatchQueue.main.async {
                     self.supportedSports = sports
+                    self.dateRange = interval.start ... interval.end
                 }
             }
         }
