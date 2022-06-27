@@ -46,6 +46,11 @@ extension WorkoutImport {
         public var eventType: EventType
         
         public init?(message: FitMessage) {
+            // ignore off course events because they break distance sample calculation
+            if let event = message.interpretedField(key: "event")?.name, event == "off_course" {
+                return nil
+            }
+            
             guard let name = message.interpretedField(key: "event_type")?.name,
                   let eventType = EventType(name: name) else { return nil }
                         
