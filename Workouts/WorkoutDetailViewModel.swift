@@ -47,6 +47,9 @@ struct WorkoutDetailViewModel {
     let avgHeartRate: Double
     let maxHeartRate: Double
     
+    let trimp: Int
+    let avgHeartRateReserve: Double
+    
     let zoneMaxHeartRate: Int
     let zoneValues: [Int]
         
@@ -123,6 +126,8 @@ extension WorkoutDetailViewModel {
             energyBurned: workout.energyBurned,
             avgHeartRate: workout.avgHeartRate,
             maxHeartRate: workout.maxHeartRate,
+            trimp: workout.trimp,
+            avgHeartRateReserve: workout.avgHeartRateReserve,
             zoneMaxHeartRate: workout.zoneMaxHeartRate,
             zoneValues: workout.zoneValues,
             source: workout.source,

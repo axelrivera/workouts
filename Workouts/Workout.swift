@@ -79,6 +79,10 @@ class Workout: NSManagedObject {
     
     @NSManaged private(set) var createdAt: Date
     @NSManaged private(set) var updatedAt: Date
+    
+    // V5 Additions
+    @NSManaged var trimp: Int
+    @NSManaged var avgHeartRateReserve: Double
             
     // MARK: Enums
     @nonobjc
@@ -429,6 +433,8 @@ extension Workout {
             workout.avgMovingPace = object.avgMovingPace
             workout.avgHeartRate = object.avgHeartRate
             workout.maxHeartRate = object.maxHeartRate
+            workout.trimp = object.trimp
+            workout.avgHeartRateReserve = object.avgHeartRateReserve
             workout.energyBurned = object.energyBurned
             workout.avgSpeed = object.avgSpeed
             workout.maxSpeed = object.maxSpeed

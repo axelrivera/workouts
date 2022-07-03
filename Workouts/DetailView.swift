@@ -79,12 +79,7 @@ struct DetailContentView: View {
                 }
             }
             
-            row1View()
-            if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
-                row2View()
-            }
-            row3View()
-            row4View()
+            rowViews()
             
             VStack(alignment: .leading) {
                 HStack {
@@ -224,6 +219,16 @@ extension DetailContentView {
     }
     
     @ViewBuilder
+    func rowViews() -> some View {
+        row1View()
+        if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
+            row2View()
+        }
+        row3View()
+        row4View()
+    }
+    
+    @ViewBuilder
     func row1View() -> some View {
         HStack {
             if workout.distance > 0 {
@@ -254,6 +259,13 @@ extension DetailContentView {
             DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
             DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
         }
+        
+        if detailManager.detail.trimp > 0 {
+            HStack {
+                DetailGridView(text: "Training Load", detail: trimpString, detailColor: .load)
+                DetailGridView(text: "Heart Rate Reserve", detail: avgHeartRateReserveString, detailColor: .heartRateReserve)
+            }
+        }
     }
     
     @ViewBuilder
@@ -264,6 +276,14 @@ extension DetailContentView {
                 DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
         }
+    }
+    
+    var trimpString: String {
+        detailManager.detail.trimp.formatted()
+    }
+    
+    var avgHeartRateReserveString: String {
+        Int(detailManager.detail.avgHeartRateReserve * 100).formatted(.percent)
     }
     
     var distanceString: String {

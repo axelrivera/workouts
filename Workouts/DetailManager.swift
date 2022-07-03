@@ -39,7 +39,7 @@ class DetailManager: ObservableObject {
     
     @Published var isFavorite = false
     @Published var tags = [TagLabelViewModel]()
-            
+                
     var distanceSamples: [Quantity]?
         
     var detail: WorkoutDetailViewModel

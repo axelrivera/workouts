@@ -10,12 +10,14 @@ import CoreData
 import Combine
 
 enum LogDisplayType: String, Identifiable, CaseIterable {
-    case distance, time
+    case distance, time, load
     
     var id: String { rawValue }
     
     var color: Color {
         switch self {
+        case .load:
+            return .load
         case .distance:
             return .distance
         case .time:

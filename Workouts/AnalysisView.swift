@@ -165,7 +165,7 @@ struct AnalysisView: View {
             .sheet(item: $activeSheet) { sheet in
                 switch sheet {
                 case .heartRateZones:
-                    HeartRateEditView(action: saveZones)
+                    HRZonesEditView(action: saveZones)
                         .environmentObject(detailManager.zoneManager)
                 }
             }

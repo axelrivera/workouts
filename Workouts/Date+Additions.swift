@@ -245,12 +245,12 @@ extension DateInterval {
         return DateInterval(start: start, end: end)
     }
     
-    static func lastThirtyDays() -> DateInterval? {
+    static func lastThirtyDays() -> DateInterval {
         let start = Calendar.current.date(byAdding: .day, value: -30, to: Date())!.startOfDay
         return DateInterval(start: start, end: Date())
     }
     
-    static func lastTwoWeeks() -> DateInterval? {
+    static func lastTwoWeeks() -> DateInterval {
         let now = Date()
         let start = now.workoutWeekStart.addingTimeInterval(-1).workoutWeekStart
         return DateInterval(start: start, end: Date())

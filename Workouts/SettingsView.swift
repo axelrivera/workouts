@@ -41,7 +41,7 @@ struct SettingsView: View {
                     }
                     
                     NavigationLink(destination: HeartRateView()) {
-                        Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
+                        Label("Heart Rate", systemImage: "heart.fill")
                     }
                     
                     NavigationLink(destination: AdvancedSettingsView()) {

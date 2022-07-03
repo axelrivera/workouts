@@ -58,6 +58,10 @@ extension HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .heartRate)!
     }
     
+    static func restingHeartRate() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .restingHeartRate)!
+    }
+    
     static func weight() -> HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .bodyMass)!
     }
@@ -154,6 +158,18 @@ extension HKWorkout {
     
     var minAltitude: Double? {
         metadata?[MetadataKeyMaxAltitude] as? Double
+    }
+    
+}
+
+extension HKCharacteristicType {
+    
+    static func dateOfBirth() -> HKCharacteristicType {
+        HKCharacteristicType(.dateOfBirth)
+    }
+    
+    static func biologicalSex() -> HKCharacteristicType {
+        HKCharacteristicType(.biologicalSex)
     }
     
 }

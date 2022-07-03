@@ -1,5 +1,5 @@
 //
-//  HeartRateEditView.swift
+//  HRZonesEditView.swift
 //  Workouts
 //
 //  Created by Axel Rivera on 6/24/21.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension HeartRateEditView {
+extension HRZonesEditView {
     
     enum DisplayType {
         case config, workout
@@ -15,7 +15,7 @@ extension HeartRateEditView {
     
 }
 
-struct HeartRateEditView: View {
+struct HRZonesEditView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var zoneManager: HRZoneManager
     
@@ -28,14 +28,13 @@ struct HeartRateEditView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(footer: Text("Your maximum heart rate is about 220 minus your age. For example, if you're 30 years old, subtract 30 from 220 to get a maximum heart rate of 190 bpm.")) {
+                Section {
                     HStack {
                         Text("Max Heart Rate")
                         Spacer()
                         Text(zoneManager.maxHeartRateString)
-                            .foregroundColor(.red)
+                            .foregroundColor(.secondary)
                     }
-                    Slider(value: $zoneManager.maxHeartRate, in: 140...220, step: 1)
                 }
                 
                 Section {
@@ -69,7 +68,7 @@ struct HeartRateEditView: View {
 
 // MARK: - Actions
 
-extension HeartRateEditView {
+extension HRZonesEditView {
     
     func save() {
         action(Int(zoneManager.maxHeartRate), zoneManager.values)
@@ -77,14 +76,14 @@ extension HeartRateEditView {
     
 }
 
-struct HeartRateEditView_Previews: PreviewProvider {
+struct HRZonesEditView_Previews: PreviewProvider {
     
     static func saveAction(_ heartRate: Int, _ values: [Int]) {
         // no-op
     }
     
     static var previews: some View {
-        HeartRateEditView(action: saveAction)
+        HRZonesEditView(action: saveAction)
             .environmentObject(HRZoneManager())
             .preferredColorScheme(.dark)
     }

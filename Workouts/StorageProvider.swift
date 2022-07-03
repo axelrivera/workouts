@@ -209,6 +209,8 @@ class StorageProvider: ObservableObject {
             energyBurned: 500.0,
             avgHeartRate: 0.0,
             maxHeartRate: 0.0,
+            trimp: 0,
+            avgHeartRateReserve: 0,
             elevationAscended: 0.0,
             elevationDescended: 0.0,
             source: "Workouts Preview",

@@ -93,6 +93,7 @@ struct WorkoutLogIntervalRow: View {
     
     func headerText(for interval: LogInterval) -> String {
         switch displayType {
+        case .load: return interval.trimp.formatted()
         case .distance: return formattedDistanceString(for: interval.distance, zeroPadding: true)
         case .time: return formattedHoursMinutesPrettyString(for: interval.duration)
         }
@@ -185,6 +186,8 @@ extension WorkoutLogItem {
     
     var text: String {
         switch displayType {
+        case .load:
+            return day.trimp.formatted()
         case .distance:
             let measurement = Measurement<UnitLength>(value: day.distance, unit: .meters)
             let conversion = measurement.converted(to: Locale.isMetric() ? .kilometers : .miles)
@@ -198,6 +201,8 @@ extension WorkoutLogItem {
     
     var value: CGFloat {
         switch displayType {
+        case .load:
+            return CGFloat(day.trimp)
         case .distance:
             return CGFloat(day.distance)
         case .time:
@@ -214,6 +219,8 @@ extension WorkoutLogItem {
         
         let preferredSport = day.distancePreferredSport
         switch displayType {
+        case .load:
+            return CGFloat(logScaleFactorForLoad(day.trimp))
         case .distance where preferredSport == .cycling:
             return CGFloat(logScaleFactorForCyclingDistance(for: day.distance))
         case .distance where preferredSport == .running:

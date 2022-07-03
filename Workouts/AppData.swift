@@ -57,5 +57,3 @@ enum GlobalError: Error {
     case data
     case database
 }
-
-

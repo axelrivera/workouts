@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HeartRateView: View {
     enum ActiveSheet: Identifiable {
-        case edit, info, explanation
+        case edit, editZones, info, explanation
         var id: Int { hashValue }
     }
     
@@ -25,54 +25,68 @@ struct HeartRateView: View {
     @State private var activeAlert: ActiveAlert?
     
     @StateObject private var zoneManager = HRZoneManager()
+    @StateObject private var editManager = HREditManager()
         
     var body: some View {
         Form {
             Section {
                 HStack {
-                    Label(
-                        title: { Text("Max Heart Rate") },
-                        icon: { Image(systemName: "heart.fill").foregroundColor(.red) }
-                    )
+                    Label("Max Heart Rate", systemImage: "arrow.up.heart.fill")
                     Spacer()
-                    Text(zoneManager.maxHeartRateString)
-                        .foregroundColor(.red)
+                    Text(editManager.estimateMaxHeartRateString)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack {
+                    Label("Resting Heart Rate", systemImage: "arrow.down.heart.fill")
+                    Spacer()
+                    Text(editManager.recentRestingHeartRateString)
+                        .foregroundColor(.secondary)
+                }
+                
+                Button(action: { activeSheet = .edit }) {
+                    Label("Edit Heart Rate", systemImage: "slider.horizontal.3")
                 }
             }
+            .onAppear { editManager.loadValues() }
             
-            Section(header: Text("Curent Zones")) {
+            Section {
                 ForEach(HRZone.allCases) { zone in
                     HRSectionRow(zone: zone)
                         .environmentObject(zoneManager)
                 }
+                
+                Button(action: { activeSheet = .editZones }) {
+                    Label("Edit Zones", systemImage: "slider.horizontal.3")
+                }
+            } header: {
+                Text("Heart Rate Zones")
             }
             
             Section {
-                Button(action: { activeSheet = .edit }) {
-                    Label("Edit Heart Rate and Zones", systemImage: "slider.horizontal.3")
-                }
-                
                 Button(action: { activeAlert = .allConfirmation }) {
                     Label("Apply to All Workouts", systemImage: "calendar.badge.clock")
                 }
             }
             
-            Section(header: Text("Help")) {
-                Button(action: { activeSheet = .info }) {
-                    Label("Learn More", systemImage: "info.circle")
-                }
-                
-                Button(action: { activeSheet = .explanation }) {
-                    Label("Heart Rate Zones Explained", systemImage: "lightbulb")
-                }
-            }
+//            Section(header: Text("Help")) {
+//                Button(action: { activeSheet = .info }) {
+//                    Label("Learn More", systemImage: "info.circle")
+//                }
+//
+//                Button(action: { activeSheet = .explanation }) {
+//                    Label("Heart Rate Zones Explained", systemImage: "lightbulb")
+//                }
+//            }
         }
-        .navigationTitle("Heart Rate Zones")
+        .navigationTitle("Heart Rate")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .edit:
-                HeartRateEditView(action: saveAction)
+                HREditView(manager: editManager)
+            case .editZones:
+                HRZonesEditView(action: saveAction)
                     .environmentObject(HRZoneManager())
             case .info:
                 SafariView(urlString: URLStrings.heartRateInfo)

@@ -32,6 +32,8 @@ extension WorkoutProcessor {
         let energyBurned: Double
         let avgHeartRate: Double
         let maxHeartRate: Double
+        let trimp: Int
+        let avgHeartRateReserve: Double
         let elevationAscended: Double
         let elevationDescended: Double
         let source: String
@@ -97,9 +99,39 @@ extension WorkoutProcessor {
             activeEnergy = energyBurned()
         }
         
+        let trimp: Int
+        let avgHeartRateReserve: Double
+        do {
+            guard provider.isTrainingLoadSupported else {
+                throw WorkoutError("training load not supported")
+            }
+            
+            let paddedSamples = try await provider.fetchPaddedHeartRateSamples(for: workout)
+            let gender = provider.userGender()
+            let profileMaxHeartRate = await provider.profileMaxHeartRate()
+            let profileRestingHeartRate = await provider.profileRestingHeartRate()
+            
+            let loadProcessor = TrainingLoadProcessor(
+                gender: gender,
+                maxHeartRate: profileMaxHeartRate,
+                restingHeartRate: profileRestingHeartRate,
+                paddedHeartRateSamples: paddedSamples
+            )
+            
+            trimp = loadProcessor.trimp()
+            avgHeartRateReserve = loadProcessor.percentHeartRateReserve(for: Int(avgHeartRate))
+        } catch {
+            Log.debug("failed to setup training load: \(error.localizedDescription)")
+            
+            trimp = 0
+            avgHeartRateReserve = 0
+        }
+        
         let movingTime = workout.duration
         let avgMovingSpeed: Double = totalDistance() / movingTime
         let avgMovingPace: Double = calculateRunningWalkingPace(distanceInMeters: totalDistance(), duration: movingTime) ?? avgPace()
+        
+        Log.debug("trimp: \(trimp), avgHRR: \(avgHeartRateReserve)")
         
         // calculated values
         // coordinatesValue, minElevation, maxElevation, avgHeartRate, maxHeartRage
@@ -123,6 +155,8 @@ extension WorkoutProcessor {
             energyBurned: activeEnergy,
             avgHeartRate: avgHeartRate,
             maxHeartRate: maxHeartRate,
+            trimp: trimp,
+            avgHeartRateReserve: avgHeartRateReserve,
             elevationAscended: elevationAscended(),
             elevationDescended: elevationDescended(),
             source: workout.sourceRevision.source.name,

@@ -40,7 +40,10 @@ struct AppSettings {
         static let defaultStatsFilter = "arn_default_stats_filter"
         static let shareSettings = "arn_share_settings"
         static let mockPurchaseActive = "arn_mock_purchase_active"
+        static let useFormulaMaxHeartRate = "arn_use_formula_max_heart_rate"
         static let maxHeartRate = "arn_max_heart_rate"
+        static let useHealthRestingHeartRate = "arn_use_health_resting_heart_rate"
+        static let restingHeartRate = "arn_resting_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
         static let workoutsQueryAnchor = "arn_workouts_query_anchor"
         static let yearToDateTimeframe = "arn_year_to_date_timeframe"
@@ -68,9 +71,18 @@ struct AppSettings {
     
     @Settings(Keys.version, defaultValue: 0)
     static var version: Int
-        
+    
+    @Settings(Keys.useFormulaMaxHeartRate, defaultValue: true)
+    static var useFormulaMaxHeartRate: Bool
+    
+    @Settings(Keys.useHealthRestingHeartRate, defaultValue: true)
+    static var useHealthRestingHeartRate: Bool
+    
     @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
     static var maxHeartRate: Int
+    
+    @Settings(Keys.restingHeartRate, defaultValue: 60)
+    static var restingHeartRate: Int
     
     // heart Rate Zones
     static var heartRateZones: [Int] {

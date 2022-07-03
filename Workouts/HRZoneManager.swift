@@ -23,7 +23,7 @@ class HRZoneManager: ObservableObject {
     }
     
     var maxHeartRateString: String {
-        String(format: "%@ bpm", maxHeartRateValue as NSNumber)
+        formattedHeartRateString(for: Double(maxHeartRateValue))
     }
     
     // Don't update values directly, use helper method
@@ -256,8 +256,8 @@ extension HRZoneManager {
         
         let samples = try await provider.fetchHeartRateSamples(interval: dateInterval, source: source)
                 
-        let startIndex = keyForTimestamp(remoteWorkout.startDate)
-        let endIndex = keyForTimestamp(remoteWorkout.endDate)
+        let startIndex = KeyForTimestamp(remoteWorkout.startDate)
+        let endIndex = KeyForTimestamp(remoteWorkout.endDate)
         
         var dictionary = [Int: Quantity]()
         for key in startIndex ... endIndex {
@@ -266,7 +266,7 @@ extension HRZoneManager {
         }
         
         for sample in samples {
-            let key = keyForTimestamp(sample.timestamp)
+            let key = KeyForTimestamp(sample.timestamp)
             guard let quantity = dictionary[key] else { continue }
             
             if sample.value > quantity.value {
@@ -306,10 +306,6 @@ extension HRZoneManager {
         
         guard summaries.count == HRZone.allCases.count else { throw DataError.missingZone }
         return summaries
-    }
-    
-    func keyForTimestamp(_ timestamp: Date) -> Int {
-        Int(truncating: timestamp.timeIntervalSince1970 as NSNumber)
     }
     
 }

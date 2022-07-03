@@ -106,7 +106,6 @@ func logScaleFactorForWalkingDistance(for meters: Double) -> Double {
     }
 }
 
-
 func logScaleFactorForTime(_ duration: Double) -> Double {
     let minutes = duration / 60.0
     
@@ -126,6 +125,35 @@ func logScaleFactorForTime(_ duration: Double) -> Double {
     case let x where x > 240 && x <= 300:
         return 0.95
     case let x where x > 300:
+        return 1
+    default:
+        return 0.5
+    }
+}
+
+func logScaleFactorForLoad(_ trimp: Int) -> Double {
+    switch trimp {
+    case let x where x > 0 && x <= 20:
+        return 0.5
+    case let x where x > 20 && x <= 40:
+        return 0.55
+    case let x where x > 40 && x <= 75:
+        return 0.6
+    case let x where x > 75 && x <= 100:
+        return 0.65
+    case let x where x > 100 && x <= 150:
+        return 0.7
+    case let x where x > 150 && x <= 200:
+        return 0.75
+    case let x where x > 200 && x <= 250:
+        return 0.80
+    case let x where x > 250 && x <= 300:
+        return 0.85
+    case let x where x > 300 && x <= 350:
+        return 0.90
+    case let x where x > 350 && x <= 400:
+        return 0.95
+    case let x where x > 400:
         return 1
     default:
         return 0.5

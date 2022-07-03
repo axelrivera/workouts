@@ -51,6 +51,10 @@ extension LogInterval {
         days.map({ $0.activities.count }).reduce(0, +)
     }
     
+    var trimp: Int {
+        days.map({ $0.trimp }).reduce(0, +)
+    }
+    
     var distance: Double {
         days.map({ $0.distance }).reduce(0, +)
     }
@@ -116,6 +120,10 @@ extension LogDay {
         activities.compactMap { $0.remoteIdentifier }
     }
     
+    var trimp: Int {
+        activities.map({ $0.trimp }).reduce(0, +)
+    }
+    
     var distance: Double {
         activities.map({ $0.distance }).reduce(0, +)
     }
@@ -179,6 +187,7 @@ struct LogActivity: Identifiable {
     
     let remoteIdentifier: UUID
     let sport: Sport
+    let trimp: Int
     let distance: Double
     let duration: Double
 }
@@ -189,6 +198,7 @@ extension Workout {
         LogActivity(
             remoteIdentifier: workoutIdentifier,
             sport: sport,
+            trimp: trimp,
             distance: distance,
             duration: movingTime
         )
@@ -203,20 +213,25 @@ extension LogActivity {
     static func random() -> LogActivity {
         let sport = Sport.supportedSports.randomElement()!
         let speed: Double
+        let trimp: Int
         let distance: Double
         let duration: Double
         
         switch sport {
         case .cycling:
+            trimp = Int.random(in: 50...300)
             speed = 6.7056 // 15 mph
             distance = Double((32187...96560).randomElement()!) // 20 to 60 miles
         case .running:
+            trimp = Int.random(in: 10...50)
             speed = 2.68224 // 6 mph
             distance = Double((4830...41842).randomElement()!) // 3 to 26 miles
         case .walking:
+            trimp = Int.random(in: 5...30)
             speed = 1.34112 // 3 mph
             distance = Double((1609...4830).randomElement()!) // 1 to 3 miles
         default:
+            trimp = 0
             speed = 0
             distance = 0
         }
@@ -226,6 +241,7 @@ extension LogActivity {
         return LogActivity(
             remoteIdentifier: UUID(),
             sport: sport,
+            trimp: trimp,
             distance: distance,
             duration: duration
         )

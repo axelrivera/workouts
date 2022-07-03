@@ -12,6 +12,7 @@ enum ModelVersion: String, CaseIterable {
     case v2 = "Workouts 2"
     case v3 = "Workouts 3"
     case v4 = "Workouts 4"
+    case v5 = "Workouts 5"
     
     static var current: ModelVersion {
         guard let current = allCases.last else {
@@ -28,7 +29,8 @@ extension ModelVersion {
         case .v1: return .v2
         case .v2: return .v3
         case .v3: return .v4
-        case .v4: return nil
+        case .v4: return .v5
+        case .v5: return nil
         }
     }
     
