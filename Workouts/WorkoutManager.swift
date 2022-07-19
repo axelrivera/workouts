@@ -21,7 +21,7 @@ class WorkoutManager: ObservableObject {
     
     private let authProvider = HealthAuthProvider.shared
     private let healthProvider = HealthProvider.shared
-        
+    
     @Published var sport: Sport?
 
     @Published var showDateFilter = false
@@ -35,18 +35,14 @@ class WorkoutManager: ObservableObject {
     var processingRemoteDataTimestamp: Date?
     @Published var isProcessingRemoteData = false
     @Published var showProcessingRemoteDataLoading = false
-    
-    var updatingRemoteLocationDataTimestamp: Date?
-    @Published var isUpdatingRemoteLocationData = false
-    @Published var showUpdatingRemoteLocationDataLoading = false
-    
+        
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
 
     @Published var showNoWorkoutsAlert = false
     
     var isProcessing: Bool {
-        isProcessingRemoteData || isUpdatingRemoteLocationData
+        isProcessingRemoteData
     }
     
     init(context: NSManagedObjectContext) {
@@ -185,38 +181,19 @@ extension WorkoutManager {
             object: nil
         )
         
-        // Updating Location Data
-        
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(willStartUpdatingLocation),
-            name: .willBeginProcessingRemoteLocationData,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(didUpdateLocation),
-            name: .didUpdateRemoteLocationData,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(didFinishUpdatingLocation),
-            name: .didFinishProcessingRemoteLocationData,
+            selector: #selector(updateWorkoutValues),
+            name: .didUpdateWorkoutValues,
             object: nil
         )
     }
     
     private func removeObservers() {
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil) 
         NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
-        
-        NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteLocationData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didUpdateRemoteLocationData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteLocationData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didUpdateWorkoutValues, object: nil)
     }
     
     // MARK: - Inserting Workouts
@@ -252,6 +229,8 @@ extension WorkoutManager {
         processingRemoteDataTimestamp = nil
         validateHealthPermissions()
         
+        Log.debug("WORKOUT: did process workouts")
+        
         DispatchQueue.main.async {
             withAnimation {
                 self.isProcessingRemoteData = false
@@ -260,51 +239,16 @@ extension WorkoutManager {
         }
     }
     
-    // MARK: - Updating Location Data
-    
     @objc
-    func willStartUpdatingLocation(_ notification: Notification) {
-        updatingRemoteLocationDataTimestamp = Date()
+    private func updateWorkoutValues(_ notification: Notification) {
+        guard let ids = notification.userInfo?[Notification.workoutIdentifiersKey] as? [UUID] else { return }
         
-        DispatchQueue.main.async {
-            withAnimation {
-                self.isUpdatingRemoteLocationData = true
-            }
-        }
-    }
-    
-    @objc
-    func didUpdateLocation(_ notification: Notification) {
-        let now = Date()
-        let date = updatingRemoteLocationDataTimestamp ?? now
-        let waitTime = now.timeIntervalSince(date)
-        
-        if waitTime > LOADING_WAIT_IN_SECONDS && !showUpdatingRemoteLocationDataLoading {
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.showUpdatingRemoteLocationDataLoading = true
-                }
-            }
-        }
-        
-        let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID
-        let coordinates = notification.userInfo?[Notification.coordinatesKey] as? [CLLocationCoordinate2D]
-
-        if let remoteIdentifier = remoteIdentifier, let coordinates = coordinates {
-            self.storage.set(coordinates: coordinates, forID: remoteIdentifier)
-        }
-    }
-    
-    @objc
-    func didFinishUpdatingLocation(_ notification: Notification) {
-        updatingRemoteLocationDataTimestamp = nil
-        
-        DispatchQueue.main.async {
-            withAnimation {
-                self.isUpdatingRemoteLocationData = false
-                self.showUpdatingRemoteLocationDataLoading = false
-            }
-        }
+//        DispatchQueue.main.async {
+//            ids.forEach { workoutID in
+//                let userInfo: [String: Any] =
+//                NotificationCenter.default.post(name: <#T##NSNotification.Name#>, object: <#T##Any?#>, userInfo: <#T##[AnyHashable : Any]?#>)
+//            }
+//        }
     }
     
 }

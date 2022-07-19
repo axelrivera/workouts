@@ -55,4 +55,10 @@ class SyncOperation: Operation {
         }
     }
     
+    // Subclassed must implement process to do any needed logic
+    
+    func process() async {
+        fatalError("implement in subclass")
+    }
+    
 }

@@ -79,5 +79,9 @@ extension WorkoutImport {
         totalMaxCadence.cadenceValue
     }
     
+    var totalEnergyBurnedValue: Double? {
+        totalEnergyBurned.caloriesValue
+    }
+    
 }
 

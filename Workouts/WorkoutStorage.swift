@@ -14,7 +14,6 @@ final class WorkoutStorage {
     typealias WorkoutID = UUID
     
     private var workouts = [WorkoutID: WorkoutViewModel]()
-    private let imageCache = NSCache<NSString, UIImage>()
     private let queue = DispatchQueue(label: "WorkoutStorage.queue")
     
     private var context: NSManagedObjectContext
@@ -25,7 +24,6 @@ final class WorkoutStorage {
         self.context = context
         metaProvider = MetadataProvider(context: context)
         workoutTagProvider = WorkoutTagProvider(context: context)
-        imageCache.countLimit = 20
         addObservers()
     }
     
@@ -94,37 +92,37 @@ extension WorkoutStorage {
 
 extension WorkoutStorage {
     
-    func set(coordinates: [CLLocationCoordinate2D], forID id: WorkoutID) {
-        queue.async { [unowned self] in
-            if let viewModel = workouts[id] {
-                resetImages(forID: id)
-                viewModel.coordinates = coordinates
-                DispatchQueue.main.async {
-                    self.postNotification(forViewModel: viewModel)
-                }
-            }
-        }
-    }
+//    func set(coordinates: [CLLocationCoordinate2D], forID id: WorkoutID) {
+//        queue.async { [unowned self] in
+//            if let viewModel = workouts[id] {
+//                resetImages(forID: id)
+//                viewModel.coordinates = coordinates
+//                DispatchQueue.main.async {
+//                    self.postNotification(forViewModel: viewModel)
+//                }
+//            }
+//        }
+//    }
     
-    func isPendingLocation(forID id: WorkoutID) -> Bool {
-        queue.sync {
-            if let viewModel = workouts[id] {
-                return viewModel.isPendingLocation
-            } else {
-                return false
-            }
-        }
-    }
+//    func isPendingLocation(forID id: WorkoutID) -> Bool {
+//        queue.sync {
+//            if let viewModel = workouts[id] {
+//                return viewModel.isPendingValues
+//            } else {
+//                return false
+//            }
+//        }
+//    }
     
-    func coordinates(forID id: WorkoutID) -> [CLLocationCoordinate2D] {
-        queue.sync {
-            if let viewModel = workouts[id] {
-                return viewModel.coordinates
-            } else {
-                return []
-            }
-        }
-    }
+//    func coordinates(forID id: WorkoutID) -> [CLLocationCoordinate2D] {
+//        queue.sync {
+//            if let viewModel = workouts[id] {
+//                return viewModel.coordinates
+//            } else {
+//                return []
+//            }
+//        }
+//    }
     
 }
 
@@ -132,39 +130,42 @@ extension WorkoutStorage {
 
 extension WorkoutStorage {
     
-    func getCachedImage(forID id: WorkoutID, scheme: ColorScheme) -> UIImage? {
-        queue.sync {
-            let url = URL.cachedMapImageURL(id: id, scheme: scheme)
-            return imageCache.object(forKey: url.path as NSString)
-        }
-    }
+//    func getCachedImage(forID id: WorkoutID, scheme: ColorScheme) -> UIImage? {
+//        queue.sync {
+//            let url = URL.cachedMapImageURL(id: id, scheme: scheme)
+//            return imageCache.object(forKey: url.path as NSString)
+//        }
+//    }
     
     func getDiskImage(forID id: WorkoutID, scheme: ColorScheme) -> UIImage? {
         queue.sync {
-            let url = URL.cachedMapImageURL(id: id, scheme: scheme)
-            return FileManager.localImage(at: url)
+            Self.getDiskImage(forID: id, scheme: scheme)
         }
     }
     
-    func set(image: UIImage, forID id: WorkoutID, scheme: ColorScheme, memoryOnly: Bool = false) {
-        queue.async { [unowned self] in
-            let url = URL.cachedMapImageURL(id: id, scheme: scheme)
-            imageCache.setObject(image, forKey: url.path as NSString)
-            if !memoryOnly {
-                do {
-                    try FileManager.createImagesCacheDirectoryIfNeeded()
-                    try FileManager.writeLocalImage(image, at: url)
-                } catch {
-                    Log.debug("failed to write cached image: \(error.localizedDescription)")
-                }
-            }
-        }
+    static func getDiskImage(forID id: WorkoutID, scheme: ColorScheme) -> UIImage? {
+        let url = URL.cachedMapImageURL(id: id, scheme: scheme)
+        return FileManager.localImage(at: url)
     }
+    
+//    func set(image: UIImage, forID id: WorkoutID, scheme: ColorScheme, memoryOnly: Bool = false) {
+//        queue.async { [unowned self] in
+//            let url = URL.cachedMapImageURL(id: id, scheme: scheme)
+//            imageCache.setObject(image, forKey: url.path as NSString)
+//            if !memoryOnly {
+//                do {
+//                    try FileManager.createImagesCacheDirectoryIfNeeded()
+//                    try FileManager.writeLocalImage(image, at: url)
+//                } catch {
+//                    Log.debug("failed to write cached image: \(error.localizedDescription)")
+//                }
+//            }
+//        }
+//    }
     
     private func resetImages(forID id: WorkoutID) {
         for scheme in ColorScheme.allCases {
             let url = URL.cachedMapImageURL(id: id, scheme: scheme)
-            imageCache.removeObject(forKey: url.path as NSString)
             do {
                 try FileManager.deleteLocalImage(at: url)
             } catch {
@@ -234,7 +235,8 @@ extension WorkoutStorage {
     }
 
     static var viewModelUpdatedNotification = Notification.Name("arn_workout_store_view_model_updated")
-    private static var shouldUpdateCoordinatesNotification = Notification.Name("arn_workout_store_should_update_coordinates")
+    
+    private static var shouldReloadImage = Notification.Name("arn_workout_should_reload_image")
     private static var shouldUpdateFavoriteNotification = Notification.Name("arn_workout_store_should_update_favorite")
     private static var shouldUpdateTagsNotification = Notification.Name("arn_workout_store_should_update_tags")
     private static var shouldResetAllNotification = Notification.Name("arn_workout_store_reset_all")
@@ -251,13 +253,6 @@ extension WorkoutStorage {
     }
     
     private func addObservers() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateCoordinates),
-            name: Self.shouldUpdateCoordinatesNotification,
-            object: nil
-        )
-        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(updateFavorites),
@@ -281,17 +276,10 @@ extension WorkoutStorage {
     }
     
     private func removeObservers() {
-        NotificationCenter.default.removeObserver(self, name: Self.shouldUpdateCoordinatesNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: Self.shouldReloadImage, object: nil)
         NotificationCenter.default.removeObserver(self, name: Self.shouldUpdateFavoriteNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: Self.shouldUpdateTagsNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: Self.shouldResetAllNotification, object: nil)
-    }
-    
-    @objc
-    private func updateCoordinates(_ notification: Notification) {
-        guard let id = notification.userInfo?[Self.workoutIDKey] as? WorkoutID else { return }
-        guard let coordinates = notification.userInfo?[Self.coordinatesKey] as? [CLLocationCoordinate2D] else { return }
-        set(coordinates: coordinates, forID: id)
     }
     
     @objc
@@ -313,11 +301,6 @@ extension WorkoutStorage {
     }
     
     // MARK: Notification Wrappers
-    
-    static func updateCoordinates(_ coordinates: [CLLocationCoordinate2D], forID id: WorkoutID) {
-        let userInfo: [String: Any] = [workoutIDKey: id, coordinatesKey: coordinates]
-        NotificationCenter.default.post(name: shouldUpdateCoordinatesNotification, object: nil, userInfo: userInfo)
-    }
     
     static func updateFavorite(_ isFavorite: Bool, forID id: WorkoutID) {
         let userInfo: [String: Any] = [workoutIDKey: id, favoriteKey: isFavorite]

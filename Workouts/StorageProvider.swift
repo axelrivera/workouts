@@ -10,8 +10,6 @@ import SwiftUI
 
 class PersistentContainer: NSPersistentCloudKitContainer {}
 
-let WORKOUTS_REMOTE_CONTAINER = "iCloud.me.axelrivera.Workouts"
-
 class StorageProvider: ObservableObject {
     let persistentContainer: PersistentContainer
 
@@ -40,6 +38,8 @@ class StorageProvider: ObservableObject {
             localDescription.type = NSInMemoryStoreType
             cloudDescription.type = NSInMemoryStoreType
         } else {
+            
+            
             cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: WORKOUTS_REMOTE_CONTAINER)
             cloudDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             cloudDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
@@ -185,40 +185,40 @@ class StorageProvider: ObservableObject {
     static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
         let viewContext = context ?? sampleContext
         
-        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
-        let end = start.addingTimeInterval(9000) // 1 hour
-        let duration = end.timeIntervalSince(start)
-        let avgSpeed = 6.7056
+//        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
+//        let end = start.addingTimeInterval(9000) // 1 hour
+//        let duration = end.timeIntervalSince(start)
+//        let avgSpeed = 6.7056
         
-        let object = WorkoutProcessor.InsertObject(
-            identifier: UUID(),
-            sport: sport ?? .cycling,
-            indoor: false,
-            start: start,
-            end: end,
-            duration: duration,
-            distance: 20000.0,
-            movingTime: duration - 300.0,
-            avgMovingSpeed: avgSpeed,
-            avgSpeed: avgSpeed,
-            maxSpeed: avgSpeed + 1.0,
-            avgPace: 0.0,
-            avgMovingPace: 0.0,
-            avgCyclingCadence: 80.0,
-            maxCyclingCadence: 90.0,
-            energyBurned: 500.0,
-            avgHeartRate: 0.0,
-            maxHeartRate: 0.0,
-            trimp: 0,
-            avgHeartRateReserve: 0,
-            elevationAscended: 0.0,
-            elevationDescended: 0.0,
-            source: "Workouts Preview",
-            device: nil
-        )
+//        let object = WorkoutProcessor.InsertObject(
+//            identifier: UUID(),
+//            sport: sport ?? .cycling,
+//            indoor: false,
+//            start: start,
+//            end: end,
+//            duration: duration,
+//            distance: 20000.0,
+//            movingTime: duration - 300.0,
+//            avgMovingSpeed: avgSpeed,
+//            avgSpeed: avgSpeed,
+//            maxSpeed: avgSpeed + 1.0,
+//            avgPace: 0.0,
+//            avgMovingPace: 0.0,
+//            avgCyclingCadence: 80.0,
+//            maxCyclingCadence: 90.0,
+//            energyBurned: 500.0,
+//            avgHeartRate: 0.0,
+//            maxHeartRate: 0.0,
+//            trimp: 0,
+//            avgHeartRateReserve: 0,
+//            elevationAscended: 0.0,
+//            elevationDescended: 0.0,
+//            source: "Workouts Preview",
+//            device: nil
+//        )
         
         let workout = Workout(context: viewContext)
-        Workout.updateValues(for: workout, object: object, isLocationPending: false, in: viewContext)
+//        Workout.updateValues(for: workout, object: object, isLocationPending: false, in: viewContext)
         
         return workout
     }
@@ -278,7 +278,6 @@ extension StorageProvider {
     func processPersistentHistory() {
         let taskContext = persistentContainer.newBackgroundContext()
         taskContext.performAndWait {
-            
             // Fetch history received from outside the app since the last token
             let historyFetchRequest = NSPersistentHistoryTransaction.fetchRequest!
             historyFetchRequest.predicate = NSPredicate(format: "author != %@", APP_TRANSACTION_AUTHOR_NAME)
@@ -286,9 +285,7 @@ extension StorageProvider {
             request.fetchRequest = historyFetchRequest
 
             let result = (try? taskContext.execute(request)) as? NSPersistentHistoryResult
-            guard let transactions = result?.result as? [NSPersistentHistoryTransaction],
-                  !transactions.isEmpty
-                else { return }
+            guard let transactions = result?.result as? [NSPersistentHistoryTransaction], transactions.isPresent else { return }
 
             // Post transactions relevant to the current view.
             DispatchQueue.main.async {

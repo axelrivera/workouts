@@ -2,240 +2,464 @@
 //  WorkoutProcessor.swift
 //  Workouts
 //
-//  Created by Axel Rivera on 5/28/21.
+//  Created by Axel Rivera on 7/3/22.
 //
 
 import Foundation
 import HealthKit
-import CoreLocation
+import CoreData
+import MapKit
 import Polyline
 
 fileprivate let gregorianCalendar = Calendar.init(identifier: .gregorian)
 
 extension WorkoutProcessor {
-    struct InsertObject {
-        let identifier: UUID
-        let sport: Sport
-        let indoor: Bool
-        let start: Date
-        let end: Date
-        let duration: Double
-        let distance: Double
-        let movingTime: Double
-        let avgMovingSpeed: Double
-        let avgSpeed: Double
-        let maxSpeed: Double
-        let avgPace: Double
-        let avgMovingPace: Double
-        let avgCyclingCadence: Double
-        let maxCyclingCadence: Double
-        let energyBurned: Double
+    struct Values {
+        // Heart Rate
         let avgHeartRate: Double
         let maxHeartRate: Double
+        
+        // Energy
+        let energyBurned: Double
+        
+        // Effort
         let trimp: Int
         let avgHeartRateReserve: Double
-        let elevationAscended: Double
-        let elevationDescended: Double
-        let source: String
-        let device: String?
         
-        var weekday: Int {
-            gregorianCalendar.component(.weekday, from: start)
-        }
-    }
-    
-    struct UpdateObject {
-        let coordinatesValue: String
+        // Location
+        let coordinates: [CLLocationCoordinate2D]
         let minElevation: Double
         let maxElevation: Double
+        
+        static func empty() -> Values {
+            Values(
+                avgHeartRate: 0,
+                maxHeartRate: 0,
+                energyBurned: 0,
+                trimp: 0,
+                avgHeartRateReserve: 0,
+                coordinates: [],
+                minElevation: 0,
+                maxElevation: 0
+            )
+        }
     }
 }
 
-final class WorkoutProcessor {
-    let workout: HKWorkout
-        
-    lazy var provider: HealthProvider = {
-        HealthProvider.shared
-    }()
+actor WorkoutProcessor {
+    private let workout: HKWorkout
+    private let provider = HealthProvider.shared
+    
+    var weekday: Int {
+        gregorianCalendar.component(.weekday, from: start)
+    }
+    
+    var values = Values.empty()
     
     init(workout: HKWorkout) {
         self.workout = workout
     }
     
-    static func insertObject(for workout: HKWorkout) async -> InsertObject {
-        let processor = WorkoutProcessor(workout: workout)
-        return await processor.insertObject()
-    }
+}
+
+extension WorkoutProcessor {
     
-    static func updateObject(for workout: HKWorkout) async -> UpdateObject {
-        let processor = WorkoutProcessor(workout: workout)
-        return await processor.updateObject()
+    func process() async {
+        await loadValues()
     }
     
 }
 
-// MARK: Private Methods
+// MARK: Values
 
 extension WorkoutProcessor {
     
-    func insertObject() async -> InsertObject {
-        let avgHeartRate: Double
-        let maxHeartRate: Double
-        let activeEnergy: Double
+    private func loadValues() async {
+        let (avgHeartRate, maxHeartRate) = await updateHeartRate()
+        async let energy = updateTotalEnergy()
+        async let (trimp, heartRateReserve) = updateTrainingLoad(avgHeartRate: avgHeartRate)
+        async let (coordinates, minElevation, maxElevation) = updateLocationData()
         
-        do {
-            (avgHeartRate, maxHeartRate) = try await provider.fetchHeartRateStats(for: workout)
-        } catch {
-            Log.debug("fetching heart rate stats failed for workout: \(workout.uuid) - \(error.localizedDescription)")
-            avgHeartRate = 0
-            maxHeartRate = 0
-            
+        values = await Values(
+            avgHeartRate: avgHeartRate,
+            maxHeartRate: maxHeartRate,
+            energyBurned: energy,
+            trimp: trimp,
+            avgHeartRateReserve: heartRateReserve,
+            coordinates: coordinates,
+            minElevation: minElevation,
+            maxElevation: maxElevation
+        )
+        
+        await generateImageData()
+    }
+    
+    // MARK: - Heart Rate and Energy
+    
+    typealias HeartRateReturn = (avg: Double, max: Double)
+    
+    private func updateHeartRate() async -> HeartRateReturn {
+        if workoutAvgHeartRate > 0, workoutMaxHeartRate > 0 {
+            Log.debug("UPDATE - ignore heart rate for \(identifier)")
+            return (workoutAvgHeartRate, workoutMaxHeartRate)
         }
         
+        let avg: Double
+        let max: Double
+        
         do {
-            activeEnergy = try await provider.fetchActiveEnergy(for: workout)
+            (avg, max) = try await provider.fetchHeartRateStats(for: workout)
         } catch {
-            Log.debug("fetching energy failed for workout: \(workout.uuid) - \(error.localizedDescription)")
-            activeEnergy = energyBurned()
+            Log.debug("failed to fetch heart rate samples for \(identifier): \(error.localizedDescription)")
+            avg = 0
+            max = 0
         }
         
-        let trimp: Int
-        let avgHeartRateReserve: Double
+        return (avg, max)
+    }
+
+    private func updateTotalEnergy() async -> Double {
+        if workoutTotalEnergyBurned > 0 {
+            Log.debug("UPDATE - ignore energy for \(identifier)")
+            return workoutTotalEnergyBurned
+        }
+        
+        let energy: Double
+        do {
+            energy = try await provider.fetchActiveEnergy(for: workout)
+        } catch {
+            Log.debug("UPDATE - failed energy for \(identifier)")
+            energy = 0
+        }
+        return energy
+    }
+    
+    // MARK: Training Load
+    
+    typealias TrainingLoadReturn = (trimp: Int, reserve: Double)
+    
+    private func updateTrainingLoad(avgHeartRate: Double) async -> TrainingLoadReturn {
         do {
             guard provider.isTrainingLoadSupported else {
                 throw WorkoutError("training load not supported")
             }
             
+            guard avgHeartRate > 0 else {
+                throw WorkoutError("missing avg heart rate")
+            }
+
             let paddedSamples = try await provider.fetchPaddedHeartRateSamples(for: workout)
             let gender = provider.userGender()
             let profileMaxHeartRate = await provider.profileMaxHeartRate()
             let profileRestingHeartRate = await provider.profileRestingHeartRate()
-            
+
             let loadProcessor = TrainingLoadProcessor(
                 gender: gender,
                 maxHeartRate: profileMaxHeartRate,
                 restingHeartRate: profileRestingHeartRate,
                 paddedHeartRateSamples: paddedSamples
             )
+
+            let trimp = loadProcessor.trimp()
+            let reserve = loadProcessor.percentHeartRateReserve(for: Int(avgHeartRate))
             
-            trimp = loadProcessor.trimp()
-            avgHeartRateReserve = loadProcessor.percentHeartRateReserve(for: Int(avgHeartRate))
+            return (trimp, reserve)
         } catch {
-            Log.debug("failed to setup training load: \(error.localizedDescription)")
-            
-            trimp = 0
-            avgHeartRateReserve = 0
+            return (0, 0)
         }
-        
-        let movingTime = workout.duration
-        let avgMovingSpeed: Double = totalDistance() / movingTime
-        let avgMovingPace: Double = calculateRunningWalkingPace(distanceInMeters: totalDistance(), duration: movingTime) ?? avgPace()
-        
-        Log.debug("trimp: \(trimp), avgHRR: \(avgHeartRateReserve)")
-        
-        // calculated values
-        // coordinatesValue, minElevation, maxElevation, avgHeartRate, maxHeartRage
-        
-        let object = InsertObject(
-            identifier: workout.uuid,
-            sport: workout.workoutActivityType.sport(),
-            indoor: workout.isIndoor,
-            start: workout.startDate,
-            end: workout.endDate,
-            duration: workout.totalElapsedTime,
-            distance: totalDistance(),
-            movingTime: movingTime,
-            avgMovingSpeed: avgMovingSpeed,
-            avgSpeed: avgSpeed(),
-            maxSpeed: maxSpeed(),
-            avgPace: avgPace(),
-            avgMovingPace: avgMovingPace,
-            avgCyclingCadence: avgCyclingCadence(),
-            maxCyclingCadence: maxCyclingCadence(),
-            energyBurned: activeEnergy,
-            avgHeartRate: avgHeartRate,
-            maxHeartRate: maxHeartRate,
-            trimp: trimp,
-            avgHeartRateReserve: avgHeartRateReserve,
-            elevationAscended: elevationAscended(),
-            elevationDescended: elevationDescended(),
-            source: workout.sourceRevision.source.name,
-            device: workout.device?.name
-        )
-        
-        return object
     }
     
-    func updateObject() async -> UpdateObject {
-        var locations: [CLLocation]
+    // MARK: Location
+    
+    typealias LocationReturn = (coordinates: [CLLocationCoordinate2D], min: Double, max: Double)
+    
+    private func updateLocationData() async -> LocationReturn {
+        guard hasLocationData else { return ([], 0, 0) }
         
+        let locations: [CLLocation]
         do {
             locations = try await provider.fetchLocations(for: workout)
         } catch {
             locations = []
         }
         
+        guard locations.isPresent else { return ([], 0, 0) }
+
         var coordinates = [CLLocationCoordinate2D]()
         var altitudes = [Double]()
         
-        for location in locations {
-            coordinates.append(location.coordinate)
-            altitudes.append(location.altitude)
+        if abs(workoutMinElevation) > 0 && abs(workoutMaxElevation) > 0 {
+            coordinates = locations.map { $0.coordinate }
+        } else {
+            for location in locations {
+                coordinates.append(location.coordinate)
+                altitudes.append(location.altitude)
+            }
         }
         
-        let coordinatesValue = Polyline(coordinates: coordinates).encodedPolyline
-        let minElevation = altitudes.min() ?? 0
-        let maxElevation = altitudes.max() ?? 0
+        let min = altitudes.min() ?? 0
+        let max = altitudes.max() ?? 0
         
-        let object = UpdateObject(
+        return (coordinates, min, max)
+    }
+    
+    private func generateImageData() async {
+        guard hasLocationData else { return }
+        
+        let coordinates = values.coordinates
+        do {
+            let darkData = try await MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .dark)
+            let lightData = try await MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .light)
+
+            try FileManager.writeWorkoutImageData(
+                dark: darkData,
+                light: lightData,
+                workout: identifier
+            )
+        } catch {
+            Log.debug("unable to generate images for \(identifier): \(error.localizedDescription)")
+        }
+    }
+    
+}
+
+// MARK: Helper Methods
+
+extension WorkoutProcessor {
+    
+    var identifier: UUID {
+        workout.uuid
+    }
+    
+    var sport: Sport {
+        workout.workoutActivityType.sport()
+    }
+    
+    var hasLocationData: Bool {
+        workout.isOutdoor && sport.hasDistanceSamples
+    }
+    
+    var indoor: Bool {
+        workout.isIndoor
+    }
+    
+    var start: Date {
+        workout.startDate
+    }
+    
+    var end: Date {
+        workout.endDate
+    }
+    
+    var duration: Double {
+        workout.totalElapsedTime
+    }
+    
+    var movingTime: Double {
+        workout.movingTime
+    }
+    
+    var distance: Double {
+        workout.totalDistanceValue
+    }
+    
+    var avgSpeed: Double {
+        workout.avgSpeedValue
+    }
+    
+    var avgMovingSpeed: Double {
+        workout.avgMovingSpeedValue
+    }
+    
+    var maxSpeed: Double {
+        workout.maxSpeedValue
+    }
+    
+    var avgPace: Double {
+        workout.avgPaceValue
+    }
+    
+    var avgMovingPace: Double {
+        workout.avgMovingPaceValue
+    }
+    
+    var avgCyclingCadence: Double {
+        workout.avgCyclingCadenceValue
+    }
+    
+    var maxCyclingCadence: Double {
+        workout.maxCyclingCadenceValue
+    }
+    
+    var elevationAscended: Double {
+        workout.elevationDescendedValue
+    }
+    
+    var elevationDescended: Double {
+        workout.elevationDescendedValue
+    }
+    
+    var source: String {
+        workout.sourceRevision.source.name
+    }
+    
+    var device: String? {
+        workout.device?.name
+    }
+    
+    // MARK: Data Values
+    
+    var avgHeartRate: Double {
+        values.avgHeartRate
+    }
+    
+    var maxHeartRate: Double {
+        values.maxHeartRate
+    }
+    
+    var energyBurned: Double {
+        values.energyBurned
+    }
+    
+    var trimp: Int {
+        values.trimp
+    }
+    
+    var avgHeartRateReserve: Double {
+        values.avgHeartRateReserve
+    }
+    
+    var coordinatesValue: String {
+        Polyline(coordinates: values.coordinates).encodedPolyline
+    }
+    
+    var minElevation: Double {
+        values.minElevation
+    }
+    
+    var maxElevation: Double {
+        values.maxElevation
+    }
+    
+    // MARK: Procesing Values
+    
+    var workoutAvgHeartRate: Double {
+        workout.avgHeartRateValue ?? 0
+    }
+    
+    var workoutMaxHeartRate: Double {
+        workout.maxHeartRateValue ?? 0
+    }
+    
+    var workoutTotalEnergyBurned: Double {
+        if workout.totalEnergyBurnedValue > 0 {
+            return workout.totalEnergyBurnedValue
+        } else {
+            return workout.totalCaloriesValue ?? 0
+        }
+    }
+    
+    var workoutMaxElevation: Double {
+        workout.maxAltitudeValue ?? 0
+    }
+    
+    var workoutMinElevation: Double {
+        workout.minAltitudeValue ?? 0
+    }
+    
+}
+
+extension WorkoutProcessor {
+    
+    struct Result {
+        let dayOfWeek: Int
+        let avgCyclingCadence: Double
+        let maxCyclingCadence: Double
+        let avgHeartRate: Double
+        let maxHeartRate: Double
+        let energyBurned: Double
+        let coordinatesValue: String
+        let minElevation: Double
+        let maxElevation: Double
+        let trimp: Int
+        let avgHeartRateReserve: Double
+        
+        static let empty: Result = {
+            Result(
+                dayOfWeek: 0,
+                avgCyclingCadence: 0,
+                maxCyclingCadence: 0,
+                avgHeartRate: 0,
+                maxHeartRate: 0,
+                energyBurned: 0,
+                coordinatesValue: "",
+                minElevation: 0,
+                maxElevation: 0,
+                trimp: 0,
+                avgHeartRateReserve: 0
+            )
+        }()
+    }
+    
+    var result: Result {
+        Result(
+            dayOfWeek: weekday,
+            avgCyclingCadence: avgCyclingCadence,
+            maxCyclingCadence: maxCyclingCadence,
+            avgHeartRate: avgHeartRate,
+            maxHeartRate: maxHeartRate,
+            energyBurned: energyBurned,
             coordinatesValue: coordinatesValue,
             minElevation: minElevation,
-            maxElevation: maxElevation
+            maxElevation: maxElevation,
+            trimp: trimp,
+            avgHeartRateReserve: avgHeartRateReserve
         )
-        return object
     }
     
-    private func totalDistance() -> Double {
-        workout.totalDistance?.doubleValue(for: .meter()) ?? 0
-    }
-    
-    private func avgSpeed() -> Double {        
-        guard workout.totalElapsedTime > 0 else { return 0 }
-        let distance = totalDistance()
-        return distance / workout.totalElapsedTime
-    }
-    
-    private func maxSpeed() -> Double {
-        workout.maxSpeed?.doubleValue(for: .metersPerSecond()) ?? 0
-    }
-    
-    func avgPace() -> Double {
-        let sport = workout.workoutActivityType.sport()
-        guard sport.isWalkingOrRunning else { return 0 }
+    var dictionary: [String: Any] {
+        let zoneHeartRate = AppSettings.maxHeartRate
+        let zoneValues = AppSettings.heartRateZones
         
-        let duration = workout.totalElapsedTime
-        let distance = totalDistance()
-        return calculateRunningWalkingPace(distanceInMeters: distance, duration: duration) ?? 0
-    }
-    
-    func avgCyclingCadence() -> Double {
-        workout.avgCyclingCadence ?? 0
-    }
-    
-    func maxCyclingCadence() -> Double {
-        workout.maxCyclingCadence ?? 0
-    }
-    
-    private func energyBurned() -> Double {
-        workout.totalEnergyBurned?.doubleValue(for: .largeCalorie()) ?? 0
-    }
-    
-    private func elevationAscended() -> Double {
-        workout.elevationAscended?.doubleValue(for: .meter()) ?? 0
-    }
-    
-    private func elevationDescended() -> Double {
-        workout.elevationDescended?.doubleValue(for: .meter()) ?? 0
+        var value1: Int = 0
+        var value2: Int = 0
+        var value3: Int = 0
+        var value4: Int = 0
+        var value5: Int = 0
+        if zoneValues.count == 5 {
+            value1 = zoneValues[0]
+            value2 = zoneValues[1]
+            value3 = zoneValues[2]
+            value4 = zoneValues[3]
+            value5 = zoneValues[4]
+        }
+        
+        let now = Date()
+        
+        let dict: [WorkoutSchema: Any] = [
+            .dayOfWeek: weekday,
+            .avgCyclingCadence: avgCyclingCadence,
+            .maxCyclingCadence: maxCyclingCadence,
+            .zoneMaxHeartRate: zoneHeartRate,
+            .zoneValue1: value1,
+            .zoneValue2: value2,
+            .zoneValue3: value3,
+            .zoneValue4: value4,
+            .zoneValue5: value5,
+            .avgHeartRate: avgHeartRate,
+            .maxHeartRate: maxHeartRate,
+            .energyBurned: energyBurned,
+            .coordinatesValue: coordinatesValue,
+            .minElevation: minElevation,
+            .maxElevation: maxElevation,
+            .trimp: trimp,
+            .avgHeartRateReserve: avgHeartRateReserve,
+            .locationUpdated: now,
+            .valuesUpdated: now,
+            .markedForDeletionDate: NSNull()
+        ]
+        
+        return dict.rawValuesDictionary
     }
     
 }

@@ -23,7 +23,7 @@ class ImportManager: ObservableObject {
     @Published var workouts = [WorkoutImport]()
     @Published var isProcessingImports = false
     @Published var state = State.empty
-    
+        
     private var documents = [FitDocument]()
     
     private lazy var importQueue: OperationQueue = {
@@ -107,6 +107,10 @@ extension ImportManager {
         return isProcessingImports || !state.isWhitelisted
     }
     
+    var processingWorkouts: [WorkoutImport] {
+        workoutsForStatus(.processing)
+    }
+    
     var newWorkouts: [WorkoutImport] {
         workoutsForStatus(.new)
     }
@@ -164,20 +168,35 @@ extension ImportManager {
     
     func processWorkout(_ workout: WorkoutImport) {
         guard workout.status == .new else { return }
-        
         isProcessingImports = true
-        
         workout.status = .processing
-        let operation = ImportOperation(workout: workout)
-        let start = Date()
-        operation.completionBlock = {
-            DispatchQueue.main.async {
-                let end = Date()
-                Log.debug("finished importing: \(end.timeIntervalSince(start)) sec")
-                self.isProcessingImports = !self.importQueue.operations.isEmpty
-            }
+        
+        importQueue.addOperation { [unowned self] in
+            self.processWorkoutInBackground(workout)
         }
-        importQueue.addOperation(operation)
+    }
+    
+    private func processWorkoutInBackground(_ workout: WorkoutImport) {
+        Task(priority: .userInitiated) {
+            do {
+                try await WorkoutDataStore.shared.saveWorkoutImport(workout)
+                DispatchQueue.main.async {
+                    workout.status = .processed
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    workout.status = .failed
+                }
+            }
+            
+            await updateProcessingWorkoutsFlag()
+        }
+    }
+    
+    @MainActor
+    func updateProcessingWorkoutsFlag() {
+        let processing = self.processingWorkouts
+        self.isProcessingImports = processing.isPresent
     }
     
     func loadSampleWorkouts() {

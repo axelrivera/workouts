@@ -43,6 +43,7 @@
         <attribute name="isLocationPending" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="locationCity" optional="YES" attributeType="String"/>
         <attribute name="locationState" optional="YES" attributeType="String"/>
+        <attribute name="locationUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="markedForDeletionDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="maxCyclingCadence" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="maxElevation" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -58,6 +59,7 @@
         <attribute name="totalRetries" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="trimp" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="valuesUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="zoneMaxHeartRate" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zoneValue1" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zoneValue2" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
@@ -107,7 +109,7 @@
     </configuration>
     <elements>
         <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
-        <element name="Workout" positionX="-63" positionY="-18" width="128" height="710"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="740"/>
         <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
         <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
     </elements>

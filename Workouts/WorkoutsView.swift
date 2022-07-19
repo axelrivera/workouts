@@ -73,18 +73,17 @@ struct WorkoutsContentView: View {
                                 destination: { DetailView(viewModel: workout.detailViewModel) }) {
                                     WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
                             }
-                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
-                                    workoutManager.storage.refreshAllWorkouts()
+                            .onReceive(relevantTransactionsPublisher) { notification in
+                                workoutManager.storage.refreshAllWorkouts()
+                            }
+                            .onReceive(duplicatesPublisher) { notification in
+                                workoutManager.storage.refreshAllWorkouts()
+                            }
+                            .onReceive(viewModelPublisher) { notification in
+                                if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
+                                    viewModel.id == workout.workoutIdentifier {
+                                    viewContext.refresh(workout, mergeChanges: true)
                                 }
-                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)) { notification in
-                                    workoutManager.storage.refreshAllWorkouts()
-                                }
-                                .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
-                                    if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
-                                       viewModel.id == workout.workoutIdentifier {
-                                        viewContext.refresh(workout, mergeChanges: true)
-                                    }
-                                    
                             }
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {
@@ -112,7 +111,7 @@ struct WorkoutsContentView: View {
             }
             .overlay(emptyOverlay())
             .overlay(processOverlay())
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)) { _ in
+            .onReceive(filterPublisher) { _ in
                 refreshFilter()
             }
             .navigationTitle("Workouts")
@@ -178,12 +177,8 @@ struct WorkoutsContentView: View {
     
     @ViewBuilder
     func sectionHeader() -> some View {
-        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading || workoutManager.showNoWorkoutsAlert {
+        if filterManager.isFilterActive || workoutManager.showNoWorkoutsAlert {
             VStack(spacing: 0) {
-                if workoutManager.showUpdatingRemoteLocationDataLoading {
-                    ProcessingLocationView()
-                }
-                
                 if workoutManager.showNoWorkoutsAlert {
                     NoWorkoutsView()
                 }
@@ -296,6 +291,34 @@ extension WorkoutsContentView {
     }
     
 }
+
+// MARK: Publishers
+
+extension WorkoutsContentView {
+    
+    var reloadPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingRemoteData)
+    }
+    
+    var relevantTransactionsPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)
+    }
+    
+    var duplicatesPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)
+    }
+    
+    var viewModelPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)
+    }
+    
+    var filterPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)
+    }
+    
+}
+
+// MARK: - Previews
 
 struct WorkoutsView_Previews: PreviewProvider {
     static var viewContext = StorageProvider.preview.persistentContainer.viewContext

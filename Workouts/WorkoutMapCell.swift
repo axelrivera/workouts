@@ -9,22 +9,17 @@ import SwiftUI
 import MapKit
 import Combine
 
-
 final class WorkoutMapCellManager: ObservableObject {
-    private(set) var viewModel: WorkoutViewModel
+    @Published var viewModel: WorkoutViewModel
+    @Published var isFavorite = false
+    @Published var tags = [TagLabelViewModel]()
+    @Published var image: UIImage?
     
-    init(viewModel: WorkoutViewModel) {
+    init(viewModel: WorkoutViewModel) { 
         self.viewModel = viewModel
         isFavorite = viewModel.isFavorite
         tags = viewModel.tags
-        isPendingLocation = viewModel.isPendingLocation
-        coordinates = viewModel.coordinates
     }
-    
-    @Published var isFavorite = false
-    @Published var tags = [TagLabelViewModel]()
-    @Published var coordinates = [CLLocationCoordinate2D]()
-    @Published var isPendingLocation = false
     
     func updateViewModel(_ viewModel: WorkoutViewModel) {
         DispatchQueue.main.async { [weak self] in
@@ -35,10 +30,22 @@ final class WorkoutMapCellManager: ObservableObject {
             withAnimation {
                 self.isFavorite = viewModel.isFavorite
                 self.tags = viewModel.tags
-                self.isPendingLocation = viewModel.isPendingLocation
-                self.coordinates = viewModel.coordinates
             }
         }
+    }
+    
+    func loadImage(forScheme scheme: ColorScheme) {
+        let image = WorkoutStorage.getDiskImage(forID: viewModel.id, scheme: scheme)
+        
+        DispatchQueue.main.async {
+            self.image = image
+        }
+    }
+    
+    private func reloadViewModel(_ viewModel: WorkoutViewModel) {
+        guard viewModel.id == self.viewModel.id else { return }
+        Log.debug("update view model: \(viewModel.id)")
+        updateViewModel(viewModel)
     }
     
 }
@@ -48,8 +55,14 @@ struct WorkoutMapCell: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @StateObject var manager: WorkoutMapCellManager
     
+    let mapHeight = Constants.cachedWorkoutImageHeight
+    
     var id: UUID {
         manager.viewModel.id
+    }
+    
+    var publisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)
     }
         
     init(viewModel: WorkoutViewModel, isPreview: Bool = false) {
@@ -83,20 +96,25 @@ struct WorkoutMapCell: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            if manager.isPendingLocation || manager.coordinates.isPresent {
-                MapContainer(
-                    id: manager.viewModel.id,
-                    scheme: colorScheme,
-                    coordinates: $manager.coordinates
-                )
-                    .cornerRadius(12.0)
+            if manager.viewModel.hasLocationData {
+                if let image = manager.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .cornerRadius(CGFloat(12))
+                        .frame(height: mapHeight)
+                } else {
+                    Rectangle()
+                        .background(.regularMaterial)
+                        .cornerRadius(CGFloat(12))
+                        .frame(height: mapHeight)
+                }
             }
         }
         .padding([.leading, .trailing])
         .padding([.top, .bottom], CGFloat(10.0))
-        .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification, object: nil)) { notification in
-            processNotification(notification)
-        }
+        .onAppear { manager.loadImage(forScheme: colorScheme )}
+        .onReceive(publisher, perform: processNotification)
     }
     
     @ViewBuilder
@@ -189,12 +207,18 @@ struct WorkoutMapCell: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
     
+}
+
+extension WorkoutMapCell {
+    
     func processNotification(_ notification: Notification) {
         guard let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel else { return }
         guard viewModel.id == manager.viewModel.id else { return }
-        Log.debug("update view model: \(viewModel.id), date: \(viewModel.dateString()), coordinates: \(viewModel.coordinates.isPresent), pending location: \(viewModel.isPendingLocation)")
+        Log.debug("update view model: \(viewModel.id), date: \(viewModel.dateString())")
         manager.updateViewModel(viewModel)
+        manager.loadImage(forScheme: colorScheme)
     }
+    
 }
 
 struct WorkoutMapCell_Previews: PreviewProvider {
@@ -217,76 +241,4 @@ struct WorkoutMapCell_Previews: PreviewProvider {
             .navigationBarTitleDisplayMode(.inline)
         }
     }
-}
-
-private struct MapContainer: View {
-    @EnvironmentObject var manager: WorkoutManager
-    var id: UUID
-    let scheme: ColorScheme
-    @Binding var coordinates: [CLLocationCoordinate2D]
-    @State private var cachedImage: UIImage?
-    
-    @State var isFetchingImage = false
-    @State var height = CGFloat(200)
-    
-    var body: some View {
-        Group {
-            GeometryReader { proxy in
-                VStack {
-                    if let image = cachedImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } else {
-                        Color.systemFill
-                            .overlay(
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
-                            )
-                            .onAppear { fetchCachedImage() }
-                            .onChange(of: coordinates) { newCoordinates in
-                                if newCoordinates.isPresent {
-                                    Log.debug("coordinates changed - fetching cached image")
-                                    cachedImage = nil
-                                    fetchCachedImage()
-                                }
-                            }
-                    }
-                }
-                .onAppear { updateHeight(for: proxy) }
-            }
-        }
-        .frame(height: height)
-    }
-    
-    func updateHeight(for proxy: GeometryProxy) {
-        DispatchQueue.main.async {
-            height = (proxy.size.width * Constants.cachedWorkoutImageScaleFactor).rounded()
-        }
-    }
-        
-    private func fetchCachedImage() {
-        if isFetchingImage { return }
-        
-        if let image = manager.storage.getCachedImage(forID: id, scheme: scheme) {
-            cachedImage = image
-            isFetchingImage = false
-        } else if let image = manager.storage.getDiskImage(forID: id, scheme: scheme) {
-            manager.storage.set(image: image, forID: id, scheme: scheme, memoryOnly: true)
-            cachedImage = image
-            isFetchingImage = false
-        } else {
-            MKMapView.mapImage(coordinates: coordinates, size: Constants.cachedWorkoutImageSize) { image in
-                if let newImage = image {
-                    manager.storage.set(image: newImage, forID: id, scheme: scheme)
-                    isFetchingImage = false
-                    withAnimation {
-                        self.cachedImage = newImage
-                    }
-                }
-            }
-        }
-    }
-    
-    
 }

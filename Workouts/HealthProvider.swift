@@ -108,6 +108,19 @@ extension HealthProvider {
         }
     }
     
+    func fetchWorkouts(for identifiers: [UUID]) async throws -> [HKWorkout] {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchWorkouts(for: identifiers) { result in
+                switch result {
+                case .success(let workouts):
+                    continuation.resume(returning: workouts)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
     func fetchHeartRateSamples(interval: DateInterval, source: HKSource? = nil, stoppedIntervals: [DateInterval] = [DateInterval]()) async throws -> [Quantity] {
         return try await withCheckedThrowingContinuation { continuation in
             fetchHeartRateSamples(interval: interval, source: source, stoppedIntervals: stoppedIntervals) { result in
@@ -215,6 +228,19 @@ extension HealthProvider {
         }
     }
     
+    func fetchAvgHeartRate(for workout: HKWorkout) async throws -> Double {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchAvgHeartRate(workout: workout) { result in
+                switch result {
+                case .success(let avg):
+                    continuation.resume(returning: avg)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
     func fetchActiveEnergy(for workout: HKWorkout) async throws -> Double {
         return try await withCheckedThrowingContinuation { continuation in
             fetchActiveEnergy(workout: workout) { result in
@@ -299,6 +325,18 @@ extension HealthProvider {
         let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: 1, sortDescriptors: nil) { (query, samples, error) in
             if let workout = samples?.first as? HKWorkout {
                 completionHandler(.success(workout))
+            } else {
+                completionHandler(.failure(error ?? HealthError.missingData))
+            }
+        }
+        healthStore.execute(query)
+    }
+    
+    private func fetchWorkouts(for identifiers: [UUID], completionHandler: @escaping (Result<[HKWorkout], Error>) -> Void) {
+        let predicate = HKQuery.predicateForObjects(with: Set(identifiers))
+        let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, samples, error) in
+            if let workouts = samples as? [HKWorkout] {
+                completionHandler(.success(workouts))
             } else {
                 completionHandler(.failure(error ?? HealthError.missingData))
             }
@@ -516,10 +554,31 @@ extension HealthProvider {
     
     typealias HeartRateStatsValue = (avg: Double, max: Double)
     
+    private func fetchAvgHeartRate(workout: HKWorkout, completionHandler: @escaping (Result<Double, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
+        let source = workout.sourceRevision.source
+                
+        let query = HKStatisticsQuery(
+            quantityType: .heartRate(),
+            quantitySamplePredicate: predicate,
+            options: [.discreteAverage, .separateBySource]) { (query, statistics, error) in
+                self.healthStore.stop(query)
+                
+                guard let statistics = statistics else {
+                    completionHandler(.failure(error ?? HealthError.failure))
+                    return
+                }
+                
+                let avg = statistics.averageQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
+                completionHandler(.success(avg))
+        }
+        healthStore.execute(query)
+    }
+    
     private func fetchHeartRateStatsValue(workout: HKWorkout, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
-        
+                
         let query = HKStatisticsQuery(
             quantityType: .heartRate(),
             quantitySamplePredicate: predicate,

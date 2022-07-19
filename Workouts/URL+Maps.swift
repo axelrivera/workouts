@@ -13,7 +13,7 @@ enum MapImageError: Error {
 }
 
 fileprivate let MapImageCacheDirectoryName = "BWMapImages"
-fileprivate let MapImageExtension = "feed"
+fileprivate let MapImageExtension = "data"
 
 fileprivate func stringForColorScheme(_ scheme: ColorScheme) -> String {
     switch scheme {
@@ -33,8 +33,12 @@ extension URL {
     }
     
     static func mapImagesCacheDirectory() -> URL {
-        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let cacheDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
+    }
+    
+    static func createImagesCacheDirectoryIfNeeded() throws {
+        try FileManager.createImagesCacheDirectoryIfNeeded()
     }
     
     static func cachedMapImageURL(id: UUID, scheme: ColorScheme) -> URL {
@@ -62,6 +66,15 @@ extension FileManager {
         } catch {
             Log.debug("failed to delete image cache directory: \(error.localizedDescription)")
         }
+    }
+    
+    static func writeWorkoutImageData(dark: Data, light: Data, workout: UUID) throws {
+        let darkURL = URL.cachedMapImageURL(id: workout, scheme: .dark)
+        let lightURL = URL.cachedMapImageURL(id: workout, scheme: .light)
+        
+        try FileManager.createImagesCacheDirectoryIfNeeded()
+        try dark.write(to: darkURL, options: .atomic)
+        try light.write(to: lightURL, options: .atomic)
     }
     
     static func writeLocalImage(_ image: UIImage, at url: URL) throws {

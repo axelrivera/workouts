@@ -19,6 +19,7 @@ extension WorkoutImport {
         let distance: Value
         let speed: Value
         let heartRate: Value
+        let calories: Value
         let cadence: Value
         let fractionalCadence: Value
         let temperature: Value
@@ -33,6 +34,7 @@ extension WorkoutImport {
             distance = Value(valueType: .distance, field: message.interpretedField(key: "distance"))
             speed = Value(valueType: .speed, field: message.interpretedField(key: "speed"))
             heartRate = Value(valueType: .heartRate, field: message.interpretedField(key: "heart_rate"))
+            calories = Value(valueType: .calories, field: message.interpretedField(key: "calories"))
             cadence = Value(valueType: .cadence, field: message.interpretedField(key: "cadence"))
             fractionalCadence = Value(valueType: .cadence, field: message.interpretedField(key: "fractional_cadence"))
             temperature = Value(valueType: .temperature, field: message.interpretedField(key: "temperature"))

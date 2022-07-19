@@ -197,14 +197,14 @@ extension DashboardViewManager {
     }
     
     func refreshTimer(_ output: Timer.TimerPublisher.Output) {
-        Log.debug("reloading timer")
+//        Log.debug("reloading timer")
         reload(showLoading: false)
     }
     
     func load(showLoading: Bool = true) async throws {
         if showLoading {
             if lastInterval == nil || currentInterval == .range || lastInterval != currentInterval {
-                Log.debug("previous: \(String(describing: lastInterval)), current: \(currentInterval)")
+//                Log.debug("previous: \(String(describing: lastInterval)), current: \(currentInterval)")
                 
                 DispatchQueue.main.async {
                     withAnimation {
@@ -229,7 +229,7 @@ extension DashboardViewManager {
                 guard let (quantityType, unit) = metric.quantityAndUnit() else { continue }
                 
                 group.addTask(priority: .userInitiated) {
-                    Log.debug("fetch metric for \(metric.title)")
+//                    Log.debug("fetch metric for \(metric.title)")
                     
                     if let value = try? await self.provider.fetchSum(for: quantityType, unit: unit, interval: interval) {
                         return DashboardMetricViewModel(metric: metric, value: value)
@@ -268,7 +268,7 @@ extension DashboardViewManager {
             for type in activityTypes {
                 group.addTask(priority: .userInitiated) {
                     do {
-                        Log.debug("fetching activity for \(type.name)")
+//                        Log.debug("fetching activity for \(type.name)")
                         
                         let activity = try await self.provider.fetchActivityType(for: type, interval: interval)
                         return DashboardActivityViewModel(

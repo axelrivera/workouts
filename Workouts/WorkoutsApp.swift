@@ -14,8 +14,6 @@ import SwiftUI
 #error("preventing debug version from overriding production release")
 #endif
 
-let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
-
 @main
 struct WorkoutsApp: App {
     let purchaseManager = IAPManager()

@@ -44,16 +44,8 @@ final class WorkoutViewModel: Hashable, Identifiable {
     let calories: Double
     let avgHeartRate: Double
     let elevation: Double
-    
-    // mutable properties
-    var coordinates = [CLLocationCoordinate2D]() {
-        didSet {
-            isPendingLocation = false
-        }
-    }
-    
-    private(set) var isPendingLocation = true
-    
+    let hasLocationData: Bool
+        
     // metadata
     var isFavorite = false
     var tags = [TagLabelViewModel]()
@@ -71,8 +63,7 @@ final class WorkoutViewModel: Hashable, Identifiable {
         calories = workout.energyBurned
         avgHeartRate = workout.avgHeartRate
         elevation = workout.elevationAscended
-        coordinates = workout.coordinates
-        isPendingLocation = workout.isLocationPending
+        hasLocationData = workout.hasLocationData
     }
 }
 

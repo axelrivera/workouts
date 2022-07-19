@@ -9,10 +9,6 @@ import Foundation
 import SwiftUI
 
 final class MapImageCache {
-    enum Prefix: String {
-        case home, feed
-    }
-    
     private let cache = NSCache<NSString, UIImage>()
     private let lock = NSLock()
     

@@ -10,26 +10,6 @@ import HealthKit
 import Polyline
 import CoreLocation
 
-private let MarkedForDeletionDateKey = "markedForDeletionDate"
-private let IsLocationPendingKey = "isLocationPending"
-private let SportKey = "sportValue"
-private let RemoteIdentifierKey = "remoteIdentifier"
-private let DistanceKey = "distance"
-private let CreatedAtKey = "createdAt"
-private let UpdatedAtKey = "updatedAt"
-private let StartDateKey = "start"
-private let EndDateKey = "end"
-private let IndoorKey = "indoor"
-private let DayOfWeekKey = "dayOfWeek"
-private let DurationKey = "duration"
-
-private let ZoneMaxHeartRateKey = "zoneMaxHeartRate"
-private let ZoneValue1Key = "zoneValue1"
-private let ZoneValue2Key = "zoneValue2"
-private let ZoneValue3Key = "zoneValue3"
-private let ZoneValue4Key = "zoneValue4"
-private let ZoneValue5Key = "zoneValue5"
-
 extension Workout: Identifiable {}
 
 @objc(Workout)
@@ -83,6 +63,8 @@ class Workout: NSManagedObject {
     // V5 Additions
     @NSManaged var trimp: Int
     @NSManaged var avgHeartRateReserve: Double
+    @NSManaged var valuesUpdated: Date?
+    @NSManaged var locationUpdated: Date?
             
     // MARK: Enums
     @nonobjc
@@ -93,13 +75,13 @@ class Workout: NSManagedObject {
     
     override func awakeFromInsert() {
         super.awakeFromInsert()
-        setPrimitiveValue(Date(), forKey: CreatedAtKey)
-        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
+        setPrimitiveValue(Date(), forKey: WorkoutSchema.createdAt.key)
+        setPrimitiveValue(Date(), forKey: WorkoutSchema.updatedAt.key)
     }
     
     override func willSave() {
         super.willSave()
-        setPrimitiveValue(Date(), forKey: UpdatedAtKey)
+        setPrimitiveValue(Date(), forKey: WorkoutSchema.updatedAt.key)
     }
         
 }
@@ -114,6 +96,10 @@ extension Workout {
     var coordinates: [CLLocationCoordinate2D] {
         let polyline = Polyline(encodedPolyline: coordinatesValue)
         return polyline.coordinates ?? []
+    }
+    
+    var hasLocationData: Bool {
+        outdoor && sport.hasDistanceSamples
     }
     
     var shouldUseMovingTime: Bool {
@@ -233,13 +219,13 @@ extension Workout {
     static func datePredicateFor(start: Date, end: Date) -> NSPredicate {
         NSPredicate(
             format: "%K >= %@ AND %K <= %@",
-            EndDateKey, start as NSDate,
-            StartDateKey, end as NSDate
+            WorkoutSchema.end.key, start as NSDate,
+            WorkoutSchema.start.key, end as NSDate
         )
     }
     
     static func predicateForRemoteIdentifier(_ identifier: UUID) -> NSPredicate {
-        NSPredicate(format: "%K == %@", RemoteIdentifierKey, identifier as NSUUID)
+        NSPredicate(format: "%K == %@", WorkoutSchema.remoteIdentifier.key, identifier as NSUUID)
     }
     
     static func predicateForInterval(_ interval: DateInterval) -> NSPredicate {
@@ -247,47 +233,55 @@ extension Workout {
     }
     
     static func predicateForSport(_ sport: Sport) -> NSPredicate {
-        NSPredicate(format: "%K == %@", SportKey, sport.rawValue)
+        NSPredicate(format: "%K == %@", WorkoutSchema.sport.key, sport.rawValue)
     }
     
     static func predicateForSports(_ sports: [Sport]) -> NSPredicate {
-        NSPredicate(format: "%K IN %@", SportKey, sports.map({ $0.rawValue }))
+        NSPredicate(format: "%K IN %@", WorkoutSchema.sport.key, sports.map({ $0.rawValue }))
     }
     
     static func predicateForIndoor(_ indoor: Bool) -> NSPredicate {
-        NSPredicate(format: "%K == %@", IndoorKey, NSNumber(booleanLiteral: indoor))
+        NSPredicate(format: "%K == %@", WorkoutSchema.indoor.key, NSNumber(booleanLiteral: indoor))
     }
     
     static var notMarkedForLocalDeletionPredicate: NSPredicate {
-        NSPredicate(format: "%K == NULL", MarkedForDeletionDateKey)
+        NSPredicate(format: "%K == NULL", WorkoutSchema.markedForDeletionDate.key)
     }
     
     static var activeDurationPredicate: NSPredicate {
-        NSPredicate(format: "%K > %@", DurationKey, NSNumber(value: 0))
+        NSPredicate(format: "%K > %@", WorkoutSchema.duration.key, NSNumber(value: 0))
+    }
+    
+//    static var locationPendingPredicate: NSPredicate {
+//        NSPredicate(format: "%K == %@", IsLocationPendingKey, NSNumber(booleanLiteral: true))
+//    }
+    
+    static var valuesPendingPredicate: NSPredicate {
+        NSPredicate(format: "%K == NULL", WorkoutSchema.valuesUpdated.key)
     }
     
     static var locationPendingPredicate: NSPredicate {
-        NSPredicate(format: "%K == %@", IsLocationPendingKey, NSNumber(booleanLiteral: true))
+        NSPredicate(format: "%K == NULL", WorkoutSchema.locationUpdated.key)
     }
     
     static func predicateForIdentifiers(_ identifiers: [UUID]) -> NSPredicate {
-        NSPredicate(format: "%K IN %@", RemoteIdentifierKey, identifiers)
+        NSPredicate(format: "%K IN %@", WorkoutSchema.remoteIdentifier.key, identifiers)
     }
     
     static func predicateForMinDistance(_ distance: Double) -> NSPredicate {
-        NSPredicate(format: "%K >= %@", DistanceKey, distance as NSNumber)
+        NSPredicate(format: "%K >= %@", WorkoutSchema.distance.key, distance as NSNumber)
     }
     
     static func predicateForMaxDistance(_ distance: Double) -> NSPredicate {
-        NSPredicate(format: "%K <= %@", DistanceKey, distance as NSNumber)
+        NSPredicate(format: "%K <= %@", WorkoutSchema.distance.key, distance as NSNumber)
     }
     
     static func predicateForWeekday() -> NSPredicate {
-        NSPredicate(format: "%K IN %@", DayOfWeekKey, [2,3,4,5,6] as [NSNumber])
+        NSPredicate(format: "%K IN %@", WorkoutSchema.dayOfWeek.key, [2,3,4,5,6] as [NSNumber])
     }
     
     static func predicateForWeekend() -> NSPredicate {
-        NSPredicate(format: "%K IN %@", DayOfWeekKey, [7,1] as [NSNumber])
+        NSPredicate(format: "%K IN %@", WorkoutSchema.dayOfWeek.key, [7,1] as [NSNumber])
     }
     
     static func distantFuturePredicate() -> NSPredicate {
@@ -356,12 +350,27 @@ extension Workout {
         }
     }
     
-    static func pendingWorkouts(in context: NSManagedObjectContext) -> [UUID] {
+    static func isPresent(identifier: UUID, in context: NSManagedObjectContext) -> Bool {
+        context.performAndWait {
+            let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                    notMarkedForLocalDeletionPredicate,
+                    predicateForRemoteIdentifier(identifier)
+            ])
+            let request = defaultFetchRequest()
+            request.predicate = predicate
+            
+            do {
+                return try context.count(for: request) > 0
+            } catch {
+                return false
+            }
+        }
+    }
+    
+    static func workoutIds(forPredicate predicate: NSPredicate, context: NSManagedObjectContext) -> [UUID] {
         context.performAndWait {
             let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
-            request.predicate = NSCompoundPredicate(
-                andPredicateWithSubpredicates: [notMarkedForLocalDeletionPredicate, locationPendingPredicate]
-            )
+            request.predicate = predicate
             request.resultType = .dictionaryResultType
             request.returnsObjectsAsFaults = false
             request.sortDescriptors = [sortedByDateDescriptor()]
@@ -378,6 +387,18 @@ extension Workout {
         }
     }
     
+    static func pendingValues(in context: NSManagedObjectContext) -> [UUID] {
+        let predicates = [notMarkedForLocalDeletionPredicate, valuesPendingPredicate]
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        return workoutIds(forPredicate: predicate, context: context)
+    }
+    
+    static func pendingLocation(in context: NSManagedObjectContext) -> [UUID] {
+        let predicates = [notMarkedForLocalDeletionPredicate, locationPendingPredicate]
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        return workoutIds(forPredicate: predicate, context: context)
+    }
+    
     static func availableSports(in context: NSManagedObjectContext) -> [Sport] {
         context.performAndWait {
             let predicate = NSCompoundPredicate(
@@ -389,12 +410,12 @@ extension Workout {
             request.resultType = .dictionaryResultType
             request.returnsObjectsAsFaults = false
             request.returnsDistinctResults = true
-            request.propertiesToFetch = [SportKey]
+            request.propertiesToFetch = [WorkoutSchema.sport.rawValue]
             
             do {
                 let dictionaries = try context.fetch(request)
                 return dictionaries.compactMap { (dictionary) -> Sport? in
-                    let string = dictionary[SportKey] as? String
+                    let string = dictionary[WorkoutSchema.sport.rawValue] as? String
                     return Sport(string: string ?? "")
                 }.sorted(by: { $0.activityName < $1.activityName })
             } catch {
@@ -406,53 +427,6 @@ extension Workout {
 }
 
 extension Workout {
-    typealias WorkoutObject = WorkoutProcessor.InsertObject
-    
-    @discardableResult
-    static func insert(into context: NSManagedObjectContext, object: WorkoutObject) -> Workout {
-        context.performAndWait {
-            let workout = Workout(context: context)
-            updateValues(for: workout, object: object, isLocationPending: true, in: context)
-            return workout
-        }
-    }
-    
-    static func updateValues(for workout: Workout, object: WorkoutObject, isLocationPending: Bool, in context: NSManagedObjectContext) {
-        context.performAndWait {
-            workout.isLocationPending = isLocationPending
-            workout.remoteIdentifier = object.identifier
-            workout.sport = object.sport
-            workout.indoor = object.indoor
-            workout.start = object.start
-            workout.end = object.end
-            workout.duration = object.duration
-            workout.movingTime = object.movingTime
-            workout.avgMovingSpeed = object.avgMovingSpeed
-            workout.distance = object.distance
-            workout.avgPace = object.avgPace
-            workout.avgMovingPace = object.avgMovingPace
-            workout.avgHeartRate = object.avgHeartRate
-            workout.maxHeartRate = object.maxHeartRate
-            workout.trimp = object.trimp
-            workout.avgHeartRateReserve = object.avgHeartRateReserve
-            workout.energyBurned = object.energyBurned
-            workout.avgSpeed = object.avgSpeed
-            workout.maxSpeed = object.maxSpeed
-            workout.avgCyclingCadence = object.avgCyclingCadence
-            workout.maxCyclingCadence = object.maxCyclingCadence
-            workout.elevationAscended = object.elevationAscended
-            workout.elevationDescended = object.elevationDescended
-            workout.source = object.source
-            workout.device = object.device
-            workout.dayOfWeek = object.weekday
-            workout.markedForDeletionDate = nil
-            
-            // Heart Rate Zones
-            let zoneHeartRate = AppSettings.maxHeartRate
-            let zoneValues = AppSettings.heartRateZones
-            workout.updateHeartRateZones(with: zoneHeartRate, values: zoneValues)
-        }
-    }
     
     func updateHeartRateZones(with maxHeartRate: Int, values: [Int]) {
         guard let (value1, value2, value3, value4, value5) = values.tuple as? HRZoneTuple else {
@@ -483,12 +457,12 @@ extension Workout {
         let update = NSBatchUpdateRequest(entityName: entityName)
         update.predicate = activePredicate(sport: nil, interval: nil)
         update.propertiesToUpdate = [
-            ZoneMaxHeartRateKey: maxHeartRate,
-            ZoneValue1Key: value1,
-            ZoneValue2Key: value2,
-            ZoneValue3Key: value3,
-            ZoneValue4Key: value4,
-            ZoneValue5Key: value5
+            WorkoutSchema.zoneMaxHeartRate.key: maxHeartRate,
+            WorkoutSchema.zoneValue1.key: value1,
+            WorkoutSchema.zoneValue2.key: value2,
+            WorkoutSchema.zoneValue3.key: value3,
+            WorkoutSchema.zoneValue4.key: value4,
+            WorkoutSchema.zoneValue5.key: value5
         ]
         update.resultType = .updatedObjectIDsResultType
                 
@@ -509,7 +483,7 @@ extension Workout {
         let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.predicate = NSPredicate(format: "%K < %@", MarkedForDeletionDateKey, cutoff as NSDate)
+        fetchRequest.predicate = NSPredicate(format: "%K < %@", WorkoutSchema.markedForDeletionDate.key, cutoff as NSDate)
         
         let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
         batchRequest.resultType = .resultTypeStatusOnly

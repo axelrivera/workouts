@@ -25,6 +25,9 @@ let MetadataKeyMaxHeartRate = "BWMaxHeartRate"
 let MetadataKeyStartLatitude = "BWStartLatitude"
 let MetadataKeyStartLongitude = "BWStartLongitude"
 
+// Added 7/12/22
+let MetadataKeyEnergyBurned = "BWEnergyBurned"
+
 // MARK: - Sample Metadata
 
 let MetadataKeySampleCadence = "BWCadence"
