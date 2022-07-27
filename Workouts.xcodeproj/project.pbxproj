@@ -1070,7 +1070,6 @@
 		164D0ACC26609EA7000A56AD /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				165B5139288659D60064E758 /* WorkoutsProvider.swift */,
 				164D0ACD26609EBF000A56AD /* StorageProvider.swift */,
 				160B652828721F1600C265A9 /* WorkoutProcessor.swift */,
 				16BA33F6287E386100823A6C /* LocationUpdator.swift */,
@@ -1083,6 +1082,7 @@
 			isa = PBXGroup;
 			children = (
 				160B6525287216E500C265A9 /* Synchronizer.swift */,
+				165B5139288659D60064E758 /* WorkoutsProvider.swift */,
 				165B51362885F5BA0064E758 /* SynchronizerStorage.swift */,
 				164D0AE426610EA9000A56AD /* WorkoutsDownloader.swift */,
 			);

@@ -116,7 +116,7 @@ extension ContentView {
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)

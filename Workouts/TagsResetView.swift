@@ -95,7 +95,7 @@ struct TagsResetContentView: View {
 }
 
 struct TagsResetView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var previews: some View {
         NavigationView {

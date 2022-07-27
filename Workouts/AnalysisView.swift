@@ -264,8 +264,8 @@ extension AnalysisView {
 }
 
 struct DetailAnalysisView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
+    static let workout = WorkoutsProvider.sampleWorkout(moc: viewContext)
     static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {

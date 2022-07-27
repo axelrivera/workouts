@@ -222,8 +222,8 @@ extension WorkoutMapCell {
 }
 
 struct WorkoutMapCell_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workout = StorageProvider.sampleWorkout(sport: .cycling, date: Date(), moc: viewContext)
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
+    static let workout = WorkoutsProvider.sampleWorkout(sport: .cycling, date: Date(), moc: viewContext)
     static let viewModel: WorkoutViewModel = WorkoutViewModel(workout: workout)
     
     static var previews: some View {

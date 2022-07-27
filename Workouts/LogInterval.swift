@@ -301,7 +301,7 @@ extension LogInterval {
 extension LogActivity {
     
     static func sampleActivity(sport: Sport?, date: Date?, moc: NSManagedObjectContext?) -> LogActivity {
-        StorageProvider.sampleWorkout(sport: sport, date: date, moc: moc).logActivity()
+        WorkoutsProvider.sampleWorkout(sport: sport, date: date, moc: moc).logActivity()
     }
     
 }

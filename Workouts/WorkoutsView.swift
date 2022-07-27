@@ -47,6 +47,7 @@ struct WorkoutsContentView: View {
     @State private var activeAlert: ActiveAlert?
     
     @State private var selectedWorkout: UUID?
+    @State private var reloadID = UUID()
         
     init(filterManager: WorkoutsFilterManager) {
         _filterManager = StateObject(wrappedValue: filterManager)
@@ -106,7 +107,15 @@ struct WorkoutsContentView: View {
                             .buttonStyle(WorkoutPlainButtonStyle())
                             Divider()
                         }
+                        .id(reloadID)
                     }
+                }
+            }
+            .onReceive(reloadPublisher) { notification in
+                Log.debug("reloading workouts")
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    self.reloadID = UUID()
                 }
             }
             .overlay(emptyOverlay())
@@ -297,15 +306,15 @@ extension WorkoutsContentView {
 extension WorkoutsContentView {
     
     var reloadPublisher: NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingRemoteData)
+        NotificationCenter.default.publisher(for: .NSManagedObjectContextDidSave)
     }
     
     var relevantTransactionsPublisher: NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)
+        NotificationCenter.default.publisher(for: .didFindRelevantTransactions)
     }
     
     var duplicatesPublisher: NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)
+        NotificationCenter.default.publisher(for: .didFinishProcessingDuplicates)
     }
     
     var viewModelPublisher: NotificationCenter.Publisher {
@@ -313,7 +322,7 @@ extension WorkoutsContentView {
     }
     
     var filterPublisher: NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)
+        NotificationCenter.default.publisher(for: .refreshWorkoutsFilter)
     }
     
 }
@@ -321,7 +330,7 @@ extension WorkoutsContentView {
 // MARK: - Previews
 
 struct WorkoutsView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable

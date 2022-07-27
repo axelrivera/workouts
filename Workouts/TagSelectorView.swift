@@ -93,8 +93,8 @@ extension TagSelectorView {
 }
 
 struct TagSelectorView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static var workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
+    static var workout = WorkoutsProvider.sampleWorkout(moc: viewContext)
     
     static var previews: some View {
         TagSelectorView(tagManager: workout.tagManager())

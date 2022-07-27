@@ -22,7 +22,7 @@ struct WorkoutsApp: App {
     let statsManager: StatsManager
     
     let workoutDataStore: WorkoutDataStore
-    let storageProvider = StorageProvider()
+    let storageProvider = WorkoutsProvider.shared
     let workoutManager: WorkoutManager
     let tagManager: TagManager
     let synchronizer: Synchronizer
@@ -32,27 +32,24 @@ struct WorkoutsApp: App {
         purchaseManager.reload()
         
         AppSettings.workoutsQueryAnchor = nil
-        let context = storageProvider.persistentContainer.viewContext
+        let context = storageProvider.container.viewContext
         workoutDataStore = WorkoutDataStore.shared
         logManager = LogManager(context: context)
         statsManager = StatsManager(context: context)
         workoutManager = WorkoutManager(context: context)
         tagManager = TagManager(context: context)
         
-        let backgroundContext = storageProvider.persistentContainer.newBackgroundContext()
-        backgroundContext.automaticallyMergesChangesFromParent = true
-        backgroundContext.transactionAuthor = APP_TRANSACTION_AUTHOR_NAME
-        
-        synchronizer = Synchronizer(context: backgroundContext)
+        synchronizer = Synchronizer(provider: storageProvider)
         
         AnalyticsManager.shared.captureInstallOrUpdate()
         AnalyticsManager.shared.captureOpen(isBackground: false, isPro: purchaseManager.isActive)
     }
     
-    @SceneBuilder var body: some Scene {
+    @SceneBuilder
+    var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, storageProvider.persistentContainer.viewContext)
+                .environment(\.managedObjectContext, storageProvider.container.viewContext)
                 .environmentObject(workoutManager)
                 .environmentObject(logManager)
                 .environmentObject(statsManager)

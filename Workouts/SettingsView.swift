@@ -154,7 +154,7 @@ extension SettingsView {
 }
 
 struct SettingsView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {

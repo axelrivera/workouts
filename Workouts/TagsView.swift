@@ -188,7 +188,7 @@ extension TagsContentView {
 }
 
 struct TagsView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
         
     static var previews: some View {

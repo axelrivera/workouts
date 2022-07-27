@@ -142,7 +142,7 @@ extension WorkoutLogView {
 }
 
 struct WorkoutLogView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var workoutManager = WorkoutManagerPreview.manager(context: viewContext)
     
     static var manager: LogManager = {

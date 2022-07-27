@@ -227,7 +227,7 @@ extension TagsManageContentView {
 }
 
 struct TagsManageView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var previews: some View {
         NavigationView {

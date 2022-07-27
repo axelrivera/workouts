@@ -82,7 +82,7 @@ struct AdvancedSettingsView: View {
 }
 
 struct AdvancedSettingsView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var previews: some View {
         NavigationView {

@@ -61,18 +61,31 @@ class WorkoutsProvider {
     
     private var lastToken: NSPersistentHistoryToken?
     
+//    private var lastToken: NSPersistentHistoryToken? = nil {
+//        didSet {
+//            guard let token = lastToken,
+//                let data = try? NSKeyedArchiver.archivedData( withRootObject: token, requiringSecureCoding: true) else { return }
+//
+//            do {
+//                try data.write(to: Self.tokenFile)
+//            } catch {
+//                logger.debug("failed to write token data. Error = \(error.localizedDescription)")
+//            }
+//        }
+//    }
+    
     lazy var container: NSPersistentContainer = {
-        if let tokenData = try? Data(contentsOf: Self.tokenFile) {
-            do {
-                lastToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
-            } catch {
-                logger.debug("failed to unarchive history token: \(error.localizedDescription)")
-            }
-        }
+//        if let tokenData = try? Data(contentsOf: Self.tokenFile) {
+//            do {
+//                lastToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
+//            } catch {
+//                logger.debug("failed to unarchive history token: \(error.localizedDescription)")
+//            }
+//        }
         
         let container = NSPersistentContainer(name: "Workouts")
         
-        let defaultSQliteLocation = PersistentContainer.defaultDirectoryURL()
+        let defaultSQliteLocation = NSPersistentCloudKitContainer.defaultDirectoryURL()
         
         let localStoreURL = defaultSQliteLocation.appendingPathComponent("Local.sqlite")
         let localDescription = NSPersistentStoreDescription(url: localStoreURL)
@@ -87,14 +100,14 @@ class WorkoutsProvider {
             cloudDescription.type = NSInMemoryStoreType
         } else {
             // Local
-            localDescription.setOption(
-                true as NSNumber,
-                forKey: NSPersistentHistoryTrackingKey
-            )
-            localDescription.setOption(
-                true as NSNumber,
-                forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey
-            )
+//            localDescription.setOption(
+//                true as NSNumber,
+//                forKey: NSPersistentHistoryTrackingKey
+//            )
+//            localDescription.setOption(
+//                true as NSNumber,
+//                forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey
+//            )
             
             // Cloud
             cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
@@ -120,7 +133,6 @@ class WorkoutsProvider {
         
         // Provider refreshes UI by consuming store changes via persistent history tracking.
         container.viewContext.automaticallyMergesChangesFromParent = false
-        container.viewContext.transactionAuthor = APP_TRANSACTION_AUTHOR_NAME
         container.viewContext.name = "viewContext"
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         container.viewContext.undoManager = nil
@@ -137,6 +149,28 @@ class WorkoutsProvider {
         taskContext.undoManager = nil
         return taskContext
     }
+    
+    static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
+        let viewContext = context ?? sampleContext
+
+        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
+        let end = start.addingTimeInterval(9000) // 1 hour
+        let duration = end.timeIntervalSince(start)
+        
+        let workout = Workout(context: viewContext)
+        workout.remoteIdentifier = UUID()
+        workout.sport = sport ?? .cycling
+        workout.indoor = false
+        workout.start = start
+        workout.end = end
+        workout.duration = duration
+        workout.valuesUpdated = Date()
+        workout.locationUpdated = Date()
+        workout.source = "Workouts Preview"
+        workout.device = nil
+        
+        return workout
+    }
 }
 
 // MARK: - Workouts
@@ -145,26 +179,33 @@ extension WorkoutsProvider {
     typealias WorkoutTagValue = (workout: UUID, tag: UUID)
     
     func fetchWorkouts(regenerate: Bool = false) async throws {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .willBeginProcessingRemoteData, object: nil)
+        }
+        
         let (workouts, deleted, newAnchor) = await downloader.fethLatestWorkouts(anchor: anchor)
         
         if deleted.isPresent {
             deleteWorkouts(with: deleted)
         }
         
-        var inserts = [HKWorkout]()
-        var updates = [HKWorkout]()
+        var inserts = Set<HKWorkout>()
+        var updates = Set<HKWorkout>()
+        var updateIds = Set<UUID>()
         var tagValues = [WorkoutTagValue]()
                 
         for remoteWorkout in workouts {
             if let _ = Workout.find(using: remoteWorkout.uuid, in: container.viewContext) {
                 if regenerate {
-                    updates.append(remoteWorkout)
+                    updates.insert(remoteWorkout)
+                    updateIds.insert(remoteWorkout.uuid)
                 } else {
                     Log.debug("SYNC: skip workout \(remoteWorkout.uuid)")
                 }
             } else {
-                inserts.append(remoteWorkout)
-                updates.append(remoteWorkout)
+                inserts.insert(remoteWorkout)
+                updates.insert(remoteWorkout)
+                updateIds.insert(remoteWorkout.uuid)
                 
                 let tags = Tag.defaultTags(sport: remoteWorkout.workoutActivityType.sport(), in: container.viewContext)
                 tags.forEach { tagValues.append((remoteWorkout.uuid, $0)) }
@@ -172,7 +213,7 @@ extension WorkoutsProvider {
         }
         
         do {
-            try await importWorkouts(for: inserts)
+            try await importWorkouts(for: Array(inserts))
             try await importWorkoutTags(for: tagValues)
             anchor = newAnchor
         } catch {
@@ -180,17 +221,19 @@ extension WorkoutsProvider {
             throw error
         }
         
-        if updates.isPresent {
-            await processRemoteWorkouts(updates)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .didFinishProcessingRemoteData, object: nil)
         }
         
-        let pending = Workout.pendingValues(in: container.viewContext)
+        let allPending = Set(Workout.pendingValues(in: container.viewContext))
+        let pending = allPending.subtracting(updateIds)
         if pending.isPresent {
-            do {
-                try await processRemoteWorkoutIdentifiers(pending)
-            } catch {
-                logger.debug("updating pending workouts failed: \(error.localizedDescription)")
-            }
+            let pendingWorkouts = (try? await healthProvider.fetchWorkouts(for: Array(pending))) ?? [HKWorkout]()
+            pendingWorkouts.forEach { updates.insert($0) }
+        }
+
+        if updates.isPresent {
+            await processRemoteWorkouts(Array(updates))
         }
     }
     
@@ -199,18 +242,16 @@ extension WorkoutsProvider {
         
         let taskContext = newTaskContext()
         // Add name and author to identify source of persistent history changes.
-        taskContext.name = "importContext"
+        taskContext.name = "importWorkoutsContext"
         taskContext.transactionAuthor = "importWorkouts"
         
         try await taskContext.perform {
             let request = self.newBatchInsertRequest(for: remoteWorkouts)
-            let result = try taskContext.execute(request) as? NSBatchInsertResult
+            request.resultType = .objectIDs
             
-            if let success = result?.result as? Bool, success {
-                return
-            }
-            
-            throw WorkoutError("failed to insert batch of workouts")
+            let response = try taskContext.execute(request) as? NSBatchInsertResult
+            let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
+            self.mergeChanges(for: NSInsertedObjectsKey, objects: objects)
         }
     }
     
@@ -218,56 +259,98 @@ extension WorkoutsProvider {
         guard tagValues.isPresent else { return }
         
         let taskContext = newTaskContext()
-        taskContext.name = "importContext"
+        taskContext.name = "importWorkoutTagsContext"
         taskContext.transactionAuthor = "importWorkoutTags"
         
         try await taskContext.perform {
             let request = self.newBatchInsertRequest(for: tagValues)
-            let result = try taskContext.execute(request) as? NSBatchInsertResult
+            try taskContext.execute(request)
             
-            if let success = result?.result as? Bool, success {
-                return
-            }
-            
-            throw WorkoutError("failed to insert batch of workout tags")
+            let response = try taskContext.execute(request) as? NSBatchInsertResult
+            let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
+            self.mergeChanges(for: NSInsertedObjectsKey, objects: objects)
         }
     }
-    
-    private func processRemoteWorkoutIdentifiers(_ identifiers: [UUID]) async throws {
-        let remoteWorkouts = try await healthProvider.fetchWorkouts(for: identifiers)
-        await processRemoteWorkouts(remoteWorkouts)
-    }
-    
+        
     private func processRemoteWorkouts(_ remoteWorkouts: [HKWorkout]) async {
         let taskContext = newTaskContext()
         taskContext.name = "updateContext"
         taskContext.transactionAuthor = "updateWorkout"
         
-        for remoteWorkout in remoteWorkouts {
+        let chunked = Array(remoteWorkouts.chunks(ofCount: 5))
+        
+        var index = 0
+        let total = chunked.count
+        var updates = [NSManagedObjectID]()
+        
+        while index < total {
+            let chunk = chunked[index]
+            
             do {
-                try await processRemoteWorkout(remoteWorkout, context: taskContext)
+                let objects: [NSManagedObjectID] = try await withThrowingTaskGroup(of: NSManagedObjectID.self) { group in
+                    var objects = [NSManagedObjectID]()
+                    objects.reserveCapacity(chunk.count)
+                    
+                    for remoteWorkout in chunk {
+                        group.addTask {
+                            return try await self.processRemoteWorkout(remoteWorkout, context: taskContext)
+                        }
+                    }
+                    
+                    for try await obj in group {
+                        objects.append(obj)
+                    }
+                    
+                    return objects
+                }
+                
+                updates.append(contentsOf: objects)
+                
+                if updates.count >= 25 {
+                    mergeChanges(for: NSUpdatedObjectsKey, objects: updates)
+                    updates = [NSManagedObjectID]()
+                }
             } catch {
-                logger.debug("failed to update workout: \(remoteWorkout.uuid)")
+                logger.debug("processing workout failed: \(error.localizedDescription)")
             }
+            
+            index += 1
+        }
+        
+        mergeChanges(for: NSUpdatedObjectsKey, objects: updates)
+    }
+    
+    func mergeChanges(for key: String, objects: [NSManagedObjectID]) {
+        guard objects.isPresent else { return }
+        
+        let viewContext = container.viewContext
+        viewContext.perform {
+            let changes = [key: objects]
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
         }
     }
     
-    private func processRemoteWorkout(_ remoteWorkout: HKWorkout, context: NSManagedObjectContext) async throws {
+    private func processRemoteWorkout(_ remoteWorkout: HKWorkout, context: NSManagedObjectContext) async throws -> NSManagedObjectID {
         let processor = WorkoutProcessor(workout: remoteWorkout)
         await processor.process()
         
         let values = await processor.dictionary
         
+        var object: NSManagedObjectID?
         try await context.perform {
             let request = self.newBatchUpdateRequest(for: remoteWorkout.uuid, values: values)
-            let result = try context.execute(request) as? NSBatchUpdateResult
+            request.resultType = .updatedObjectIDsResultType
             
-            if let success = result?.result as? Bool, success {
-                return
-            }
-            
-            throw WorkoutError("failed to update workout: \(remoteWorkout.uuid)")
+            let response = try context.execute(request) as? NSBatchUpdateResult
+            let objects = response?.result as? [NSManagedObjectID]
+            object = objects?.first
         }
+        
+        if let object = object {
+            return object
+        }
+        
+        throw WorkoutError("missing object id")
     }
     
     private func newBatchInsertRequest(for remoteWorkouts: [HKWorkout]) -> NSBatchInsertRequest {
@@ -368,7 +451,7 @@ extension WorkoutsProvider {
             do {
                 try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
             } catch {
-                print("###\(#function): Failed to create persistent container URL. Error = \(error)")
+                Log.debug("failed to create persistent container URL. error = \(error.localizedDescription)")
             }
         }
         return url.appendingPathComponent("token.data", isDirectory: false)
@@ -385,6 +468,7 @@ extension WorkoutsProvider {
     private func fetchPersistentHistoryTransactionsAndChanges() async throws {
         let taskContext = newTaskContext()
         taskContext.name = "persistentHistoryContext"
+        
         logger.debug("start fetching persistent history changes from the store...")
 
         try await taskContext.perform {
@@ -396,7 +480,6 @@ extension WorkoutsProvider {
                 self.mergePersistentHistoryChanges(from: history)
             } else {
                 self.logger.debug("no persistent history transactions found")
-                throw WorkoutError("persistance history change error")
             }
         }
 
@@ -404,12 +487,19 @@ extension WorkoutsProvider {
     }
     
     private func mergePersistentHistoryChanges(from history: [NSPersistentHistoryTransaction]) {
-        self.logger.debug("Received \(history.count) persistent history transactions.")
+        self.logger.debug("received \(history.count) persistent history transactions")
         
         // Update view context with objectIDs from history change request.
         let viewContext = container.viewContext
         viewContext.perform {
             for transaction in history {
+            
+                // transaction source details
+                let context = transaction.contextName ?? "unknown context"
+                let author = transaction.author ?? "unknown author"
+                
+                self.logger.debug("transaction - context: \(context), author: \(author)")
+                
                 viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
                 self.lastToken = transaction.token
             }

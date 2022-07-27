@@ -224,7 +224,7 @@ extension WorkoutsFilterView {
 }
 
 struct WorkoutsFilterView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     static let manager = WorkoutsFilterManager(context: viewContext)
     
     static var previews: some View {

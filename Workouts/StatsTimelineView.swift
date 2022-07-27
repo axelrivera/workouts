@@ -127,7 +127,7 @@ struct StatsTimelineContentView: View {
 }
 
 struct StatsTimelineView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         return manager

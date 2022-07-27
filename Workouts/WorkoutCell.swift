@@ -48,7 +48,7 @@ struct WorkoutPlainCell: View {
 }
 
 struct WorkoutCell_Previews: PreviewProvider {
-    static var workout = StorageProvider.sampleWorkout()
+    static var workout = WorkoutsProvider.sampleWorkout()
     
     static var previews: some View {
         NavigationView {

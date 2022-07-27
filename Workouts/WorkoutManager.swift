@@ -241,7 +241,7 @@ extension WorkoutManager {
     
     @objc
     private func updateWorkoutValues(_ notification: Notification) {
-        guard let ids = notification.userInfo?[Notification.workoutIdentifiersKey] as? [UUID] else { return }
+//        guard let ids = notification.userInfo?[Notification.workoutIdentifiersKey] as? [UUID] else { return }
         
 //        DispatchQueue.main.async {
 //            ids.forEach { workoutID in

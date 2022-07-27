@@ -50,7 +50,7 @@ struct EmptyTagsView: View {
 }
 
 struct EmptyTagsView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var previews: some View {
         EmptyTagsView(displayType: .tags, onCreate: {})
