@@ -24,12 +24,17 @@ struct StatsWorkoutsView: View {
     }
             
     var body: some View {
-        List(workouts, id: \.objectID) { workout in
-            NavigationLink(
-                tag: workout.workoutIdentifier,
-                selection: $selectedWorkout,
-                destination: { DetailView(viewModel: workout.detailViewModel) }) {
-                    WorkoutPlainCell(viewModel: workout.detailViewModel)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(workouts, id: \.objectID) { workout in
+                    NavigationLink(destination: DetailView(workoutID: workout.workoutIdentifier)) {
+                        WorkoutCell(viewModel: workout.detailViewModel)
+                            .padding([.leading, .trailing])
+                            .padding([.top, .bottom], CGFloat(5))
+                    }
+                    .buttonStyle(WorkoutPlainButtonStyle())
+                    Divider()
+                }
             }
         }
         .overlay(emptyOverlay())

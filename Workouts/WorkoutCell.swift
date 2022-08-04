@@ -10,8 +10,14 @@ import SwiftUI
 struct WorkoutCell: View {
     var viewModel: WorkoutDetailViewModel
     
+    @Environment(\.colorScheme) var colorScheme
+    @State var image: UIImage?
+    
+    let mapHeight = Constants.cachedWorkoutImageHeight
+    private let imageProvider = WorkoutImageProvider()
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 10.0) {
+        VStack(alignment: .leading, spacing: 5.0) {
             HStack {
                 Text(viewModel.title)
                     .font(.fixedTitle2)
@@ -34,16 +40,32 @@ struct WorkoutCell: View {
                 Text(formattedElevationString(for: viewModel.elevationAscended, zeroPadding: true))
                     .workoutCellLabelStyle(color: .elevation)
             }
+            
+            if viewModel.includesLocation {
+                if let image = image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .cornerRadius(CGFloat(12))
+                        .frame(height: mapHeight)
+                } else {
+                    Rectangle()
+                        .background(.regularMaterial)
+                        .cornerRadius(CGFloat(12))
+                        .frame(height: mapHeight)
+                }
+            }
         }
+        .onAppear { loadImage(forScheme: colorScheme)}
     }
-}
-
-struct WorkoutPlainCell: View {
-    var viewModel: WorkoutDetailViewModel
     
-    var body: some View {
-        WorkoutCell(viewModel: viewModel)
-            .padding([.top, .bottom], 5)
+    func loadImage(forScheme scheme: ColorScheme) {
+        guard viewModel.includesLocation else { return }
+        
+        let image = imageProvider.get(forID: viewModel.id, scheme: scheme)
+        DispatchQueue.main.async {
+            self.image = image
+        }
     }
 }
 

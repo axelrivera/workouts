@@ -50,6 +50,22 @@ final class WorkoutViewModel: Hashable, Identifiable {
     var isFavorite = false
     var tags = [TagLabelViewModel]()
     
+    init() {
+        id = UUID()
+        sport = .running
+        indoor = false
+        title = ""
+        date = Date()
+        distance = 0
+        duration = 0
+        avgSpeed = 0
+        avgPace = 0
+        calories = 0
+        avgHeartRate = 0
+        elevation = 0
+        hasLocationData = false
+    }
+    
     init(workout: Workout) {
         id = workout.workoutIdentifier
         sport = workout.sport

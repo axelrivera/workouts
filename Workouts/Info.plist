@@ -44,7 +44,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Take photos when sharing workouts</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Display your workout activity and metrics</string>
+	<string>Display and calculate workout activity, metrics, heart rate zones and training load.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Save workouts imported from FIT files</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

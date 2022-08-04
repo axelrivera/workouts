@@ -5,12 +5,8 @@
 //  Created by Axel Rivera on 2/8/21.
 //
 
-import Foundation
+import SwiftUI
 import HealthKit
-
-enum SettingsError: Error {
-    case dataNotFound
-}
 
 @propertyWrapper
 struct Settings<T> {
@@ -29,6 +25,9 @@ struct Settings<T> {
 }
 
 struct AppSettings {
+    static let DEFAULT_MAX_HEART_RATE: Int = 200
+    static let DEFAULT_RESTING_HEART_RATE: Int = 60
+    
     static var CURRENT_VERSION: Int = {
         let (_, build) = systemVersionAndBuild()
         return Int(build) ?? 0
@@ -68,7 +67,7 @@ struct AppSettings {
     private static func setValue(_ value: Any?, for key: String) {
         UserDefaults.standard.setValue(value, forKey: key)
     }
-    
+        
     @Settings(Keys.version, defaultValue: 0)
     static var version: Int
     
@@ -78,32 +77,28 @@ struct AppSettings {
     @Settings(Keys.useHealthRestingHeartRate, defaultValue: true)
     static var useHealthRestingHeartRate: Bool
     
-    @Settings(Keys.maxHeartRate, defaultValue: HRZoneManager.Defaults.max)
+    // Max Heart Rate
+    // In most cases this getter thouls not be used directly by the app (unless for specific reasons)
+    // The getter should be accessed from the HealthProvider instead to properly set the default values when needed
+    
+    @Settings(Keys.maxHeartRate, defaultValue: DEFAULT_MAX_HEART_RATE)
     static var maxHeartRate: Int
     
-    @Settings(Keys.restingHeartRate, defaultValue: 60)
+    @Settings(Keys.restingHeartRate, defaultValue: DEFAULT_RESTING_HEART_RATE)
     static var restingHeartRate: Int
     
-    // heart Rate Zones
+    // Heart Rate Zones
+    // In most cases this getter thouls not be used directly by the app (unless for specific reasons)
+    // The getter should be accessed from the HealthProvider instead to properly set the default values when needed
+    
     static var heartRateZones: [Int] {
         get {
-            var zones = objectForKey(Keys.heartRateZones) as? [Int] ?? []
-            if let (_, _, _, _, _) = zones.tuple as? HRZoneTuple {
-                return zones
-            }
-            
-            let max = Double(maxHeartRate)
-            zones = HRZoneManager.calculateDefaultZones(for: max)
-            setValue(zones, for: Keys.heartRateZones)
-            return zones
+            return objectForKey(Keys.heartRateZones) as? [Int] ?? []
         }
         set {
             setValue(newValue, for: Keys.heartRateZones)
         }
     }
-        
-    @Settings(Keys.weightInKilograms, defaultValue: Constants.defaultWeight)
-    static var weight: Double
     
     static var dashboardStartDate: Date? {
         get {
@@ -129,7 +124,7 @@ struct AppSettings {
     static var shareSettings: ShareSettings {
         get {
             do {
-                guard let data = objectForKey(Keys.shareSettings) as? Data else { throw SettingsError.dataNotFound }
+                guard let data = objectForKey(Keys.shareSettings) as? Data else { throw WorkoutError("data not found") }
                 return try JSONDecoder().decode(ShareSettings.self, from: data)
             } catch {
                 return ShareSettings.defaultValue()
@@ -144,7 +139,7 @@ struct AppSettings {
     static var workoutsQueryAnchor: HKQueryAnchor? {
         get {
             do {
-                guard let data = objectForKey(Keys.workoutsQueryAnchor) as? Data else { throw SettingsError.dataNotFound }
+                guard let data = objectForKey(Keys.workoutsQueryAnchor) as? Data else { throw WorkoutError("data not found") }
                 let anchor = try NSKeyedUnarchiver.unarchivedObject(ofClass: HKQueryAnchor.self, from: data)
                 return anchor
             } catch {
@@ -160,10 +155,5 @@ struct AppSettings {
             }
         }
     }
-    
-    #if DEVELOPMENT_BUILD
-    @Settings(Keys.mockPurchaseActive, defaultValue: false)
-    static var mockPurchaseActive: Bool
-    #endif
     
 }

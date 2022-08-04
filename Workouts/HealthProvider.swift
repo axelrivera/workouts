@@ -33,11 +33,7 @@ struct HealthProvider {
 extension HealthProvider {
     
     private var supportsMaxHeartRate: Bool {
-        if AppSettings.useFormulaMaxHeartRate {
-            return dateOfBirth() != nil
-        } else {
-            return AppSettings.maxHeartRate > 0
-        }
+        maxHeartRate() > 0
     }
     
     private var supportsRestingHeartRate: Bool {
@@ -49,7 +45,7 @@ extension HealthProvider {
     }
     
     private var supportsGender: Bool {
-        userGender().supported
+        userGender().isAvailable
     }
     
     var isTrainingLoadSupported: Bool {
@@ -334,7 +330,14 @@ extension HealthProvider {
     
     private func fetchWorkouts(for identifiers: [UUID], completionHandler: @escaping (Result<[HKWorkout], Error>) -> Void) {
         let predicate = HKQuery.predicateForObjects(with: Set(identifiers))
-        let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { (query, samples, error) in
+        let sortByDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        let query = HKSampleQuery(
+            sampleType: .workoutType(),
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: [sortByDate]
+        ) { (query, samples, error) in
             if let workouts = samples as? [HKWorkout] {
                 completionHandler(.success(workouts))
             } else {

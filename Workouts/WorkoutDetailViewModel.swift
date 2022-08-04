@@ -40,8 +40,11 @@ struct WorkoutDetailViewModel {
     
     let avgPace: Double
     
-    var elevationAscended: Double
-    var elevationDescended: Double
+    let elevationAscended: Double
+    let elevationDescended: Double
+    
+    let minElevation: Double
+    let maxElevation: Double
     
     let energyBurned: Double
     let avgHeartRate: Double
@@ -61,8 +64,12 @@ struct WorkoutDetailViewModel {
 
 extension WorkoutDetailViewModel {
     
+    var outdoor: Bool {
+        !indoor
+    }
+    
     var includesLocation: Bool {
-        !coordinates.isEmpty
+        outdoor && sport.hasDistanceSamples
     }
     
     var shouldUseMovingTime: Bool {
@@ -103,6 +110,41 @@ extension WorkoutDetailViewModel {
 
 extension WorkoutDetailViewModel {
     
+    static func empty() -> WorkoutDetailViewModel {
+        WorkoutDetailViewModel(
+            id: UUID(),
+            sport: .cycling,
+            indoor: false,
+            title: "",
+            coordinates: [],
+            start: Date(),
+            end: Date(),
+            movingTime: 0,
+            duration: 0,
+            distance: 0,
+            avgMovingSpeed: 0,
+            avgSpeed: 0,
+            maxSpeed: 0,
+            avgCyclingCadence: 0,
+            maxCyclingCadence: 0,
+            avgPace: 0,
+            elevationAscended: 0,
+            elevationDescended: 0,
+            minElevation: 0,
+            maxElevation: 0,
+            energyBurned: 0,
+            avgHeartRate: 0,
+            maxHeartRate: 0,
+            trimp: 0,
+            avgHeartRateReserve: 0,
+            zoneMaxHeartRate: 0,
+            zoneValues: [],
+            source: "",
+            device: nil,
+            appIdentifier: nil
+        )
+    }
+    
     static func model(for workout: Workout) -> WorkoutDetailViewModel {
         WorkoutDetailViewModel(
             id: workout.workoutIdentifier,
@@ -123,6 +165,8 @@ extension WorkoutDetailViewModel {
             avgPace: workout.avgMovingPace,
             elevationAscended: workout.elevationAscended,
             elevationDescended: workout.elevationDescended,
+            minElevation: workout.minElevation,
+            maxElevation: workout.maxElevation,
             energyBurned: workout.energyBurned,
             avgHeartRate: workout.avgHeartRate,
             maxHeartRate: workout.maxHeartRate,

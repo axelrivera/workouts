@@ -10,7 +10,7 @@ import CoreData
 
 struct AdvancedSettingsView: View {
     enum ActiveAlert: Identifiable {
-        case regenerateWorkouts, resetCachedImages
+        case regenerateWorkouts
         var id: Int { hashValue }
     }
     
@@ -22,14 +22,16 @@ struct AdvancedSettingsView: View {
     var body: some View {
         Form {
             Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
-                Button(action: { activeAlert = .regenerateWorkouts }) {
-                    Text("Reset Workout Data")
-                }
-            }
-            
-            Section(footer: Text("Regenerates all cached maps in Workouts feed.")) {
-                Button(action: { activeAlert = .resetCachedImages }) {
-                    Text("Reset Maps")
+                HStack {
+                    Button(action: { activeAlert = .regenerateWorkouts }) {
+                        Text("Reset Workout Data")
+                    }
+                    
+                    if workoutManager.isProcessingRemoteData {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    }
                 }
             }
             
@@ -38,7 +40,6 @@ struct AdvancedSettingsView: View {
             }
         }
         .disabled(workoutManager.isProcessingRemoteData)
-        .overlay(processOverlay())
         .navigationTitle("Advanced Settings")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
@@ -60,23 +61,7 @@ struct AdvancedSettingsView: View {
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
-            case .resetCachedImages:
-                let title = "Reset Map Images"
-                let message = "This action will reset all cached map images used in the workouts feed."
-                
-                let action = {
-                    let cache = MapImageCache.getImageCache()
-                    cache.resetAll()
-                }
-                
-                return Alert.showAlertWithTitle(title, message: message, action: action)
             }
-        }
-    }
-    
-    @ViewBuilder func processOverlay() -> some View {
-        if workoutManager.isProcessingRemoteData {
-            HUDView()
         }
     }
 }

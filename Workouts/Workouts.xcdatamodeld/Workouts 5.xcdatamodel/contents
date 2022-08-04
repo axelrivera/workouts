@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21G72" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Tag" representedClassName="Tag" syncable="YES">
         <attribute name="archivedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="color" optional="YES" attributeType="Transformable" valueTransformerName="ColorTransformer" customClassName="UIKit.UIColor"/>
@@ -43,7 +43,6 @@
         <attribute name="isLocationPending" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="locationCity" optional="YES" attributeType="String"/>
         <attribute name="locationState" optional="YES" attributeType="String"/>
-        <attribute name="locationUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="markedForDeletionDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="maxCyclingCadence" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="maxElevation" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -73,6 +72,7 @@
             <fetchIndexElement property="start" type="Binary" order="descending"/>
             <fetchIndexElement property="remoteIdentifier" type="Binary" order="ascending"/>
             <fetchIndexElement property="dayOfWeek" type="Binary" order="ascending"/>
+            <fetchIndexElement property="valuesUpdated" type="Binary" order="descending"/>
         </fetchIndex>
         <uniquenessConstraints>
             <uniquenessConstraint>
@@ -109,7 +109,7 @@
     </configuration>
     <elements>
         <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
-        <element name="Workout" positionX="-63" positionY="-18" width="128" height="740"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="725"/>
         <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
         <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
     </elements>

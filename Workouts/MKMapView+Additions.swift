@@ -47,7 +47,7 @@ extension MKMapView {
         let snapshot = try await snapshotter.start()
         
         let image = snapshot.image
-        let data = UIGraphicsImageRenderer(size: image.size).pngData { context in
+        let data = UIGraphicsImageRenderer(size: image.size).jpegData(withCompressionQuality: 0.9) { context in
             image.draw(at: .zero)
             
             if coordinates.isPresent {
@@ -62,6 +62,9 @@ extension MKMapView {
 
                 // stroke it
 
+                path.lineCapStyle = .round
+                path.lineJoinStyle = .round
+                path.flatness = 0
                 path.lineWidth = lineWidth
                 UIColor(.accentColor).setStroke()
                 path.stroke()

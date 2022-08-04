@@ -34,10 +34,6 @@ struct WeightInputView: View {
                 .onAppear(perform: {
                     updateSelectedIndex()
                 })
-                .onChange(of: selectedIndex, perform: { value in
-                    weight = localizedWeightUnitToKilograms(for: weightValue)
-                    AppSettings.weight = weight
-                })
                 .pickerStyle(WheelPickerStyle())
             }
         }

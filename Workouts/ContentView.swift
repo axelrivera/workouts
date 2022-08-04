@@ -35,6 +35,11 @@ struct ContentView: View {
     @State private var selected = Tabs.workouts
     @State private var activeCoverSheet: ActiveCoverSheet?
     
+    private var foregroundPublisher = NotificationCenter.Publisher.foregroundPublisher()
+    private var memoryPublisher = NotificationCenter.Publisher.memoryPublisher()
+    private var fetchingPublisher = NotificationCenter.Publisher.workoutsFetchNotification()
+    private var processingPublisher = NotificationCenter.Publisher.workoutsProcessNotification()
+    
     var body: some View {
         TabView(selection: $selected) {
             WorkoutsView()
@@ -64,17 +69,16 @@ struct ContentView: View {
             activeCoverSheet = .add(url: url)
         }
         .onboardingOverlay()
-        .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
-            viewContext.refreshAllObjects()
-            workoutManager.storage.resetAll()
-        }
-        .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
-            reloadData()
-        }
-        .onReceive(NotificationCenter.Publisher.foregroundPublisher()) { _ in
+        .onReceive(foregroundPublisher) { _ in
             purchaseManager.reload()
             AnalyticsManager.shared.captureOpen(isBackground: true, isPro: purchaseManager.isActive)
         }
+        .onReceive(memoryPublisher) { _ in
+            viewContext.refreshAllObjects()
+            workoutManager.storage.resetAll()
+        }
+        .onReceive(fetchingPublisher, perform: reloadData)
+        .onReceive(processingPublisher, perform: reloadData)
         .onChange(of: scenePhase) { phase in
             switch phase {
             case .active:
@@ -108,7 +112,7 @@ struct ContentView: View {
 
 extension ContentView {
     
-    private func reloadData() {
+    private func reloadData(_ notification: Notification) {
         statsManager.refresh()
         logManager.reloadIntervals()
     }

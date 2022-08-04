@@ -19,7 +19,6 @@ class Synchronizer {
     
     init(provider: WorkoutsProvider) {
         self.provider = provider
-        
         cancellable = NotificationCenter.default.publisher(for: .shouldFetchRemoteData).sink(receiveValue: fetchRemoteData)
     }
     
@@ -50,10 +49,9 @@ extension Synchronizer {
 extension Notification.Name {
     
     static var shouldFetchRemoteData = Notification.Name("arn_should_fetch_remote_data")
-    static var didInsertRemoteData = Notification.Name("arn_did_insert_remote_data")
+    static var didFinishFetchingRemoteData = Notification.Name("arn_did_finish_fetching_remote_data")
     static var willBeginProcessingRemoteData = Notification.Name("arn_will_begin_processing_remote_data")
     static var didFinishProcessingRemoteData = Notification.Name("arn_did_finish_processing_remote_data")
-    static var didUpdateWorkoutValues = Notification.Name("arn_did_update_workout_values")
 }
 
 extension Notification {

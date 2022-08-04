@@ -44,6 +44,7 @@ final class DashboardViewManager: ObservableObject {
     
     @Published var metrics = [DashboardMetricViewModel]()
     @Published var activities = [DashboardActivityViewModel]()
+    @Published var showEmptyMetrics = false
     
     @Published var image: UIImage?
     
@@ -208,6 +209,7 @@ extension DashboardViewManager {
                 
                 DispatchQueue.main.async {
                     withAnimation {
+                        self.showEmptyMetrics = false
                         self.isLoading = true
                     }
                 }
@@ -322,6 +324,7 @@ extension DashboardViewManager {
                 self.metrics = sortedMetrics
                 self.activities = sortedActivities
                 self.dateRange = rangeStart...Date()
+                self.showEmptyMetrics = sortedMetrics.isEmpty
             }
         }
 

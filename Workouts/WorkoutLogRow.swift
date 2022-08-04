@@ -149,11 +149,7 @@ struct WorkoutLogItem: View {
     @ViewBuilder
     func destinationView() -> some View {
         if let identifier = day.remoteIdentifiers.first, day.totalActivities == 1 {
-            if let workout = Workout.find(using: identifier, in: viewContext) {
-                DetailView(viewModel: workout.detailViewModel)
-            } else {
-                Text("No Workout")
-            }
+            DetailView(workoutID: identifier)
         } else {
             StatsWorkoutsView(identifiers: day.remoteIdentifiers)
                 .navigationTitle("Workouts")

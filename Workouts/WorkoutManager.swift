@@ -11,7 +11,7 @@ import CoreData
 import CoreLocation
 
 class WorkoutManager: ObservableObject {
-    let LOADING_WAIT_IN_SECONDS = 2.0
+    let LOADING_WAIT_IN_SECONDS: Double = 5.0
     
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
@@ -32,7 +32,6 @@ class WorkoutManager: ObservableObject {
     @Published var filterByMinDistance: Double = 0
     @Published var filterByMaxDistance: Double = 0
     
-    var processingRemoteDataTimestamp: Date?
     @Published var isProcessingRemoteData = false
     @Published var showProcessingRemoteDataLoading = false
         
@@ -41,9 +40,8 @@ class WorkoutManager: ObservableObject {
 
     @Published var showNoWorkoutsAlert = false
     
-    var isProcessing: Bool {
-        isProcessingRemoteData
-    }
+    private var startProcessingDate: Date?
+    private var timer: Timer?
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -131,6 +129,10 @@ class WorkoutManager: ObservableObject {
 
 extension WorkoutManager {
     
+    func viewModel(for workout: Workout) -> WorkoutViewModel {
+        storage.viewModel(forWorkout: workout)
+    }
+    
     func toggleFavorite(_ identifier: UUID) {
         var isFavorite = storage.isWorkoutFavorite(identifier)
 
@@ -162,15 +164,15 @@ extension WorkoutManager {
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(willProcessWorkouts),
-            name: .willBeginProcessingRemoteData,
+            selector: #selector(didFinishFetchingWorkouts),
+            name: .didFinishFetchingRemoteData,
             object: nil
         )
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(didInsertWorkout),
-            name: .didInsertRemoteData,
+            selector: #selector(willProcessWorkouts),
+            name: .willBeginProcessingRemoteData,
             object: nil
         )
         
@@ -180,45 +182,44 @@ extension WorkoutManager {
             name: .didFinishProcessingRemoteData,
             object: nil
         )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(updateWorkoutValues),
-            name: .didUpdateWorkoutValues,
-            object: nil
-        )
     }
     
     private func removeObservers() {
+        NotificationCenter.default.removeObserver(self, name: .didFinishFetchingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil) 
         NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didUpdateWorkoutValues, object: nil)
     }
     
     // MARK: - Inserting Workouts
     
     @objc
-    private func willProcessWorkouts(_ notification: Notification) {
-        processingRemoteDataTimestamp = Date()
-        
-        DispatchQueue.main.async {
-            withAnimation {
-                self.isProcessingRemoteData = true
+    private func didFinishFetchingWorkouts(_ notification: Notification) {
+        Log.debug("WORKOUTS: did finish inserting workouts")
+        if showNoWorkoutsAlert {
+            DispatchQueue.main.async {
+                self.showNoWorkoutsAlert = false
             }
         }
     }
     
     @objc
-    private func didInsertWorkout(_ notification: Notification) {
-        let now = Date()
-        let date = processingRemoteDataTimestamp ?? now
-        let waitTime = now.timeIntervalSince(date)
+    private func willProcessWorkouts(_ notification: Notification) {
+        Log.debug("WORKOUTS: will process workout data")
         
-        if waitTime > LOADING_WAIT_IN_SECONDS && !showProcessingRemoteDataLoading {
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.showProcessingRemoteDataLoading = true
+        startProcessingDate = Date()
+        
+        DispatchQueue.main.async {
+            self.isProcessingRemoteData = true
+        }
+        
+        if timer == nil {
+            timer = Timer.scheduledTimer(withTimeInterval: LOADING_WAIT_IN_SECONDS, repeats: false) { _ in
+                DispatchQueue.main.async {
+                    if self.isProcessingRemoteData {
+                        withAnimation {
+                            self.showProcessingRemoteDataLoading = true
+                        }
+                    }
                 }
             }
         }
@@ -226,10 +227,17 @@ extension WorkoutManager {
     
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
-        processingRemoteDataTimestamp = nil
-        validateHealthPermissions()
+        var totalMinutes: Double = 0
         
-        Log.debug("WORKOUT: did process workouts")
+        if let start = startProcessingDate {
+            totalMinutes = Date().timeIntervalSince(start) / 60.0
+        }
+        
+        Log.debug("WORKOUTS: did finish processing workout data (\(totalMinutes) minutes)")
+        
+        startProcessingDate = nil
+        timer = nil
+        validateHealthPermissions()
         
         DispatchQueue.main.async {
             withAnimation {
@@ -237,18 +245,6 @@ extension WorkoutManager {
                 self.showProcessingRemoteDataLoading = false
             }
         }
-    }
-    
-    @objc
-    private func updateWorkoutValues(_ notification: Notification) {
-//        guard let ids = notification.userInfo?[Notification.workoutIdentifiersKey] as? [UUID] else { return }
-        
-//        DispatchQueue.main.async {
-//            ids.forEach { workoutID in
-//                let userInfo: [String: Any] =
-//                NotificationCenter.default.post(name: <#T##NSNotification.Name#>, object: <#T##Any?#>, userInfo: <#T##[AnyHashable : Any]?#>)
-//            }
-//        }
     }
     
 }

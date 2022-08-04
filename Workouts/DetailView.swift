@@ -12,10 +12,10 @@ import CoreData
 struct DetailView: View {
     @Environment(\.managedObjectContext) var viewContext
     
-    let viewModel: WorkoutDetailViewModel
+    let workoutID: UUID
     
     var body: some View {
-        DetailContentView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
+        DetailContentView(detailManager: DetailManager(id: workoutID, context: viewContext))
     }
 }
 
@@ -368,7 +368,7 @@ struct DetailView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DetailView(viewModel: workout.detailViewModel)
+            DetailView(workoutID: workout.workoutIdentifier)
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

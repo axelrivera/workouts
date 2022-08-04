@@ -48,7 +48,11 @@ extension WorkoutProcessor {
 
 actor WorkoutProcessor {
     private let workout: HKWorkout
+    private let profileMaxHR: Int
+    private let profileRestingHR: Int
+    private let profileGender: UserGender
     private let provider = HealthProvider.shared
+    
     
     var weekday: Int {
         gregorianCalendar.component(.weekday, from: start)
@@ -56,8 +60,11 @@ actor WorkoutProcessor {
     
     var values = Values.empty()
     
-    init(workout: HKWorkout) {
+    init(workout: HKWorkout, maxHR: Int, restingHR: Int, gender: UserGender) {
         self.workout = workout
+        self.profileMaxHR = maxHR
+        self.profileRestingHR = restingHR
+        self.profileGender = gender
     }
     
 }
@@ -149,14 +156,10 @@ extension WorkoutProcessor {
             }
 
             let paddedSamples = try await provider.fetchPaddedHeartRateSamples(for: workout)
-            let gender = provider.userGender()
-            let profileMaxHeartRate = await provider.profileMaxHeartRate()
-            let profileRestingHeartRate = await provider.profileRestingHeartRate()
-
             let loadProcessor = TrainingLoadProcessor(
-                gender: gender,
-                maxHeartRate: profileMaxHeartRate,
-                restingHeartRate: profileRestingHeartRate,
+                gender: profileGender,
+                maxHeartRate: profileMaxHR,
+                restingHeartRate: profileRestingHR,
                 paddedHeartRateSamples: paddedSamples
             )
 
@@ -197,8 +200,8 @@ extension WorkoutProcessor {
             }
         }
         
-        let min = altitudes.min() ?? 0
-        let max = altitudes.max() ?? 0
+        let min = altitudes.min() ?? workoutMinElevation
+        let max = altitudes.max() ?? workoutMaxElevation
         
         return (coordinates, min, max)
     }
@@ -208,14 +211,11 @@ extension WorkoutProcessor {
         
         let coordinates = values.coordinates
         do {
-            let darkData = try await MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .dark)
-            let lightData = try await MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .light)
-
-            try FileManager.writeWorkoutImageData(
-                dark: darkData,
-                light: lightData,
-                workout: identifier
-            )
+            async let dark = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .dark)
+            async let light = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .light)
+            let images: (dark: Data, light: Data) = try await (dark, light)
+            
+            try WorkoutImageProvider.writeImageData(dark: images.dark, light: images.light, workout: identifier)
         } catch {
             Log.debug("unable to generate images for \(identifier): \(error.localizedDescription)")
         }
@@ -418,8 +418,8 @@ extension WorkoutProcessor {
     }
     
     var dictionary: [String: Any] {
-        let zoneHeartRate = AppSettings.maxHeartRate
-        let zoneValues = AppSettings.heartRateZones
+        let zoneHeartRate = provider.maxHeartRate()
+        let zoneValues = provider.heartRateZones()
         
         var value1: Int = 0
         var value2: Int = 0
@@ -454,7 +454,6 @@ extension WorkoutProcessor {
             .maxElevation: maxElevation,
             .trimp: trimp,
             .avgHeartRateReserve: avgHeartRateReserve,
-            .locationUpdated: now,
             .valuesUpdated: now,
             .markedForDeletionDate: NSNull()
         ]

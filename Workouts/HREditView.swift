@@ -8,8 +8,22 @@
 import SwiftUI
 
 struct HREditView: View {
+    enum Field {
+        case max, resting
+    }
+    
     @Environment(\.presentationMode) private var presentationMode
-    @StateObject var manager: HREditManager
+    @EnvironmentObject var manager: HREditManager
+    
+    @State private var maxHeartRate = ""
+    @State private var isMaxHeartRateValid = true
+    
+    @State private var restingHeartRate = ""
+    @State private var isRestingHeartRateValid = true
+    
+    @FocusState private var focusedField: Field?
+    
+    @State var isPresentingValidationError = false
     
     var body: some View {
         NavigationView {
@@ -17,19 +31,22 @@ struct HREditView: View {
                 Section {
                     HStack {
                         Text("Max Heart Rate")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(isMaxHeartRateValid ? .secondary : .red)
                         Spacer()
                         
-                        if !manager.isMaxHeartRateFormulaDisabled() && manager.useFormulaMaxHeartRate {
+                        if manager.useFormulaMaxHeartRate {
                             Text(estimateHeartRateString)
                         } else {
-                            TextField("bpm", text: $manager.restingHeartRateString)
+                            TextField("bpm", text: $maxHeartRate.animation())
+                                .focused($focusedField, equals: .max)
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
-                                .toolbar {
-                                    ToolbarItemGroup(placement: .keyboard) {
-                                        Spacer()
-                                        Button("Done", action: {})
+                                
+                                .onChange(of: maxHeartRate) { newValue in
+                                    if isNumberString(newValue) {
+                                        manager.maxHeartRate = Int(newValue) ?? 0
+                                    } else {
+                                        maxHeartRate = maxHeartRateString
                                     }
                                 }
                         }
@@ -37,7 +54,6 @@ struct HREditView: View {
                     
                     Toggle("Use Formula", isOn: $manager.useFormulaMaxHeartRate)
                         .foregroundColor(.secondary)
-                        .disabled(manager.isMaxHeartRateFormulaDisabled())
                 } footer: {
                     Text("Estimate Max Heart Rate using formula. Date of Birth is required.")
                 }
@@ -45,27 +61,40 @@ struct HREditView: View {
                 Section {
                     HStack {
                         Text("Resting Heart Rate")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(isRestingHeartRateValid ? .secondary : .red)
                         Spacer()
                         
-                        if !manager.isRecentHealthRestingHeartRateDisabled() && manager.useHealthRestingHeartRate {
+                        if manager.useHealthRestingHeartRate {
                             Text(recentRestingHeartRateString)
                         } else {
-                            TextField("bpm", text: .constant(""))
+                            TextField("bpm", text: $restingHeartRate.animation())
+                                .focused($focusedField, equals: .resting)
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
+                                .onChange(of: restingHeartRate) { newValue in
+                                    if isNumberString(newValue) {
+                                        manager.restingHeartRate = Int(newValue) ?? 0
+                                    } else {
+                                        restingHeartRate = restingHeartRateString
+                                    }
+                                }
                         }
                     }
                     
                     Toggle("Use Recent Value", isOn: $manager.useHealthRestingHeartRate)
                         .foregroundColor(.secondary)
-                        .disabled(manager.isRecentHealthRestingHeartRateDisabled())
-                    
                 } footer: {
                     if manager.useHealthRestingHeartRate {
-                        Text("Using your avg resting heart rate over the past 30 days.")
+                        if let _ = manager.recentRestingHeartRate {
+                            Text("Using your avg resting heart rate over the past 30 days.")
+                        } else {
+                            Text("Your resting heart rate is not available on Apple Health. Better Workouts will use a default value but results are different for every individual. Please update your resting heart rate manually to get better results.")
+                                .foregroundColor(.red)
+                        }
                     } else {
-                        Text("The avg resting heart rate over the past 30 days is 60 bpm.")
+                        if let _ = manager.recentRestingHeartRate {
+                            Text("The avg resting heart rate over the past 30 days is \(recentRestingHeartRateString).")
+                        }
                     }
                 }
                 
@@ -81,14 +110,25 @@ struct HREditView: View {
             .navigationTitle("Heart Rate")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done", action: { focusedField = nil })
+                }
+                
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    Button("Cancel", action: dismiss)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: {})
+                    Button("Save", action: save)
                 }
             }
+            .onAppear(perform: loadValues)
+            .alert("Validation Error", isPresented: $isPresentingValidationError, actions: {
+                Button("Ok", role: .cancel) {}
+            }, message: {
+                Text("Max heart rate and resting heart rate cannot be empty.")
+            })
         }
     }
     
@@ -96,22 +136,69 @@ struct HREditView: View {
     func row(text: String, detail: String) -> some View {
         HStack {
             Text(text)
-                .foregroundColor(.secondary)
             Spacer()
             Text(detail)
+                .foregroundColor(.secondary)
         }
     }
 }
 
 extension HREditView {
     
-    var estimateHeartRateString: String {
-        formattedHeartRateString(for: Double(manager.estimateMaxHeartRate ?? 0))
+    func loadValues() {
+        maxHeartRate = maxHeartRateString
+        restingHeartRate = restingHeartRateString
     }
     
-    var recentRestingHeartRateString: String {
-        formattedHeartRateString(for: Double(manager.recentRestingHeartRate ?? 0))
+    func save() {
+        do {
+            try manager.save()
+            dismiss()
+        } catch {
+            withAnimation {
+                isMaxHeartRateValid = manager.isMaxHeartRateValid
+                isRestingHeartRateValid = manager.isRestingHeartRateValid
+                isPresentingValidationError = true
+            }
+        }
     }
+    
+    func dismiss() {
+        presentationMode.wrappedValue.dismiss()
+    }
+    
+    func isNumberString(_ value: String) -> Bool {
+        if value.isEmpty {
+            return true
+        } else {
+            let nonNumbers = CharacterSet.decimalDigits.inverted
+            return value.rangeOfCharacter(from: nonNumbers) == nil
+        }
+    }
+    
+    // MARK: Max Heart Rate
+    
+    var estimateHeartRateString: String {
+        let value = manager.estimateMaxHeartRate ?? AppSettings.DEFAULT_MAX_HEART_RATE
+        return formattedHeartRateString(for: Double(value))
+    }
+    
+    var maxHeartRateString: String {
+        manager.maxHeartRate > 0 ? "\(manager.maxHeartRate)" : ""
+    }
+    
+    // MARK: Resting Heart Rate
+    
+    var recentRestingHeartRateString: String {
+        let value = manager.recentRestingHeartRate ?? AppSettings.DEFAULT_RESTING_HEART_RATE
+        return formattedHeartRateString(for: Double(value))
+    }
+    
+    var restingHeartRateString: String {
+        manager.restingHeartRate > 0 ? "\(manager.restingHeartRate)" : ""
+    }
+    
+    // MARK: Date and Gender
     
     var dateOfBirthString: String {
         guard let dateOfBirth = manager.dateOfBirth, let age = manager.age else { return "n/a" }
@@ -128,7 +215,8 @@ extension HREditView {
 
 struct HREditView_Previews: PreviewProvider {
     static var previews: some View {
-        HREditView(manager: HREditManager())
+        HREditView()
+            .environmentObject(HREditManager())
             .preferredColorScheme(.dark)
     }
 }

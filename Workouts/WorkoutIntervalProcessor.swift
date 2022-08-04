@@ -34,7 +34,7 @@ class WorkoutIntervalProcessor {
         return locations
     }
     
-    func intervalsForDistanceSamples(_ samples: [Quantity], lapDistance: Double?) async throws -> [WorkoutInterval] {
+    func intervalsForDistanceSamples(_ samples: [Quantity], lapDistance: Double?) async -> [WorkoutInterval] {
         let intervalDistance = lapDistance ?? sport.defaultDistanceValue
         
         var chunks = [[Quantity]]()

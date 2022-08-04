@@ -22,11 +22,9 @@ enum UserGender: String {
         }
     }
     
-    var supported: Bool {
+    var isAvailable: Bool {
         switch self {
-        case .male:
-            fallthrough
-        case .female:
+        case .male, .female:
             return true
         default:
             return false
@@ -37,12 +35,35 @@ enum UserGender: String {
         switch self {
         case .male: return "Male"
         case .female: return "Female"
-        case .none: return "n/a"
+        case .none: return "Not Available"
         }
     }
 }
 
 extension HealthProvider {
+    
+    func maxHeartRate() -> Int {
+        if AppSettings.useFormulaMaxHeartRate {
+            return (try? estimateHeartRate()) ?? AppSettings.DEFAULT_MAX_HEART_RATE
+        } else {
+            return AppSettings.maxHeartRate
+        }
+    }
+    
+    func heartRateZones() -> [Int] {
+        let zones = AppSettings.heartRateZones
+        
+        if let (_, _, _, _, _) = zones.tuple as? HRZoneTuple {
+            return zones
+        }
+        
+        let maxHeartRate = self.maxHeartRate()
+        let calculator = HRZonesCalculator(maxHeartRate: maxHeartRate, values: [])
+        let newZones = calculator.defaultValues()
+        
+        AppSettings.heartRateZones = newZones
+        return newZones
+    }
     
     func dateOfBirth() -> Date? {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
@@ -65,7 +86,7 @@ extension HealthProvider {
         
     }
     
-    func estimateHeartRate() async throws -> Int {
+    func estimateHeartRate() throws -> Int {
         let (_, age) = try self.dateOfBirthAndAge()
         let max = 211.0 - (0.64 * Double(age))
         return Int(max)
@@ -82,13 +103,13 @@ extension HealthProvider {
         }
     }
     
-    func profileMaxHeartRate() async -> Int {
+    func profileMaxHeartRate() -> Int {
         do {
             guard AppSettings.useFormulaMaxHeartRate else {
                 throw WorkoutError("should use manual max heart rate")
             }
             
-            return try await estimateHeartRate()
+            return try estimateHeartRate()
         } catch {
             return AppSettings.maxHeartRate
         }

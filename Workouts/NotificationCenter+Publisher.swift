@@ -8,7 +8,8 @@
 import SwiftUI
 
 fileprivate let memoryNotification = UIApplication.didReceiveMemoryWarningNotification
-fileprivate let refreshNotification = Notification.Name.didFinishProcessingRemoteData
+fileprivate let finishedProcessingWorkoutsNotification = Notification.Name.didFinishProcessingRemoteData
+fileprivate let finishedFetchingWorkoutsNotification = Notification.Name.didFinishFetchingRemoteData
 
 extension NotificationCenter.Publisher {
     
@@ -16,8 +17,12 @@ extension NotificationCenter.Publisher {
         NotificationCenter.default.publisher(for: memoryNotification)
     }
     
-    static func workoutRefreshPublisher() -> NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: refreshNotification)
+    static func workoutsFetchNotification() -> NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: finishedFetchingWorkoutsNotification)
+    }
+    
+    static func workoutsProcessNotification() -> NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: finishedProcessingWorkoutsNotification)
     }
     
     static func foregroundPublisher() -> NotificationCenter.Publisher {

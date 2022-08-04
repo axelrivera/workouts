@@ -59,7 +59,6 @@ struct TagGrid: View {
         TagCloud(models: tags) {
             TagView(viewModel: $0)
         }
-        .padding([.top, .bottom], 5.0)
     }
     
 }

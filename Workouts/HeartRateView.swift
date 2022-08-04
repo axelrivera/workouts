@@ -13,16 +13,10 @@ struct HeartRateView: View {
         var id: Int { hashValue }
     }
     
-    enum ActiveAlert: Identifiable {
-        case allConfirmation
-        var id: Int { hashValue }
-    }
-    
     @Environment(\.managedObjectContext) var managedObjectContext
     @EnvironmentObject var purchaseManager: IAPManager
     
     @State private var activeSheet: ActiveSheet?
-    @State private var activeAlert: ActiveAlert?
     
     @StateObject private var zoneManager = HRZoneManager()
     @StateObject private var editManager = HREditManager()
@@ -31,24 +25,49 @@ struct HeartRateView: View {
         Form {
             Section {
                 HStack {
-                    Label("Max Heart Rate", systemImage: "arrow.up.heart.fill")
+                    Label {
+                        Text("Max Heart Rate")
+                            .foregroundColor(.secondary)
+                    } icon: {
+                        Image(systemName: "bolt.heart.fill")
+                            .foregroundColor(.red)
+                    }
+                    
                     Spacer()
-                    Text(editManager.estimateMaxHeartRateString)
-                        .foregroundColor(.secondary)
+                    Text(editManager.formattedMaxHeartRate)
+                        .foregroundColor(.primary)
                 }
                 
                 HStack {
-                    Label("Resting Heart Rate", systemImage: "arrow.down.heart.fill")
+                    Label {
+                        Text("Resting Heart Rate")
+                            .foregroundColor(.secondary)
+                    } icon: {
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(.red)
+                    }
+
                     Spacer()
-                    Text(editManager.recentRestingHeartRateString)
-                        .foregroundColor(.secondary)
+                    Text(editManager.formattedRestingHeartRate)
+                        .foregroundColor(.primary)
                 }
                 
                 Button(action: { activeSheet = .edit }) {
-                    Label("Edit Heart Rate", systemImage: "slider.horizontal.3")
+                    Text("Edit Heart Rate")
                 }
+            } header: {
+                HStack {
+                    Text("Heart Rate")
+                    Spacer()
+                    Button(action: { activeSheet = .info }) {
+                        Image(systemName: "info.circle")
+                            .font(.body)
+                    }
+                }
+            } footer: {
+                Text("Max and resting heart rates are used to calculate heart rate zones and training load.")
             }
-            .onAppear { editManager.loadValues() }
+            .task { await editManager.load() }
             
             Section {
                 ForEach(HRZone.allCases) { zone in
@@ -57,77 +76,37 @@ struct HeartRateView: View {
                 }
                 
                 Button(action: { activeSheet = .editZones }) {
-                    Label("Edit Zones", systemImage: "slider.horizontal.3")
+                    Text("Edit Heart Rate Zones")
                 }
             } header: {
-                Text("Heart Rate Zones")
-            }
-            
-            Section {
-                Button(action: { activeAlert = .allConfirmation }) {
-                    Label("Apply to All Workouts", systemImage: "calendar.badge.clock")
+                HStack {
+                    Text("Heart Rate Zones")
+                    Spacer()
+                    Button(action: { activeSheet = .explanation }) {
+                        Image(systemName: "info.circle")
+                            .font(.body)
+                    }
                 }
             }
-            
-//            Section(header: Text("Help")) {
-//                Button(action: { activeSheet = .info }) {
-//                    Label("Learn More", systemImage: "info.circle")
-//                }
-//
-//                Button(action: { activeSheet = .explanation }) {
-//                    Label("Heart Rate Zones Explained", systemImage: "lightbulb")
-//                }
-//            }
+            .onAppear { zoneManager.load() }
         }
-        .navigationTitle("Heart Rate")
+        .navigationTitle("Heart")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $activeSheet) { sheet in
+        .sheet(item: $activeSheet, onDismiss: { editManager.load() }) { sheet in
             switch sheet {
             case .edit:
-                HREditView(manager: editManager)
+                HREditView()
+                    .environmentObject(editManager)
             case .editZones:
-                HRZonesEditView(action: saveAction)
-                    .environmentObject(HRZoneManager())
+                HRZonesEditView()
+                    .environmentObject(zoneManager)
             case .info:
                 SafariView(urlString: URLStrings.heartRateInfo)
             case .explanation:
                 HeartRateInfoView()
             }
         }
-        .alert(item: $activeAlert) { alert in
-            switch alert {
-            case .allConfirmation:
-                let title = "Update All Workouts?"
-                let message = "This action will update all your existing workouts with your current Max Heart Rate and Current Zones."
-                
-                return Alert.showAlertWithTitle(title, message: message, action: applyAllAction)
-            }
-        }
     }
-}
-
-// MARK: - Actions
-
-extension HeartRateView {
-    
-    func saveAction(heartRate: Int, values: [Int]) {
-        AnalyticsManager.shared.capture(.savedHRZone)
-        
-        zoneManager.maxHeartRate = Double(heartRate)
-        zoneManager.values = values
-        AppSettings.maxHeartRate = heartRate
-        AppSettings.heartRateZones = values
-        activeSheet = nil
-    }
-    
-    func applyAllAction() {
-        AnalyticsManager.shared.capture(.applyAllHRZones)
-        
-        let heartRate = AppSettings.maxHeartRate
-        let values = AppSettings.heartRateZones
-        Workout.batchUpdateHeartRateZones(with: heartRate, values: values, in: managedObjectContext)
-    }
-    
 }
 
 struct HeartRateView_Previews: PreviewProvider {
@@ -147,7 +126,7 @@ struct HRSectionRow: View {
     var zone: HRZone
     
     @Environment(\.isEnabled) var isEnabled
-    @EnvironmentObject var zoneManager: HRZoneManager
+    @EnvironmentObject var manager: HRZoneManager
     
     private let opacityValue = 0.5
     
@@ -178,22 +157,22 @@ struct HRSectionRow: View {
             }
             
             HStack {
-                Text(HRZoneManager.stringForRange(range))
+                Text(HRZonesCalculator.stringForRange(range))
                     .font(.body)
                     .foregroundColor(primaryColor)
                 Spacer()
-                Text(HRZoneManager.stringForPercentRange(percentRange))
+                Text(HRZonesCalculator.stringForPercentRange(percentRange))
                     .font(.fixedSubheadline)
                     .foregroundColor(secondaryColor)
             }
         }
     }
     
-    var range: HRZoneManager.ZoneRange {
-        zoneManager.rangeForZone(zone)
+    var range: HRZonesCalculator.ZoneRange {
+        manager.calculator.rangeForZone(zone)
     }
     
-    var percentRange: HRZoneManager.ZonePercentRange {
-        zoneManager.percentRangeForZone(zone)
+    var percentRange: HRZonesCalculator.ZonePercentRange {
+        manager.calculator.percentRangeForZone(zone)
     }
 }

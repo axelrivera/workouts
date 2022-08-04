@@ -26,25 +26,25 @@ struct NoWorkoutsView: View {
     }
 }
 
-struct ProcessingLocationView: View {
+struct ProcessingWorkoutDataView: View {
     
     var body: some View {
         VStack(spacing: 5.0) {
             HStack(spacing: 10.0) {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                Text("Processing Location Data")
+                Text("Processing Workouts…")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             Text("Some data may not be available while processing")
                 .font(.footnote)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.primary.opacity(0.8))
                 .multilineTextAlignment(.center)
         }
         .padding([.top, .bottom], CGFloat(10.0))
         .frame(maxWidth: .infinity)
-        .background(Color.red.opacity(0.5))
+        .background(Color.red.opacity(0.2))
         .background(.regularMaterial)
     }
     
@@ -56,8 +56,9 @@ struct NoWorkoutsView_Previews: PreviewProvider {
         NavigationView {
             VStack {
                 NoWorkoutsView()
-                ProcessingLocationView()
+                ProcessingWorkoutDataView()
             }
         }
+        .preferredColorScheme(.light)
     }
 }

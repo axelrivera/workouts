@@ -71,5 +71,4 @@ struct WorkoutSchema: Hashable, RawRepresentable {
     static let trimp = WorkoutSchema("trimp")
     static let avgHeartRateReserve = WorkoutSchema("avgHeartRateReserve")
     static let valuesUpdated = WorkoutSchema("valuesUpdated")
-    static let locationUpdated = WorkoutSchema("locationUpdated")
 }

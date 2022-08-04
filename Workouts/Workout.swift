@@ -64,7 +64,6 @@ class Workout: NSManagedObject {
     @NSManaged var trimp: Int
     @NSManaged var avgHeartRateReserve: Double
     @NSManaged var valuesUpdated: Date?
-    @NSManaged var locationUpdated: Date?
             
     // MARK: Enums
     @nonobjc
@@ -251,17 +250,9 @@ extension Workout {
     static var activeDurationPredicate: NSPredicate {
         NSPredicate(format: "%K > %@", WorkoutSchema.duration.key, NSNumber(value: 0))
     }
-    
-//    static var locationPendingPredicate: NSPredicate {
-//        NSPredicate(format: "%K == %@", IsLocationPendingKey, NSNumber(booleanLiteral: true))
-//    }
-    
+        
     static var valuesPendingPredicate: NSPredicate {
         NSPredicate(format: "%K == NULL", WorkoutSchema.valuesUpdated.key)
-    }
-    
-    static var locationPendingPredicate: NSPredicate {
-        NSPredicate(format: "%K == NULL", WorkoutSchema.locationUpdated.key)
     }
     
     static func predicateForIdentifiers(_ identifiers: [UUID]) -> NSPredicate {
@@ -389,12 +380,6 @@ extension Workout {
     
     static func pendingValues(in context: NSManagedObjectContext) -> [UUID] {
         let predicates = [notMarkedForLocalDeletionPredicate, valuesPendingPredicate]
-        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        return workoutIds(forPredicate: predicate, context: context)
-    }
-    
-    static func pendingLocation(in context: NSManagedObjectContext) -> [UUID] {
-        let predicates = [notMarkedForLocalDeletionPredicate, locationPendingPredicate]
         let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         return workoutIds(forPredicate: predicate, context: context)
     }

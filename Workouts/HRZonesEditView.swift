@@ -17,13 +17,7 @@ extension HRZonesEditView {
 
 struct HRZonesEditView: View {
     @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var zoneManager: HRZoneManager
-    
-    let action: HRZoneManagerAction
-    
-    init(action: @escaping HRZoneManagerAction) {
-        self.action = action
-    }
+    @EnvironmentObject var manager: HRZoneManager
     
     var body: some View {
         NavigationView {
@@ -32,7 +26,7 @@ struct HRZonesEditView: View {
                     HStack {
                         Text("Max Heart Rate")
                         Spacer()
-                        Text(zoneManager.maxHeartRateString)
+                        Text(manager.maxHeartRateString)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -40,21 +34,21 @@ struct HRZonesEditView: View {
                 Section {
                     ForEach(HRZone.allCases) {
                         HREditSectionRow(zone: $0)
-                            .environmentObject(zoneManager)
+                            .environmentObject(manager)
                     }
                 }
                 
                 Section(footer: Text("Resetting will use your Max Heart Rate to calculate new zones based on default values. You can adjust further to meet your training goals.")) {
-                    Button("Reset Zones", action: zoneManager.autoCalculate)
+                    Button("Reset Zones", action: manager.autoCalculate)
                         .accentColor(.red)
                 }
             }
-            .onAppear { AnalyticsManager.shared.logPage(.editHRZones)}
+            .onAppear(perform: load)
             .navigationTitle("Edit Zones")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    Button("Cancel", action: dismiss)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
@@ -70,20 +64,27 @@ struct HRZonesEditView: View {
 
 extension HRZonesEditView {
     
+    func load() {
+        AnalyticsManager.shared.logPage(.editHRZones)
+        manager.load()
+    }
+    
     func save() {
-        action(Int(zoneManager.maxHeartRate), zoneManager.values)
+        AnalyticsManager.shared.capture(.savedHRZone)
+        AppSettings.heartRateZones = manager.values
+        dismiss()
+    }
+    
+    func dismiss() {
+        presentationMode.wrappedValue.dismiss()
     }
     
 }
 
 struct HRZonesEditView_Previews: PreviewProvider {
     
-    static func saveAction(_ heartRate: Int, _ values: [Int]) {
-        // no-op
-    }
-    
     static var previews: some View {
-        HRZonesEditView(action: saveAction)
+        HRZonesEditView()
             .environmentObject(HRZoneManager())
             .preferredColorScheme(.dark)
     }
@@ -93,7 +94,7 @@ struct HRZonesEditView_Previews: PreviewProvider {
 
 struct HREditSectionRow: View {
     var zone: HRZone
-    @EnvironmentObject var zoneManager: HRZoneManager
+    @EnvironmentObject var manager: HRZoneManager
         
     var body: some View {
         VStack(alignment: .leading, spacing: 5.0) {
@@ -115,23 +116,23 @@ struct HREditSectionRow: View {
                 .foregroundColor(.secondary)
                         
             Stepper(
-                onIncrement: { zoneManager.incrementZone(zone) },
-                onDecrement: { zoneManager.decrementZone(zone)}) {
+                onIncrement: { manager.incrementZone(zone) },
+                onDecrement: { manager.decrementZone(zone)}) {
                 inputLabel()
             }
         }
     }
         
-    var range: HRZoneManager.ZoneRange {
-        zoneManager.rangeForZone(zone)
+    var range: HRZonesCalculator.ZoneRange {
+        manager.calculator.rangeForZone(zone)
     }
     
-    var percentRange: HRZoneManager.ZonePercentRange {
-        zoneManager.percentRangeForZone(zone)
+    var percentRange: HRZonesCalculator.ZonePercentRange {
+        manager.calculator.percentRangeForZone(zone)
     }
     
     func textString() -> String {
-        HRZoneManager.stringForPercentRange(percentRange)
+        HRZonesCalculator.stringForPercentRange(percentRange)
     }
     
     func inputLabel() -> some View {

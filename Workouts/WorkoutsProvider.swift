@@ -13,6 +13,8 @@ let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
 let WORKOUTS_REMOTE_CONTAINER = "iCloud.me.axelrivera.Workouts"
 
 class WorkoutsProvider {
+    let PROCESSING_REFRESH_COUNT = 10
+    
     let logger = Logger(subsystem: "me.axelrivera.Workouts", category: "persistence")
     
     static let shared = WorkoutsProvider()
@@ -42,7 +44,7 @@ class WorkoutsProvider {
     
     private init(inMemory: Bool = false) {
         self.inMemory = inMemory
-        self.anchor = AppSettings.workoutsQueryAnchor
+        anchor = AppSettings.workoutsQueryAnchor
         
         // Observe Core Data remote change notifications on the queue where the changes were made.
         notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { note in
@@ -58,30 +60,28 @@ class WorkoutsProvider {
             NotificationCenter.default.removeObserver(observer)
         }
     }
-    
-    private var lastToken: NSPersistentHistoryToken?
-    
-//    private var lastToken: NSPersistentHistoryToken? = nil {
-//        didSet {
-//            guard let token = lastToken,
-//                let data = try? NSKeyedArchiver.archivedData( withRootObject: token, requiringSecureCoding: true) else { return }
-//
-//            do {
-//                try data.write(to: Self.tokenFile)
-//            } catch {
-//                logger.debug("failed to write token data. Error = \(error.localizedDescription)")
-//            }
-//        }
-//    }
+        
+    private var lastToken: NSPersistentHistoryToken? = nil {
+        didSet {
+            guard let token = lastToken,
+                let data = try? NSKeyedArchiver.archivedData( withRootObject: token, requiringSecureCoding: true) else { return }
+
+            do {
+                try data.write(to: Self.tokenFile)
+            } catch {
+                logger.debug("failed to write token data. Error = \(error.localizedDescription)")
+            }
+        }
+    }
     
     lazy var container: NSPersistentContainer = {
-//        if let tokenData = try? Data(contentsOf: Self.tokenFile) {
-//            do {
-//                lastToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
-//            } catch {
-//                logger.debug("failed to unarchive history token: \(error.localizedDescription)")
-//            }
-//        }
+        if let tokenData = try? Data(contentsOf: Self.tokenFile) {
+            do {
+                lastToken = try NSKeyedUnarchiver.unarchivedObject(ofClass: NSPersistentHistoryToken.self, from: tokenData)
+            } catch {
+                logger.debug("failed to unarchive history token: \(error.localizedDescription)")
+            }
+        }
         
         let container = NSPersistentContainer(name: "Workouts")
         
@@ -99,17 +99,6 @@ class WorkoutsProvider {
             localDescription.type = NSInMemoryStoreType
             cloudDescription.type = NSInMemoryStoreType
         } else {
-            // Local
-//            localDescription.setOption(
-//                true as NSNumber,
-//                forKey: NSPersistentHistoryTrackingKey
-//            )
-//            localDescription.setOption(
-//                true as NSNumber,
-//                forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey
-//            )
-            
-            // Cloud
             cloudDescription.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: WORKOUTS_REMOTE_CONTAINER
             )
@@ -140,37 +129,6 @@ class WorkoutsProvider {
         
         return container
     }()
-    
-    private func newTaskContext() -> NSManagedObjectContext {
-        let taskContext = container.newBackgroundContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
-        // to reduce resource requirements.
-        taskContext.undoManager = nil
-        return taskContext
-    }
-    
-    static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
-        let viewContext = context ?? sampleContext
-
-        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
-        let end = start.addingTimeInterval(9000) // 1 hour
-        let duration = end.timeIntervalSince(start)
-        
-        let workout = Workout(context: viewContext)
-        workout.remoteIdentifier = UUID()
-        workout.sport = sport ?? .cycling
-        workout.indoor = false
-        workout.start = start
-        workout.end = end
-        workout.duration = duration
-        workout.valuesUpdated = Date()
-        workout.locationUpdated = Date()
-        workout.source = "Workouts Preview"
-        workout.device = nil
-        
-        return workout
-    }
 }
 
 // MARK: - Workouts
@@ -179,35 +137,35 @@ extension WorkoutsProvider {
     typealias WorkoutTagValue = (workout: UUID, tag: UUID)
     
     func fetchWorkouts(regenerate: Bool = false) async throws {
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .willBeginProcessingRemoteData, object: nil)
+        // context only used for fetching fata in this method
+        let fetchContext = newTaskContext()
+        
+        if regenerate {
+            anchor = nil
         }
         
         let (workouts, deleted, newAnchor) = await downloader.fethLatestWorkouts(anchor: anchor)
         
         if deleted.isPresent {
-            deleteWorkouts(with: deleted)
+            await deleteWorkouts(with: deleted)
         }
         
         var inserts = Set<HKWorkout>()
-        var updates = Set<HKWorkout>()
-        var updateIds = Set<UUID>()
+        var regenerates = Set<UUID>()
+        
         var tagValues = [WorkoutTagValue]()
                 
         for remoteWorkout in workouts {
-            if let _ = Workout.find(using: remoteWorkout.uuid, in: container.viewContext) {
+            if let _ = Workout.find(using: remoteWorkout.uuid, in: fetchContext) {
                 if regenerate {
-                    updates.insert(remoteWorkout)
-                    updateIds.insert(remoteWorkout.uuid)
+                    regenerates.insert(remoteWorkout.uuid)
                 } else {
                     Log.debug("SYNC: skip workout \(remoteWorkout.uuid)")
                 }
             } else {
                 inserts.insert(remoteWorkout)
-                updates.insert(remoteWorkout)
-                updateIds.insert(remoteWorkout.uuid)
                 
-                let tags = Tag.defaultTags(sport: remoteWorkout.workoutActivityType.sport(), in: container.viewContext)
+                let tags = Tag.defaultTags(sport: remoteWorkout.workoutActivityType.sport(), in: fetchContext)
                 tags.forEach { tagValues.append((remoteWorkout.uuid, $0)) }
             }
         }
@@ -221,21 +179,50 @@ extension WorkoutsProvider {
             throw error
         }
         
+        let refreshIds = workouts.map({ $0.uuid })
+        WorkoutStorage.reloadWorkouts(for: refreshIds)
+        
         DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .didFinishProcessingRemoteData, object: nil)
+            NotificationCenter.default.post(name: .didFinishFetchingRemoteData, object: nil)
         }
         
-        let allPending = Set(Workout.pendingValues(in: container.viewContext))
-        let pending = allPending.subtracting(updateIds)
-        if pending.isPresent {
-            let pendingWorkouts = (try? await healthProvider.fetchWorkouts(for: Array(pending))) ?? [HKWorkout]()
-            pendingWorkouts.forEach { updates.insert($0) }
-        }
+        // reset pending values for workouts marked as regenerate
+        await resetPendingValues(with: Array(regenerates))
+        let updates = Workout.pendingValues(in: fetchContext)
 
-        if updates.isPresent {
-            await processRemoteWorkouts(Array(updates))
+        if inserts.isPresent || updates.isPresent {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .willBeginProcessingRemoteData, object: nil)
+            }
+            
+            if inserts.isPresent {
+                logger.debug("processing inserts")
+                let sortedInserts = inserts.sorted { $0.startDate > $1.startDate }
+                await processRemoteWorkouts(sortedInserts)
+            }
+            
+            if updates.isPresent {
+                logger.debug("processing regenerates")
+                
+                do {
+                    let workoutsToUpdate = try await healthProvider.fetchWorkouts(for: Array(updates))
+                    await processRemoteWorkouts(workoutsToUpdate)
+                } catch {
+                    logger.debug("failed to fetch workouts: \(error.localizedDescription)")
+                }
+            }
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .didFinishProcessingRemoteData, object: nil)
+            }
         }
     }
+    
+}
+
+// MARK: - Processing
+
+extension WorkoutsProvider {
     
     private func importWorkouts(for remoteWorkouts: [HKWorkout]) async throws {
         guard remoteWorkouts.isPresent else { return }
@@ -271,29 +258,59 @@ extension WorkoutsProvider {
             self.mergeChanges(for: NSInsertedObjectsKey, objects: objects)
         }
     }
+    
+    private func resetPendingValues(with identifiers: [UUID]) async {
+        let taskContext = newTaskContext()
+        taskContext.name = "resetPendingValuesContext"
+        taskContext.transactionAuthor = "updateWorkout"
+        
+        do {
+            try await taskContext.perform {
+                let request = self.newBatchUpdateRequest(
+                    for: identifiers,
+                    propertiesToUpdate: [WorkoutSchema.valuesUpdated.rawValue: NSNull()]
+                )
+                request.resultType = .statusOnlyResultType
+                
+                try taskContext.execute(request)
+            }
+        } catch {
+            logger.debug("reset pending values failed")
+        }
+    }
         
     private func processRemoteWorkouts(_ remoteWorkouts: [HKWorkout]) async {
         let taskContext = newTaskContext()
         taskContext.name = "updateContext"
         taskContext.transactionAuthor = "updateWorkout"
         
+        let maxHR = healthProvider.maxHeartRate()
+        let restingHR = await healthProvider.profileRestingHeartRate()
+        let gender = healthProvider.userGender()
+        
         let chunked = Array(remoteWorkouts.chunks(ofCount: 5))
         
         var index = 0
         let total = chunked.count
-        var updates = [NSManagedObjectID]()
+        var updates = [WorkoutIDTuple]()
         
         while index < total {
             let chunk = chunked[index]
             
             do {
-                let objects: [NSManagedObjectID] = try await withThrowingTaskGroup(of: NSManagedObjectID.self) { group in
-                    var objects = [NSManagedObjectID]()
+                let objects: [WorkoutIDTuple] = try await withThrowingTaskGroup(of: WorkoutIDTuple.self) { group in
+                    var objects = [WorkoutIDTuple]()
                     objects.reserveCapacity(chunk.count)
                     
                     for remoteWorkout in chunk {
                         group.addTask {
-                            return try await self.processRemoteWorkout(remoteWorkout, context: taskContext)
+                            return try await self.processRemoteWorkout(
+                                remoteWorkout,
+                                maxHR: maxHR,
+                                restingHR: restingHR,
+                                gender: gender,
+                                context: taskContext
+                            )
                         }
                     }
                     
@@ -306,9 +323,9 @@ extension WorkoutsProvider {
                 
                 updates.append(contentsOf: objects)
                 
-                if updates.count >= 25 {
-                    mergeChanges(for: NSUpdatedObjectsKey, objects: updates)
-                    updates = [NSManagedObjectID]()
+                if updates.count >= PROCESSING_REFRESH_COUNT {
+                    processUpdates(updates)
+                    updates = [WorkoutIDTuple]()
                 }
             } catch {
                 logger.debug("processing workout failed: \(error.localizedDescription)")
@@ -317,28 +334,54 @@ extension WorkoutsProvider {
             index += 1
         }
         
-        mergeChanges(for: NSUpdatedObjectsKey, objects: updates)
+        // process any remaining workouts missed in chunk
+        processUpdates(updates)
     }
     
-    func mergeChanges(for key: String, objects: [NSManagedObjectID]) {
+    func processUpdates(_ updates: [WorkoutIDTuple]) {
+        guard updates.isPresent else { return }
+        
+        let objects = updates.map({ $0.id })
+        let uuids = updates.map({ $0.uuid })
+        mergeChanges(for: NSUpdatedObjectsKey, objects: objects, uuids: uuids)
+    }
+    
+    func mergeChanges(for key: String, objects: [NSManagedObjectID], uuids: [UUID] = []) {
         guard objects.isPresent else { return }
         
         let viewContext = container.viewContext
         viewContext.perform {
             let changes = [key: objects]
             NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
+            
+            if uuids.isPresent {
+                WorkoutStorage.reloadWorkouts(for: uuids)
+            }
         }
     }
     
-    private func processRemoteWorkout(_ remoteWorkout: HKWorkout, context: NSManagedObjectContext) async throws -> NSManagedObjectID {
-        let processor = WorkoutProcessor(workout: remoteWorkout)
+    typealias WorkoutIDTuple = (id: NSManagedObjectID, uuid: UUID)
+    
+    private func processRemoteWorkout(
+        _ remoteWorkout: HKWorkout,
+        maxHR: Int,
+        restingHR: Int,
+        gender: UserGender,
+        context: NSManagedObjectContext
+    ) async throws -> WorkoutIDTuple {
+        let processor = WorkoutProcessor(
+            workout: remoteWorkout,
+            maxHR: maxHR,
+            restingHR: restingHR,
+            gender: gender
+        )
         await processor.process()
         
         let values = await processor.dictionary
         
         var object: NSManagedObjectID?
         try await context.perform {
-            let request = self.newBatchUpdateRequest(for: remoteWorkout.uuid, values: values)
+            let request = self.newBatchUpdateRequest(for: remoteWorkout.uuid, propertiesToUpdate: values)
             request.resultType = .updatedObjectIDsResultType
             
             let response = try context.execute(request) as? NSBatchUpdateResult
@@ -347,11 +390,39 @@ extension WorkoutsProvider {
         }
         
         if let object = object {
-            return object
+            return (object, remoteWorkout.uuid)
         }
         
         throw WorkoutError("missing object id")
     }
+    
+    func deleteWorkouts(with ids: [UUID]) async {
+        let taskContext = newTaskContext()
+        taskContext.name = "deleteWorkoutsContext"
+        taskContext.transactionAuthor = "deleteWorkouts"
+        
+        logger.debug("start deleting workouts: \(ids.count)")
+        
+        do {
+            try await taskContext.perform {
+                let request = self.newBatchUpdateRequest(
+                    for: ids,
+                    propertiesToUpdate: [WorkoutSchema.markedForDeletionDate.rawValue: Date()]
+                )
+                request.resultType = .statusOnlyResultType
+                
+                try taskContext.execute(request)
+            }
+        } catch {
+            logger.debug("failed to delete workouts: \(error.localizedDescription)")
+        }
+    }
+    
+}
+
+// MARK: - Batch Requests
+
+extension WorkoutsProvider {
     
     private func newBatchInsertRequest(for remoteWorkouts: [HKWorkout]) -> NSBatchInsertRequest {
         var index = 0
@@ -402,6 +473,20 @@ extension WorkoutsProvider {
         return request
     }
     
+    func newBatchUpdateRequest(for identifier: UUID, propertiesToUpdate properties: [String: Any]) -> NSBatchUpdateRequest {
+        let request = NSBatchUpdateRequest(entity: Workout.entity())
+        request.predicate = Workout.predicateForRemoteIdentifier(identifier)
+        request.propertiesToUpdate = properties
+        return request
+    }
+    
+    func newBatchUpdateRequest(for identifiers: [UUID], propertiesToUpdate properties: [String: Any]) -> NSBatchUpdateRequest {
+        let request = NSBatchUpdateRequest(entity: Workout.entity())
+        request.predicate = Workout.predicateForIdentifiers(identifiers)
+        request.propertiesToUpdate = properties
+        return request
+    }
+    
     func newBatchInsertRequest(for tagValues: [WorkoutTagValue]) -> NSBatchInsertRequest {
         var index = 0
         let total = tagValues.count
@@ -421,22 +506,40 @@ extension WorkoutsProvider {
         return request
     }
     
-    func newBatchUpdateRequest(for identifier: UUID, values: [String: Any]) -> NSBatchUpdateRequest {
-        let request = NSBatchUpdateRequest(entity: Workout.entity())
-        request.predicate = Workout.predicateForRemoteIdentifier(identifier)
-        request.propertiesToUpdate = values
-        return request
+}
+
+// MARK: Additional Methods
+
+extension WorkoutsProvider {
+    
+    private func newTaskContext() -> NSManagedObjectContext {
+        let taskContext = container.newBackgroundContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Set unused undoManager to nil for macOS (it is nil by default on iOS)
+        // to reduce resource requirements.
+        taskContext.undoManager = nil
+        return taskContext
     }
     
-    func deleteWorkouts(with ids: [UUID]) {
-        let context = container.viewContext
+    static func sampleWorkout(sport: Sport? = nil, date: Date? = nil, moc context: NSManagedObjectContext? = nil) -> Workout {
+        let viewContext = context ?? sampleContext
+
+        let start = date ?? Date.dateFor(month: 1, day: 1, year: 2021)!
+        let end = start.addingTimeInterval(9000) // 1 hour
+        let duration = end.timeIntervalSince(start)
         
-        logger.debug("start deleting workouts: \(ids.count)")
-        context.perform {
-            let workouts = Workout.fetchWorkoutsWithRemoteIdentifiers(ids, in: context)
-            workouts.forEach { $0.markForLocalDeletion() }
-        }
-        logger.debug("finished deleting workouts")
+        let workout = Workout(context: viewContext)
+        workout.remoteIdentifier = UUID()
+        workout.sport = sport ?? .cycling
+        workout.indoor = false
+        workout.start = start
+        workout.end = end
+        workout.duration = duration
+        workout.valuesUpdated = Date()
+        workout.source = "Workouts Preview"
+        workout.device = nil
+        
+        return workout
     }
     
 }
@@ -506,4 +609,9 @@ extension WorkoutsProvider {
         }
     }
     
+}
+
+extension Notification.Name {
+    static let didFindRelevantTransactions = Notification.Name("didFindRelevantTransactions")
+    static let didFinishProcessingDuplicates = Notification.Name("didFinishProcessingDuplicates")
 }

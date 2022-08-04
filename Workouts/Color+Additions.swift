@@ -64,7 +64,8 @@ extension Color {
     static let obsidian = Color(hex: "000000")
     
     static var workoutColors: [Color] = {
-        [accentColor, ruby, amber, citrine, emerald, amazonite, apatite, saphire, lolite, amethyst, graphite, obsidian]
+        [accentColor, ruby, amber, citrine, emerald, amazonite,
+         apatite, saphire, lolite, amethyst, graphite, obsidian]
     }()
     
     static var tagColors: [Color] = {

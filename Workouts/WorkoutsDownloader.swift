@@ -19,7 +19,7 @@ final class WorkoutsDownloader {
         }
     }
     
-    func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
+    private func fetchLatestWorkouts(anchor: HKQueryAnchor?, completion: @escaping (_ remoteWorkouts: [HKWorkout], _ deleted: [UUID], _ newAnchor: HKQueryAnchor?) -> Void) {
         let query = HKAnchoredObjectQuery(
             type: .workoutType(),
             predicate: HealthProvider.shared.defaultActivitiesPredicate(),
