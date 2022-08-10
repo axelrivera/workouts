@@ -119,11 +119,17 @@ struct PaywallButtonStyle: ButtonStyle {
 // MARK: Lock Button
 
 struct PaywallLockButton: View {
+    enum ButtonType {
+        case `default`, small
+    }
+    
     let sample: Bool
+    let buttonType: ButtonType
     var action = {}
     
-    init(sample: Bool = true, action: @escaping () -> Void) {
+    init(sample: Bool = true, type: ButtonType = .default, action: @escaping () -> Void) {
         self.sample = sample
+        self.buttonType = type
         self.action = action
     }
     
@@ -133,16 +139,30 @@ struct PaywallLockButton: View {
                 Image(systemName: "lock.fill")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 64.0, height: 64.0, alignment: .center)
-                if sample {
+                    .frame(width: buttonSize, height: buttonSize, alignment: .center)
+                if showSample {
                     Text("SAMPLE DATA")
                         .font(.fixedFootnote)
                         .foregroundColor(.black.opacity(0.75))
                 }
             }
-            .padding()
+            .padding(.all, buttonType == .small ? 10 : nil)
         }
         .buttonStyle(PaywallLockButtonStyle())
+    }
+    
+    var buttonSize: CGFloat {
+        switch buttonType {
+        case .default:
+            return 64
+        case .small:
+            return 24
+        }
+    }
+    
+    var showSample: Bool {
+        guard buttonType == .default else { return false }
+        return sample
     }
     
 }

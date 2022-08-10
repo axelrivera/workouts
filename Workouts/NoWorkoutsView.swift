@@ -16,12 +16,12 @@ struct NoWorkoutsView: View {
             
             Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
                 .font(.footnote)
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
         }
         .padding([.top, .bottom], CGFloat(10.0))
         .frame(maxWidth: .infinity)
-        .background(Color.yellow.opacity(0.5))
+        .background(Color.red.opacity(0.2))
         .background(.regularMaterial)
     }
 }

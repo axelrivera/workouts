@@ -34,7 +34,6 @@
         <attribute name="device" optional="YES" attributeType="String"/>
         <attribute name="distance" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="effort" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="elevationAscended" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="elevationDescended" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="end" attributeType="Date" defaultDateTimeInterval="643864620" usesScalarValueType="NO"/>
@@ -109,7 +108,7 @@
     </configuration>
     <elements>
         <element name="Tag" positionX="-54" positionY="144" width="128" height="164"/>
-        <element name="Workout" positionX="-63" positionY="-18" width="128" height="725"/>
+        <element name="Workout" positionX="-63" positionY="-18" width="128" height="710"/>
         <element name="WorkoutMetadata" positionX="-54" positionY="144" width="128" height="74"/>
         <element name="WorkoutTag" positionX="-54" positionY="144" width="128" height="74"/>
     </elements>

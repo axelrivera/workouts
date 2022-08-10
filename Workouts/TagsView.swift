@@ -122,8 +122,11 @@ struct TagsContentView: View {
     
     @ViewBuilder
     func emptyView() -> some View {
-        if tags.isEmpty {
-            EmptyTagsView(displayType: .tags, onCreate: { reload() })
+        if currentSegment == .active && tags.isEmpty {
+            EmptyTagsView(displayType: .tags, onCreate: reload)
+        } else if currentSegment == .archived && tags.isEmpty {
+            Text("No Tags")
+                .foregroundColor(.secondary)
         }
     }
     

@@ -94,6 +94,7 @@ struct StatsTimelineContentView: View {
                     } label: {
                         Text(manager.timeframe.menuTitle)
                     }
+                    .disabled(purchaseManager.isFreeUser)
                 }
             }
         }

@@ -9,11 +9,12 @@ import Foundation
 import HealthKit
 
 final class HRZonesCalculator {
-    static let DEFAULT_PERCENTS = [0.5, 0.6, 0.7, 0.8, 0.9]
+    static let DEFAULT_PERCENTS: [Int] = [50, 60, 70, 80, 90]
     static let TOTAL_ZONES: Int = 5
+    static let CONVERSION_FACTOR: Double = 100
     
     typealias ZoneRange = (low: Int, high: Int)
-    typealias ZonePercentRange = (low: Double, high: Double)
+    typealias ZonePercentRange = (low: Int, high: Int)
     
     let maxHeartRate: Int
     private(set) var values: [Int]
@@ -35,14 +36,46 @@ final class HRZonesCalculator {
         }
         self.values = values
     }
+    
+    var percentValues: [Int] {
+        values.map { percent(for: $0) }
+    }
+    
 }
 
 // MARK: - Methods
 
 extension HRZonesCalculator {
     
+    static func empty() -> HRZonesCalculator {
+        let maxHeartRate = AppSettings.DEFAULT_MAX_HEART_RATE
+        let values = values(for: DEFAULT_PERCENTS, maxHeartRate: maxHeartRate)
+        return HRZonesCalculator(maxHeartRate: maxHeartRate, values: values)
+    }
+    
+    static func percentForValue(_ value: Int, maxHeartRate: Int) -> Int {
+        guard maxHeartRate > 0 else { return 0 }
+        
+        let max = Double(maxHeartRate)
+        let doubleValue = Double(value)
+        let result = (doubleValue / max) * CONVERSION_FACTOR
+        return Int(round(result))
+    }
+    
+    static func percents(values: [Int], maxHeartRate: Int) -> [Int] {
+        values.map { percentForValue($0, maxHeartRate: maxHeartRate) }
+    }
+    
+    static func values(for percents: [Int], maxHeartRate: Int) -> [Int] {
+        return percents.map { percent in
+            let fraction = Double(percent) / CONVERSION_FACTOR
+            let result = Double(maxHeartRate) * fraction
+            return Int(round(result))
+        }
+    }
+    
     static func defaultValues(for maxHeartRate: Int) -> [Int] {
-        DEFAULT_PERCENTS.map { Int(ceil($0 * Double(maxHeartRate))) }
+        values(for: DEFAULT_PERCENTS, maxHeartRate: maxHeartRate)
     }
     
     func defaultValues() -> [Int] {
@@ -199,54 +232,31 @@ extension HRZonesCalculator {
     
     func percentRangeForZone(_ zone: HRZone) -> ZonePercentRange {
         switch zone {
-        case .zone1:
-            return zone1PercentRange
-        case .zone2:
-            return zone2PercentRange
-        case .zone3:
-            return zone3PercentRange
-        case .zone4:
-            return zone4PercentRange
-        case .zone5:
-            return zone5PercentRange
+        case .zone1: return percentRange(for: zone1Range)
+        case .zone2: return percentRange(for: zone2Range)
+        case .zone3: return percentRange(for: zone3Range)
+        case .zone4: return percentRange(for: zone4Range)
+        case .zone5: return percentRange(for: zone5Range)
         }
-    }
-    
-    var zone1PercentRange: ZonePercentRange {
-        percentRange(for: zone1Range)
-    }
-    
-    var zone2PercentRange: ZonePercentRange {
-        percentRange(for: zone2Range)
-    }
-    
-    var zone3PercentRange: ZonePercentRange {
-        percentRange(for: zone3Range)
-    }
-    
-    var zone4PercentRange: ZonePercentRange {
-        percentRange(for: zone4Range)
-    }
-    
-    var zone5PercentRange: ZonePercentRange {
-        percentRange(for: zone5Range)
     }
     
     private func percentRange(for range: ZoneRange) -> ZonePercentRange {
         (percent(for: range.low), percent(for: range.high))
     }
     
-    private func percent(for value: Int) -> Double {
-        guard maxHeartRate > 0 else { return 0 }
-        return (Double(value) / Double(maxHeartRate)) * 100
+    private func percent(for value: Int) -> Int {
+        Self.percentForValue(value, maxHeartRate: maxHeartRate)
     }
     
     static func stringForPercentRange(_ range: ZonePercentRange) -> String {
-        if range.low > 0 && range.high == 0 {
-            return String(format: "> %.0f%% of HR max", range.low)
+        let low = Double(range.low)
+        let high = Double(range.high)
+        
+        if low > 0 && high == 0 {
+            return String(format: "> %.0f%% of HR max", low)
         }
         
-        return String(format: "%.0f - %.0f%% of HR max", range.low, range.high)
+        return String(format: "%.0f - %.0f%% of HR max", low, high)
     }
     
 }

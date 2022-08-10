@@ -50,19 +50,51 @@ extension HealthProvider {
         }
     }
     
-    func heartRateZones() -> [Int] {
-        let zones = AppSettings.heartRateZones
-        
-        if let (_, _, _, _, _) = zones.tuple as? HRZoneTuple {
-            return zones
+    func restingHeartRate() async -> Int {
+        do {
+            guard AppSettings.useHealthRestingHeartRate else {
+                throw WorkoutError("should use manual resting heart rate")
+            }
+            
+            guard let restingHeartRate = await fetchRecentRestingHeartRate() else {
+                throw WorkoutError("no recent heart rate found")
+            }
+            
+            return restingHeartRate
+        } catch {
+            return AppSettings.restingHeartRate
+        }
+    }
+    
+    func heartRateZonesPercents() -> [Int] {
+        var percents = AppSettings.heartRateZonePercents
+        if percents.count == HRZonesCalculator.TOTAL_ZONES {
+            return percents
         }
         
-        let maxHeartRate = self.maxHeartRate()
-        let calculator = HRZonesCalculator(maxHeartRate: maxHeartRate, values: [])
-        let newZones = calculator.defaultValues()
+        let values = AppSettings.heartRateZones
         
-        AppSettings.heartRateZones = newZones
-        return newZones
+        Log.debug("BACKUP PLAN")
+        Log.debug("values: \(values)")
+        
+        percents = HRZonesCalculator.percents(values: values, maxHeartRate: maxHeartRate())
+        Log.debug("percents: \(percents)")
+        
+        if percents.count != HRZonesCalculator.TOTAL_ZONES {
+            percents = HRZonesCalculator.DEFAULT_PERCENTS
+        }
+        
+        AppSettings.heartRateZonePercents = percents
+        return percents
+    }
+    
+    func heartRateZones() -> [Int] {
+        let percents = heartRateZonesPercents()
+        return HRZonesCalculator.values(for: percents, maxHeartRate: maxHeartRate())
+    }
+    
+    func heartRateZonesCalculator() -> HRZonesCalculator {
+        HRZonesCalculator(maxHeartRate: maxHeartRate(), values: heartRateZones())
     }
     
     func dateOfBirth() -> Date? {
@@ -100,34 +132,6 @@ extension HealthProvider {
             return UserGender(sex: sex)
         } catch {
             return .none
-        }
-    }
-    
-    func profileMaxHeartRate() -> Int {
-        do {
-            guard AppSettings.useFormulaMaxHeartRate else {
-                throw WorkoutError("should use manual max heart rate")
-            }
-            
-            return try estimateHeartRate()
-        } catch {
-            return AppSettings.maxHeartRate
-        }
-    }
-    
-    func profileRestingHeartRate() async -> Int {
-        do {
-            guard AppSettings.useHealthRestingHeartRate else {
-                throw WorkoutError("should use manual resting heart rate")
-            }
-            
-            guard let restingHeartRate = await fetchRecentRestingHeartRate() else {
-                throw WorkoutError("no recent heart rate found")
-            }
-            
-            return restingHeartRate
-        } catch {
-            return AppSettings.restingHeartRate
         }
     }
     

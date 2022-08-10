@@ -131,7 +131,7 @@ private extension ImportView {
         if importManager.isProcessingImports {
             activeAlert = .dismiss
         } else {
-            NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil)
+            Synchronizer.fetchRemoteData()
             presentationMode.wrappedValue.dismiss()
         }
     }

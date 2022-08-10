@@ -21,35 +21,43 @@ struct WorkoutsApp: App {
     let logManager: LogManager
     let statsManager: StatsManager
     
+    let workoutsProvider: WorkoutsProvider
+    let synchronizer: Synchronizer
     let workoutDataStore: WorkoutDataStore
-    let storageProvider = WorkoutsProvider.shared
     let workoutManager: WorkoutManager
     let tagManager: TagManager
-    let synchronizer: Synchronizer
     let analytics = AnalyticsManager.shared
     
     init() {
         purchaseManager.reload()
         
+        // Reset Query Anchor on Every App Load
         AppSettings.workoutsQueryAnchor = nil
-        let context = storageProvider.container.viewContext
+        
+        // Workouts Provider
+        workoutsProvider = WorkoutsProvider.shared
+        let context = workoutsProvider.container.viewContext
+        
+        // Other Singletons
+        synchronizer = Synchronizer(provider: workoutsProvider)
         workoutDataStore = WorkoutDataStore.shared
         logManager = LogManager(context: context)
         statsManager = StatsManager(context: context)
         workoutManager = WorkoutManager(context: context)
         tagManager = TagManager(context: context)
         
-        synchronizer = Synchronizer(provider: storageProvider)
-        
         AnalyticsManager.shared.captureInstallOrUpdate()
         AnalyticsManager.shared.captureOpen(isBackground: false, isPro: purchaseManager.isActive)
+        
+        // Maintenance work should be deleted on next release
+        FileManager.deleteOldImageCacheDirectoryIfNeeded()
     }
     
     @SceneBuilder
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, storageProvider.container.viewContext)
+                .environment(\.managedObjectContext, workoutsProvider.container.viewContext)
                 .environmentObject(workoutManager)
                 .environmentObject(logManager)
                 .environmentObject(statsManager)

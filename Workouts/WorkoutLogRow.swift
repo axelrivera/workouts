@@ -63,11 +63,13 @@ struct WorkoutLogIntervalRow: View {
     @Binding var displayType: LogDisplayType
     var interval: LogInterval
     let totalActivities: Int
+    let showContent: Bool
     
-    init(displayType: Binding<LogDisplayType>, interval: LogInterval) {
+    init(displayType: Binding<LogDisplayType>, interval: LogInterval, showContent: Bool = true) {
         _displayType = displayType
         self.interval = interval
         self.totalActivities = interval.totalActivities
+        self.showContent = showContent
     }
     
     var body: some View {
@@ -83,7 +85,11 @@ struct WorkoutLogIntervalRow: View {
             
             HStack {
                 ForEach(interval.days) { day in
-                    WorkoutLogItem(displayType: $displayType, day: day, hideBubble: false, navigatable: true)
+                    if showContent {
+                        WorkoutLogItem(displayType: $displayType, day: day, hideBubble: false)
+                    } else {
+                        WorkoutLogItem(displayType: $displayType, day: LogDay.randomDay(date: day.date), hideBubble: false)
+                    }
                 }
             }
             .frame(height: 80)
@@ -93,9 +99,15 @@ struct WorkoutLogIntervalRow: View {
     
     func headerText(for interval: LogInterval) -> String {
         switch displayType {
-        case .load: return interval.trimp.formatted()
-        case .distance: return formattedDistanceString(for: interval.distance, zeroPadding: true)
-        case .time: return formattedHoursMinutesPrettyString(for: interval.duration)
+        case .load:
+            let value = showContent ? interval.trimp : 0
+            return value.formatted()
+        case .distance:
+            let value = showContent ? interval.distance : 0
+            return formattedDistanceString(for: value, zeroPadding: true)
+        case .time:
+            let value = showContent ? interval.duration : 0
+            return formattedHoursMinutesPrettyString(for: value)
         }
     }
     
@@ -110,35 +122,26 @@ struct WorkoutLogItem: View {
     var day: LogDay
     var hideBubble: Bool = false
     let totalActivities: Int
-    var navigatable = false
     
     var isEmpty: Bool { totalActivities == 0 }
     
-    init(displayType: Binding<LogDisplayType>, day: LogDay, hideBubble: Bool = false, navigatable: Bool = false) {
+    init(displayType: Binding<LogDisplayType>, day: LogDay, hideBubble: Bool = false) {
         _displayType = displayType
         self.day = day
         self.hideBubble = hideBubble
         totalActivities = day.totalActivities
-        self.navigatable = navigatable
     }
     
     var body: some View {
         VStack(spacing: 5.0) {
-            if navigatable {
-                NavigationLink(destination: destinationView()) {
-                    LogBubble(color: day.color, scaleFactor: scaleFactor)
-                        .overlay(bubbleOverlay())
-                        .frame(idealWidth: maxWidth, idealHeight: maxWidth, alignment: .center)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .disabled(isEmpty)
-                .opacity(hideBubble ? 0.0 : 1.0)
-            } else {
+            NavigationLink(destination: destinationView()) {
                 LogBubble(color: day.color, scaleFactor: scaleFactor)
                     .overlay(bubbleOverlay())
                     .frame(idealWidth: maxWidth, idealHeight: maxWidth, alignment: .center)
-                    .opacity(hideBubble ? 0.0 : 1.0)
             }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(isEmpty)
+            .opacity(hideBubble ? 0.0 : 1.0)
             
             Text(day.label)
                 .font(.footnote)
@@ -190,8 +193,13 @@ extension WorkoutLogItem {
             
             return String(format: "%0.1f", conversion.value)
         case .time:
-            let (h, m, _) = secondsToHoursMinutesSeconds(seconds: Int(day.duration))
-            return String(format: "%d:%02d", h, m)
+            let duration = day.duration
+            if duration > 0 {
+                let (h, m, _) = secondsToHoursMinutesSeconds(seconds: Int(day.duration))
+                return String(format: "%d:%02d", h, m)
+            } else {
+                return "0"
+            }
         }
     }
     

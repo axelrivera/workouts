@@ -32,6 +32,11 @@ extension URL {
         String(format: "%@_%@.%@", id.uuidString, stringForColorScheme(scheme), MapImageExtension)
     }
     
+    static func oldMapImagesCacheDirectory() -> URL {
+        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
+    }
+    
     static func mapImagesCacheDirectory() -> URL {
         let cacheDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
@@ -54,6 +59,27 @@ extension FileManager {
         let url = URL.mapImagesCacheDirectory()
         if !FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        }
+    }
+    
+    static let OLD_CACHE_DIRECTORY_KEY = "arn_delete_old_image_cache_directory"
+    
+    static func deleteOldImageCacheDirectoryIfNeeded() {
+        let isDeleted = UserDefaults.standard.bool(forKey: OLD_CACHE_DIRECTORY_KEY)
+        guard isDeleted else { return }
+        
+        deleteOldImageCacheDirectory()
+        UserDefaults.standard.set(true, forKey: OLD_CACHE_DIRECTORY_KEY)
+    }
+    
+    static func deleteOldImageCacheDirectory() {
+        let url = URL.oldMapImagesCacheDirectory()
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        
+        do {
+            try FileManager.default.moveItem(at: url, to: tmpURL)
+        } catch {
+            Log.debug("failed to delete old image cache directory: \(error.localizedDescription)")
         }
     }
     

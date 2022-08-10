@@ -76,6 +76,10 @@ class IAPManager: ObservableObject {
 
 extension IAPManager {
     
+    var isFreeUser: Bool {
+        !isActive
+    }
+    
     var packagePrice: Double {
         if let pro = pro {
             return NSDecimalNumber(decimal: pro.price).doubleValue

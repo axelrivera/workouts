@@ -41,6 +41,8 @@ extension HRZoneManager {
         let newValues = calculator.defaultValues()
         calculator.updateValues(newValues)
         
+        Log.debug("CALCULATE: values - \(values), percents: \(calculator.percentValues)")
+        
         DispatchQueue.main.async {
             self.values = newValues
         }

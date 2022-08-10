@@ -92,6 +92,7 @@ extension WorkoutStorage {
     
     func resetAll() {
         queue.async { [unowned self] in
+            Log.debug("resetting workout cache")
             workouts = [WorkoutID: WorkoutViewModel]()
         }
     }
@@ -265,7 +266,9 @@ extension WorkoutStorage {
     }
     
     static func resetAll() {
-        NotificationCenter.default.post(name: shouldResetAllNotification, object: nil, userInfo: nil)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: shouldResetAllNotification, object: nil, userInfo: nil)
+        }
     }
     
 }

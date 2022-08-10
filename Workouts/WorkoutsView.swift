@@ -45,9 +45,7 @@ struct WorkoutsContentView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var activeCoverSheet: ActiveCoverSheet?
     @State private var activeAlert: ActiveAlert?
-    
-    @State private var reloadID = UUID()
-        
+            
     init(filterManager: WorkoutsFilterManager) {
         _filterManager = StateObject(wrappedValue: filterManager)
         fetchRequest = DataProvider.fetchFetquest(for: filterManager.filterPredicate())
@@ -69,6 +67,8 @@ struct WorkoutsContentView: View {
                         ForEach(workouts, id: \.objectID) { workout in
                             NavigationLink(destination: DetailView(workoutID: workout.workoutIdentifier)) {
                                 WorkoutMapCell(viewModel: workoutManager.viewModel(for: workout))
+                                    .padding([.leading, .trailing])
+                                    .padding([.top, .bottom], CGFloat(5))
                             }
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {
@@ -91,7 +91,6 @@ struct WorkoutsContentView: View {
                             .buttonStyle(WorkoutPlainButtonStyle())
                             Divider()
                         }
-                        .id(reloadID)
                     }
                 }
             }
@@ -156,20 +155,22 @@ struct WorkoutsContentView: View {
                 }
             }
             .onReceive(filterPublisher, perform: refreshFilterOnReceive)
-            .onReceive(relevantTransactionsPublisher, perform: refreshAllWorkoutsOnReceive)
-            .onReceive(duplicatesPublisher, perform: refreshFilterOnReceive)
+            .onReceive(duplicatesPublisher, perform: refreshAllWorkoutsOnReceive)
         }
     }
     
     var showHeader: Bool {
-        filterManager.isFilterActive || workoutManager.showNoWorkoutsAlert || workoutManager.showProcessingRemoteDataLoading
+        filterManager.isFilterActive ||
+        workoutManager.showNoWorkoutsAlert ||
+        workoutManager.showProcessingRemoteDataLoading ||
+        workoutManager.isProcessingMapImages
     }
     
     @ViewBuilder
     func sectionHeader() -> some View {
         if showHeader {
             VStack(spacing: 0) {
-                if workoutManager.showProcessingRemoteDataLoading {
+                if workoutManager.showProcessingRemoteDataLoading  || workoutManager.isProcessingMapImages {
                     ProcessingWorkoutDataView()
                 }
                 
@@ -299,10 +300,6 @@ extension WorkoutsContentView {
 // MARK: Publishers
 
 extension WorkoutsContentView {
-    
-    var relevantTransactionsPublisher: NotificationCenter.Publisher {
-        NotificationCenter.default.publisher(for: .didFindRelevantTransactions)
-    }
     
     var duplicatesPublisher: NotificationCenter.Publisher {
         NotificationCenter.default.publisher(for: .didFinishProcessingDuplicates)

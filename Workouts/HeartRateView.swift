@@ -15,11 +15,11 @@ struct HeartRateView: View {
     
     @Environment(\.managedObjectContext) var managedObjectContext
     @EnvironmentObject var purchaseManager: IAPManager
+    @StateObject private var manager = HREditManager()
     
+    @State private var calculator = HRZonesCalculator.empty()
+    @State private var zones = HRZone.allCases
     @State private var activeSheet: ActiveSheet?
-    
-    @StateObject private var zoneManager = HRZoneManager()
-    @StateObject private var editManager = HREditManager()
         
     var body: some View {
         Form {
@@ -34,7 +34,7 @@ struct HeartRateView: View {
                     }
                     
                     Spacer()
-                    Text(editManager.formattedMaxHeartRate)
+                    Text(manager.formattedMaxHeartRate)
                         .foregroundColor(.primary)
                 }
                 
@@ -48,7 +48,7 @@ struct HeartRateView: View {
                     }
 
                     Spacer()
-                    Text(editManager.formattedRestingHeartRate)
+                    Text(manager.formattedRestingHeartRate)
                         .foregroundColor(.primary)
                 }
                 
@@ -67,12 +67,10 @@ struct HeartRateView: View {
             } footer: {
                 Text("Max and resting heart rates are used to calculate heart rate zones and training load.")
             }
-            .task { await editManager.load() }
             
             Section {
-                ForEach(HRZone.allCases) { zone in
-                    HRSectionRow(zone: zone)
-                        .environmentObject(zoneManager)
+                ForEach(zones, id: \.id) { zone in
+                    HRSectionRow(calculator: $calculator, zone: zone)
                 }
                 
                 Button(action: { activeSheet = .editZones }) {
@@ -88,18 +86,17 @@ struct HeartRateView: View {
                     }
                 }
             }
-            .onAppear { zoneManager.load() }
         }
+        .onAppear(perform: load)
         .navigationTitle("Heart")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $activeSheet, onDismiss: { editManager.load() }) { sheet in
+        .sheet(item: $activeSheet, onDismiss: load) { sheet in
             switch sheet {
             case .edit:
                 HREditView()
-                    .environmentObject(editManager)
+                    .environmentObject(manager)
             case .editZones:
                 HRZonesEditView()
-                    .environmentObject(zoneManager)
             case .info:
                 SafariView(urlString: URLStrings.heartRateInfo)
             case .explanation:
@@ -107,6 +104,22 @@ struct HeartRateView: View {
             }
         }
     }
+}
+
+extension HeartRateView {
+    
+    func load() {
+        Task(priority: .userInitiated) {
+            await manager.load()
+            loadZonesCalculator()
+        }
+    }
+    
+    func loadZonesCalculator() {
+        calculator = HealthProvider.shared.heartRateZonesCalculator()
+        zones = HRZone.allCases
+    }
+    
 }
 
 struct HeartRateView_Previews: PreviewProvider {
@@ -123,12 +136,12 @@ struct HeartRateView_Previews: PreviewProvider {
 }
 
 struct HRSectionRow: View {
-    var zone: HRZone
-    
     @Environment(\.isEnabled) var isEnabled
-    @EnvironmentObject var manager: HRZoneManager
     
     private let opacityValue = 0.5
+    
+    @Binding var calculator: HRZonesCalculator
+    var zone: HRZone
     
     var zoneColor: Color {
         isEnabled ? zone.color : zone.color.opacity(opacityValue)
@@ -169,10 +182,10 @@ struct HRSectionRow: View {
     }
     
     var range: HRZonesCalculator.ZoneRange {
-        manager.calculator.rangeForZone(zone)
+        calculator.rangeForZone(zone)
     }
     
     var percentRange: HRZonesCalculator.ZonePercentRange {
-        manager.calculator.percentRangeForZone(zone)
+        calculator.percentRangeForZone(zone)
     }
 }

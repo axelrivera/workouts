@@ -35,15 +35,14 @@ struct AppSettings {
     
     struct Keys {
         static let version = "arn_app_version"
-        static let weightInKilograms = "arn_weight_in_kilograms"
         static let defaultStatsFilter = "arn_default_stats_filter"
         static let shareSettings = "arn_share_settings"
-        static let mockPurchaseActive = "arn_mock_purchase_active"
         static let useFormulaMaxHeartRate = "arn_use_formula_max_heart_rate"
         static let maxHeartRate = "arn_max_heart_rate"
         static let useHealthRestingHeartRate = "arn_use_health_resting_heart_rate"
         static let restingHeartRate = "arn_resting_heart_rate"
         static let heartRateZones = "arn_heart_rate_zones"
+        static let heartRateZonePercents = "arn_heart_rate_zone_percents"
         static let workoutsQueryAnchor = "arn_workouts_query_anchor"
         static let yearToDateTimeframe = "arn_year_to_date_timeframe"
         static let allTimeTimeframe = "arn_all_time_timeframe"
@@ -90,13 +89,23 @@ struct AppSettings {
     // Heart Rate Zones
     // In most cases this getter thouls not be used directly by the app (unless for specific reasons)
     // The getter should be accessed from the HealthProvider instead to properly set the default values when needed
-    
+
+    //@available(*, deprecated, message: "use heartRatezonePercents instead")
     static var heartRateZones: [Int] {
         get {
-            return objectForKey(Keys.heartRateZones) as? [Int] ?? []
+            objectForKey(Keys.heartRateZones) as? [Int] ?? []
         }
         set {
             setValue(newValue, for: Keys.heartRateZones)
+        }
+    }
+    
+    static var heartRateZonePercents: [Int] {
+        get {
+            objectForKey(Keys.heartRateZonePercents) as? [Int] ?? []
+        }
+        set {
+            setValue(newValue, for: Keys.heartRateZonePercents)
         }
     }
     

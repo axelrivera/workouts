@@ -392,6 +392,8 @@ extension WorkoutsFilterManager {
                 do {
                     try backgroundContext.save()
                     try context.save()
+                    
+                    WorkoutStorage.reloadWorkouts(for: workouts)
                 } catch {
                     Log.debug("failed to save adding tags: \(error.localizedDescription)")
                 }

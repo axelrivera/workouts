@@ -8,6 +8,7 @@
 import CoreData
 import OSLog
 import HealthKit
+import Polyline
 
 let APP_TRANSACTION_AUTHOR_NAME = "workouts_app"
 let WORKOUTS_REMOTE_CONTAINER = "iCloud.me.axelrivera.Workouts"
@@ -39,9 +40,7 @@ class WorkoutsProvider {
             AppSettings.workoutsQueryAnchor = anchor
         }
     }
-    
-    private var regenerate = false
-    
+        
     private init(inMemory: Bool = false) {
         self.inMemory = inMemory
         anchor = AppSettings.workoutsQueryAnchor
@@ -134,8 +133,11 @@ class WorkoutsProvider {
 // MARK: - Workouts
 
 extension WorkoutsProvider {
-    typealias WorkoutTagValue = (workout: UUID, tag: UUID)
-    
+    struct WorkoutTagValue: Hashable {
+        let workout: UUID
+        let tag: UUID
+    }
+        
     func fetchWorkouts(regenerate: Bool = false) async throws {
         // context only used for fetching fata in this method
         let fetchContext = newTaskContext()
@@ -152,7 +154,6 @@ extension WorkoutsProvider {
         
         var inserts = Set<HKWorkout>()
         var regenerates = Set<UUID>()
-        
         var tagValues = [WorkoutTagValue]()
                 
         for remoteWorkout in workouts {
@@ -166,7 +167,10 @@ extension WorkoutsProvider {
                 inserts.insert(remoteWorkout)
                 
                 let tags = Tag.defaultTags(sport: remoteWorkout.workoutActivityType.sport(), in: fetchContext)
-                tags.forEach { tagValues.append((remoteWorkout.uuid, $0)) }
+                tags.forEach { tag in
+                    let value = WorkoutTagValue(workout: remoteWorkout.uuid, tag: tag)
+                    tagValues.append(value)
+                }
             }
         }
         
@@ -218,6 +222,35 @@ extension WorkoutsProvider {
         }
     }
     
+    func resetHeartRateZones() async throws {
+        let taskContext = newTaskContext()
+        taskContext.name = "updateHRZonesContext"
+        taskContext.transactionAuthor = "updateHRZones"
+        
+        try await taskContext.perform {
+            let maxHeartRate = self.healthProvider.maxHeartRate()
+            let percents = self.healthProvider.heartRateZonesPercents()
+            
+            let (value1, value2, value3, value4, value5) = WorkoutProcessor.calculateHeartRateZones(for: percents, maxHeartRate: maxHeartRate)
+            let dictionary: [WorkoutSchema: Any] = [
+                .zoneValue1: value1,
+                .zoneValue2: value2,
+                .zoneValue3: value3,
+                .zoneValue4: value4,
+                .zoneValue5: value5,
+                .zoneMaxHeartRate: maxHeartRate
+            ]
+            
+            let request = NSBatchUpdateRequest(entity: Workout.entity())
+            request.propertiesToUpdate = dictionary.rawValuesDictionary
+            request.resultType = .updatedObjectIDsResultType
+            
+            let response = try taskContext.execute(request) as? NSBatchUpdateResult
+            let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
+            self.mergeChanges(for: .update, objects: objects)
+        }
+    }
+    
 }
 
 // MARK: - Processing
@@ -233,29 +266,26 @@ extension WorkoutsProvider {
         taskContext.transactionAuthor = "importWorkouts"
         
         try await taskContext.perform {
-            let request = self.newBatchInsertRequest(for: remoteWorkouts)
+            let request = self.newBatchInsertRequestForWorkouts(remoteWorkouts)
             request.resultType = .objectIDs
             
             let response = try taskContext.execute(request) as? NSBatchInsertResult
             let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
-            self.mergeChanges(for: NSInsertedObjectsKey, objects: objects)
+            self.mergeChanges(for: .insert, objects: objects)
         }
     }
     
     private func importWorkoutTags(for tagValues: [WorkoutTagValue]) async throws {
         guard tagValues.isPresent else { return }
         
-        let taskContext = newTaskContext()
-        taskContext.name = "importWorkoutTagsContext"
-        taskContext.transactionAuthor = "importWorkoutTags"
-        
+        let taskContext = container.viewContext
         try await taskContext.perform {
-            let request = self.newBatchInsertRequest(for: tagValues)
-            try taskContext.execute(request)
-            
+            let request = self.newBatchInsertRequestForWorkoutTags(tagValues)
+            request.resultType = .objectIDs
+                        
             let response = try taskContext.execute(request) as? NSBatchInsertResult
             let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
-            self.mergeChanges(for: NSInsertedObjectsKey, objects: objects)
+            self.mergeChanges(for: .insert, objects: objects)
         }
     }
     
@@ -266,10 +296,8 @@ extension WorkoutsProvider {
         
         do {
             try await taskContext.perform {
-                let request = self.newBatchUpdateRequest(
-                    for: identifiers,
-                    propertiesToUpdate: [WorkoutSchema.valuesUpdated.rawValue: NSNull()]
-                )
+                let dictionary: [WorkoutSchema: Any] = [.valuesUpdated: NSNull()]
+                let request = self.newBatchUpdateRequest(for: identifiers, propertiesToUpdate: dictionary.rawValuesDictionary)
                 request.resultType = .statusOnlyResultType
                 
                 try taskContext.execute(request)
@@ -285,7 +313,7 @@ extension WorkoutsProvider {
         taskContext.transactionAuthor = "updateWorkout"
         
         let maxHR = healthProvider.maxHeartRate()
-        let restingHR = await healthProvider.profileRestingHeartRate()
+        let restingHR = await healthProvider.restingHeartRate()
         let gender = healthProvider.userGender()
         
         let chunked = Array(remoteWorkouts.chunks(ofCount: 5))
@@ -343,12 +371,25 @@ extension WorkoutsProvider {
         
         let objects = updates.map({ $0.id })
         let uuids = updates.map({ $0.uuid })
-        mergeChanges(for: NSUpdatedObjectsKey, objects: objects, uuids: uuids)
+        mergeChanges(for: .update, objects: objects, uuids: uuids)
     }
     
-    func mergeChanges(for key: String, objects: [NSManagedObjectID], uuids: [UUID] = []) {
+    enum MergeOperation: String, Identifiable {
+        case insert, update
+        var id: String { rawValue }
+        
+        var keyValue: String {
+            switch self {
+            case .insert: return NSInsertedObjectsKey
+            case .update: return NSUpdatedObjectsKey
+            }
+        }
+    }
+    
+    func mergeChanges(for mergeOperation: MergeOperation, objects: [NSManagedObjectID], uuids: [UUID] = []) {
         guard objects.isPresent else { return }
         
+        let key = mergeOperation.keyValue
         let viewContext = container.viewContext
         viewContext.perform {
             let changes = [key: objects]
@@ -405,13 +446,13 @@ extension WorkoutsProvider {
         
         do {
             try await taskContext.perform {
-                let request = self.newBatchUpdateRequest(
-                    for: ids,
-                    propertiesToUpdate: [WorkoutSchema.markedForDeletionDate.rawValue: Date()]
-                )
-                request.resultType = .statusOnlyResultType
+                let dictionary: [WorkoutSchema: Any] = [.markedForDeletionDate: Date()]
+                let request = self.newBatchUpdateRequest(for: ids, propertiesToUpdate: dictionary.rawValuesDictionary)
+                request.resultType = .updatedObjectIDsResultType
                 
-                try taskContext.execute(request)
+                let response = try taskContext.execute(request) as? NSBatchUpdateResult
+                let objects = response?.result as? [NSManagedObjectID] ?? [NSManagedObjectID]()
+                self.mergeChanges(for: .update, objects: objects)
             }
         } catch {
             logger.debug("failed to delete workouts: \(error.localizedDescription)")
@@ -424,53 +465,62 @@ extension WorkoutsProvider {
 
 extension WorkoutsProvider {
     
-    private func newBatchInsertRequest(for remoteWorkouts: [HKWorkout]) -> NSBatchInsertRequest {
-        var index = 0
-        let total = remoteWorkouts.count
-        
-        let request = NSBatchInsertRequest(entity: Workout.entity()) { (object: NSManagedObject) -> Bool in
-            guard index < total else { return true }
+    private func newBatchInsertRequestForWorkouts(_ remoteWorkouts: [HKWorkout]) -> NSBatchInsertRequest {
+        let now = Date()
+        let objects = remoteWorkouts.map { (workout) -> [String: Any] in
+            var dict: [WorkoutSchema: Any] = [
+                .remoteIdentifier: workout.uuid,
+                .sport: workout.workoutActivityType.sport().rawValue,
+                .indoor: workout.isIndoor,
+                .start: workout.startDate,
+                .end: workout.endDate,
+                .duration: workout.totalElapsedTime,
+                .movingTime: workout.movingTime,
+                .distance: workout.totalDistanceValue,
+                .avgSpeed: workout.avgSpeedValue,
+                .avgMovingSpeed: workout.avgMovingSpeedValue,
+                .maxSpeed: workout.maxSpeedValue,
+                .avgPace: workout.avgPaceValue,
+                .avgMovingPace: workout.avgMovingPaceValue,
+                .avgCyclingCadence: workout.avgCyclingCadenceValue,
+                .maxCyclingCadence: workout.maxCyclingCadenceValue,
+                .elevationAscended: workout.elevationAscendedValue,
+                .elevationDescended: workout.elevationDescendedValue,
+                .source: workout.sourceRevision.source.name,
+                .createdAt: now,
+                .updatedAt: now
+            ]
             
-            let remoteWorkout = remoteWorkouts[index]
-            if let workout = object as? Workout {
-                workout.remoteIdentifier = remoteWorkout.uuid
-                workout.sport = remoteWorkout.workoutActivityType.sport()
-                workout.indoor = remoteWorkout.isIndoor
-                workout.start = remoteWorkout.startDate
-                workout.end = remoteWorkout.endDate
-                workout.duration = remoteWorkout.totalElapsedTime
-                workout.movingTime = remoteWorkout.movingTime
-                workout.distance = remoteWorkout.totalDistanceValue
-                workout.avgSpeed = remoteWorkout.avgSpeedValue
-                workout.avgMovingSpeed = remoteWorkout.avgMovingSpeedValue
-                workout.maxSpeed = remoteWorkout.maxSpeedValue
-                workout.avgPace = remoteWorkout.avgPaceValue
-                workout.avgMovingPace = remoteWorkout.avgMovingPaceValue
-                workout.avgCyclingCadence = remoteWorkout.avgCyclingCadenceValue
-                workout.maxCyclingCadence = remoteWorkout.maxCyclingCadenceValue
-                workout.elevationAscended = remoteWorkout.elevationAscendedValue
-                workout.elevationDescended = remoteWorkout.elevationDescendedValue
-                workout.device = remoteWorkout.device?.name
-                workout.source = remoteWorkout.sourceRevision.source.name
-                workout.markedForDeletionDate = nil
-                
-                // these values should be overriden during update
-                // but adding them here in case the update fails
-                
-                workout.avgHeartRate = remoteWorkout.avgHeartRateValue ?? 0
-                workout.maxHeartRate = remoteWorkout.maxHeartRateValue ?? 0
-                
-                if remoteWorkout.totalEnergyBurnedValue > 0 {
-                    workout.energyBurned = remoteWorkout.totalEnergyBurnedValue
-                } else {
-                    workout.energyBurned = remoteWorkout.totalCaloriesValue ?? 0
-                }
+            if let device = workout.device?.name {
+                dict[.device] = device
             }
             
-            index += 1
-            return false
+            // these values should be overriden during update
+            // but adding them here in case the update fails
+            
+            dict[.avgHeartRate] = workout.avgHeartRateValue ?? 0
+            dict[.maxHeartRate] = workout.maxHeartRateValue ?? 0
+            
+            if workout.totalEnergyBurnedValue > 0 {
+                dict[.energyBurned] = workout.totalEnergyBurnedValue
+            } else {
+                dict[.energyBurned] = workout.totalCaloriesValue ?? 0
+            }
+            
+            return dict.rawValuesDictionary
         }
-        return request
+        return NSBatchInsertRequest(entity: Workout.entity(), objects: objects)
+    }
+    
+    func newBatchInsertRequestForWorkoutTags(_ tagValues: [WorkoutTagValue]) -> NSBatchInsertRequest {
+        let objects = tagValues.map { (value) -> [String: Any] in
+            let dict: [WorkoutTagSchema: Any] = [
+                .workout: value.workout,
+                .tag: value.tag
+            ]
+            return dict.rawValuesDictionary
+        }
+        return NSBatchInsertRequest(entity: WorkoutTag.entity(), objects: objects)
     }
     
     func newBatchUpdateRequest(for identifier: UUID, propertiesToUpdate properties: [String: Any]) -> NSBatchUpdateRequest {
@@ -487,23 +537,62 @@ extension WorkoutsProvider {
         return request
     }
     
-    func newBatchInsertRequest(for tagValues: [WorkoutTagValue]) -> NSBatchInsertRequest {
-        var index = 0
-        let total = tagValues.count
+}
+
+// MARK: Images
+
+extension WorkoutsProvider {
+    
+    func resetImageData() async throws {
+        let taskContext = newTaskContext()
         
-        let request = NSBatchInsertRequest(entity: WorkoutTag.entity()) { (object: NSManagedObject) -> Bool in
-            guard index < total else { return true }
+        var dictionaries: [NSDictionary] = [NSDictionary]()
+        try await taskContext.perform {
+            let schema: [WorkoutSchema] = [
+                .remoteIdentifier,
+                .coordinatesValue,
+                .sport,
+                .indoor
+            ]
+            let properties = schema.map { $0.rawValue }
             
-            let value = tagValues[index]
-            if let workoutTag = object as? WorkoutTag {
-                workoutTag.workoutId = value.workout
-                workoutTag.tagId = value.tag
-            }
+            let request = NSFetchRequest<NSDictionary>(entityName: Workout.entityName)
+            request.predicate = Workout.notMarkedForLocalDeletionPredicate
+            request.resultType = .dictionaryResultType
+            request.returnsObjectsAsFaults = false
+            request.propertiesToFetch = properties
             
-            index += 1
-            return false
+            dictionaries = try taskContext.fetch(request)
         }
-        return request
+        
+        for dictionary in dictionaries {
+            guard let dict = dictionary as? [String: Any] else { continue }
+            
+            do {
+                try await processImage(dictionary: dict)
+            } catch {
+                let id = dict[WorkoutSchema.remoteIdentifier.rawValue] ?? "n/a"
+                Log.debug("processing image failed \(id): \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func processImage(dictionary: [String: Any]) async throws {
+        let coordinatesValue = dictionary[WorkoutSchema.coordinatesValue.rawValue] as? String ?? ""
+        let coordinates = Polyline(encodedPolyline: coordinatesValue).coordinates ?? []
+        
+        guard coordinates.isPresent else { return }
+        
+        guard let identifier = dictionary[WorkoutSchema.remoteIdentifier.rawValue] as? UUID else { return }
+        guard let sportValue = dictionary[WorkoutSchema.sport.rawValue] as? String, let sport = Sport(rawValue: sportValue) else { return }
+        guard let indoor = dictionary[WorkoutSchema.indoor.rawValue] as? Bool else { return }
+        
+        if sport.hasDistanceSamples && !indoor {
+            Log.debug("resetting workout image for\(identifier)")
+            try await WorkoutProcessor.generateAndSaveImageData(for: identifier, coordinates: coordinates)
+        } else {
+            Log.debug("skip workout image reset for \(identifier)")
+        }
     }
     
 }
@@ -573,45 +662,107 @@ extension WorkoutsProvider {
         taskContext.name = "persistentHistoryContext"
         
         logger.debug("start fetching persistent history changes from the store...")
-
+        
         try await taskContext.perform {
             // Execute the persistent history change since the last transaction.
             let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
             let historyResult = try taskContext.execute(changeRequest) as? NSPersistentHistoryResult
-            if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
-               !history.isEmpty {
-                self.mergePersistentHistoryChanges(from: history)
-            } else {
+            
+            guard let transactions = historyResult?.result as? [NSPersistentHistoryTransaction], !transactions.isEmpty else {
                 self.logger.debug("no persistent history transactions found")
+                return
             }
+            
+            self.mergePersistentHistoryChanges(from: transactions)
         }
 
         logger.debug("finished merging history changes")
     }
     
-    private func mergePersistentHistoryChanges(from history: [NSPersistentHistoryTransaction]) {
-        self.logger.debug("received \(history.count) persistent history transactions")
+    private func mergePersistentHistoryChanges(from transactions: [NSPersistentHistoryTransaction]) {
+        self.logger.debug("received \(transactions.count) persistent history transactions")
         
         // Update view context with objectIDs from history change request.
         let viewContext = container.viewContext
         viewContext.perform {
-            for transaction in history {
-            
-                // transaction source details
-                let context = transaction.contextName ?? "unknown context"
-                let author = transaction.author ?? "unknown author"
-                
-                self.logger.debug("transaction - context: \(context), author: \(author)")
-                
+            for transaction in transactions {
                 viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
                 self.lastToken = transaction.token
             }
+            self.processDuplicates(from: transactions, context: viewContext)
+        }
+    }
+    
+    private func refreshAllObjects() {
+        let viewContext = container.viewContext
+        viewContext.perform {
+            viewContext.refreshAllObjects()
+        }
+    }
+    
+}
+
+// MARK: - Tag Duplicates
+
+extension WorkoutsProvider {
+    
+    private func processDuplicates(from transactions: [NSPersistentHistoryTransaction], context: NSManagedObjectContext) {
+        var newWorkoutMetaObjects = [NSManagedObjectID]()
+        let workoutMetaEntity = WorkoutMetadata.entityName
+        
+        for transaction in transactions where transaction.changes != nil {
+            for change in transaction.changes! where change.changedObjectID.entity.name == workoutMetaEntity && change.changeType == .insert {
+                newWorkoutMetaObjects.append(change.changedObjectID)
+            }
+        }
+        
+        if newWorkoutMetaObjects.isPresent {
+            self.deduplicateAndWait(metaObjectIDs: newWorkoutMetaObjects, context: context)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .didFinishProcessingDuplicates, object: self)
+            }
+        }
+    }
+    
+    private func deduplicateAndWait(metaObjectIDs: [NSManagedObjectID], context: NSManagedObjectContext)  {
+        context.performAndWait {
+            for objectID in metaObjectIDs {
+                self.deduplicate(workoutMeta: objectID, context: context)
+            }
+            
+            do {
+                if context.hasChanges {
+                    try context.save()
+                }
+            } catch {
+                Log.debug("failed to save deduplicated objects")
+            }
+        }
+    }
+    
+    private func deduplicate(workoutMeta objectID: NSManagedObjectID, context: NSManagedObjectContext)  {
+        guard let workout = context.object(with: objectID) as? WorkoutMetadata else {
+            assertionFailure("failed to get valid workout metadata: \(objectID)")
+            return
+        }
+        
+        let identifier = workout.identifier
+        Log.debug("trying to deduplicate workouts for \(identifier)")
+        
+        var workouts = WorkoutMetadata.find(using: identifier, in: context)
+        if workouts.count > 1 {
+            Log.debug("fixing duplicates for: \(identifier)")
+            let isFavorite = workouts.filter({ $0.isFavorite }).isPresent
+            let first = workouts.removeFirst()
+            first.isFavorite = isFavorite
+            workouts.forEach({ context.delete($0) })
+        } else {
+            Log.debug("no duplicates found for \(workout.identifier)")
         }
     }
     
 }
 
 extension Notification.Name {
-    static let didFindRelevantTransactions = Notification.Name("didFindRelevantTransactions")
     static let didFinishProcessingDuplicates = Notification.Name("didFinishProcessingDuplicates")
 }

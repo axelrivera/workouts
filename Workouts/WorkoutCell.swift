@@ -17,7 +17,7 @@ struct WorkoutCell: View {
     private let imageProvider = WorkoutImageProvider()
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 5.0) {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text(viewModel.title)
                     .font(.fixedTitle2)
@@ -27,7 +27,7 @@ struct WorkoutCell: View {
                     .foregroundColor(.secondary)
             }
             
-            HStack(alignment: .center, spacing: 5.0) {
+            HStack(alignment: .center, spacing: 5) {
                 Text(formattedDistanceString(for: viewModel.distance, zeroPadding: true))
                     .workoutCellLabelStyle(color: .distance)
                                     
@@ -56,13 +56,13 @@ struct WorkoutCell: View {
                 }
             }
         }
-        .onAppear { loadImage(forScheme: colorScheme)}
+        .onAppear(perform: load)
     }
     
-    func loadImage(forScheme scheme: ColorScheme) {
+    func load() {
         guard viewModel.includesLocation else { return }
         
-        let image = imageProvider.get(forID: viewModel.id, scheme: scheme)
+        let image = imageProvider.get(forID: viewModel.id, scheme: colorScheme)
         DispatchQueue.main.async {
             self.image = image
         }

@@ -10,6 +10,11 @@ import SwiftUI
 
 extension MKMapView {
     
+    class func workoutMapImage(coordinates: [CLLocationCoordinate2D], colorScheme: ColorScheme) async throws -> UIImage? {
+        let data = try await workoutMapData(coordinates: coordinates, colorScheme: colorScheme)
+        return UIImage(data: data)
+    }
+    
     class func workoutMapData(coordinates: [CLLocationCoordinate2D], colorScheme: ColorScheme) async throws -> Data {
         return try await mapImageData(
             coordinates: coordinates,

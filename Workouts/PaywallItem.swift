@@ -18,7 +18,7 @@ struct PaywallItem: Identifiable, Hashable {
 extension PaywallItem {
     
     static func items() -> [PaywallItem] {
-        [workoutLog, progress, metrics, laps, heartRate, more]
+        [workoutLog, progress, metrics, laps, more]
     }
     
     static var workoutLog: PaywallItem {
@@ -36,15 +36,6 @@ extension PaywallItem {
             imageColor: .orange,
             title: "Interactive Splits",
             description: "Analyze your splits using multiple distance intervals."
-        )
-    }
-    
-    static var heartRate: PaywallItem {
-        PaywallItem(
-            imageName: "heart.fill",
-            imageColor: .red,
-            title: "Heart Rate Zones",
-            description: "Train smarter not harder! Use heart rate zones to monitor your effort on individual workouts."
         )
     }
     

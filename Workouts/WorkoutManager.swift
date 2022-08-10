@@ -34,7 +34,8 @@ class WorkoutManager: ObservableObject {
     
     @Published var isProcessingRemoteData = false
     @Published var showProcessingRemoteDataLoading = false
-        
+    @Published var isProcessingMapImages = false
+    
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
 
@@ -97,11 +98,7 @@ class WorkoutManager: ObservableObject {
     }
     
     func refreshWorkouts(isAuthorized: Bool) {
-        let userInfo: [String: Any] = [
-            Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized,
-        ]
-        
-        NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
+        Synchronizer.fetchRemoteData(isAuthorized: isAuthorized)
     }
     
     var totalWorkouts: Int {
@@ -148,6 +145,12 @@ extension WorkoutManager {
             }
 
             storage.set(isFavorite: isFavorite, forID: identifier)
+            
+            context.perform { [unowned self] in
+                if let workout = Workout.find(using: identifier, in: self.context) {
+                    self.context.refresh(workout, mergeChanges: true)
+                }
+            }
         } catch {
             Log.debug("favorite toggle error for id - \(identifier): \(error.localizedDescription)")
         }
@@ -182,12 +185,28 @@ extension WorkoutManager {
             name: .didFinishProcessingRemoteData,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(willRegenerateImages),
+            name: .willBeginRegeneratingMapImages,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(didRegenerateImages),
+            name: .didFinishRegeneratingMapImages,
+            object: nil
+        )
     }
     
     private func removeObservers() {
         NotificationCenter.default.removeObserver(self, name: .didFinishFetchingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .willBeginRegeneratingMapImages, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didFinishRegeneratingMapImages, object: nil)
     }
     
     // MARK: - Inserting Workouts
@@ -195,11 +214,6 @@ extension WorkoutManager {
     @objc
     private func didFinishFetchingWorkouts(_ notification: Notification) {
         Log.debug("WORKOUTS: did finish inserting workouts")
-        if showNoWorkoutsAlert {
-            DispatchQueue.main.async {
-                self.showNoWorkoutsAlert = false
-            }
-        }
     }
     
     @objc
@@ -243,6 +257,24 @@ extension WorkoutManager {
             withAnimation {
                 self.isProcessingRemoteData = false
                 self.showProcessingRemoteDataLoading = false
+            }
+        }
+    }
+    
+    @objc
+    private func willRegenerateImages(_ notification: Notification) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isProcessingMapImages = true
+            }
+        }
+    }
+    
+    @objc
+    private func didRegenerateImages(_ notification: Notification) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.isProcessingMapImages = false
             }
         }
     }

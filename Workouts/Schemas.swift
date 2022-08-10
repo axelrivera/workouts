@@ -24,7 +24,6 @@ struct WorkoutSchema: Hashable, RawRepresentable {
         rawValue
     }
     
-    static let isReady = WorkoutSchema("isReady")
     static let remoteIdentifier = WorkoutSchema("remoteIdentifier")
     static let sport = WorkoutSchema("sportValue")
     static let indoor = WorkoutSchema("indoor")
@@ -54,9 +53,7 @@ struct WorkoutSchema: Hashable, RawRepresentable {
     static let locationCity = WorkoutSchema("locationCity")
     static let locationState = WorkoutSchema("locationState")
     static let markedForDeletionDate = WorkoutSchema("markedForDeletionDate")
-    static let totalRetries = WorkoutSchema("totalRetries")
     static let coordinatesValue = WorkoutSchema("coordinatesValue")
-    static let isLocationPending = WorkoutSchema("isLocationPending")
     static let dayOfWeek = WorkoutSchema("dayOfWeek")
     static let zoneMaxHeartRate = WorkoutSchema("zoneMaxHeartRate")
     static let zoneValue1 = WorkoutSchema("zoneValue1")
@@ -65,10 +62,32 @@ struct WorkoutSchema: Hashable, RawRepresentable {
     static let zoneValue4 = WorkoutSchema("zoneValue4")
     static let zoneValue5 = WorkoutSchema("zoneValue5")
     static let createdAt = WorkoutSchema("createdAt")
-    static let updatedAt = WorkoutSchema("udpatedAt")
+    static let updatedAt = WorkoutSchema("updatedAt")
     
     // V5 Additions
     static let trimp = WorkoutSchema("trimp")
     static let avgHeartRateReserve = WorkoutSchema("avgHeartRateReserve")
     static let valuesUpdated = WorkoutSchema("valuesUpdated")
+}
+
+struct WorkoutTagSchema: Hashable, RawRepresentable {
+    init?(rawValue: String) {
+        self.rawValue = rawValue
+    }
+    
+    init(_ string: String) {
+        self.rawValue = string
+    }
+    
+    var rawValue: String
+    
+    typealias RawValue = String
+    
+    var key: String {
+        rawValue
+    }
+    
+    static let workout = WorkoutTagSchema("workoutId")
+    static let tag = WorkoutTagSchema("tagId")
+    static let deletedDate = WorkoutTagSchema("deletedDate")
 }

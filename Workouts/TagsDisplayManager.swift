@@ -35,7 +35,11 @@ extension TagsDisplayManager {
     
     func summaryViewModels(for tags: [Tag]) -> [TagSummaryViewModel] {
         tags.map { tag -> TagSummaryViewModel in
+            Log.debug("TAGS - fetching identifiers for tag: \(tag.uuid)")
+            
             let identifiers = workoutTagProvider.workoutIdentifiers(forTag: tag.uuid)
+            
+            Log.debug("TAGS - workout tags: \(identifiers)")
             
             var viewModel: TagSummaryViewModel = tag.viewModel()
             if let  dictionary = try? dataProvider.fetchStatsSummary(for: identifiers) {

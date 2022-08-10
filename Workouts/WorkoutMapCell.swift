@@ -38,33 +38,28 @@ struct WorkoutMapCell: View {
     }
     
     var body: some View {
-        VStack {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text(viewModel.dateString())
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    if isFavorite {
-                        Spacer()
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(.red)
-                    }
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(viewModel.dateString())
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                if isFavorite {
+                    Spacer()
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.red)
                 }
-                .padding([.bottom], CGFloat(2))
-                
-                Text(viewModel.title)
-                    .font(.title)
-                    .padding(.bottom, CGFloat(3))
-                
-                if tags.isPresent {
-                    TagLine(tags: tags)
-                        .padding([.bottom], CGFloat(3))
-                }
-                
-                statsView()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, CGFloat(3))
+            
+            Text(viewModel.title)
+                .font(.title)
+            
+            if tags.isPresent {
+                TagLine(tags: tags)
+            }
+            
+            statsView()
             
             if viewModel.hasLocationData {
                 if let image = image {
@@ -83,15 +78,13 @@ struct WorkoutMapCell: View {
                 }
             }
         }
-        .padding([.leading, .trailing])
-        .padding([.top, .bottom], CGFloat(5))
         .onAppear(perform: load)
         .onReceive(publisher, perform: processNotification)
     }
     
     @ViewBuilder
     func statsView() -> some View {
-        HStack {
+        HStack(alignment: .center, spacing: 5) {
             switch viewModel.displayType() {
             case .cyclingDistance:
                 distanceText()

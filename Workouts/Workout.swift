@@ -57,8 +57,8 @@ class Workout: NSManagedObject {
     @NSManaged private(set) var zoneValue4: Int
     @NSManaged private(set) var zoneValue5: Int
     
-    @NSManaged private(set) var createdAt: Date
-    @NSManaged private(set) var updatedAt: Date
+    @NSManaged var createdAt: Date
+    @NSManaged var updatedAt: Date
     
     // V5 Additions
     @NSManaged var trimp: Int
@@ -365,12 +365,12 @@ extension Workout {
             request.resultType = .dictionaryResultType
             request.returnsObjectsAsFaults = false
             request.sortDescriptors = [sortedByDateDescriptor()]
-            request.propertiesToFetch = ["remoteIdentifier"]
+            request.propertiesToFetch = [WorkoutSchema.remoteIdentifier.rawValue]
             
             do {
                 let dictionaries = try context.fetch(request)
                 return dictionaries.compactMap { (dictionary) -> UUID? in
-                    return dictionary["remoteIdentifier"] as? UUID
+                    return dictionary[WorkoutSchema.remoteIdentifier.rawValue] as? UUID
                 }
             } catch {
                 return []

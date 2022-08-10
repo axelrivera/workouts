@@ -12,7 +12,6 @@ import CoreData
 struct AnalysisView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var detailManager: DetailManager
-    @EnvironmentObject var purchaseManager: IAPManager
         
     var localizedAvgSpeed: Double? {
         nativeSpeedToLocalizedUnit(for: workout.avgMovingSpeed)
@@ -99,10 +98,8 @@ struct AnalysisView: View {
                     
                     if detailManager.zones.isPresent {
                         Section {
-                            HRZonesView(summaries: purchaseManager.isActive ? detailManager.zones : HRZoneSummary.samples())
+                            HRZonesView(summaries: detailManager.zones)
                                 .padding([.top, .bottom])
-                                .paywallButtonOverlay(source: .workoutAnalytics)
-                                
                         } header: {
                             Text("Heart Rate Zones")
                         }
@@ -245,13 +242,11 @@ extension AnalysisView {
 struct DetailAnalysisView_Previews: PreviewProvider {
     static let viewContext = WorkoutsProvider.preview.container.viewContext
     static let workout = WorkoutsProvider.sampleWorkout(moc: viewContext)
-    static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         AnalysisView()
             .environment(\.managedObjectContext, viewContext)
             .environmentObject(DetailManager(id: workout.workoutIdentifier, context: viewContext))
-            .environmentObject(purchaseManager)
             .colorScheme(.dark)
         
     }

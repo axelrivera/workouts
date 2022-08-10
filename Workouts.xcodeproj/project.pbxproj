@@ -195,6 +195,8 @@
 		1668F99E26DE4F5800393322 /* ShareDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1668F99C26DE4F5800393322 /* ShareDetailView.swift */; };
 		166973FB289891CF00D1942C /* WorkoutImageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166973FA289891CF00D1942C /* WorkoutImageProvider.swift */; };
 		166973FC289891CF00D1942C /* WorkoutImageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166973FA289891CF00D1942C /* WorkoutImageProvider.swift */; };
+		1669741D289D297D00D1942C /* Decimal+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1669741C289D297D00D1942C /* Decimal+Additions.swift */; };
+		1669741E289D297D00D1942C /* Decimal+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1669741C289D297D00D1942C /* Decimal+Additions.swift */; };
 		166A39B72696495E00413F71 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A39B62696495E00413F71 /* AdvancedSettingsView.swift */; };
 		166A39B82696495E00413F71 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A39B62696495E00413F71 /* AdvancedSettingsView.swift */; };
 		16755ED825BBAC6E002E73BA /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91A25B350BB00B04478 /* AppData.swift */; };
@@ -582,6 +584,7 @@
 		16682B6E25CFF54F00FC9317 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		1668F99C26DE4F5800393322 /* ShareDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareDetailView.swift; sourceTree = "<group>"; };
 		166973FA289891CF00D1942C /* WorkoutImageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutImageProvider.swift; sourceTree = "<group>"; };
+		1669741C289D297D00D1942C /* Decimal+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Additions.swift"; sourceTree = "<group>"; };
 		166A39B62696495E00413F71 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 		16755EDB25BBACC5002E73BA /* GarminUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminUtils.swift; sourceTree = "<group>"; };
 		1676996C2869E11A00EC92F1 /* TrainingLoadProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingLoadProcessor.swift; sourceTree = "<group>"; };
@@ -940,6 +943,7 @@
 				167EECA82865F09800CD47D2 /* TimestampUtils.swift */,
 				167EECAB2865F25900CD47D2 /* HKWorkout+Additions.swift */,
 				16BA33FC2883652600823A6C /* Dictionary+RawRepresentable.swift */,
+				1669741C289D297D00D1942C /* Decimal+Additions.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -1009,6 +1013,7 @@
 		1645B93725B3533600B04478 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				167D2EEB2611104800A4A299 /* IAPManager.swift */,
 				1645B91B25B350BB00B04478 /* HealthData.swift */,
 				1645B93825B353DD00B04478 /* WorkoutDataStore.swift */,
 				16E588DA2665420600CD0273 /* DataProvider.swift */,
@@ -1271,8 +1276,9 @@
 		169CD13727D3D80B00A0CAC6 /* Summary */ = {
 			isa = PBXGroup;
 			children = (
-				160BB05225DC2C2C0059E493 /* StatsView.swift */,
 				168E0D0C276E9F8300DA3913 /* StatsTimelineManager.swift */,
+				1678145825DF4B120012531D /* StatsManager.swift */,
+				160BB05225DC2C2C0059E493 /* StatsView.swift */,
 				16864BEA268E950C0005E7D8 /* StatsRecentView.swift */,
 				168E0D09276E943500DA3913 /* StatsTimelineView.swift */,
 				167D0BA526E25D4F00055D54 /* StatsWorkoutsView.swift */,
@@ -1345,7 +1351,6 @@
 		16B321C626C02C3D007CCE70 /* Training */ = {
 			isa = PBXGroup;
 			children = (
-				1678145825DF4B120012531D /* StatsManager.swift */,
 				16CA68DF26AF0B700056C1BA /* LogManager.swift */,
 				16CA68D926AEE2690056C1BA /* WorkoutLogView.swift */,
 				16CA68E826B10A3C0056C1BA /* LogFilterView.swift */,
@@ -1382,7 +1387,6 @@
 		16CCDBA1272E026400C75BD4 /* Tags */ = {
 			isa = PBXGroup;
 			children = (
-				167D2EEB2611104800A4A299 /* IAPManager.swift */,
 				16DE5BEB272F39C6006FF803 /* TagManager.swift */,
 				168D25B8273579A00066B1C8 /* TagsDisplayManager.swift */,
 				16CCDBA3272E042600C75BD4 /* TagsView.swift */,
@@ -1658,6 +1662,7 @@
 				1620B03326982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CB26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
 				16208BFA26D4207600693530 /* ImageActivitySheet.swift in Sources */,
+				1669741E289D297D00D1942C /* Decimal+Additions.swift in Sources */,
 				165BE37426E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
 				16D1364F275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				160BB07F25DD61700059E493 /* RoundButton.swift in Sources */,
@@ -1878,6 +1883,7 @@
 				1620B03226982BA60037004A /* PaywallModifier.swift in Sources */,
 				16B321CA26C047E4007CCE70 /* WorkoutLap.swift in Sources */,
 				16208BF926D4207500693530 /* ImageActivitySheet.swift in Sources */,
+				1669741D289D297D00D1942C /* Decimal+Additions.swift in Sources */,
 				165BE37326E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
 				16D1364E275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				16682B6525CF3E1900FC9317 /* RoundButton.swift in Sources */,

@@ -116,6 +116,12 @@ extension LogDay: Hashable {
 
 extension LogDay {
     
+    static func randomDay(date: Date) -> LogDay {
+        let activities = LogInterval.randomActivities(for: date)
+        let day = LogDay(date: date, activities: activities)
+        return day
+    }
+    
     var remoteIdentifiers: [UUID] {
         activities.compactMap { $0.remoteIdentifier }
     }
@@ -267,7 +273,7 @@ extension LogInterval {
         return LogInterval(days: days)
     }
     
-    private static func randomActivities(for date: Date) -> [LogActivity] {
+    static func randomActivities(for date: Date) -> [LogActivity] {
         let total = (0...2).randomElement()!
         guard total > 0 else { return [] }
         

@@ -17,7 +17,7 @@ extension HRZonesEditView {
 
 struct HRZonesEditView: View {
     @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var manager: HRZoneManager
+    @StateObject var manager = HRZoneManager()
     
     var body: some View {
         NavigationView {
@@ -71,7 +71,7 @@ extension HRZonesEditView {
     
     func save() {
         AnalyticsManager.shared.capture(.savedHRZone)
-        AppSettings.heartRateZones = manager.values
+        AppSettings.heartRateZonePercents = manager.calculator.percentValues
         dismiss()
     }
     

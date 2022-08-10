@@ -209,16 +209,19 @@ extension WorkoutProcessor {
     private func generateImageData() async {
         guard hasLocationData else { return }
         
-        let coordinates = values.coordinates
         do {
-            async let dark = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .dark)
-            async let light = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .light)
-            let images: (dark: Data, light: Data) = try await (dark, light)
-            
-            try WorkoutImageProvider.writeImageData(dark: images.dark, light: images.light, workout: identifier)
+            try await Self.generateAndSaveImageData(for: identifier, coordinates: values.coordinates)
         } catch {
             Log.debug("unable to generate images for \(identifier): \(error.localizedDescription)")
         }
+    }
+    
+    static func generateAndSaveImageData(for identifier: UUID, coordinates: [CLLocationCoordinate2D]) async throws {
+        async let dark = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .dark)
+        async let light = try MKMapView.workoutMapData(coordinates: coordinates, colorScheme: .light)
+        let images: (dark: Data, light: Data) = try await (dark, light)
+        
+        try WorkoutImageProvider.writeImageData(dark: images.dark, light: images.light, workout: identifier)
     }
     
 }
@@ -417,25 +420,31 @@ extension WorkoutProcessor {
         )
     }
     
-    var dictionary: [String: Any] {
-        let zoneHeartRate = provider.maxHeartRate()
-        let zoneValues = provider.heartRateZones()
+    static func calculateHeartRateZones(for percents: [Int], maxHeartRate: Int) -> HRZoneTuple {
+        let values = HRZonesCalculator.values(for: percents, maxHeartRate: maxHeartRate)
         
         var value1: Int = 0
         var value2: Int = 0
         var value3: Int = 0
         var value4: Int = 0
         var value5: Int = 0
-        if zoneValues.count == 5 {
-            value1 = zoneValues[0]
-            value2 = zoneValues[1]
-            value3 = zoneValues[2]
-            value4 = zoneValues[3]
-            value5 = zoneValues[4]
+        if values.count == 5 {
+            value1 = values[0]
+            value2 = values[1]
+            value3 = values[2]
+            value4 = values[3]
+            value5 = values[4]
         }
         
-        let now = Date()
+        return (value1, value2, value3, value4, value5)
+    }
+    
+    var dictionary: [String: Any] {
+        let zoneHeartRate = provider.maxHeartRate()
+        let zonePercents = provider.heartRateZonesPercents()
+        let (value1, value2, value3, value4, value5) = Self.calculateHeartRateZones(for: zonePercents, maxHeartRate: zoneHeartRate)
         
+        let now = Date()
         let dict: [WorkoutSchema: Any] = [
             .dayOfWeek: weekday,
             .avgCyclingCadence: avgCyclingCadence,
