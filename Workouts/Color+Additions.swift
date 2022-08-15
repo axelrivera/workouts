@@ -33,8 +33,8 @@ extension Color {
 // MARK: Asset Colors
 
 extension Color {
-    static let load = Color.orange
-    static let heartRateReserve = Color.pink
+    static let load = Color.pink
+    static let heartRateReserve = Color(.magenta)
     static let distance = Color("DistanceColor")
     static let time = Color("TimeColor")
     static let calories = Color("CaloriesColor")
