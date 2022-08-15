@@ -26,7 +26,6 @@
 		160BB05325DC2C2C0059E493 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160BB05225DC2C2C0059E493 /* StatsView.swift */; };
 		160BB06525DD61700059E493 /* TimeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91725B350BA00B04478 /* TimeSelectView.swift */; };
 		160BB06625DD61700059E493 /* HealthProvider+Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8323D25D4C0F100382545 /* HealthProvider+Profile.swift */; };
-		160BB06725DD61700059E493 /* ImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662725C642EA00019096 /* ImportView.swift */; };
 		160BB06825DD61700059E493 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16682B6825CF416D00FC9317 /* ContentView.swift */; };
 		160BB06925DD61700059E493 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A3A5E925B8F477003D1AB2 /* Log.swift */; };
 		160BB06A25DD61700059E493 /* TextRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B94225B35F6E00B04478 /* TextRow.swift */; };
@@ -52,10 +51,8 @@
 		160BB08125DD61700059E493 /* Date+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0663225C751FD00019096 /* Date+Additions.swift */; };
 		160BB08225DD61700059E493 /* WorkoutDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B93825B353DD00B04478 /* WorkoutDataStore.swift */; };
 		160BB08325DD61700059E493 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16682B6E25CFF54F00FC9317 /* OnboardingView.swift */; };
-		160BB08425DD61700059E493 /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662E25C7209E00019096 /* ImportManager.swift */; };
 		160BB08525DD61700059E493 /* WorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91325B350BA00B04478 /* WorkoutManager.swift */; };
 		160BB08625DD61700059E493 /* WorkoutImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AD0F9925B5DA2C0092FA91 /* WorkoutImport.swift */; };
-		160BB08725DD61700059E493 /* AddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91125B350BA00B04478 /* AddView.swift */; };
 		160BB08825DD61700059E493 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91525B350BA00B04478 /* DocumentPicker.swift */; };
 		160BB08925DD61700059E493 /* WorkoutImport+Record.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A065F725C48CB200019096 /* WorkoutImport+Record.swift */; };
 		160BB08A25DD61700059E493 /* WorkoutImport+Value.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0660325C48D7000019096 /* WorkoutImport+Value.swift */; };
@@ -126,7 +123,6 @@
 		1641DBDA2726C743001F8C49 /* TagsManageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBD82726C743001F8C49 /* TagsManageView.swift */; };
 		1641DBDC2726D4F3001F8C49 /* TagsAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBDB2726D4F3001F8C49 /* TagsAddView.swift */; };
 		1641DBDD2726D4F3001F8C49 /* TagsAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1641DBDB2726D4F3001F8C49 /* TagsAddView.swift */; };
-		1645B91F25B350BB00B04478 /* AddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91125B350BA00B04478 /* AddView.swift */; };
 		1645B92125B350BB00B04478 /* WorkoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91325B350BA00B04478 /* WorkoutManager.swift */; };
 		1645B92225B350BB00B04478 /* UTType+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91425B350BA00B04478 /* UTType+Additions.swift */; };
 		1645B92325B350BB00B04478 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91525B350BA00B04478 /* DocumentPicker.swift */; };
@@ -197,6 +193,14 @@
 		166973FC289891CF00D1942C /* WorkoutImageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166973FA289891CF00D1942C /* WorkoutImageProvider.swift */; };
 		1669741D289D297D00D1942C /* Decimal+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1669741C289D297D00D1942C /* Decimal+Additions.swift */; };
 		1669741E289D297D00D1942C /* Decimal+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1669741C289D297D00D1942C /* Decimal+Additions.swift */; };
+		166974D328A3EC5400D1942C /* SingleImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D228A3EC5400D1942C /* SingleImportView.swift */; };
+		166974D428A3EC5400D1942C /* SingleImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D228A3EC5400D1942C /* SingleImportView.swift */; };
+		166974D628A3F6AD00D1942C /* MultipleImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D528A3F6AD00D1942C /* MultipleImportView.swift */; };
+		166974D728A3F6AD00D1942C /* MultipleImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D528A3F6AD00D1942C /* MultipleImportView.swift */; };
+		166974D928A4836100D1942C /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D828A4836100D1942C /* ImportManager.swift */; };
+		166974DA28A4836100D1942C /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974D828A4836100D1942C /* ImportManager.swift */; };
+		166974DC28A484D500D1942C /* ImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974DB28A484D500D1942C /* ImportView.swift */; };
+		166974DD28A484D500D1942C /* ImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166974DB28A484D500D1942C /* ImportView.swift */; };
 		166A39B72696495E00413F71 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A39B62696495E00413F71 /* AdvancedSettingsView.swift */; };
 		166A39B82696495E00413F71 /* AdvancedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166A39B62696495E00413F71 /* AdvancedSettingsView.swift */; };
 		16755ED825BBAC6E002E73BA /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1645B91A25B350BB00B04478 /* AppData.swift */; };
@@ -317,8 +321,6 @@
 		16A0660F25C48FB500019096 /* WorkoutImport+Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0660D25C48FB500019096 /* WorkoutImport+Events.swift */; };
 		16A0661525C4A60D00019096 /* WorkoutImport+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0661425C4A60D00019096 /* WorkoutImport+Metadata.swift */; };
 		16A0661625C4A60D00019096 /* WorkoutImport+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0661425C4A60D00019096 /* WorkoutImport+Metadata.swift */; };
-		16A0662825C642EA00019096 /* ImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662725C642EA00019096 /* ImportView.swift */; };
-		16A0662F25C7209F00019096 /* ImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0662E25C7209E00019096 /* ImportManager.swift */; };
 		16A0663325C751FD00019096 /* Date+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A0663225C751FD00019096 /* Date+Additions.swift */; };
 		16A17D0026039B9700273321 /* Quantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A17CFF26039B9700273321 /* Quantity.swift */; };
 		16A17D0126039B9700273321 /* Quantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A17CFF26039B9700273321 /* Quantity.swift */; };
@@ -365,6 +367,8 @@
 		16BAD10F280E233A00D1ADCC /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 16BAD10E280E233A00D1ADCC /* PostHog */; };
 		16BAD111280EDBFA00D1ADCC /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 16BAD110280EDBFA00D1ADCC /* Products.storekit */; };
 		16BAD112280EDBFA00D1ADCC /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 16BAD110280EDBFA00D1ADCC /* Products.storekit */; };
+		16BE24AD28A9E6F800F7D6EA /* ImportEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BE24AC28A9E6F800F7D6EA /* ImportEmptyView.swift */; };
+		16BE24AE28A9E6F800F7D6EA /* ImportEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BE24AC28A9E6F800F7D6EA /* ImportEmptyView.swift */; };
 		16C03D7D26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16C03D7E26C373FB004F50DC /* Calendar+Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */; };
 		16CA62812720518B002A2D92 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16CA62802720518B002A2D92 /* CloudKit.framework */; };
@@ -390,12 +394,8 @@
 		16CCDBA5272E042600C75BD4 /* TagsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCDBA3272E042600C75BD4 /* TagsView.swift */; };
 		16CCDBA7272E069700C75BD4 /* EmptyListHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCDBA6272E069700C75BD4 /* EmptyListHeader.swift */; };
 		16CCDBA8272E069700C75BD4 /* EmptyListHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16CCDBA6272E069700C75BD4 /* EmptyListHeader.swift */; };
-		16D13647275AC918002B4B72 /* ImportEmptyModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D13646275AC918002B4B72 /* ImportEmptyModifier.swift */; };
-		16D13648275AC940002B4B72 /* ImportEmptyModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D13646275AC918002B4B72 /* ImportEmptyModifier.swift */; };
 		16D1364A275AC967002B4B72 /* NoFilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D13649275AC967002B4B72 /* NoFilesView.swift */; };
 		16D1364B275AC967002B4B72 /* NoFilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D13649275AC967002B4B72 /* NoFilesView.swift */; };
-		16D1364E275AC9AE002B4B72 /* NotAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D1364C275AC9AE002B4B72 /* NotAvailableView.swift */; };
-		16D1364F275AC9AE002B4B72 /* NotAvailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D1364C275AC9AE002B4B72 /* NotAvailableView.swift */; };
 		16D13650275AC9AE002B4B72 /* WriteDeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D1364D275AC9AE002B4B72 /* WriteDeniedView.swift */; };
 		16D13651275AC9AE002B4B72 /* WriteDeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D1364D275AC9AE002B4B72 /* WriteDeniedView.swift */; };
 		16D154E225D6ED4D00E2AC7C /* Sport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E8323825D4B06200382545 /* Sport.swift */; };
@@ -525,7 +525,6 @@
 		1641DBD52725F386001F8C49 /* SummaryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryCell.swift; sourceTree = "<group>"; };
 		1641DBD82726C743001F8C49 /* TagsManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsManageView.swift; sourceTree = "<group>"; };
 		1641DBDB2726D4F3001F8C49 /* TagsAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsAddView.swift; sourceTree = "<group>"; };
-		1645B91125B350BA00B04478 /* AddView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddView.swift; sourceTree = "<group>"; };
 		1645B91325B350BA00B04478 /* WorkoutManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WorkoutManager.swift; sourceTree = "<group>"; };
 		1645B91425B350BA00B04478 /* UTType+Additions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UTType+Additions.swift"; sourceTree = "<group>"; };
 		1645B91525B350BA00B04478 /* DocumentPicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
@@ -571,6 +570,10 @@
 		1668F99C26DE4F5800393322 /* ShareDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareDetailView.swift; sourceTree = "<group>"; };
 		166973FA289891CF00D1942C /* WorkoutImageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutImageProvider.swift; sourceTree = "<group>"; };
 		1669741C289D297D00D1942C /* Decimal+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Decimal+Additions.swift"; sourceTree = "<group>"; };
+		166974D228A3EC5400D1942C /* SingleImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleImportView.swift; sourceTree = "<group>"; };
+		166974D528A3F6AD00D1942C /* MultipleImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleImportView.swift; sourceTree = "<group>"; };
+		166974D828A4836100D1942C /* ImportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportManager.swift; sourceTree = "<group>"; };
+		166974DB28A484D500D1942C /* ImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportView.swift; sourceTree = "<group>"; };
 		166A39B62696495E00413F71 /* AdvancedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettingsView.swift; sourceTree = "<group>"; };
 		16755EDB25BBACC5002E73BA /* GarminUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarminUtils.swift; sourceTree = "<group>"; };
 		1676996C2869E11A00EC92F1 /* TrainingLoadProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainingLoadProcessor.swift; sourceTree = "<group>"; };
@@ -634,8 +637,6 @@
 		16A0660325C48D7000019096 /* WorkoutImport+Value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutImport+Value.swift"; sourceTree = "<group>"; };
 		16A0660D25C48FB500019096 /* WorkoutImport+Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutImport+Events.swift"; sourceTree = "<group>"; };
 		16A0661425C4A60D00019096 /* WorkoutImport+Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WorkoutImport+Metadata.swift"; sourceTree = "<group>"; };
-		16A0662725C642EA00019096 /* ImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportView.swift; sourceTree = "<group>"; };
-		16A0662E25C7209E00019096 /* ImportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportManager.swift; sourceTree = "<group>"; };
 		16A0663225C751FD00019096 /* Date+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Additions.swift"; sourceTree = "<group>"; };
 		16A17CFF26039B9700273321 /* Quantity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quantity.swift; sourceTree = "<group>"; };
 		16A2F51A25EB0FD10010F01D /* Array+Chunked.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Chunked.swift"; sourceTree = "<group>"; };
@@ -661,6 +662,7 @@
 		16BA33FF2884A63300823A6C /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
 		16BAD10B280E203900D1ADCC /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		16BAD110280EDBFA00D1ADCC /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
+		16BE24AC28A9E6F800F7D6EA /* ImportEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportEmptyView.swift; sourceTree = "<group>"; };
 		16C03D7C26C373FB004F50DC /* Calendar+Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calendar+Interval.swift"; sourceTree = "<group>"; };
 		16CA62802720518B002A2D92 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		16CA6282272053A6002A2D92 /* Workouts 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Workouts 4.xcdatamodel"; sourceTree = "<group>"; };
@@ -675,9 +677,7 @@
 		16CA68F526B36C670056C1BA /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
 		16CCDBA3272E042600C75BD4 /* TagsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsView.swift; sourceTree = "<group>"; };
 		16CCDBA6272E069700C75BD4 /* EmptyListHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyListHeader.swift; sourceTree = "<group>"; };
-		16D13646275AC918002B4B72 /* ImportEmptyModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImportEmptyModifier.swift; sourceTree = "<group>"; };
 		16D13649275AC967002B4B72 /* NoFilesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NoFilesView.swift; sourceTree = "<group>"; };
-		16D1364C275AC9AE002B4B72 /* NotAvailableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotAvailableView.swift; sourceTree = "<group>"; };
 		16D1364D275AC9AE002B4B72 /* WriteDeniedView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WriteDeniedView.swift; sourceTree = "<group>"; };
 		16D296422722EB0500DD328D /* WorkoutMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMetadata.swift; sourceTree = "<group>"; };
 		16D380FA26CFFD1500DB8F0C /* HealthAuthProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthAuthProvider.swift; sourceTree = "<group>"; };
@@ -870,7 +870,7 @@
 				1645B93425B351F500B04478 /* Main */,
 				160BB05825DC2C4F0059E493 /* Workouts */,
 				16864BDE2685E95C0005E7D8 /* Workout Detail */,
-				16B321C626C02C3D007CCE70 /* Training */,
+				16B321C626C02C3D007CCE70 /* Calendar */,
 				160BB05125DC2C110059E493 /* Progress */,
 				169CD13827D3D84D00A0CAC6 /* Dashboard */,
 				16CCDBA1272E026400C75BD4 /* Tags */,
@@ -1182,12 +1182,12 @@
 		16864BDF2685E9670005E7D8 /* Import */ = {
 			isa = PBXGroup;
 			children = (
-				16A0662E25C7209E00019096 /* ImportManager.swift */,
-				16A0662725C642EA00019096 /* ImportView.swift */,
-				1645B91125B350BA00B04478 /* AddView.swift */,
-				16D13646275AC918002B4B72 /* ImportEmptyModifier.swift */,
+				166974D828A4836100D1942C /* ImportManager.swift */,
+				166974DB28A484D500D1942C /* ImportView.swift */,
+				166974D228A3EC5400D1942C /* SingleImportView.swift */,
+				166974D528A3F6AD00D1942C /* MultipleImportView.swift */,
+				16BE24AC28A9E6F800F7D6EA /* ImportEmptyView.swift */,
 				16D13649275AC967002B4B72 /* NoFilesView.swift */,
-				16D1364C275AC9AE002B4B72 /* NotAvailableView.swift */,
 				16D1364D275AC9AE002B4B72 /* WriteDeniedView.swift */,
 			);
 			name = Import;
@@ -1296,7 +1296,7 @@
 			name = Onboarding;
 			sourceTree = "<group>";
 		};
-		16B321C626C02C3D007CCE70 /* Training */ = {
+		16B321C626C02C3D007CCE70 /* Calendar */ = {
 			isa = PBXGroup;
 			children = (
 				16CA68DF26AF0B700056C1BA /* LogManager.swift */,
@@ -1305,7 +1305,7 @@
 				16A544F926B75F5300CB6160 /* WorkoutLogRow.swift */,
 				16CA68E226B039630056C1BA /* LogBubble.swift */,
 			);
-			name = Training;
+			name = Calendar;
 			sourceTree = "<group>";
 		};
 		16B321C726C02C63007CCE70 /* Goals */ = {
@@ -1522,7 +1522,6 @@
 				160BB06625DD61700059E493 /* HealthProvider+Profile.swift in Sources */,
 				16D296442722EB0500DD328D /* WorkoutMetadata.swift in Sources */,
 				1678146025DFFFBD0012531D /* StatsSummary.swift in Sources */,
-				160BB06725DD61700059E493 /* ImportView.swift in Sources */,
 				16864BD4268369470005E7D8 /* BarView.swift in Sources */,
 				1628BD682863456D0000371A /* HeartRateDuration.swift in Sources */,
 				160BB06825DD61700059E493 /* ContentView.swift in Sources */,
@@ -1610,7 +1609,6 @@
 				16208BFA26D4207600693530 /* ImageActivitySheet.swift in Sources */,
 				1669741E289D297D00D1942C /* Decimal+Additions.swift in Sources */,
 				165BE37426E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
-				16D1364F275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				160BB07F25DD61700059E493 /* RoundButton.swift in Sources */,
 				16240565273B020D00FC4864 /* WorkoutTagProvider.swift in Sources */,
 				169A1309275F4B4E00D2F176 /* WorkoutViewModel.swift in Sources */,
@@ -1619,6 +1617,7 @@
 				168F3C7726A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16F5B6D22740543F005152E0 /* WorkoutsFilterManager.swift in Sources */,
 				16FB84EA25F8321F00CF22ED /* Charts+Additions.swift in Sources */,
+				166974D728A3F6AD00D1942C /* MultipleImportView.swift in Sources */,
 				16E4F62D27E2BFB1002E9AD6 /* DashboardMetricsView.swift in Sources */,
 				16D861ED2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */,
 				167D0BA726E25D5000055D54 /* StatsWorkoutsView.swift in Sources */,
@@ -1630,6 +1629,7 @@
 				16D380FC26CFFD1500DB8F0C /* HealthAuthProvider.swift in Sources */,
 				167EECAD2865F25900CD47D2 /* HKWorkout+Additions.swift in Sources */,
 				16CA68F726B36C670056C1BA /* GoalsView.swift in Sources */,
+				166974D428A3EC5400D1942C /* SingleImportView.swift in Sources */,
 				16BA33FB288359F900823A6C /* Schemas.swift in Sources */,
 				165B513B288659D60064E758 /* WorkoutsProvider.swift in Sources */,
 				16864BD72684B2EB0005E7D8 /* HeartRateView.swift in Sources */,
@@ -1643,7 +1643,6 @@
 				16A2F51C25EB0FD10010F01D /* Array+Chunked.swift in Sources */,
 				16E4C7DE26C204CA00A4C0E6 /* HealthProvider.swift in Sources */,
 				160BB08325DD61700059E493 /* OnboardingView.swift in Sources */,
-				160BB08425DD61700059E493 /* ImportManager.swift in Sources */,
 				163A5F3D25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */,
 				1694A51A2732CEED00DEAD8B /* TagViewModel.swift in Sources */,
 				167D2EA02607E91500A4A299 /* FileUtils.swift in Sources */,
@@ -1655,7 +1654,6 @@
 				164D0AE926611C6E000A56AD /* Array+Additions.swift in Sources */,
 				160BB08625DD61700059E493 /* WorkoutImport.swift in Sources */,
 				16D1364B275AC967002B4B72 /* NoFilesView.swift in Sources */,
-				160BB08725DD61700059E493 /* AddView.swift in Sources */,
 				169CD14227D3D9AE00A0CAC6 /* DashboardActivityViewModel.swift in Sources */,
 				1641DBDA2726C743001F8C49 /* TagsManageView.swift in Sources */,
 				16E37B4D26E82D0D0075178E /* ShareSettings.swift in Sources */,
@@ -1664,19 +1662,21 @@
 				160BB08925DD61700059E493 /* WorkoutImport+Record.swift in Sources */,
 				1641DBDD2726D4F3001F8C49 /* TagsAddView.swift in Sources */,
 				16208BEE26D3C81900693530 /* ShareView.swift in Sources */,
+				16BE24AE28A9E6F800F7D6EA /* ImportEmptyView.swift in Sources */,
 				160BB08A25DD61700059E493 /* WorkoutImport+Value.swift in Sources */,
 				169885BA272CD26A00F02EAF /* Tag.swift in Sources */,
 				160BB08B25DD61700059E493 /* HealthData.swift in Sources */,
 				16CCDBA5272E042600C75BD4 /* TagsView.swift in Sources */,
 				165D649C261B51D20015744C /* MailView.swift in Sources */,
 				164D0AF426613A34000A56AD /* LinearInterpolator.swift in Sources */,
-				16D13648275AC940002B4B72 /* ImportEmptyModifier.swift in Sources */,
 				167EECAA2865F09900CD47D2 /* TimestampUtils.swift in Sources */,
 				1628BD65286006BC0000371A /* HREditManager.swift in Sources */,
+				166974DA28A4836100D1942C /* ImportManager.swift in Sources */,
 				160BB08C25DD61700059E493 /* DetailMap.swift in Sources */,
 				168E0D0E276E9F8300DA3913 /* StatsTimelineManager.swift in Sources */,
 				160BB08D25DD61700059E493 /* FormatterUtils.swift in Sources */,
 				16CA68E426B039630056C1BA /* LogBubble.swift in Sources */,
+				166974DD28A484D500D1942C /* ImportView.swift in Sources */,
 				16208BF726D3E76300693530 /* Coordinates+Sample.swift in Sources */,
 				167D2E632604E0BA00A4A299 /* String+Additions.swift in Sources */,
 				16DF29DA274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift in Sources */,
@@ -1736,7 +1736,6 @@
 				16E8323E25D4C0F100382545 /* HealthProvider+Profile.swift in Sources */,
 				16D296432722EB0500DD328D /* WorkoutMetadata.swift in Sources */,
 				1678145F25DFFFBD0012531D /* StatsSummary.swift in Sources */,
-				16A0662825C642EA00019096 /* ImportView.swift in Sources */,
 				16864BD3268369470005E7D8 /* BarView.swift in Sources */,
 				1628BD672863456D0000371A /* HeartRateDuration.swift in Sources */,
 				16682B6925CF416D00FC9317 /* ContentView.swift in Sources */,
@@ -1824,7 +1823,6 @@
 				16208BF926D4207500693530 /* ImageActivitySheet.swift in Sources */,
 				1669741D289D297D00D1942C /* Decimal+Additions.swift in Sources */,
 				165BE37326E4F9B400C3F36B /* WorkoutPhotoCard.swift in Sources */,
-				16D1364E275AC9AE002B4B72 /* NotAvailableView.swift in Sources */,
 				16682B6525CF3E1900FC9317 /* RoundButton.swift in Sources */,
 				16240564273B020D00FC4864 /* WorkoutTagProvider.swift in Sources */,
 				169A1308275F4B4E00D2F176 /* WorkoutViewModel.swift in Sources */,
@@ -1833,6 +1831,7 @@
 				168F3C7626A05F050054AFD1 /* Alert+Additions.swift in Sources */,
 				16F5B6D12740543F005152E0 /* WorkoutsFilterManager.swift in Sources */,
 				16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */,
+				166974D628A3F6AD00D1942C /* MultipleImportView.swift in Sources */,
 				16E4F62C27E2BFB1002E9AD6 /* DashboardMetricsView.swift in Sources */,
 				16D861EC2715D6D800C09AC5 /* HealthOnboarding.swift in Sources */,
 				167D0BA626E25D4F00055D54 /* StatsWorkoutsView.swift in Sources */,
@@ -1844,9 +1843,9 @@
 				16D380FB26CFFD1500DB8F0C /* HealthAuthProvider.swift in Sources */,
 				167EECAC2865F25900CD47D2 /* HKWorkout+Additions.swift in Sources */,
 				16CA68F626B36C670056C1BA /* GoalsView.swift in Sources */,
+				166974D328A3EC5400D1942C /* SingleImportView.swift in Sources */,
 				16BA33FA288359F900823A6C /* Schemas.swift in Sources */,
 				165B513A288659D60064E758 /* WorkoutsProvider.swift in Sources */,
-				16D13647275AC918002B4B72 /* ImportEmptyModifier.swift in Sources */,
 				16864BD62684B2EB0005E7D8 /* HeartRateView.swift in Sources */,
 				16FB84EF25F99C5400CF22ED /* Array+Slice.swift in Sources */,
 				164D0AF026613A24000A56AD /* Interpolator.swift in Sources */,
@@ -1858,7 +1857,6 @@
 				16A2F51B25EB0FD10010F01D /* Array+Chunked.swift in Sources */,
 				16E4C7DD26C204CA00A4C0E6 /* HealthProvider.swift in Sources */,
 				16682B6F25CFF54F00FC9317 /* OnboardingView.swift in Sources */,
-				16A0662F25C7209F00019096 /* ImportManager.swift in Sources */,
 				163A5F3C25EFC8DA00146964 /* WorkoutAnnotation.swift in Sources */,
 				1694A5192732CEED00DEAD8B /* TagViewModel.swift in Sources */,
 				167D2E9F2607E91500A4A299 /* FileUtils.swift in Sources */,
@@ -1871,13 +1869,13 @@
 				16AD0F9A25B5DA2C0092FA91 /* WorkoutImport.swift in Sources */,
 				16D1364A275AC967002B4B72 /* NoFilesView.swift in Sources */,
 				169CD14127D3D9AE00A0CAC6 /* DashboardActivityViewModel.swift in Sources */,
-				1645B91F25B350BB00B04478 /* AddView.swift in Sources */,
 				1641DBD92726C743001F8C49 /* TagsManageView.swift in Sources */,
 				16E37B4C26E82D0D0075178E /* ShareSettings.swift in Sources */,
 				1602AFAB26C7DE8A0079A6E4 /* CLLocation+Array.swift in Sources */,
 				1645B92325B350BB00B04478 /* DocumentPicker.swift in Sources */,
 				16A065F825C48CB300019096 /* WorkoutImport+Record.swift in Sources */,
 				1641DBDC2726D4F3001F8C49 /* TagsAddView.swift in Sources */,
+				16BE24AD28A9E6F800F7D6EA /* ImportEmptyView.swift in Sources */,
 				16208BED26D3C81900693530 /* ShareView.swift in Sources */,
 				16A0660425C48D7000019096 /* WorkoutImport+Value.swift in Sources */,
 				169885B9272CD26A00F02EAF /* Tag.swift in Sources */,
@@ -1887,10 +1885,12 @@
 				164D0AF326613A34000A56AD /* LinearInterpolator.swift in Sources */,
 				167EECA92865F09900CD47D2 /* TimestampUtils.swift in Sources */,
 				1628BD64286006BC0000371A /* HREditManager.swift in Sources */,
+				166974D928A4836100D1942C /* ImportManager.swift in Sources */,
 				1697607B25CB7BCC00CAF544 /* DetailMap.swift in Sources */,
 				168E0D0D276E9F8300DA3913 /* StatsTimelineManager.swift in Sources */,
 				16ACF73525C8D61000CAFDBC /* FormatterUtils.swift in Sources */,
 				16CA68E326B039630056C1BA /* LogBubble.swift in Sources */,
+				166974DC28A484D500D1942C /* ImportView.swift in Sources */,
 				16208BF626D3E76300693530 /* Coordinates+Sample.swift in Sources */,
 				167D2E622604E0BA00A4A299 /* String+Additions.swift in Sources */,
 				16DF29D9274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift in Sources */,

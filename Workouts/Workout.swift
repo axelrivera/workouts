@@ -223,6 +223,10 @@ extension Workout {
         )
     }
     
+    static func predicateForStartDate(_ startDate: Date) -> NSPredicate {
+        NSPredicate(format: "%K = %@", WorkoutSchema.start.key, startDate as NSDate)
+    }
+    
     static func predicateForRemoteIdentifier(_ identifier: UUID) -> NSPredicate {
         NSPredicate(format: "%K == %@", WorkoutSchema.remoteIdentifier.key, identifier as NSUUID)
     }
@@ -347,6 +351,25 @@ extension Workout {
                     notMarkedForLocalDeletionPredicate,
                     predicateForRemoteIdentifier(identifier)
             ])
+            let request = defaultFetchRequest()
+            request.predicate = predicate
+            
+            do {
+                return try context.count(for: request) > 0
+            } catch {
+                return false
+            }
+        }
+    }
+    
+    static func isPresent(start: Date, sport: Sport, in context: NSManagedObjectContext) -> Bool {
+        context.performAndWait {
+            let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+                notMarkedForLocalDeletionPredicate,
+                predicateForStartDate(start),
+                predicateForSport(sport)
+            ])
+            
             let request = defaultFetchRequest()
             request.predicate = predicate
             

@@ -18,11 +18,12 @@ struct WorkoutsView: View {
 
 struct WorkoutsContentView: View {
     enum ActiveCoverSheet: Hashable, Identifiable {
-        case settings, add
+        case settings
         var id: Self { self }
     }
     
     enum ActiveSheet: Hashable, Identifiable {
+        case add
         case filter
         case tagsToAll
         case tags(identifier: UUID, sport: Sport)
@@ -105,7 +106,7 @@ struct WorkoutsContentView: View {
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: { activeCoverSheet = .add}) {
+                    Button(action: { activeSheet = .add}) {
                         Image(systemName: "plus")
                     }
                     .disabled(isAddDisabled)
@@ -117,6 +118,8 @@ struct WorkoutsContentView: View {
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
+                case .add:
+                    ImportView()
                 case .filter:
                     WorkoutsFilterView()
                         .environmentObject(filterManager)
@@ -133,8 +136,6 @@ struct WorkoutsContentView: View {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
-                case .add:
-                    ImportView()
                 }
             }
             .alert(item: $activeAlert) { alert in

@@ -1,36 +1,49 @@
 //
-//  ImportManager.swift
+//  WorkoutImportManager.swift
 //  Workouts
 //
-//  Created by Axel Rivera on 1/31/21.
+//  Created by Axel Rivera on 8/10/22.
 //
 
+import Foundation
+import CoreData
 import SwiftUI
-import FitFileParser
 import HealthKit
 
-class ImportManager: ObservableObject {
-    enum State {
-        case processing, ok, empty, notAuthorized, notAvailable
+extension ImportManager {
+    
+    enum EmptyState {
+        case `default`, notAvailable
         
-        var isWhitelisted: Bool {
-            Self.whitelisted.contains(self)
+        var isReady: Bool {
+            self == .default
         }
-        
-        static let whitelisted: [State] = [.ok, .empty, .processing]
     }
     
-    @Published var workouts = [WorkoutImport]()
-    @Published var isProcessingImports = false
-    @Published var state = State.empty
-        
-    private var documents = [FitDocument]()
+    enum Screen {
+        case single, multiple, empty
+    }
     
-    private lazy var importQueue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-        return queue
-    }()
+}
+
+class ImportManager: ObservableObject {
+    private let IMPORT_CHUNK_SIZE = 2
+    let PROCESS_WHITELIST: [WorkoutImport.Status] = [.new, .duplicate]
+    
+    @Published var isGeneratingWorkoutFiles = false
+    @Published var isProcessing = false
+    @Published var visibleScreen = Screen.empty
+    @Published var emptyState = EmptyState.default
+    @Published var showDocumentPicker = false
+    
+    @Published var workouts = [WorkoutImport]()
+    @Published var singleWorkout = WorkoutImport(status: .empty, sport: .other)
+    
+    private let viewContext: NSManagedObjectContext
+    
+    init(viewContext: NSManagedObjectContext) {
+        self.viewContext = viewContext
+    }
 }
 
 // MARK: - Authorization
@@ -41,27 +54,29 @@ extension ImportManager {
         // Double check permissions on succeed
         // sample types must be an empty string for success
         // if response is nil or an array with values it means the user did not accept some of the permissions
-        
+
         if let sampleTypes = try? HealthData.shared.filteredWriteSampleTypes(), sampleTypes.isEmpty {
-            updateState(workouts.isEmpty ? .empty : .ok)
+            updateEmptyState(.default)
             completionHandler(true)
         } else {
-            self.fail(with: HealthData.DataError.permissionDenied, completionHandler: completionHandler)
+            updateEmptyState(.notAvailable)
+            completionHandler(false)
         }
     }
-    
+
     func fail(with error: Error, completionHandler: @escaping (_ success: Bool) -> Void) {
-        switch error {
-        case HealthData.DataError.dataNotAvailable:
-            self.updateState(.notAvailable)
-        case HealthData.DataError.permissionDenied:
-            self.updateState(.notAuthorized)
-        default:
-            self.updateState(.notAvailable)
-        }
+        self.updateEmptyState(.notAvailable)
         completionHandler(false)
     }
     
+    func updateEmptyState(_ emptyState: EmptyState) {
+        DispatchQueue.main.async {
+            withAnimation {
+                self.emptyState = emptyState
+            }
+        }
+    }
+
     func requestAuthorizationStatus(completionHandler: @escaping (_ success: Bool) -> Void) {
         HealthData.shared.requestStatus(write: HealthData.writeSampleTypes()) { result in
             switch result {
@@ -70,14 +85,14 @@ extension ImportManager {
                     self.requestWritingAuthorization(completionHandler: completionHandler)
                     return
                 }
-                
+
                 self.success(with: completionHandler)
             case .failure(let error):
                 self.fail(with: error, completionHandler: completionHandler)
             }
         }
     }
-    
+
     func requestWritingAuthorization(completionHandler: @escaping (_ success: Bool) -> Void) {
         HealthData.shared.requestHealthAuthorization(read: HealthData.readObjectTypes(), write: HealthData.writeSampleTypes()) { result in
             switch result {
@@ -89,153 +104,155 @@ extension ImportManager {
         }
     }
     
-    func updateState(_ state: State) {
+}
+
+// MARK: - Updates
+
+extension ImportManager {
+    
+    func updateScreen() {
+        let screen: Screen
+        if !singleWorkout.status.isValid && workouts.isEmpty {
+            screen = .empty
+        } else {
+            if singleWorkout.status.isValid {
+                screen = .single
+            } else {
+                screen = .multiple
+            }
+        }
+        self.visibleScreen = screen
+    }
+    
+    func updateSingleWorkout() {
+        if workouts.count == 1 {
+            self.singleWorkout = workouts[0]
+        } else {
+            self.singleWorkout = WorkoutImport(status: .empty, sport: .other)
+        }
+    }
+    
+    func generateWorkouts(with documents: [FitDocument]) async {
+        var existingWorkouts = self.workouts.filter({ PROCESS_WHITELIST.contains($0.status) })
+        
+        for document in documents {
+            await document.open()
+            
+            if let file = await document.fitFile, let workout = WorkoutImport(fitFile: file) {
+                guard existingWorkouts.filter({ $0.id == workout.id }).isEmpty else {
+                    continue
+                }
+                
+                if let date = workout.startDate, Workout.isPresent(start: date, sport: workout.sport, in: viewContext) {
+                    workout.status = .duplicate
+                }
+                
+                existingWorkouts.insert(workout, at: 0)
+            } else {
+                let name = await document.fileURL.lastPathComponent
+                existingWorkouts.insert(WorkoutImport(invalidFilename: name), at: 0)
+            }
+        }
+        
+        let workouts = existingWorkouts
         DispatchQueue.main.async {
             withAnimation {
-                self.state = state
+                self.workouts = workouts
+                self.updateSingleWorkout()
+                self.updateScreen()
             }
         }
     }
     
-}
-
-// MARK: - Selection Logic
-
-extension ImportManager {
+    func delete(workout: WorkoutImport, completionHandler: (_ shouldDismiss: Bool) -> Void) {
+        if let index = workouts.firstIndex(where: { $0.id == workout.id }) {
+            workouts.remove(at: index)
+        }
+        updateSingleWorkout()
         
-    var isImportDisabled: Bool {
-        return isProcessingImports || !state.isWhitelisted
-    }
-    
-    var processingWorkouts: [WorkoutImport] {
-        workoutsForStatus(.processing)
-    }
-    
-    var newWorkouts: [WorkoutImport] {
-        workoutsForStatus(.new)
-    }
-    
-    var failedWorkouts: [WorkoutImport] {
-        workoutsForStatus(.failed)
-    }
-    
-    var processedWorkouts: [WorkoutImport] {
-        workoutsForStatus(.processed)
-    }
-    
-    private func workoutsForStatus(_ status: WorkoutImport.Status) -> [WorkoutImport] {
-        workouts.filter({ $0.status == status })
-    }
-    
-}
-
-// MARK: - Process Imports
-
-extension ImportManager {
-    
-    func cancelPendingImports() {
-        importQueue.cancelAllOperations()
-    }
-    
-    func processDocuments(at documents: [FitDocument], completionHandler: @escaping (() -> Void)) {
-        self.documents = documents
-        workouts = [WorkoutImport]()
+        completionHandler(visibleScreen == .multiple)
         
-        Task(priority: .userInitiated) {
-            var workouts = [WorkoutImport]()
-            for document in documents {
-                await document.open()
-                
-                if let fitFile = await document.fitFile, let workout = WorkoutImport(fitFile: fitFile) {
-                    workouts.append(workout)
-                } else {
-                    let fileURL = await document.fileURL
-                    workouts.append(WorkoutImport(invalidFilename: fileURL.lastPathComponent))
-                }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if self.workouts.isEmpty {
+                self.visibleScreen = .empty
             }
-            
-            let sortedWorkouts = workouts.sorted(by: { (lhs, rhs) -> Bool in
-                guard let leftDate = lhs.startDate, let rightDate = rhs.startDate else { return false }
-                return leftDate > rightDate
-            })
-            
+        }
+    }
+    
+    func delete(at offsets: IndexSet) {
+        workouts.remove(atOffsets: offsets)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if self.workouts.isEmpty {
+                self.updateSingleWorkout()
+                self.visibleScreen = .empty
+            }
+        }
+    }
+    
+    func discardAll() {
+        self.workouts = []
+        self.updateSingleWorkout()
+        self.updateScreen()
+    }
+    
+}
+
+// MARK: Processing
+
+extension ImportManager {
+    
+    func processWorkouts(singleWorkout workout: WorkoutImport? = nil) async {
+        let newWorkouts: [WorkoutImport]
+        if let workout = workout {
+            newWorkouts = workout.status == .new ? [workout] : []
+        } else {
+            newWorkouts = workouts.filter({ $0.status == .new })
+        }
+        
+        if newWorkouts.isEmpty { return }
+        
+        await setIsProcessing(true)
+        
+        newWorkouts.forEach { workout in
             DispatchQueue.main.async {
-                self.workouts = sortedWorkouts
-                completionHandler()
+                workout.status = .processing
             }
         }
-    }
-    
-    func processWorkout(_ workout: WorkoutImport) {
-        guard workout.status == .new else { return }
-        isProcessingImports = true
-        workout.status = .processing
         
-        importQueue.addOperation { [unowned self] in
-            self.processWorkoutInBackground(workout)
-        }
-    }
-    
-    private func processWorkoutInBackground(_ workout: WorkoutImport) {
-        Task(priority: .userInitiated) {
-            do {
-                try await WorkoutDataStore.shared.saveWorkoutImport(workout)
-                DispatchQueue.main.async {
-                    workout.status = .processed
+        let chunks = newWorkouts.chunks(ofCount: IMPORT_CHUNK_SIZE)
+        for chunk in chunks {
+            let _ = await withTaskGroup(of: WorkoutImport.self) { group in
+                var workouts = [WorkoutImport]()
+                
+                for workout in chunk {
+                    group.addTask {
+                        do {
+                            try await WorkoutDataStore.shared.saveWorkoutImport(workout)
+                            DispatchQueue.main.async {
+                                workout.status = .processed
+                            }
+                        } catch {
+                            DispatchQueue.main.async {
+                                workout.status = .failed
+                            }
+                        }
+                        return workout
+                    }
                 }
-            } catch {
-                DispatchQueue.main.async {
-                    workout.status = .failed
+                
+                for await workout in group {
+                    workouts.append(workout)
                 }
             }
-            
-            await updateProcessingWorkoutsFlag()
         }
+        
+        await setIsProcessing(false)
     }
     
     @MainActor
-    func updateProcessingWorkoutsFlag() {
-        let processing = self.processingWorkouts
-        self.isProcessingImports = processing.isPresent
-    }
-    
-    func loadSampleWorkouts() {
-        self.workouts = Self.sampleWorkouts()
+    func setIsProcessing(_ isProcessing: Bool) {
+        self.isProcessing = isProcessing
     }
     
 }
-
-// MARK: Sample Workouts
-
-extension ImportManager {
-    
-    static func sampleWorkouts() -> [WorkoutImport] {
-        let today = Date()
-        let yesterday = today.dayBefore
-        
-        return [
-            workoutWithStatus(.new, sport: .cycling, startDate: today),
-            workoutWithStatus(.new, sport: .cycling, startDate: yesterday, indoor: true),
-            workoutWithStatus(.new, sport: .cycling),
-            workoutWithStatus(.notSupported, sport: .running),
-            workoutWithStatus(.notSupported, sport: .walking),
-            workoutWithStatus(.processed, sport: .cycling),
-            workoutWithStatus(.failed, sport: .cycling)
-        ]
-    }
-    
-    static func sampleWorkout() -> WorkoutImport {
-        workoutWithStatus(.new, sport: .cycling, indoor: false)
-    }
-    
-    private static func workoutWithStatus(_ status: WorkoutImport.Status, sport: Sport, startDate: Date? = nil, indoor: Bool = false) -> WorkoutImport {
-        let startDate = startDate ?? Date.dateFor(month: 1, day: 1, year: 2021)!
-        let workout = WorkoutImport(status: status, sport: sport)
-        workout.indoor = indoor
-        workout.start = .init(valueType: .date, value: startDate.timeIntervalSince1970)
-        workout.totalDistance = .init(valueType: .distance, value: 32000.0)
-        return workout
-    }
-    
-}
-

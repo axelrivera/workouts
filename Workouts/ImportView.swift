@@ -2,151 +2,155 @@
 //  ImportView.swift
 //  Workouts
 //
-//  Created by Axel Rivera on 1/30/21.
+//  Created by Axel Rivera on 8/10/22.
 //
 
 import SwiftUI
-import FitFileParser
+import CoreData
 
 struct ImportView: View {
-    enum ActiveAlert: Identifiable {
-        case dismiss
-        var id: Int { hashValue }
-    }
+    @Environment(\.managedObjectContext) var viewContext
     
-    @Environment(\.presentationMode) var presentationMode
-    @StateObject var importManager: ImportManager = ImportManager()
-    var openURL: URL? = nil
+    var fileURL: URL?
     
-    @State private var isProcessingDocuments = false
-    
-    @State private var activeAlert: ActiveAlert?
-    @State private var shouldFetchWritePermission = false
-    @State private var showDocumentPicker = false
-        
     var body: some View {
-        NavigationView {
-            VStack {
-                List(importManager.workouts, id: \.id) { workout in
-                    ImportRow(workout: workout) {
-                        AnalyticsManager.shared.capture(.importedWorkout)
-                        importManager.processWorkout(workout)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .listStyle(PlainListStyle())
-                .modifier(ImportEmptyModifier(importState: importManager.state))
-                
-                Spacer()
-                
-                RoundButton(text: "Add FIT Files", action: addAction)
-                    .disabled(importManager.isImportDisabled)
-                    .padding()
-            }
-            .onAppear {
-                requestWritingAuthorizationIfNeeded(onAppear: true)
-                
-            }
-            .navigationTitle("Import Workouts")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(action: dismissAction) {
-                        Text("Done")
-                    }
-                }
-            }
-            .fileImporter(isPresented: $showDocumentPicker, allowedContentTypes: [.fitDocument], allowsMultipleSelection: true) { result in
-                switch result {
-                case .success(let urls):
-                    importManager.state = .processing
-                    
-                    let documents = urls.map({ FitDocument(fileURL: $0) })
-                    importManager.processDocuments(at: documents) {
-                        importManager.state = urls.isEmpty ? .empty : .ok
-                    }
-                case .failure(let error):
-                    Log.debug("failed to show document importer: \(error.localizedDescription)")
-                }
-            }
-            .alert(item: $activeAlert) { item in
-                switch item {
-                case .dismiss:
-                    return Alert(
-                        title:  Text("Import In Progress"),
-                        message: Text("Please wait until import finishes."),
-                        dismissButton: .default(Text("Ok"))
-                    )
-                }
-            }
-        }
+        ImportContentView(fileURL: fileURL, manager: ImportManager(viewContext: viewContext))
     }
 }
 
-private extension ImportView {
-    
-    func addAction() {
-        if importManager.state == .processing { return }
+struct ImportContentView: View {
+    @Environment(\.dismiss) private var dismiss
         
-        importManager.requestWritingAuthorization { success in
+    @State var fileURL: URL?
+    @StateObject var manager: ImportManager
+    
+    @State private var isProcessingAlertVisible = false
+        
+    var body: some View {
+        NavigationView {
+            Group {
+                if manager.visibleScreen == .single {
+                    SingleImportView(workout: manager.singleWorkout)
+                        .environmentObject(manager)
+                } else if manager.visibleScreen == .multiple {
+                    MultipleImportView()
+                        .environmentObject(manager)
+                } else {
+                    ImportEmptyView(state: manager.emptyState)
+                        .edgesIgnoringSafeArea(.top)
+                }
+            }
+            .onAppear(perform: requestWritingAuthorization)
+            .interactiveDismissDisabled()
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: dismissSheet) {
+                        Text("Done")
+                    }
+                }
+                
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: add) {
+                        Image(systemName: "plus")
+                    }
+                    .disabled(!manager.emptyState.isReady || manager.isProcessing)
+                }
+            }
+            .fileImporter(
+                isPresented: $manager.showDocumentPicker,
+                allowedContentTypes: [.fitDocument],
+                allowsMultipleSelection: true)
+            { result in
+                processFiles(result)
+            }
+            .alert("Import in Progress", isPresented: $isProcessingAlertVisible) {
+                Button("Ok", role: .cancel, action: {})
+            } message: {
+                Text("Please wait until import process ends.")
+            }
+
+        }
+    }
+    
+}
+
+extension ImportContentView {
+    
+    func add() {
+        guard manager.emptyState == .default else { return }
+        
+        manager.requestWritingAuthorization { success in
             DispatchQueue.main.async {
                 if success {
                     AnalyticsManager.shared.capture(.addWorkoutFile)
-                    showDocumentPicker = true
+                    self.manager.showDocumentPicker = true
                 } else {
-                    importManager.state = .notAuthorized
+                    self.manager.emptyState = .notAvailable
                 }
             }
         }
     }
     
-    func requestWritingAuthorizationIfNeeded(onAppear: Bool = false) {
-        importManager.requestAuthorizationStatus { success in
+    func requestWritingAuthorization() {
+        manager.requestAuthorizationStatus { success in
             guard success else {
                 Log.debug("request authorization failed")
                 return
             }
             
-            if let url = openURL {
-                let document = FitDocument(fileURL: url)
-                
-                DispatchQueue.main.async {
-                    importManager.state = .processing
-                    importManager.processDocuments(at: [document]) {
-                        importManager.state = .ok
-                    }
-                }
-            }
+            processURLIfNeeded()
         }
     }
     
-    func onSheetDismiss() {
-        if shouldFetchWritePermission {
-            requestWritingAuthorizationIfNeeded()
-        }
-        shouldFetchWritePermission = false
-    }
-    
-    func dismissAction() {
-        if importManager.isProcessingImports {
-            activeAlert = .dismiss
+    func dismissSheet() {
+        if manager.isProcessing {
+            isProcessingAlertVisible = true
         } else {
             Synchronizer.fetchRemoteData()
-            presentationMode.wrappedValue.dismiss()
+            dismiss()
+        }
+    }
+    
+    func processURLIfNeeded() {
+        guard let url = fileURL else { return }
+        self.fileURL = nil
+        processFiles(.success([url]))
+    }
+    
+    func processFiles(_ result: Result<[URL], Error>) {
+        Task(priority: .userInitiated) {
+            switch result {
+            case .success(let urls):
+                if urls.count > 1 {
+                    DispatchQueue.main.async {
+                        withAnimation {
+                            manager.visibleScreen = .multiple
+                            manager.isGeneratingWorkoutFiles = true
+                        }
+                    }
+                }
+                
+                let documents = urls.map({ FitDocument(fileURL: $0 )})
+                await self.manager.generateWorkouts(with: documents)
+                
+                DispatchQueue.main.async {
+                    withAnimation {
+                        self.manager.isGeneratingWorkoutFiles = false
+                    }
+                }
+            case .failure(let error):
+                Log.debug("open document failed: \(error.localizedDescription)")
+            }
         }
     }
     
 }
 
 struct ImportView_Previews: PreviewProvider {
-    static let importManager: ImportManager = {
-        let manager = ImportManager()
-        manager.state = .ok
-        manager.loadSampleWorkouts()
-        return manager
-    }()
-        
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
+    
     static var previews: some View {
-        ImportView(importManager: importManager)
+        ImportView()
+            .environment(\.managedObjectContext, viewContext)
     }
 }

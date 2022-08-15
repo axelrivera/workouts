@@ -43,6 +43,37 @@ extension WorkoutImport {
         totalTimerTime.timeValue
     }
     
+    var totalElapsedTimeValue: Double? {
+        totalElapsedTime.timeValue
+    }
+    
+    var pausedTimeValue: Double? {
+        guard let total = totalElapsedTimeValue, let moving = totalTimerTimeValue  else {
+            return nil
+        }
+        return total - moving
+    }
+    
+    var showMap: Bool {
+        sport.hasDistanceSamples && !indoor
+    }
+    
+    var formattedTitle: String {
+        if case .invalid = status, let fileName = fileName {
+            return fileName
+        } else {
+            return String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
+        }
+    }
+    
+    var distanceValue: Double? {
+        totalDistance.distanceValue
+    }
+    
+    var elevationGainValue: Double? {
+        totalAscent.altitudeValue
+    }
+    
     var avgHeartRateValue: Double? {
         avgHeartRate.heartRateValue
     }

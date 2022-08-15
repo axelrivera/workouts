@@ -41,9 +41,9 @@ struct NoFilesView: View {
                         .font(.title)
                         .foregroundColor(.green)
                     Group {
-                        Text("Tap on ") +
-                        Text("Add FIT Files").foregroundColor(.yellow).bold() +
-                        Text(" button and select one or more files.")
+                        Text("Tap on the ") +
+                        Text("add (+)").foregroundColor(.yellow).bold() +
+                        Text(" button above and select one or more files.")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }
@@ -55,7 +55,7 @@ struct NoFilesView: View {
                     Group {
                         Text("Review the workout and tap on the ") +
                         Text("Import").foregroundColor(.yellow).bold() +
-                        Text(" button for each file.")
+                        Text(" button.")
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }

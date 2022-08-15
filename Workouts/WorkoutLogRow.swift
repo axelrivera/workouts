@@ -172,6 +172,14 @@ extension WorkoutLogItem {
                     .minimumScaleFactor(0.9)
                     .padding(3)
             }
+        } else if displayType == .load {
+            if day.trimp > 0 {
+                Text(text)
+                    .font(.system(size: 10))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.9)
+                    .padding(3)
+            }
         } else {
             if day.hasActivities {
                 Text(text)
@@ -218,7 +226,11 @@ extension WorkoutLogItem {
         guard day.hasActivities else { return 0.1 }
         
         if displayType == .distance && day.distance == 0 {
-            return 0.3
+            return 0.25
+        }
+        
+        if displayType == .load && day.trimp == 0 {
+            return 0.25
         }
         
         let preferredSport = day.distancePreferredSport

@@ -348,7 +348,7 @@ struct DetailGridView: View {
     var detailColor = Color.primary
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 2.0) {
+        VStack(alignment: .leading, spacing: 2) {
             Group {
                 Text(text)
                 Text(detail)
