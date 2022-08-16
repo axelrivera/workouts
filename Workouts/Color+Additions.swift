@@ -34,7 +34,7 @@ extension Color {
 
 extension Color {
     static let load = Color.pink
-    static let heartRateReserve = Color(.magenta)
+    static let heartRateReserve = Color.orange
     static let distance = Color("DistanceColor")
     static let time = Color("TimeColor")
     static let calories = Color("CaloriesColor")
