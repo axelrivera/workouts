@@ -209,10 +209,9 @@ extension WorkoutImport {
     }
     
     var filteredEvents: [Event] {
-        let filtered = self.events.filter({ $0.timestamp.dateValue != nil })
+        let filtered = self.events
         let events = filtered.sorted { lhs, rhs in
-            guard let ldate = lhs.timestamp.dateValue, let rdate = rhs.timestamp.dateValue else { return false }
-            return ldate < rdate
+            return lhs.timestamp < rhs.timestamp
         }
                 
         let totalEvents = events.count
@@ -243,12 +242,30 @@ extension WorkoutImport {
         if let last = finalEvents.last, last.eventType == .pause {
             finalEvents = finalEvents.dropLast()
         }
-                
-        return finalEvents
+        
+        // Clean bad events and colliding timestamps
+        
+        var cleanEvents = [Event]()
+        var tuples = [(pause: Event, resume: Event)]()
+        
+        for (pause, resume) in zip(finalEvents, finalEvents.dropFirst()) {
+            if pause.eventType == .pause && resume.eventType == .resume {
+                tuples.append((pause, resume))
+            }
+        }
+        
+        for (prev, tuple) in zip(tuples, tuples.dropFirst()) {
+            if tuple.pause.timestamp > prev.resume.timestamp {
+                cleanEvents.append(tuple.pause)
+                cleanEvents.append(tuple.resume)
+            }
+        }
+                        
+        return cleanEvents
     }
     
     var workoutEvents: [HKWorkoutEvent] {
-        filteredEvents.compactMap({ $0.workoutEvent })
+        filteredEvents.map { $0.workoutEvent }
     }
     
 }

@@ -103,6 +103,14 @@ extension FileManager {
         try light.write(to: lightURL, options: .atomic)
     }
     
+    static func deleteWorkoutImageData(for workout: UUID) throws {
+        let darkURL = URL.cachedMapImageURL(id: workout, scheme: .dark)
+        let lightURL = URL.cachedMapImageURL(id: workout, scheme: .light)
+        
+        try FileManager.default.removeItem(at: darkURL)
+        try FileManager.default.removeItem(at: lightURL)
+    }
+    
     static func writeLocalImage(_ image: UIImage, at url: URL) throws {
         guard let data = image.jpegData(compressionQuality: 0.9) else { throw MapImageError.invalidImage }
         try data.write(to: url, options: .atomic)

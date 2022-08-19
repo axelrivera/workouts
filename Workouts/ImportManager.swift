@@ -233,6 +233,8 @@ extension ImportManager {
                                 workout.status = .processed
                             }
                         } catch {
+                            Log.debug("import failed: \(error.localizedDescription)")
+                            
                             DispatchQueue.main.async {
                                 workout.status = .failed
                             }

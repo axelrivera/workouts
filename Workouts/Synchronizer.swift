@@ -91,6 +91,8 @@ extension Synchronizer {
             }
             
             do {
+                FileManager.deleteImageCacheDirectory()
+                try FileManager.createImagesCacheDirectoryIfNeeded()
                 try await provider.resetImageData()
             } catch {
                 Log.debug("failed to reset images: \(error.localizedDescription)")

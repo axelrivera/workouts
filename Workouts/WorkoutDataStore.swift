@@ -84,14 +84,19 @@ extension WorkoutDataStore {
         try await builder.beginCollection(at: start)
         
         let samples = self.samples(for: workoutImport)
-        try await builder.addSamples(samples)
+        if samples.isPresent {
+            try await builder.addSamples(samples)
+        }
+        
         try await builder.endCollection(at: end)
         
         let metadata = self.metadata(for: workoutImport)
         try await builder.addMetadata(metadata)
         
         let events = workoutImport.workoutEvents
-        try await builder.addWorkoutEvents(events)
+        if events.isPresent {
+            try await builder.addWorkoutEvents(events)
+        }
         
         guard let workout = try await builder.finishWorkout() else {
             return

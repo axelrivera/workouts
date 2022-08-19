@@ -44,7 +44,7 @@ struct Constants {
 }
 
 struct URLStrings {
-    static let faq = "https://betterworkouts.app/faq/"
+    static let faq = "https://betterworkouts.helpscoutdocs.com"
     static let about = "https://betterworkouts.app/about/"
     static let privacy = "https://betterworkouts.app/privacy/"
     static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"

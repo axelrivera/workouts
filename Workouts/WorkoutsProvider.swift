@@ -590,6 +590,7 @@ extension WorkoutsProvider {
         if sport.hasDistanceSamples && !indoor {
             Log.debug("resetting workout image for\(identifier)")
             try await WorkoutProcessor.generateAndSaveImageData(for: identifier, coordinates: coordinates)
+            WorkoutStorage.reloadWorkouts(for: [identifier])
         } else {
             Log.debug("skip workout image reset for \(identifier)")
         }

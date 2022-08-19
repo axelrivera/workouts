@@ -81,11 +81,7 @@ struct AdvancedSettingsView: View {
                 let title = "Reset Workouts"
                 let message = "This action will reset and regenerate your local workout data from Apple Health."
                 
-                let action = {
-                    Synchronizer.fetchRemoteData(regenerate: true)
-                }
-                
-                return Alert.showAlertWithTitle(title, message: message, action: action)
+                return Alert.showAlertWithTitle(title, message: message, action: regenerate)
             case .resetHeartRateZones:
                 let title = "Reset Heart Rate Zones"
                 let message = "This action will reset and regenerate the heart rate zones for all your workouts using current settings."
@@ -113,6 +109,16 @@ extension AdvancedSettingsView {
     
     func load() {
         self.maxHeartRate = Double(provider.maxHeartRate())
+    }
+    
+    func regenerate() {
+        do {
+            FileManager.deleteImageCacheDirectory()
+            try FileManager.createImagesCacheDirectoryIfNeeded()
+        } catch {
+            Log.debug("error deleting images directory: \(error.localizedDescription)")
+        }
+        Synchronizer.fetchRemoteData(regenerate: true)
     }
     
     var maxHeartRateString: String {

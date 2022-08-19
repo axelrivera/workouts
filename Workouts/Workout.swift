@@ -487,14 +487,24 @@ extension Workout {
     
     private static let DeletionAgeBeforePermanentlyDeletingObjects = TimeInterval(2 * 60)
     
-    static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {
+    static func batchDeleteObjectsMarkedForDeletion(in context: NSManagedObjectContext) {        
         let cutoff = Date(timeIntervalSinceNow: -DeletionAgeBeforePermanentlyDeletingObjects)
+        let predicate = NSPredicate(format: "%K < %@", WorkoutSchema.markedForDeletionDate.key, cutoff as NSDate)
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.predicate = NSPredicate(format: "%K < %@", WorkoutSchema.markedForDeletionDate.key, cutoff as NSDate)
+        fetchRequest.predicate = predicate
         
         let batchRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
         batchRequest.resultType = .resultTypeStatusOnly
+        
+        let ids = workoutIds(forPredicate: predicate, context: context)
+        for id in ids {
+            do {
+                try FileManager.deleteWorkoutImageData(for: id)
+            } catch {
+                Log.debug("failed to delete images for workout \(id): \(error.localizedDescription)")
+            }
+        }
         
         do {
             try context.execute(batchRequest)
