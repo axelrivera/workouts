@@ -93,14 +93,14 @@ struct TagsContentView: View {
                     }
                 }
             }
-            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
+            .sheet(item: $activeSheet, onDismiss: reload) { item in
                 switch item {
                 case .edit(let viewModel):
                     TagsAddView(viewModel: viewModel, source: .tags, isInsert: false)
                         .environmentObject(TagManager(context: viewContext))
                 }
             }
-            .fullScreenCover(item: $activeCover) { item in
+            .fullScreenCover(item: $activeCover, onDismiss: reload) { item in
                 switch item {
                 case .settings:
                     SettingsView()
