@@ -2,118 +2,152 @@
 //  Synchronizer.swift
 //  Workouts
 //
-//  Created by Axel Rivera on 5/27/21.
+//  Created by Axel Rivera on 7/3/22.
 //
 
+import Foundation
 import CoreData
 import HealthKit
+import Combine
 
-class Synchronizer {
-    let context: NSManagedObjectContext
-    let importer: RemoteImporter
-    let updator: RemoteUpdator
-        
-    var isAuthorizedToFetchWorkouts = false
-    var anchor: HKQueryAnchor?
+actor SynchronizerValues {
+    var isAuthorized = false
+    var regenerate = false
     
-    var resetAnchor: Bool = false
-    var regenerate: Bool = false
-    var isFetchingWorkouts = false
-    
-    init(context: NSManagedObjectContext) {
-        self.context = context
-        self.importer = RemoteImporter(context: context)
-        self.updator = RemoteUpdator(context: context)
-        self.anchor = AppSettings.workoutsQueryAnchor
-        addObservers()
+    func setIsAuthorized(_ isAuthorized: Bool) {
+        self.isAuthorized = isAuthorized
     }
     
-    private func fetchLatestWorkouts() async {
-        // reset anchor even if is fetching
-        // request will be ignored but anchor will be respected on next fetch
-        if resetAnchor {
-            anchor = nil
-            AppSettings.workoutsQueryAnchor = anchor
-        }
+    func setRegenerate(_ regenerate: Bool) {
+        self.regenerate = regenerate
+    }
+}
 
-        guard isAuthorizedToFetchWorkouts else {
-            Log.debug("ignore remote data fetch - not authorized yet")
-            return
-        }
-        
-        // import workouts first
-        Log.debug("importing workouts")
-        self.isFetchingWorkouts = true
-        let newAnchor =  await importer.importLatestWorkouts(anchor: anchor, regenerate: regenerate)
-        
-        // save anchor and regenerate flat before processing
-        AppSettings.workoutsQueryAnchor = newAnchor
-        self.anchor = newAnchor
-        self.regenerate = false
-        
-        // update heart rate and location data
-        await updator.updatePendingWorkouts()
-        
-        // reset fetching flag last
-        self.isFetchingWorkouts = false
+class Synchronizer {
+    private let provider: WorkoutsProvider
+    private var values = SynchronizerValues()
+    
+    private var fetchCancellable: Cancellable?
+    private var zonesCancellable: Cancellable?
+    private var imageCancellable: Cancellable?
+    
+    init(provider: WorkoutsProvider) {
+        self.provider = provider
+        fetchCancellable = NotificationCenter.default.publisher(for: .shouldFetchRemoteData).sink(receiveValue: fetchRemoteData)
+        zonesCancellable = NotificationCenter.default.publisher(for: .shouldResetHeartRateZones).sink(receiveValue: resetHeartRateZones)
+        imageCancellable = NotificationCenter.default.publisher(for: .shouldRegenerateMapImages).sink(receiveValue: resetImages)
     }
     
     deinit {
-        removeObservers()
+        fetchCancellable = nil
+        zonesCancellable = nil
+    }
+}
+
+// MARK: Import Workouts
+
+extension Synchronizer {
+    
+    func fetchRemoteData(_ notification: Notification) {
+        let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool
+        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool
+        
+        Task {
+            do {
+                if let isAuthorized = isAuthorized {
+                    await values.setIsAuthorized(isAuthorized)
+                }
+                
+                if let regenerate = regenerate {
+                    await values.setRegenerate(regenerate)
+                }
+                
+                guard await values.isAuthorized else {
+                    throw WorkoutError("not authorized")
+                }
+                
+                try await provider.fetchWorkouts(regenerate: await values.regenerate)
+                await values.setRegenerate(false)
+            } catch {
+                Log.debug("failed to fetch workouts: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func resetHeartRateZones(_ notification: Notification) {
+        Task {
+            do {
+                try await provider.resetHeartRateZones()
+            } catch {
+                Log.debug("failed to reset heart rate zones: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func resetImages(_ notification: Notification) {
+        Task {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .willBeginRegeneratingMapImages, object: nil)
+            }
+            
+            do {
+                FileManager.deleteImageCacheDirectory()
+                try FileManager.createImagesCacheDirectoryIfNeeded()
+                try await provider.resetImageData()
+            } catch {
+                Log.debug("failed to reset images: \(error.localizedDescription)")
+            }
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .didFinishRegeneratingMapImages, object: nil)
+            }
+        }
     }
     
 }
 
 extension Synchronizer {
     
-    @objc
-    func fetchRemoteDataAction(_ notification: Notification) {
-        if let isAuthorized = notification.userInfo?[Notification.isAuthorizedToFetchRemoteDataKey] as? Bool {
-            isAuthorizedToFetchWorkouts = isAuthorized
-        }
+    static func fetchRemoteData(isAuthorized: Bool? = nil, regenerate: Bool? = nil) {
+        let userInfo: [String: Any] = [
+            Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized,
+            Notification.regenerateDataKey: regenerate
+        ].compactMapValues { $0 }
         
-        // if regenerate is true we want to reset the anchor an fetch all workouts from health kit
-        let regenerate = notification.userInfo?[Notification.regenerateDataKey] as? Bool ?? self.regenerate
-        let resetAnchor = regenerate ? true : notification.userInfo?[Notification.resetAnchorKey] as? Bool ?? false
-        
-        self.regenerate = regenerate
-        self.resetAnchor = resetAnchor
-        
-        // this prevents the task from being called twice
-        // regenerate and resetAnchor are set before to cache the values in case of multiple requests
-        if isFetchingWorkouts {
-            Log.debug("ignore remote data fetch - already fetching workouts")
-            return
-        }
-        
-        let _ = context.performAndWait {
-            Task {
-                Log.debug("fetching remote data")
-                await fetchLatestWorkouts()
-            }
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
         }
     }
     
-    func addObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(fetchRemoteDataAction), name: .shouldFetchRemoteData, object: nil)
+    static func resetHeartRateZones() {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .shouldResetHeartRateZones, object: nil)
+        }
     }
     
-    func removeObservers() {
-        NotificationCenter.default.removeObserver(self, name: .shouldFetchRemoteData, object: nil)
+    static func resetImages() {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .shouldRegenerateMapImages, object: nil)
+        }
     }
     
 }
 
+// MARK: - Notifications
+
 extension Notification.Name {
     
-    static var shouldFetchRemoteData = Notification.Name("arn_should_fetch_remote_data")
-    static var didInsertRemoteData = Notification.Name("arn_did_insert_remote_data")
+    fileprivate static var shouldFetchRemoteData = Notification.Name("arn_should_fetch_remote_data")
+    fileprivate static var shouldResetHeartRateZones = Notification.Name("arn_should_reset_heart_rate_zones")
+    fileprivate static var shouldRegenerateMapImages = Notification.Name("arn_should_regenerate_map_images")
+    
+    // App Observers
+    static var didFinishFetchingRemoteData = Notification.Name("arn_did_finish_fetching_remote_data")
     static var willBeginProcessingRemoteData = Notification.Name("arn_will_begin_processing_remote_data")
     static var didFinishProcessingRemoteData = Notification.Name("arn_did_finish_processing_remote_data")
-    static var willBeginProcessingRemoteLocationData = Notification.Name("arn_will_begin_processing_remote_location_data")
-    static var didFinishProcessingRemoteLocationData = Notification.Name("arn_did_finish_processing_remote_location_data")
-    static var didUpdateRemoteLocationData = Notification.Name("arn_did_update_remote_location_data")
     
+    static var willBeginRegeneratingMapImages = Notification.Name("arn_will_begin_regenerating_map_images")
+    static var didFinishRegeneratingMapImages = Notification.Name("arn_did_finish_regnerating_map_images")
 }
 
 extension Notification {
@@ -122,6 +156,6 @@ extension Notification {
     static var remoteWorkoutKey = "arn_remote_workout"
     static var resetAnchorKey = "arn_reset_anchor"
     static var regenerateDataKey = "arn_regenerate_data"
-    static var coordinatesKey = "arn_coordinates"
+    static var workoutIdentifiersKey = "arn_workout_identifiers"
     
 }

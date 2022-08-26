@@ -93,14 +93,14 @@ struct TagsContentView: View {
                     }
                 }
             }
-            .sheet(item: $activeSheet, onDismiss: { reload() }) { item in
+            .sheet(item: $activeSheet, onDismiss: reload) { item in
                 switch item {
                 case .edit(let viewModel):
                     TagsAddView(viewModel: viewModel, source: .tags, isInsert: false)
                         .environmentObject(TagManager(context: viewContext))
                 }
             }
-            .fullScreenCover(item: $activeCover) { item in
+            .fullScreenCover(item: $activeCover, onDismiss: reload) { item in
                 switch item {
                 case .settings:
                     SettingsView()
@@ -122,8 +122,11 @@ struct TagsContentView: View {
     
     @ViewBuilder
     func emptyView() -> some View {
-        if tags.isEmpty {
-            EmptyTagsView(displayType: .tags, onCreate: { reload() })
+        if currentSegment == .active && tags.isEmpty {
+            EmptyTagsView(displayType: .tags, onCreate: reload)
+        } else if currentSegment == .archived && tags.isEmpty {
+            Text("No Tags")
+                .foregroundColor(.secondary)
         }
     }
     
@@ -188,7 +191,7 @@ extension TagsContentView {
 }
 
 struct TagsView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
         
     static var previews: some View {

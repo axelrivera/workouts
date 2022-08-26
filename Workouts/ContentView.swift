@@ -18,7 +18,7 @@ struct ContentView: View {
         var id: String { rawValue }
     }
     
-    enum ActiveCoverSheet: Hashable, Identifiable {
+    enum ActiveSheet: Hashable, Identifiable {
         case add(url: URL)
         var id: Self { self }
     }
@@ -33,7 +33,12 @@ struct ContentView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     
     @State private var selected = Tabs.workouts
-    @State private var activeCoverSheet: ActiveCoverSheet?
+    @State private var activeSheet: ActiveSheet?
+    
+    private var foregroundPublisher = NotificationCenter.Publisher.foregroundPublisher()
+    private var memoryPublisher = NotificationCenter.Publisher.memoryPublisher()
+    private var fetchingPublisher = NotificationCenter.Publisher.workoutsFetchNotification()
+    private var processingPublisher = NotificationCenter.Publisher.workoutsProcessNotification()
     
     var body: some View {
         TabView(selection: $selected) {
@@ -61,20 +66,19 @@ struct ContentView: View {
             Log.debug("trying to open url: \(url)")
             presentationMode.wrappedValue.dismiss()
             selected = .workouts
-            activeCoverSheet = .add(url: url)
+            activeSheet = .add(url: url)
         }
         .onboardingOverlay()
-        .onReceive(NotificationCenter.Publisher.memoryPublisher()) { _ in
-            viewContext.refreshAllObjects()
-            workoutManager.storage.resetAll()
-        }
-        .onReceive(NotificationCenter.Publisher.workoutRefreshPublisher()) { _ in
-            reloadData()
-        }
-        .onReceive(NotificationCenter.Publisher.foregroundPublisher()) { _ in
+        .onReceive(foregroundPublisher) { _ in
             purchaseManager.reload()
             AnalyticsManager.shared.captureOpen(isBackground: true, isPro: purchaseManager.isActive)
         }
+        .onReceive(memoryPublisher) { _ in
+            viewContext.refreshAllObjects()
+            workoutManager.storage.resetAll()
+        }
+        .onReceive(fetchingPublisher, perform: reloadData)
+        .onReceive(processingPublisher, perform: reloadData)
         .onChange(of: scenePhase) { phase in
             switch phase {
             case .active:
@@ -94,10 +98,10 @@ struct ContentView: View {
                 assertionFailure()
             }
         }
-        .fullScreenCover(item: $activeCoverSheet) { item in
+        .sheet(item: $activeSheet) { item in
             switch item {
             case .add(let url):
-                ImportView(openURL: url)
+                ImportView(fileURL: url)
             }
         }
     }
@@ -108,7 +112,7 @@ struct ContentView: View {
 
 extension ContentView {
     
-    private func reloadData() {
+    private func reloadData(_ notification: Notification) {
         statsManager.refresh()
         logManager.reloadIntervals()
     }
@@ -116,7 +120,7 @@ extension ContentView {
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)

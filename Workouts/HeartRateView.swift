@@ -9,115 +9,121 @@ import SwiftUI
 
 struct HeartRateView: View {
     enum ActiveSheet: Identifiable {
-        case edit, info, explanation
-        var id: Int { hashValue }
-    }
-    
-    enum ActiveAlert: Identifiable {
-        case allConfirmation
+        case edit, editZones, info, explanation
         var id: Int { hashValue }
     }
     
     @Environment(\.managedObjectContext) var managedObjectContext
     @EnvironmentObject var purchaseManager: IAPManager
+    @StateObject private var manager = HREditManager()
     
+    @State private var calculator = HRZonesCalculator.empty()
+    @State private var zones = HRZone.allCases
     @State private var activeSheet: ActiveSheet?
-    @State private var activeAlert: ActiveAlert?
-    
-    @StateObject private var zoneManager = HRZoneManager()
         
     var body: some View {
         Form {
             Section {
                 HStack {
-                    Label(
-                        title: { Text("Max Heart Rate") },
-                        icon: { Image(systemName: "heart.fill").foregroundColor(.red) }
-                    )
+                    Label {
+                        Text("Max Heart Rate")
+                            .foregroundColor(.secondary)
+                    } icon: {
+                        Image(systemName: "bolt.heart.fill")
+                            .foregroundColor(.red)
+                    }
+                    
                     Spacer()
-                    Text(zoneManager.maxHeartRateString)
-                        .foregroundColor(.red)
+                    Text(manager.formattedMaxHeartRate)
+                        .foregroundColor(.primary)
                 }
-            }
-            
-            Section(header: Text("Curent Zones")) {
-                ForEach(HRZone.allCases) { zone in
-                    HRSectionRow(zone: zone)
-                        .environmentObject(zoneManager)
+                
+                HStack {
+                    Label {
+                        Text("Resting Heart Rate")
+                            .foregroundColor(.secondary)
+                    } icon: {
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(.red)
+                    }
+
+                    Spacer()
+                    Text(manager.formattedRestingHeartRate)
+                        .foregroundColor(.primary)
                 }
+                
+                Button(action: { activeSheet = .edit }) {
+                    Text("Edit Heart Rate")
+                }
+            } header: {
+                HStack {
+                    Text("Heart Rate")
+                    Spacer()
+                    Button(action: { activeSheet = .info }) {
+                        Image(systemName: "info.circle")
+                            .font(.body)
+                    }
+                }
+            } footer: {
+                Text("Max and resting heart rates are used to calculate heart rate zones and training load.")
             }
             
             Section {
-                Button(action: { activeSheet = .edit }) {
-                    Label("Edit Heart Rate and Zones", systemImage: "slider.horizontal.3")
+                ForEach(zones, id: \.id) { zone in
+                    HRSectionRow(calculator: $calculator, zone: zone)
                 }
                 
-                Button(action: { activeAlert = .allConfirmation }) {
-                    Label("Apply to All Workouts", systemImage: "calendar.badge.clock")
+                Button(action: { activeSheet = .editZones }) {
+                    Text("Edit Heart Rate Zones")
                 }
-            }
-            
-            Section(header: Text("Help")) {
-                Button(action: { activeSheet = .info }) {
-                    Label("Learn More", systemImage: "info.circle")
-                }
-                
-                Button(action: { activeSheet = .explanation }) {
-                    Label("Heart Rate Zones Explained", systemImage: "lightbulb")
+            } header: {
+                HStack {
+                    Text("Heart Rate Zones")
+                    Spacer()
+                    Button(action: { activeSheet = .explanation }) {
+                        Image(systemName: "info.circle")
+                            .font(.body)
+                    }
                 }
             }
         }
-        .navigationTitle("Heart Rate Zones")
+        .onAppear(perform: load)
+        .navigationTitle("Heart")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $activeSheet) { sheet in
+        .sheet(item: $activeSheet, onDismiss: load) { sheet in
             switch sheet {
             case .edit:
-                HeartRateEditView(action: saveAction)
-                    .environmentObject(HRZoneManager())
+                HREditView()
+                    .environmentObject(manager)
+            case .editZones:
+                HRZonesEditView()
             case .info:
                 SafariView(urlString: URLStrings.heartRateInfo)
             case .explanation:
                 HeartRateInfoView()
             }
         }
-        .alert(item: $activeAlert) { alert in
-            switch alert {
-            case .allConfirmation:
-                let title = "Update All Workouts?"
-                let message = "This action will update all your existing workouts with your current Max Heart Rate and Current Zones."
-                
-                return Alert.showAlertWithTitle(title, message: message, action: applyAllAction)
-            }
-        }
     }
 }
 
-// MARK: - Actions
-
 extension HeartRateView {
     
-    func saveAction(heartRate: Int, values: [Int]) {
-        AnalyticsManager.shared.capture(.savedHRZone)
-        
-        zoneManager.maxHeartRate = Double(heartRate)
-        zoneManager.values = values
-        AppSettings.maxHeartRate = heartRate
-        AppSettings.heartRateZones = values
-        activeSheet = nil
+    func load() {
+        Task(priority: .userInitiated) {
+            await manager.load()
+            loadZonesCalculator()
+        }
     }
     
-    func applyAllAction() {
-        AnalyticsManager.shared.capture(.applyAllHRZones)
-        
-        let heartRate = AppSettings.maxHeartRate
-        let values = AppSettings.heartRateZones
-        Workout.batchUpdateHeartRateZones(with: heartRate, values: values, in: managedObjectContext)
+    func loadZonesCalculator() {
+        calculator = HealthProvider.shared.heartRateZonesCalculator()
+        zones = HRZone.allCases
     }
     
 }
 
 struct HeartRateView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
@@ -130,12 +136,12 @@ struct HeartRateView_Previews: PreviewProvider {
 }
 
 struct HRSectionRow: View {
-    var zone: HRZone
-    
     @Environment(\.isEnabled) var isEnabled
-    @EnvironmentObject var zoneManager: HRZoneManager
     
     private let opacityValue = 0.5
+    
+    @Binding var calculator: HRZonesCalculator
+    var zone: HRZone
     
     var zoneColor: Color {
         isEnabled ? zone.color : zone.color.opacity(opacityValue)
@@ -164,22 +170,22 @@ struct HRSectionRow: View {
             }
             
             HStack {
-                Text(HRZoneManager.stringForRange(range))
+                Text(HRZonesCalculator.stringForRange(range))
                     .font(.body)
                     .foregroundColor(primaryColor)
                 Spacer()
-                Text(HRZoneManager.stringForPercentRange(percentRange))
+                Text(HRZonesCalculator.stringForPercentRange(percentRange))
                     .font(.fixedSubheadline)
                     .foregroundColor(secondaryColor)
             }
         }
     }
     
-    var range: HRZoneManager.ZoneRange {
-        zoneManager.rangeForZone(zone)
+    var range: HRZonesCalculator.ZoneRange {
+        calculator.rangeForZone(zone)
     }
     
-    var percentRange: HRZoneManager.ZonePercentRange {
-        zoneManager.percentRangeForZone(zone)
+    var percentRange: HRZonesCalculator.ZonePercentRange {
+        calculator.percentRangeForZone(zone)
     }
 }

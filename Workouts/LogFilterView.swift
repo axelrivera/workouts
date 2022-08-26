@@ -17,7 +17,7 @@ struct LogFilterView: View {
     @Binding var filterYear: String
     @Binding var years: [String]
     @Binding var sports: [Sport]
-        
+            
     var body: some View {
         NavigationView {
             Form {
@@ -50,10 +50,16 @@ struct LogFilterView: View {
                 }
                 .textCase(nil)
             }
-            .onAppear { AnalyticsManager.shared.logPage(.calendarFilter) }
+            .onAppear(perform: load)
             .navigationTitle("Filter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Reset", action: reset)
+                        .tint(.red)
+                        .disabled(isResetButtonDisabled)
+                }
+                
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", action: { presentationMode.wrappedValue.dismiss() })
                 }
@@ -74,6 +80,22 @@ struct LogFilterView: View {
 
 extension LogFilterView {
     
+    func load() {
+        AnalyticsManager.shared.logPage(.calendarFilter)
+    }
+    
+    var isResetButtonDisabled: Bool {
+        dateFilter == .recentMonths && sports.isEmpty
+    }
+    
+    func reset() {
+        withAnimation {
+            dateFilter = .recentMonths
+            filterYear = years.first ?? ""
+            sports = []
+        }
+    }
+    
     func isSportSelected(_ sport: Sport) -> Bool {
         sports.contains(sport)
     }
@@ -92,11 +114,12 @@ struct LogFilterView_Previews: PreviewProvider {
     @State static var dateFilter = LogFilterView.DateFilter.recentMonths
     @State static var filterYear = "2021"
     @State static var years = ["2021", "2020", "2019", "2018", "2017"]
-    @State static var sports: [Sport] = [.cycling, .running]
+    @State static var availableSports: [Sport] = [.cycling, .running, .walking]
+    @State static var sports: [Sport] = []
     
     static var previews: some View {
         LogFilterView(
-            availableSports: $sports,
+            availableSports: $availableSports,
             dateFilter: $dateFilter,
             filterYear: $filterYear,
             years: $years,

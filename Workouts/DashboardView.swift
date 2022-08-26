@@ -64,6 +64,7 @@ struct DashboardView: View {
                 .padding()
             }
             .overlay(overlayView())
+            .overlay(emptyMetrics())
             .task {
                 try? await manager.load()
             }
@@ -83,7 +84,7 @@ struct DashboardView: View {
                     Button(action: { activeSheet = .activity }) {
                         Image(systemName: "square.and.arrow.up")
                     }
-                    .disabled(manager.isLoading)
+                    .disabled(manager.isLoading || manager.showEmptyMetrics)
                 }
             }
             .sheet(item: $activeSheet, onDismiss: { manager.reload() }) { item in
@@ -222,6 +223,14 @@ extension DashboardView {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Material.thinMaterial)
         .cornerRadius(CGFloat(12))
+    }
+    
+    @ViewBuilder
+    func emptyMetrics() -> some View {
+        if manager.showEmptyMetrics {
+            Text("No Metrics")
+                .foregroundColor(.secondary)
+        }
     }
     
     func activityView() -> AnyView {

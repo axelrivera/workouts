@@ -11,32 +11,30 @@ struct WatchOnboarding: View {
     var action = {}
     
     var body: some View {
-        VStack {
-            VStack(spacing: 50.0) {
-                VStack(spacing: 20.0) {
-                    Text("Welcome to Better Workouts")
-                        .minimumScaleFactor(0.5)
-                        .font(.largeTitle)
-                        .multilineTextAlignment(.center)
-                    
-                    Text("A simple yet powerful way to visualize your workouts!")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 280.0)
-                }
+        VStack(spacing: 25) {
+            Text("Welcome to Better Workouts")
+                .font(.largeTitle)
+                .multilineTextAlignment(.center)
+                .padding(.top)
+            
+            VStack(spacing: 40.0) {
+                Text("A simple yet powerful app\nto visualize your workouts!")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
                 
                 Image(systemName: "applewatch")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 256, height: 256)
+                    .frame(width: 200, height: 200)
                     .foregroundColor(.green)
-                
-                Text("Better Workouts reads the Health data stored by the Workout app from your Apple Watch.")
-                    .multilineTextAlignment(.center)
-                
             }
             .frame(maxHeight: .infinity)
+            
+            Text("Better Workouts reads Health data stored by the Workout app from your Apple Watch.")
+                .font(.subheadline)
+                .foregroundColor(.time)
+                .multilineTextAlignment(.center)
             
             Button(action: action) {
                 Text("Next")

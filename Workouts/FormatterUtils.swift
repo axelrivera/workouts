@@ -155,9 +155,6 @@ func formattedRangeString(start: Date?, end: Date?) -> String {
     let endDay = DateFormatter.day.string(from: end)
     let endYear = "\(end.year())"
     
-    Log.debug("start - month: \(startMonth), \(startDay), \(startYear)")
-    Log.debug("end - month: \(endMonth), \(endDay), \(endYear)")
-
     if startMonth == endMonth && startYear == endYear {
         return String(format: "%@ %@﹣%@, %@", startMonth, startDay, endDay, endYear)
     } else if startYear == endYear {

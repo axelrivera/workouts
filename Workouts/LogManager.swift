@@ -10,12 +10,14 @@ import CoreData
 import Combine
 
 enum LogDisplayType: String, Identifiable, CaseIterable {
-    case distance, time
+    case distance, time, load
     
     var id: String { rawValue }
     
     var color: Color {
         switch self {
+        case .load:
+            return .load
         case .distance:
             return .distance
         case .time:
@@ -81,7 +83,6 @@ class LogManager: ObservableObject {
         
     init(context: NSManagedObjectContext) {
         self.context = context
-        addObservers()
     }
     
     func reloadIntervals() {
@@ -94,6 +95,17 @@ class LogManager: ObservableObject {
 // MARK: - Fetching
 
 extension LogManager {
+    
+    // most recent three weeks are free
+    
+    var paywallCutoffDate: Date? {
+        intervals.prefix(4).last?.end
+    }
+    
+    func isFreeContent(interval: LogInterval) -> Bool {
+        guard let cutoff = paywallCutoffDate, let date = interval.end else { return false }
+        return cutoff <= date
+    }
     
     private func fetchIntervals() {
         let filterInterval: DateInterval
@@ -184,8 +196,14 @@ extension LogManager {
         let endYear = Date().year()
         
         let filters: [String] = Array(startYear ... endYear).map { "\($0)" }.reversed()
-        let displayYear = filters.first ?? ""
         
+        let displayYear: String
+        if self.displayYear.isPresent && filters.contains(self.displayYear) {
+            displayYear = self.displayYear
+        } else {
+            displayYear = filters.first ?? ""
+        }
+                
         DispatchQueue.main.async {
             self.availableSports = availableSports
             self.filterYears = filters
@@ -211,20 +229,6 @@ extension LogManager {
     var filterSportString: String {
         if sports.isEmpty { return "All Workouts" }
         return sports.map({ $0.altName }).sorted().joined(separator: ", ")
-    }
-    
-}
-
-// MARK: - Observers
-
-extension LogManager {
-    
-    func addObservers() {
-//        refreshCancellable = NotificationCenter.default.publisher(for: .didFinishProcessingRemoteData)
-//            .sink { _ in
-//                Log.debug("LOG - refreshing current interval")
-//                self.reloadCurrentInterval()
-//            }
     }
     
 }

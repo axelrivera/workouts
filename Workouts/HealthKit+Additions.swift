@@ -58,6 +58,10 @@ extension HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .heartRate)!
     }
     
+    static func restingHeartRate() -> HKQuantityType {
+        HKSampleType.quantityType(forIdentifier: .restingHeartRate)!
+    }
+    
     static func weight() -> HKQuantityType {
         HKSampleType.quantityType(forIdentifier: .bodyMass)!
     }
@@ -89,71 +93,14 @@ extension HKUnit {
     
 }
 
-extension HKWorkout {
+extension HKCharacteristicType {
     
-    var totalElapsedTime: Double {
-        endDate.timeIntervalSince(startDate)
+    static func dateOfBirth() -> HKCharacteristicType {
+        HKCharacteristicType(.dateOfBirth)
     }
     
-    var isIndoor: Bool {
-        metadata?[HKMetadataKeyIndoorWorkout] as? Bool ?? false
-    }
-    
-    var isOutdoor: Bool {
-        !isIndoor
-    }
-    
-    var avgSpeed: HKQuantity? {
-        metadata?[HKMetadataKeyAverageSpeed] as? HKQuantity
-    }
-    
-    var maxSpeed: HKQuantity? {
-        metadata?[HKMetadataKeyMaximumSpeed] as? HKQuantity
-    }
-    
-    var avgCyclingCadence: Double? {
-        metadata?[MetadataKeyAvgCyclingCadence] as? Double
-    }
-    
-    var maxCyclingCadence: Double? {
-        metadata?[MetadataKeyMaxCyclingCadence] as? Double
-    }
-    
-    var elevationAscended: HKQuantity? {
-        metadata?[HKMetadataKeyElevationAscended] as? HKQuantity
-    }
-    
-    var elevationDescended: HKQuantity? {
-        metadata?[HKMetadataKeyElevationDescended] as? HKQuantity
-    }
-    
-    var movingTime: Double? {
-        metadata?[MetadataKeyMovingTime] as? Double
-    }
-    
-    var avgHeartRate: Double? {
-        metadata?[MetadataKeyAvgHeartRate] as? Double
-    }
-    
-    var minHeartRate: Double? {
-        metadata?[MetadataKeyMinHeartRate] as? Double
-    }
-    
-    var maxHeartRate: Double? {
-        metadata?[MetadataKeyMaxHeartRate] as? Double
-    }
-    
-    var startCoordinate: CLLocationCoordinate2D? {
-        guard let lat = metadata?[MetadataKeyStartLatitude] as? Double, let long = metadata?[MetadataKeyStartLongitude] as? Double else { return nil }
-        return CLLocationCoordinate2D(latitude: lat, longitude: long)
-    }
-    
-    var maxAltitude: Double? {
-        metadata?[MetadataKeyMaxAltitude] as? Double
-    }
-    
-    var minAltitude: Double? {
-        metadata?[MetadataKeyMaxAltitude] as? Double
+    static func biologicalSex() -> HKCharacteristicType {
+        HKCharacteristicType(.biologicalSex)
     }
     
 }

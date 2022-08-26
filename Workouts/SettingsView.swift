@@ -41,7 +41,7 @@ struct SettingsView: View {
                     }
                     
                     NavigationLink(destination: HeartRateView()) {
-                        Label("Heart Rate Zones", systemImage: "bolt.heart.fill")
+                        Label("Heart Rate", systemImage: "heart.fill")
                     }
                     
                     NavigationLink(destination: AdvancedSettingsView()) {
@@ -85,14 +85,14 @@ struct SettingsView: View {
                     SafariView(urlString: url, entersReaderIfAvailable: reader)
                         .ignoresSafeArea(.all, edges: .bottom)
                 case .feedback:
-                    MailView(recepients: [Emails.support], subject: "Better Workouts Feedback", body: feedbackBody())
+                    MailView(recepients: [Emails.support], subject: feedbackSubject(), body: feedbackBody())
                         .navigationBarTitleDisplayMode(.inline)
                 }
             }
             .alert(item: $activeAlert) { alert in
                 switch alert {
                 case .emailError:
-                    let message = String(format: "Unable to send email from this device. If you need support please send us an email to %@", Emails.support)
+                    let message = String(format: "Unable to send email from this device. If you need support please send me an email to %@", Emails.support)
                     return Alert(
                         title:  Text("Email Error"),
                         message: Text(message),
@@ -132,19 +132,24 @@ extension SettingsView {
         activeSheet = .feedback
     }
     
+    func feedbackSubject() -> String {
+        let (version, _) = systemVersionAndBuild()
+        return String(format: "Better Workouts %@", version)
+    }
+    
     func feedbackBody() -> String {
         let device = UIDevice.current
-        let (version, build) = systemVersionAndBuild()
+        
         let systemName = device.systemName
         let systemVersion = device.systemVersion
         let model = device.localizedModel
 
         let content = """
         \n\n\n\n
-        Better Workouts Version %@ (%@) - %@ %@ %@
+        %@ %@ %@
         """
 
-        return String(format: content, version, build, model, systemName, systemVersion)
+        return String(format: content, model, systemName, systemVersion)
     }
     
     func reviewAction() {
@@ -154,7 +159,7 @@ extension SettingsView {
 }
 
 struct SettingsView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     static let purchaseManager = IAPManagerPreview.manager(isActive: false)
     
     static var previews: some View {

@@ -56,7 +56,7 @@ enum HRZone: String, CaseIterable {
     }
     
     private static var colorDictionary: [HRZone: Color] {
-        [.zone1: .blue, .zone2: .green, .zone3: .orange, .zone4: .red, .zone5: .purple]
+        [.zone1: .cadence, .zone2: .green, .zone3: .orange, .zone4: .red, .zone5: .purple]
     }
     
     private static var percentDictionary: [HRZone: String] {

@@ -11,7 +11,7 @@ import CoreData
 import CoreLocation
 
 class WorkoutManager: ObservableObject {
-    let LOADING_WAIT_IN_SECONDS = 2.0
+    let LOADING_WAIT_IN_SECONDS: Double = 5.0
     
     private(set) var context: NSManagedObjectContext
     private(set) var dataProvider: DataProvider
@@ -21,7 +21,7 @@ class WorkoutManager: ObservableObject {
     
     private let authProvider = HealthAuthProvider.shared
     private let healthProvider = HealthProvider.shared
-        
+    
     @Published var sport: Sport?
 
     @Published var showDateFilter = false
@@ -32,22 +32,17 @@ class WorkoutManager: ObservableObject {
     @Published var filterByMinDistance: Double = 0
     @Published var filterByMaxDistance: Double = 0
     
-    var processingRemoteDataTimestamp: Date?
     @Published var isProcessingRemoteData = false
     @Published var showProcessingRemoteDataLoading = false
-    
-    var updatingRemoteLocationDataTimestamp: Date?
-    @Published var isUpdatingRemoteLocationData = false
-    @Published var showUpdatingRemoteLocationDataLoading = false
+    @Published var isProcessingMapImages = false
     
     @Published var isOnboardingVisible = false
     @Published var isAuthorized = true
 
     @Published var showNoWorkoutsAlert = false
     
-    var isProcessing: Bool {
-        isProcessingRemoteData || isUpdatingRemoteLocationData
-    }
+    private var startProcessingDate: Date?
+    private var timer: Timer?
     
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -103,11 +98,7 @@ class WorkoutManager: ObservableObject {
     }
     
     func refreshWorkouts(isAuthorized: Bool) {
-        let userInfo: [String: Any] = [
-            Notification.isAuthorizedToFetchRemoteDataKey: isAuthorized,
-        ]
-        
-        NotificationCenter.default.post(name: .shouldFetchRemoteData, object: nil, userInfo: userInfo)
+        Synchronizer.fetchRemoteData(isAuthorized: isAuthorized)
     }
     
     var totalWorkouts: Int {
@@ -135,6 +126,10 @@ class WorkoutManager: ObservableObject {
 
 extension WorkoutManager {
     
+    func viewModel(for workout: Workout) -> WorkoutViewModel {
+        storage.viewModel(forWorkout: workout)
+    }
+    
     func toggleFavorite(_ identifier: UUID) {
         var isFavorite = storage.isWorkoutFavorite(identifier)
 
@@ -150,6 +145,12 @@ extension WorkoutManager {
             }
 
             storage.set(isFavorite: isFavorite, forID: identifier)
+            
+            context.perform { [unowned self] in
+                if let workout = Workout.find(using: identifier, in: self.context) {
+                    self.context.refresh(workout, mergeChanges: true)
+                }
+            }
         } catch {
             Log.debug("favorite toggle error for id - \(identifier): \(error.localizedDescription)")
         }
@@ -166,15 +167,15 @@ extension WorkoutManager {
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(willProcessWorkouts),
-            name: .willBeginProcessingRemoteData,
+            selector: #selector(didFinishFetchingWorkouts),
+            name: .didFinishFetchingRemoteData,
             object: nil
         )
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(didInsertWorkout),
-            name: .didInsertRemoteData,
+            selector: #selector(willProcessWorkouts),
+            name: .willBeginProcessingRemoteData,
             object: nil
         )
         
@@ -185,63 +186,54 @@ extension WorkoutManager {
             object: nil
         )
         
-        // Updating Location Data
-        
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(willStartUpdatingLocation),
-            name: .willBeginProcessingRemoteLocationData,
+            selector: #selector(willRegenerateImages),
+            name: .willBeginRegeneratingMapImages,
             object: nil
         )
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(didUpdateLocation),
-            name: .didUpdateRemoteLocationData,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(didFinishUpdatingLocation),
-            name: .didFinishProcessingRemoteLocationData,
+            selector: #selector(didRegenerateImages),
+            name: .didFinishRegeneratingMapImages,
             object: nil
         )
     }
     
     private func removeObservers() {
+        NotificationCenter.default.removeObserver(self, name: .didFinishFetchingRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didInsertRemoteData, object: nil)
         NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteData, object: nil)
-        
-        NotificationCenter.default.removeObserver(self, name: .willBeginProcessingRemoteLocationData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didUpdateRemoteLocationData, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .didFinishProcessingRemoteLocationData, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .willBeginRegeneratingMapImages, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .didFinishRegeneratingMapImages, object: nil)
     }
     
     // MARK: - Inserting Workouts
     
     @objc
-    private func willProcessWorkouts(_ notification: Notification) {
-        processingRemoteDataTimestamp = Date()
-        
-        DispatchQueue.main.async {
-            withAnimation {
-                self.isProcessingRemoteData = true
-            }
-        }
+    private func didFinishFetchingWorkouts(_ notification: Notification) {
+        Log.debug("WORKOUTS: did finish inserting workouts")
     }
     
     @objc
-    private func didInsertWorkout(_ notification: Notification) {
-        let now = Date()
-        let date = processingRemoteDataTimestamp ?? now
-        let waitTime = now.timeIntervalSince(date)
+    private func willProcessWorkouts(_ notification: Notification) {
+        Log.debug("WORKOUTS: will process workout data")
         
-        if waitTime > LOADING_WAIT_IN_SECONDS && !showProcessingRemoteDataLoading {
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.showProcessingRemoteDataLoading = true
+        startProcessingDate = Date()
+        
+        DispatchQueue.main.async {
+            self.isProcessingRemoteData = true
+        }
+        
+        if timer == nil {
+            timer = Timer.scheduledTimer(withTimeInterval: LOADING_WAIT_IN_SECONDS, repeats: false) { _ in
+                DispatchQueue.main.async {
+                    if self.isProcessingRemoteData {
+                        withAnimation {
+                            self.showProcessingRemoteDataLoading = true
+                        }
+                    }
                 }
             }
         }
@@ -249,7 +241,16 @@ extension WorkoutManager {
     
     @objc
     private func didProcessWorkouts(_ notification: Notification) {
-        processingRemoteDataTimestamp = nil
+        var totalMinutes: Double = 0
+        
+        if let start = startProcessingDate {
+            totalMinutes = Date().timeIntervalSince(start) / 60.0
+        }
+        
+        Log.debug("WORKOUTS: did finish processing workout data (\(totalMinutes) minutes)")
+        
+        startProcessingDate = nil
+        timer = nil
         validateHealthPermissions()
         
         DispatchQueue.main.async {
@@ -260,49 +261,20 @@ extension WorkoutManager {
         }
     }
     
-    // MARK: - Updating Location Data
-    
     @objc
-    func willStartUpdatingLocation(_ notification: Notification) {
-        updatingRemoteLocationDataTimestamp = Date()
-        
+    private func willRegenerateImages(_ notification: Notification) {
         DispatchQueue.main.async {
             withAnimation {
-                self.isUpdatingRemoteLocationData = true
+                self.isProcessingMapImages = true
             }
         }
     }
     
     @objc
-    func didUpdateLocation(_ notification: Notification) {
-        let now = Date()
-        let date = updatingRemoteLocationDataTimestamp ?? now
-        let waitTime = now.timeIntervalSince(date)
-        
-        if waitTime > LOADING_WAIT_IN_SECONDS && !showUpdatingRemoteLocationDataLoading {
-            DispatchQueue.main.async {
-                withAnimation {
-                    self.showUpdatingRemoteLocationDataLoading = true
-                }
-            }
-        }
-        
-        let remoteIdentifier = notification.userInfo?[Notification.remoteWorkoutKey] as? UUID
-        let coordinates = notification.userInfo?[Notification.coordinatesKey] as? [CLLocationCoordinate2D]
-
-        if let remoteIdentifier = remoteIdentifier, let coordinates = coordinates {
-            self.storage.set(coordinates: coordinates, forID: remoteIdentifier)
-        }
-    }
-    
-    @objc
-    func didFinishUpdatingLocation(_ notification: Notification) {
-        updatingRemoteLocationDataTimestamp = nil
-        
+    private func didRegenerateImages(_ notification: Notification) {
         DispatchQueue.main.async {
             withAnimation {
-                self.isUpdatingRemoteLocationData = false
-                self.showUpdatingRemoteLocationDataLoading = false
+                self.isProcessingMapImages = false
             }
         }
     }

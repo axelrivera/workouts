@@ -106,8 +106,10 @@ extension WorkoutsTagSelectorContent {
 }
 
 struct WorkoutsTagSelectorView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    @State static var tags = StorageProvider.previewTags(in: viewContext)
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
+    
+    // FIXME: Update this
+    @State static var tags = [Tag]() //StorageProvider.previewTags(in: viewContext)
     
     static var previews: some View {
         WorkoutsTagSelectorView()

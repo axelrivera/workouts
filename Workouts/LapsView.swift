@@ -210,11 +210,11 @@ extension LapsView {
 }
 
 struct LapsView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
+    static let workout = WorkoutsProvider.sampleWorkout(moc: viewContext)
     
     static let detailManager: DetailManager = {
-        let manager = DetailManager(viewModel: workout.detailViewModel, context: viewContext)
+        let manager = DetailManager(id: workout.workoutIdentifier, context: viewContext)
         manager.processWorkout()
         manager.isProcessingLaps = true
         return manager

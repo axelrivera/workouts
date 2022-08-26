@@ -5,47 +5,66 @@
 //  Created by Axel Rivera on 1/18/21.
 //
 
-import Foundation
+import SwiftUI
 import CoreLocation
 import FitFileParser
 import HealthKit
+
+extension WorkoutImport {
+    enum Status {
+        case new, duplicate, processing, processed, notSupported, failed, invalid, empty
+    }
+}
 
 extension WorkoutImport.Status: Equatable, Identifiable, Hashable {
     
     var id: Self { self }
     
-    static func ==(lhs: WorkoutImport.Status, rhs: WorkoutImport.Status) -> Bool {
-        switch (lhs, rhs) {
-        case (.new, .new):
-            return true
-        case (.processing, .processing):
-            return true
-        case (.processed, .processed):
-            return true
-        case (.notSupported, .notSupported):
-            return true
-        case (.failed, .failed):
-            return true
-        case (.invalid(let lname), .invalid(let rname)):
-            return lname == rname
-        default:
-            return false
+    var isValid: Bool {
+        self != .empty
+    }
+    
+    var title: String {
+        switch self {
+        case .new: return "New Workout"
+        case .duplicate: return "Duplicate Workout"
+        case .processing: return "Processing…"
+        case .processed: return "Import Complete"
+        case .notSupported: return "Sport Not Supported"
+        case .failed: return "Import Failed"
+        case .invalid: return "Invalid File"
+        case .empty: return "Missing Workout"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .new: return .accentColor
+        case .duplicate: return .orange
+        case .processing: return .secondary
+        case .processed: return .green
+        case .notSupported, .failed, .invalid: return .red
+        case .empty: return .secondary
+        }
+    }
+    
+    var imageName: String {
+        switch self {
+        case .new: return "flame.fill"
+        case .duplicate: return "exclamationmark.circle"
+        case .processing: return "hourglass"
+        case .processed: return "checkmark.circle.fill"
+        case .notSupported, .failed, .invalid: return "xmark.circle"
+        case .empty: return "circle.slash"
         }
     }
     
 }
 
 class WorkoutImport: ObservableObject, Identifiable, Hashable {
-    enum Status {
-        case new, processing, processed, notSupported, failed, invalid(file: String)
-    }
-    
-    let id = UUID()
-    
-    var uuidString: String {
-        id.uuidString
-    }
-    
+    private(set) var id: String
+    let uuidString = UUID().uuidString
+        
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -85,23 +104,34 @@ class WorkoutImport: ObservableObject, Identifiable, Hashable {
     
     var records = [Record]()
     var events = [Event]()
+    var locations = [CLLocation]()
+    var coordinates = [CLLocationCoordinate2D]()
     
     var fileURL: URL?
+    var fileName: String?
     
     init(status: Status, sport: Sport) {
+        self.id = UUID().uuidString
         self.status = status
         self.sport = sport
     }
     
     init(invalidFilename: String) {
-        self.status = .invalid(file: invalidFilename)
+        self.id = UUID().uuidString
+        self.status = .invalid
+        self.fileName = invalidFilename
         self.sport = .other
         start = .init(valueType: .date, value: Date().timeIntervalSince1970)
     }
     
     init?(fitFile: FitFile) {
+        guard let fileID = fitFile.messages(forMessageType: .file_id).first else { return nil }
         guard let sport = fitFile.messages(forMessageType: .sport).first else { return nil }
         guard let session = fitFile.messages(forMessageType: .session).first else { return nil }
+        
+        guard let date = fileID.interpretedField(key: "time_created")?.time else { return nil }
+        self.id = DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .short).removingCharacters(in: .whitespacesAndNewlines).lowercased()
+        Log.debug("initializing workout with id: \(self.id)")
         
         self.sport = Sport(string: sport.interpretedField(key: "sport")?.name ?? "")
         status = self.sport.isImportSupported ? .new : .notSupported
@@ -137,6 +167,8 @@ class WorkoutImport: ObservableObject, Identifiable, Hashable {
         
         // Records
         records = fitFile.messages(forMessageType: .record).compactMap { .init(message: $0) }
+        locations = records.compactMap { $0.location }
+        coordinates = locations.map { $0.coordinate }
         
         // Events
         events = fitFile.messages(forMessageType: .event).compactMap { (message) -> Event? in
@@ -176,15 +208,10 @@ extension WorkoutImport {
         return startDate.addingTimeInterval(duration)
     }
     
-    var locations: [CLLocation] {
-        records.compactMap { $0.location }
-    }
-    
     var filteredEvents: [Event] {
-        let filtered = self.events.filter({ $0.timestamp.dateValue != nil })
+        let filtered = self.events
         let events = filtered.sorted { lhs, rhs in
-            guard let ldate = lhs.timestamp.dateValue, let rdate = rhs.timestamp.dateValue else { return false }
-            return ldate < rdate
+            return lhs.timestamp < rhs.timestamp
         }
                 
         let totalEvents = events.count
@@ -215,26 +242,30 @@ extension WorkoutImport {
         if let last = finalEvents.last, last.eventType == .pause {
             finalEvents = finalEvents.dropLast()
         }
-                
-        return finalEvents
+        
+        // Clean bad events and colliding timestamps
+        
+        var cleanEvents = [Event]()
+        var tuples = [(pause: Event, resume: Event)]()
+        
+        for (pause, resume) in zip(finalEvents, finalEvents.dropFirst()) {
+            if pause.eventType == .pause && resume.eventType == .resume {
+                tuples.append((pause, resume))
+            }
+        }
+        
+        for (prev, tuple) in zip(tuples, tuples.dropFirst()) {
+            if tuple.pause.timestamp > prev.resume.timestamp {
+                cleanEvents.append(tuple.pause)
+                cleanEvents.append(tuple.resume)
+            }
+        }
+                        
+        return cleanEvents
     }
     
     var workoutEvents: [HKWorkoutEvent] {
-        filteredEvents.compactMap({ $0.workoutEvent })
-    }
-    
-}
-
-// MARK: - Presentation
-
-extension WorkoutImport {
-    
-    var formattedTitle: String {
-        if case .invalid(let file) = status {
-            return file
-        } else {
-            return String(format: "%@ %@", indoor ? "Indoor" : "Outdoor", sport.name)
-        }
+        filteredEvents.map { $0.workoutEvent }
     }
     
 }

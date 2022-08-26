@@ -11,6 +11,7 @@ struct PaywallButtonModifier: ViewModifier {
     @EnvironmentObject var purchaseManager: IAPManager
     
     let source: AnalyticsManager.PaywallSource
+    let buttonType: PaywallLockButton.ButtonType
     let sample: Bool
     @State private var isPaywallShowing: Bool = false
     
@@ -22,7 +23,7 @@ struct PaywallButtonModifier: ViewModifier {
                 
             if !purchaseManager.isActive {
                 VStack(spacing: 20.0) {
-                    PaywallLockButton(sample: sample, action: { isPaywallShowing = true })
+                    PaywallLockButton(sample: sample, type: buttonType, action: { isPaywallShowing = true })
                 }
              }
         }
@@ -36,8 +37,8 @@ struct PaywallButtonModifier: ViewModifier {
 
 extension View {
     
-    func paywallButtonOverlay(source: AnalyticsManager.PaywallSource, sample: Bool = true) -> some View {
-        modifier(PaywallButtonModifier(source: source, sample: sample))
+    func paywallButtonOverlay(source: AnalyticsManager.PaywallSource, type: PaywallLockButton.ButtonType = .default, sample: Bool = true) -> some View {
+        modifier(PaywallButtonModifier(source: source, buttonType: type, sample: sample))
     }
     
 }

@@ -34,7 +34,6 @@ final class WorkoutsDownloader {
 
             let workouts = samples as? [HKWorkout] ?? [HKWorkout]()
             let deleted = (deleted ?? [HKDeletedObject]()).map({ $0.uuid })
-            
             completion(workouts, deleted, newAnchor)
         }
 

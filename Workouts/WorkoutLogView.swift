@@ -49,26 +49,34 @@ struct WorkoutLogView: View {
             .background(.regularMaterial)
         }
     }
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section(header: headerView()) {
                         ForEach(manager.intervals, id: \.id) { interval in
-                            WorkoutLogIntervalRow(displayType: $manager.displayType, interval: interval)
+                            if purchaseManager.isActive || manager.isFreeContent(interval: interval) {
+                                WorkoutLogIntervalRow(
+                                    displayType: $manager.displayType,
+                                    interval: interval
+                                )
+                            } else {
+                                WorkoutLogIntervalRow(
+                                    displayType: $manager.displayType,
+                                    interval: interval,
+                                    showContent: false
+                                )
+                                .paywallButtonOverlay(source: .calendar, type: .small, sample: false)
+                            }
                             Divider()
                         }
                     }
                 }
-                .onAppear { reloadIfNeeded() }
-                .onChange(of: purchaseManager.isActive, perform: { isActive in
-                    reloadIfNeeded()
-                })
             }
+            .onAppear { reload() }
             .overlay(emptyOverlay())
-            .paywallButtonOverlay(source: .calendar)
-            .navigationTitle("Calendar")
+            .navigationTitle("Training Calendar")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -88,7 +96,6 @@ struct WorkoutLogView: View {
                     })
                     .pickerStyle(SegmentedPickerStyle())
                     .fixedSize()
-                    .disabled(!purchaseManager.isActive)
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
@@ -122,7 +129,7 @@ struct WorkoutLogView: View {
     
     @ViewBuilder
     func emptyOverlay() -> some View {
-        if purchaseManager.isActive && manager.intervals.isEmpty {
+        if manager.intervals.isEmpty {
             Text("No Workouts")
                 .foregroundColor(.secondary)
         }
@@ -131,18 +138,14 @@ struct WorkoutLogView: View {
 
 extension WorkoutLogView {
     
-    func reloadIfNeeded() {
-        if purchaseManager.isActive {
-            manager.reloadIntervals()
-        } else {
-            manager.intervals = LogInterval.sampleLastTwelveMonths()
-        }
+    func reload() {
+        manager.reloadIntervals()
     }
     
 }
 
 struct WorkoutLogView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var workoutManager = WorkoutManagerPreview.manager(context: viewContext)
     
     static var manager: LogManager = {

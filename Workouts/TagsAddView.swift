@@ -246,7 +246,7 @@ extension TagsAddView {
 }
 
 struct TagsAddView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var tagManager = TagManager(context: viewContext)
     
     static var viewModel: TagEditViewModel = {

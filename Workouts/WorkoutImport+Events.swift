@@ -42,7 +42,7 @@ extension WorkoutImport.Event {
 extension WorkoutImport {
     
     public struct Event {
-        public var timestamp: Value
+        public var timestamp: Date
         public var eventType: EventType
         
         public init?(message: FitMessage) {
@@ -55,9 +55,9 @@ extension WorkoutImport {
                   let eventType = EventType(name: name) else { return nil }
                         
             let timestamp = Value(valueType: .date, field: message.interpretedField(key: "timestamp"))
-            if timestamp.dateValue == nil { return nil }
+            guard let date = timestamp.dateValue else { return nil }
             
-            self.timestamp = timestamp
+            self.timestamp = date
             self.eventType = eventType
         }
     }
@@ -66,9 +66,7 @@ extension WorkoutImport {
 
 extension WorkoutImport.Event {
     
-    var workoutEvent: HKWorkoutEvent? {
-        guard let timestamp = timestamp.dateValue else { return nil }
-        
+    var workoutEvent: HKWorkoutEvent {
         let interval = DateInterval(start: timestamp, end: timestamp)
         return HKWorkoutEvent(type: eventType.workoutEventType, dateInterval: interval, metadata: nil)
     }
@@ -78,7 +76,7 @@ extension WorkoutImport.Event {
 extension WorkoutImport.Event: CustomStringConvertible {
     
     public var description: String {
-        eventType.rawValue
+        String("event: \(eventType.rawValue), timestamp: \(timestamp.timeIntervalSince1970)")
     }
     
 }

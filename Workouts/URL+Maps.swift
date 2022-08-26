@@ -13,7 +13,7 @@ enum MapImageError: Error {
 }
 
 fileprivate let MapImageCacheDirectoryName = "BWMapImages"
-fileprivate let MapImageExtension = "feed"
+fileprivate let MapImageExtension = "data"
 
 fileprivate func stringForColorScheme(_ scheme: ColorScheme) -> String {
     switch scheme {
@@ -32,9 +32,18 @@ extension URL {
         String(format: "%@_%@.%@", id.uuidString, stringForColorScheme(scheme), MapImageExtension)
     }
     
-    static func mapImagesCacheDirectory() -> URL {
+    static func oldMapImagesCacheDirectory() -> URL {
         let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
+    }
+    
+    static func mapImagesCacheDirectory() -> URL {
+        let cacheDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return cacheDirectory.appendingPathComponent(MapImageCacheDirectoryName, isDirectory: true)
+    }
+    
+    static func createImagesCacheDirectoryIfNeeded() throws {
+        try FileManager.createImagesCacheDirectoryIfNeeded()
     }
     
     static func cachedMapImageURL(id: UUID, scheme: ColorScheme) -> URL {
@@ -53,6 +62,27 @@ extension FileManager {
         }
     }
     
+    static let OLD_CACHE_DIRECTORY_KEY = "arn_delete_old_image_cache_directory"
+    
+    static func deleteOldImageCacheDirectoryIfNeeded() {
+        let isDeleted = UserDefaults.standard.bool(forKey: OLD_CACHE_DIRECTORY_KEY)
+        guard isDeleted else { return }
+        
+        deleteOldImageCacheDirectory()
+        UserDefaults.standard.set(true, forKey: OLD_CACHE_DIRECTORY_KEY)
+    }
+    
+    static func deleteOldImageCacheDirectory() {
+        let url = URL.oldMapImagesCacheDirectory()
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        
+        do {
+            try FileManager.default.moveItem(at: url, to: tmpURL)
+        } catch {
+            Log.debug("failed to delete old image cache directory: \(error.localizedDescription)")
+        }
+    }
+    
     static func deleteImageCacheDirectory() {
         let url = URL.mapImagesCacheDirectory()
         let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -62,6 +92,23 @@ extension FileManager {
         } catch {
             Log.debug("failed to delete image cache directory: \(error.localizedDescription)")
         }
+    }
+    
+    static func writeWorkoutImageData(dark: Data, light: Data, workout: UUID) throws {
+        let darkURL = URL.cachedMapImageURL(id: workout, scheme: .dark)
+        let lightURL = URL.cachedMapImageURL(id: workout, scheme: .light)
+        
+        try FileManager.createImagesCacheDirectoryIfNeeded()
+        try dark.write(to: darkURL, options: .atomic)
+        try light.write(to: lightURL, options: .atomic)
+    }
+    
+    static func deleteWorkoutImageData(for workout: UUID) throws {
+        let darkURL = URL.cachedMapImageURL(id: workout, scheme: .dark)
+        let lightURL = URL.cachedMapImageURL(id: workout, scheme: .light)
+        
+        try FileManager.default.removeItem(at: darkURL)
+        try FileManager.default.removeItem(at: lightURL)
     }
     
     static func writeLocalImage(_ image: UIImage, at url: URL) throws {

@@ -32,7 +32,9 @@ extension Color {
 
 // MARK: Asset Colors
 
-extension Color {    
+extension Color {
+    static let load = Color.pink
+    static let heartRateReserve = Color.orange
     static let distance = Color("DistanceColor")
     static let time = Color("TimeColor")
     static let calories = Color("CaloriesColor")
@@ -62,7 +64,8 @@ extension Color {
     static let obsidian = Color(hex: "000000")
     
     static var workoutColors: [Color] = {
-        [accentColor, ruby, amber, citrine, emerald, amazonite, apatite, saphire, lolite, amethyst, graphite, obsidian]
+        [accentColor, ruby, amber, citrine, emerald, amazonite,
+         apatite, saphire, lolite, amethyst, graphite, obsidian]
     }()
     
     static var tagColors: [Color] = {

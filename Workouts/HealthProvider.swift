@@ -32,6 +32,26 @@ struct HealthProvider {
 
 extension HealthProvider {
     
+    private var supportsMaxHeartRate: Bool {
+        maxHeartRate() > 0
+    }
+    
+    private var supportsRestingHeartRate: Bool {
+        if AppSettings.useHealthRestingHeartRate {
+            return true
+        } else {
+            return AppSettings.restingHeartRate > 0
+        }
+    }
+    
+    private var supportsGender: Bool {
+        userGender().isAvailable
+    }
+    
+    var isTrainingLoadSupported: Bool {
+        supportsGender && supportsMaxHeartRate && supportsRestingHeartRate
+    }
+    
     func fetchDistanceSamples(distanceType: HKQuantityType, interval: DateInterval, source: HKSource) async throws -> [Quantity] {
         return try await withCheckedThrowingContinuation { continuation in
             fetchDistanceSamples(distanceType: distanceType, interval: interval, source: source) { result in
@@ -84,12 +104,106 @@ extension HealthProvider {
         }
     }
     
-    func fetchHeartRateSamples(interval: DateInterval, source: HKSource?) async throws -> [Quantity] {
+    func fetchWorkouts(for identifiers: [UUID]) async throws -> [HKWorkout] {
         return try await withCheckedThrowingContinuation { continuation in
-            fetchHeartRateSamples(interval: interval, source: source) { result in
+            fetchWorkouts(for: identifiers) { result in
+                switch result {
+                case .success(let workouts):
+                    continuation.resume(returning: workouts)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    func fetchHeartRateSamples(interval: DateInterval, source: HKSource? = nil, stoppedIntervals: [DateInterval] = [DateInterval]()) async throws -> [Quantity] {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchHeartRateSamples(interval: interval, source: source, stoppedIntervals: stoppedIntervals) { result in
                 switch result {
                 case .success(let samples):
                     continuation.resume(returning: samples)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    func fetchPaddedHeartRateSamples(for workout: HKWorkout) async throws -> [Quantity] {
+        let interval = DateInterval(start: workout.startDate, end: workout.endDate)
+        return try await fetchPaddedHeartRateSamples(
+            interval: interval,
+            source: workout.sourceRevision.source,
+            stoppedIntervals: workout.stoppedIntervals()
+        )
+    }
+    
+    func fetchPaddedHeartRateSamples(interval: DateInterval, source: HKSource? = nil, stoppedIntervals: [DateInterval] = [DateInterval]()) async throws -> [Quantity] {
+        let samples = try await fetchHeartRateSamples(interval: interval, source: source, stoppedIntervals: stoppedIntervals)
+                        
+        let startIndex = KeyForTimestamp(interval.start)
+        let endIndex = KeyForTimestamp(interval.end)
+        
+        var dictionary = [Int: Quantity]()
+        for key in startIndex ... endIndex {
+            let timestamp = Date(timeIntervalSince1970: Double(key))
+            if stoppedIntervals.isPresent, let _ = stoppedIntervals.first(where: { $0.contains(timestamp) }) {
+                continue
+            }
+            
+            dictionary[key] = Quantity(start: timestamp, end: timestamp, value: 0)
+        }
+        
+        for sample in samples {
+            let key = KeyForTimestamp(sample.timestamp)
+            guard let quantity = dictionary[key] else { continue }
+            
+            if sample.value > quantity.value {
+                let timestamp = Date(timeIntervalSince1970: Double(key))
+                dictionary[key] = Quantity(start: timestamp, end: timestamp, value: sample.value)
+            }
+        }
+        
+        // padding
+        let quantities = dictionary.values.sorted(by: { $0.timestamp < $1.timestamp })
+        
+        var currentValue: Double = quantities.first(where: { $0.value > 0 })?.value ?? 0
+        var paddedQuantities = [Quantity]()
+        
+        for quantity in quantities {
+            if quantity.value == 0 && currentValue > 0 {
+                let newQuantity = Quantity(start: quantity.start, end: quantity.end, value: currentValue)
+                paddedQuantities.append(newQuantity)
+            } else {
+                paddedQuantities.append(quantity)
+            }
+            
+            if quantity.value > 0 {
+                currentValue = quantity.value
+            }
+        }
+        
+        return paddedQuantities
+    }
+    
+    func fetchRecentRestingHeartRate() async -> Int? {
+        do {
+            let interval = DateInterval.lastThirtyDays()
+            let value = try await fetchRestingHeartRate(for: interval)
+            return Int(value)
+        } catch {
+            Log.debug("failed to fetch resting heart rate")
+            return nil
+        }
+    }
+    
+    func fetchRestingHeartRate(for interval: DateInterval) async throws -> Double {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchRestingHeartRate(for: interval) { result in
+                switch result {
+                case .success(let avg):
+                    continuation.resume(returning: avg)
                 case .failure(let error):
                     continuation.resume(throwing: error)
                 }
@@ -103,6 +217,19 @@ extension HealthProvider {
                 switch result {
                 case .success(let stats):
                     continuation.resume(returning: stats)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    func fetchAvgHeartRate(for workout: HKWorkout) async throws -> Double {
+        return try await withCheckedThrowingContinuation { continuation in
+            fetchAvgHeartRate(workout: workout) { result in
+                switch result {
+                case .success(let avg):
+                    continuation.resume(returning: avg)
                 case .failure(let error):
                     continuation.resume(throwing: error)
                 }
@@ -194,6 +321,25 @@ extension HealthProvider {
         let query = HKSampleQuery(sampleType: .workoutType(), predicate: predicate, limit: 1, sortDescriptors: nil) { (query, samples, error) in
             if let workout = samples?.first as? HKWorkout {
                 completionHandler(.success(workout))
+            } else {
+                completionHandler(.failure(error ?? HealthError.missingData))
+            }
+        }
+        healthStore.execute(query)
+    }
+    
+    private func fetchWorkouts(for identifiers: [UUID], completionHandler: @escaping (Result<[HKWorkout], Error>) -> Void) {
+        let predicate = HKQuery.predicateForObjects(with: Set(identifiers))
+        let sortByDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        let query = HKSampleQuery(
+            sampleType: .workoutType(),
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: [sortByDate]
+        ) { (query, samples, error) in
+            if let workouts = samples as? [HKWorkout] {
+                completionHandler(.success(workouts))
             } else {
                 completionHandler(.failure(error ?? HealthError.missingData))
             }
@@ -365,7 +511,12 @@ extension HealthProvider {
         healthStore.execute(query)
     }
     
-    private func fetchHeartRateSamples(interval: DateInterval, source: HKSource?, completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+    private func fetchHeartRateSamples(
+        interval: DateInterval,
+        source: HKSource? = nil,
+        stoppedIntervals: [DateInterval] = [DateInterval](),
+        completionHandler: @escaping (Result<[Quantity], Error>) -> Void) {
+            
         let intervalPredicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: [.strictStartDate, .strictEndDate])
         let queryInterval = intervalFor(start: interval.start, end: interval.end)
         
@@ -391,6 +542,11 @@ extension HealthProvider {
             
             let sortedStatistics = results.statistics().sorted(by: { $0.startDate < $1.startDate })
             let values: [Quantity] = sortedStatistics.compactMap { (statistics) in
+                let interval = DateInterval(start: statistics.startDate, end: statistics.endDate)
+                if stoppedIntervals.isPresent, let _ = stoppedIntervals.first(where: { interval.intersects($0) }) {
+                    return nil
+                }
+                
                 guard let quantity = maxQuantity(for: source, statistics: statistics) else { return nil }
                 return Quantity(start: statistics.startDate, end: statistics.endDate, value: quantity.doubleValue(for: .bpm()))
             }
@@ -401,26 +557,124 @@ extension HealthProvider {
     
     typealias HeartRateStatsValue = (avg: Double, max: Double)
     
+    private func fetchAvgHeartRate(workout: HKWorkout, completionHandler: @escaping (Result<Double, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
+        let source = workout.sourceRevision.source
+                
+        let query = HKStatisticsQuery(
+            quantityType: .heartRate(),
+            quantitySamplePredicate: predicate,
+            options: [.discreteAverage, .separateBySource]) { (query, statistics, error) in
+                self.healthStore.stop(query)
+                
+                guard let statistics = statistics else {
+                    completionHandler(.failure(error ?? HealthError.failure))
+                    return
+                }
+                
+                let avg = statistics.averageQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
+                completionHandler(.success(avg))
+        }
+        healthStore.execute(query)
+    }
+    
     private func fetchHeartRateStatsValue(workout: HKWorkout, completionHandler: @escaping (Result<HeartRateStatsValue, Error>) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: workout.startDate, end: workout.endDate, options: [.strictStartDate, .strictEndDate])
         let source = workout.sourceRevision.source
-        
+                
         let query = HKStatisticsQuery(
             quantityType: .heartRate(),
             quantitySamplePredicate: predicate,
             options: [.discreteAverage, .discreteMax, .separateBySource]) { (query, statistics, error) in
+                self.healthStore.stop(query)
+                
+                guard let statistics = statistics else {
+                    completionHandler(.failure(error ?? HealthError.failure))
+                    return
+                }
+                
+                let avg = statistics.averageQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
+                let max = statistics.maximumQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
+                
+                completionHandler(.success((avg, max)))
+        }
+        healthStore.execute(query)
+    }
+    
+    private func fetchRestingHeartRate(for interval: DateInterval, completionHandler: @escaping (Result<Double, Error>) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: interval.start, end: interval.end, options: [.strictStartDate, .strictEndDate])
+        
+        let query = HKStatisticsQuery(
+            quantityType: .restingHeartRate(),
+            quantitySamplePredicate: predicate,
+            options: [.discreteAverage]) { query, statistics, error in
+                self.healthStore.stop(query)
+                
+                guard let statistics = statistics else {
+                    completionHandler(.failure(error ?? HealthError.failure))
+                    return
+                }
+                
+                guard let avg = statistics.averageQuantity()?.doubleValue(for: .bpm()) else {
+                    completionHandler(.failure(HealthError.failure))
+                    return
+                }
+                
+                completionHandler(.success(avg))
+        }
+        healthStore.execute(query)
+    }
+    
+    private func fetchHeartRateDuration(completionHandler: @escaping (Result<[HeartRateDuration], Error>) -> Void) {
+        let calendar = Calendar.current
+        
+        // Create a 1-second interval.
+        let interval = DateComponents(second: 1)
+        
+        guard let anchorDate = calendar.date(bySetting: .minute, value: 1, of: Date()) else {
+            completionHandler(.failure(HealthError.failure))
+            return
+        }
+        
+        let query = HKStatisticsCollectionQuery(
+            quantityType: .heartRate(),
+            quantitySamplePredicate: nil,
+            options: .discreteMax,
+            anchorDate: anchorDate,
+            intervalComponents: interval
+        )
+        
+        query.initialResultsHandler = { (query, results, error) in
             self.healthStore.stop(query)
             
-            guard let statistics = statistics else {
+            guard let results = results else {
                 completionHandler(.failure(error ?? HealthError.failure))
                 return
             }
             
-            let avg = statistics.averageQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
-            let max = statistics.maximumQuantity(for: source)?.doubleValue(for: HKUnit.bpm()) ?? 0
+            var dictionary = [Int: Int]()
+            let statistics = results.statistics()
             
-            completionHandler(.success((avg, max)))
+            for statistic in statistics {
+                guard let doubleValue = statistic.maximumQuantity()?.doubleValue(for: .bpm()) else {
+                    continue
+                }
+                
+                let intValue = Int(doubleValue)
+                if let currentValue = dictionary[intValue] {
+                    dictionary[intValue] = currentValue + 1
+                } else {
+                    dictionary[intValue] = 1
+                }
+            }
+            
+            let values = dictionary.keys.sorted().map { key in
+                HeartRateDuration(value: Double(key), duration: dictionary[key]!)
+            }
+            
+            completionHandler(.success(values))
         }
+        
         healthStore.execute(query)
     }
     

@@ -10,12 +10,27 @@ import SwiftUI
 struct ImportRow: View {
     @ObservedObject var workout: WorkoutImport
     
-    var importAction = {}
+    var imageName: String {
+        if workout.status == .processing {
+            return WorkoutImport.Status.new.imageName
+        } else {
+            return workout.status.imageName
+        }
+    }
     
-    @State private var rotationAngle: Double = 0
+    var imageColor: Color {
+        if workout.status == .processing {
+            return WorkoutImport.Status.new.color
+        } else {
+            return workout.status.color
+        }
+    }
     
     var body: some View {
         HStack(spacing: 10.0) {
+            Image(systemName: imageName)
+                .foregroundColor(imageColor)
+            
             VStack(alignment: .leading) {
                 Text(workout.formattedTitle)
                 
@@ -29,50 +44,19 @@ struct ImportRow: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            
             Spacer()
             
-            switch workout.status {
-            case .new:
-                Button(action: importAction) {
-                    Text("Import")
-                }
-                .foregroundColor(.accentColor)
-            case .processing:
-                Image(systemName: "hourglass")
-                    .foregroundColor(.secondary)
-                    .rotationEffect(.degrees(rotationAngle))
-                    .onAppear {
-                        let animation = Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true)
-                        withAnimation(animation) {
-                            rotationAngle = 360.0
-                        }
-                    }
-            case .processed:
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-            case .notSupported:
-                Text("Not Supported")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-            case .failed:
-                Text("Import Failed")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
-            case .invalid:
-                Text("Invalid")
-                    .font(.subheadline)
-                    .foregroundColor(.red)
+            if workout.status == .processing {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
             }
         }
     }
 }
 
 struct ImportRow_Previews: PreviewProvider {
-    static var workout: WorkoutImport = {
-        let workout = ImportManager.sampleWorkout()
-        workout.status = .processing
-        return workout
-    }()
+    static var workout: WorkoutImport = WorkoutImport(status: .processing, sport: .cycling)
     
     static var previews: some View {
         ImportRow(workout: workout)

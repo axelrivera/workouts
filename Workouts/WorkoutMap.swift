@@ -26,8 +26,6 @@ extension WorkoutMap {
     }
     
     func updateUIView(_ view: MKMapView, context: Context) {
-        if points.isEmpty { return }
-        
         if !view.overlays.isEmpty {
             view.removeOverlays(view.overlays)
         }
@@ -36,12 +34,22 @@ extension WorkoutMap {
             view.removeAnnotations(view.annotations)
         }
         
-        let zoomRect = MKMapRect.rectForCoordinates(points)
+        let zoomRect: MKMapRect
+        var line: MKPolyline?
+        
+        if points.isPresent {
+            zoomRect = MKMapRect.rectForCoordinates(points)
+            line = MKGeodesicPolyline(coordinates: points, count: points.count)
+        } else {
+            zoomRect = .world
+        }
+        
         let mapFrame = view.mapRectThatFits(zoomRect, edgePadding: .zero)
         view.setVisibleMapRect(mapFrame, animated: false)
                         
-        let line = MKGeodesicPolyline(coordinates: points, count: points.count)
-        view.addOverlay(line)
+        if let line = line {
+            view.addOverlay(line)
+        }
     }
     
     func makeCoordinator() -> Coordinator {

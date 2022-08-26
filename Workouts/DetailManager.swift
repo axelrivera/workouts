@@ -16,6 +16,7 @@ class DetailManager: ObservableObject {
         case lap, metadata
     }
     
+    @Published var detail = WorkoutDetailViewModel.empty()
     @Published var isProcessingAnalysis: Bool = false
     @Published var isProcessingLaps: Bool = false
         
@@ -27,11 +28,8 @@ class DetailManager: ObservableObject {
     @Published var bestPace: Double = 0
     
     @Published var altitudeValues = [ChartInterval]()
-    @Published var minElevation: Double = 0
-    @Published var maxElevation: Double = 0
     
     @Published var zones = [HRZoneSummary]()
-    @Published var zoneManager: HRZoneManager = HRZoneManager()
     
     @Published var showLaps = false
     @Published var selectedLapDistance = LapDistance.option1
@@ -39,24 +37,23 @@ class DetailManager: ObservableObject {
     
     @Published var isFavorite = false
     @Published var tags = [TagLabelViewModel]()
-            
+                
     var distanceSamples: [Quantity]?
-        
-    var detail: WorkoutDetailViewModel
+    
+    var id: UUID
     var context: NSManagedObjectContext
+    
+    private lazy var healthProvider = HealthProvider.shared
     private let metaProvider: MetadataProvider
     private let workoutTagProvider: WorkoutTagProvider
+    private let zonesProvider = HRZonesProvider()
     
-    init(viewModel: WorkoutDetailViewModel, context: NSManagedObjectContext) {
-        self.detail = viewModel
+    init(id: UUID, context: NSManagedObjectContext) {
+        self.id = id
         self.context = context
         metaProvider = MetadataProvider(context: context)
         workoutTagProvider = WorkoutTagProvider(context: context)
     }
-    
-    lazy var provider: HealthProvider = {
-        HealthProvider.shared
-    }()
 }
 
 extension DetailManager {
@@ -64,7 +61,7 @@ extension DetailManager {
     var includesLocation: Bool { detail.includesLocation }
     
     func remoteWorkout() async throws -> HKWorkout {
-        try await provider.fetchWorkout(uuid: detail.id)
+        try await healthProvider.fetchWorkout(uuid: id)
     }
     
     private func defaultDistanceSamples(remoteWorkout: HKWorkout) async -> [Quantity] {
@@ -76,9 +73,9 @@ extension DetailManager {
         var samples = [Quantity]()
         do {
             if sport.isCycling {
-                samples = try await provider.fetchDistanceSamples(distanceType: .distanceCycling(), interval: interval, source: source)
+                samples = try await healthProvider.fetchDistanceSamples(distanceType: .distanceCycling(), interval: interval, source: source)
             } else {
-                samples = try await provider.fetchDistanceSamples(distanceType: .distanceWalkingRunning(), interval: interval, source: source)
+                samples = try await healthProvider.fetchDistanceSamples(distanceType: .distanceWalkingRunning(), interval: interval, source: source)
             }
         } catch {
             samples = []
@@ -94,13 +91,15 @@ extension DetailManager {
             self.isProcessingAnalysis = true
             self.isProcessingLaps = true
         }
-
+        
         Task(priority: .userInitiated) {
-            context.performAndWait {
-                let isFavorite = self.metaProvider.isFavorite(self.detail.id)
-                let tags: [TagLabelViewModel] = self.workoutTagProvider.visibleTags(forWorkout: self.detail.id).map({ $0.viewModel() })
+            await context.perform {
+                let viewModel = Workout.find(using: self.id, in: self.context)?.detailViewModel ?? WorkoutDetailViewModel.empty()
+                let isFavorite = self.metaProvider.isFavorite(self.id)
+                let tags: [TagLabelViewModel] = self.workoutTagProvider.visibleTags(forWorkout: self.id).map({ $0.viewModel() })
 
                 DispatchQueue.main.async {
+                    self.detail = viewModel
                     self.isFavorite = isFavorite
                     self.tags = tags
                 }
@@ -113,21 +112,22 @@ extension DetailManager {
     
     private func process() async {
         do {
-            guard let remoteWorkout = try? await remoteWorkout() else { return }
+            guard let remoteWorkout = try? await remoteWorkout() else {
+                throw WorkoutError("missing workout")
+            }
             
-            let locations = (try? await provider.fetchLocations(for: remoteWorkout)) ?? []
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
-            let intervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
+            let intervals = await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
-            let avgCadence = remoteWorkout.avgCyclingCadence ?? 0
+            let avgCadence = remoteWorkout.avgCyclingCadenceValue
             let (speed, heartRate, cadence, altitude) = intervals.chartIntervals(duration: detail.movingTime, avgCadence: avgCadence)
             
             let paceValues: [ChartInterval]
             let bestPace: Double
             
             if sport.isWalkingOrRunning {
-                let paceIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: Sport.paceDistanceValue)
+                let paceIntervals = await processor.intervalsForDistanceSamples(samples, lapDistance: Sport.paceDistanceValue)
                 
                 let paceSamples = paceIntervals.doubleValues(keyPath: \.avgPace)
                 paceValues = ChartInterval.paceChartIntervals(samples: paceSamples, movingTime: detail.movingTime)
@@ -136,21 +136,13 @@ extension DetailManager {
                 paceValues = []
                 bestPace = 0
             }
-            
-            let zoneMaxHeartRate = detail.zoneMaxHeartRate
-            let zoneValues = detail.zoneValues
-            let zoneManager = HRZoneManager(maxHeartRate: zoneMaxHeartRate, zoneValues: zoneValues)
-
+                        
             let zones: [HRZoneSummary]
-            if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout),  heartRate.isPresent {
+            if let fetchedZones = try? await zonesProvider.fetchZones(for: remoteWorkout, values: detail.zoneValues),  heartRate.isPresent {
                 zones = fetchedZones
             } else {
                 zones = []
             }
-
-            let locationAltitudes = locations.altitudeValues()
-            let maxElevation = locationAltitudes.max() ?? 0
-            let minElevation = locationAltitudes.min() ?? 0
             
             DispatchQueue.main.async {
                 self.speedValues = speed
@@ -159,9 +151,6 @@ extension DetailManager {
                 self.heartRateValues = heartRate
                 self.cyclingCadenceValues = cadence
                 self.altitudeValues = altitude
-                self.minElevation = minElevation
-                self.maxElevation = maxElevation
-                self.zoneManager = zoneManager
                 self.zones = zones
                 
                 withAnimation {
@@ -170,6 +159,12 @@ extension DetailManager {
             }
         } catch {
             Log.debug("unable to process intervals")
+            
+            DispatchQueue.main.async {
+                withAnimation {
+                    self.isProcessingAnalysis = false
+                }
+            }
         }
     }
     
@@ -208,7 +203,7 @@ extension DetailManager {
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
 
-            let lapIntervals = try await processor.intervalsForDistanceSamples(samples, lapDistance: lapDistance.distanceInMeters(for: sport))
+            let lapIntervals = await processor.intervalsForDistanceSamples(samples, lapDistance: lapDistance.distanceInMeters(for: sport))
             let laps = lapIntervals.map { interval in
                 WorkoutLap(
                     sport: interval.sport,
@@ -226,31 +221,6 @@ extension DetailManager {
         } catch {
             Log.debug("unable to process intervals")
             return []
-        }
-    }
-    
-    func updateZones(maxHeartRate: Int, values: [Int]) async {
-        guard let remoteWorkout = try? await remoteWorkout() else { return }
-        guard let workout = Workout.find(using: remoteWorkout.uuid, in: context) else { return }
-        
-        context.performAndWait {
-            workout.updateHeartRateZones(with: maxHeartRate, values: values)
-            context.saveOrRollback()
-        }
-
-        let zoneManager = HRZoneManager(maxHeartRate: maxHeartRate, zoneValues: values)
-        let zones: [HRZoneSummary]
-        if let fetchedZones = try? await zoneManager.fetchZones(for: remoteWorkout) {
-            zones = fetchedZones
-        } else {
-            zones = []
-        }
-
-        DispatchQueue.main.async {
-            withAnimation {
-                self.zoneManager = zoneManager
-                self.zones = zones
-            }
         }
     }
     

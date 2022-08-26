@@ -59,6 +59,8 @@ extension HealthAuthProvider {
     
     static func readObjectTypes() -> Set<HKObjectType> {
         [
+            HKCharacteristicType.dateOfBirth(),
+            HKCharacteristicType.biologicalSex(),
             HKSeriesType.workoutType(),
             HKSeriesType.workoutRoute(),
             HKQuantityType.distanceCycling(),
@@ -73,6 +75,7 @@ extension HealthAuthProvider {
             HKQuantityType.stepCount(),
             HKQuantityType.exerciseTime(),
             HKQuantityType.heartRate(),
+            HKQuantityType.restingHeartRate()
         ]
     }
     

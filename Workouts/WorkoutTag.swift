@@ -7,15 +7,11 @@
 
 import CoreData
 
-private let WorkoutKey = "workoutId"
-private let TagKey = "tagId"
-private let DeletedDateKey = "deletedDate"
-
 @objc(WorkoutTag)
 class WorkoutTag: NSManagedObject {
     @NSManaged var workoutId: UUID
     @NSManaged var tagId: UUID
-    @NSManaged var deletedDate: Date?
+    @NSManaged private(set) var deletedDate: Date?
 }
 
 extension WorkoutTag {
@@ -86,19 +82,19 @@ extension WorkoutTag {
     }
     
     static func predicate(forWorkout workout: UUID) -> NSPredicate {
-        NSPredicate(format: "%K == %@", WorkoutKey, workout as NSUUID)
+        NSPredicate(format: "%K == %@", WorkoutTagSchema.workout.key, workout as NSUUID)
     }
     
     static func predicate(forTag tag: UUID) -> NSPredicate {
-        NSPredicate(format: "%K == %@", TagKey, tag as NSUUID)
+        NSPredicate(format: "%K == %@", WorkoutTagSchema.tag.key, tag as NSUUID)
     }
     
     static func predicate(forTags tags: [UUID]) -> NSPredicate {
-        NSPredicate(format: "%K IN %@", TagKey, tags as [NSUUID])
+        NSPredicate(format: "%K IN %@", WorkoutTagSchema.tag.key, tags)
     }
     
     static func activePredicate() -> NSPredicate {
-        NSPredicate(format: "%K == NULL", DeletedDateKey)
+        NSPredicate(format: "%K == NULL", WorkoutTagSchema.deletedDate.key)
     }
     
 }

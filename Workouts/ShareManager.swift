@@ -259,6 +259,9 @@ extension ShareManager {
 
             // stroke it
 
+            path.lineCapStyle = .round
+            path.lineJoinStyle = .round
+            path.flatness = 0
             path.lineWidth = 5
             UIColor(.accentColor).setStroke()
             path.stroke()

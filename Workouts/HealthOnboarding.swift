@@ -14,21 +14,30 @@ struct HealthOnboarding: View {
     
     var body: some View {
         
-        VStack {
-            VStack(spacing: 50.0) {
-                Text("Health Permissions")
-                    .font(.largeTitle)
-                
+        VStack(spacing: 25) {
+            Text("Health Permissions")
+                .font(.largeTitle)
+                .padding(.top)
+            
+            VStack {
                 Image(systemName: "heart.fill")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 200, height: 200)
                     .foregroundColor(.red)
+                                
                 
-                Text("Better Workouts needs permission to read your workout data from the Apple Health app.")
-                    .multilineTextAlignment(.center)
             }
             .frame(maxHeight: .infinity)
+            
+            Text("Better Workouts needs permission to read your workout data from the Apple Health app. Some profile data is also used to calculate heart rate zones and training load.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            Text("The data will always stay on your phone and never be uploaded to a server.")
+                .foregroundColor(.time)
+                .multilineTextAlignment(.center)
             
             Button(action: onButtopnPress) {
                 Group {
@@ -64,6 +73,6 @@ extension HealthOnboarding {
 struct HealthOnboarding_Previews: PreviewProvider {
     static var previews: some View {
         HealthOnboarding()
-            .preferredColorScheme(.light)
+            .preferredColorScheme(.dark)
     }
 }

@@ -12,10 +12,10 @@ import CoreData
 struct DetailView: View {
     @Environment(\.managedObjectContext) var viewContext
     
-    let viewModel: WorkoutDetailViewModel
+    let workoutID: UUID
     
     var body: some View {
-        DetailContentView(detailManager: DetailManager(viewModel: viewModel, context: viewContext))
+        DetailContentView(detailManager: DetailManager(id: workoutID, context: viewContext))
     }
 }
 
@@ -79,12 +79,7 @@ struct DetailContentView: View {
                 }
             }
             
-            row1View()
-            if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
-                row2View()
-            }
-            row3View()
-            row4View()
+            rowViews()
             
             VStack(alignment: .leading) {
                 HStack {
@@ -224,6 +219,16 @@ extension DetailContentView {
     }
     
     @ViewBuilder
+    func rowViews() -> some View {
+        row1View()
+        if workout.sport.isCycling || workout.sport.isWalkingOrRunning {
+            row2View()
+        }
+        row3View()
+        row4View()
+    }
+    
+    @ViewBuilder
     func row1View() -> some View {
         HStack {
             if workout.distance > 0 {
@@ -254,6 +259,13 @@ extension DetailContentView {
             DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
             DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
         }
+        
+        if detailManager.detail.trimp > 0 {
+            HStack {
+                DetailGridView(text: "Training Load", detail: trimpString, detailColor: .load)
+                DetailGridView(text: "Heart Rate Reserve", detail: avgHeartRateReserveString, detailColor: .heartRateReserve)
+            }
+        }
     }
     
     @ViewBuilder
@@ -264,6 +276,14 @@ extension DetailContentView {
                 DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
             }
         }
+    }
+    
+    var trimpString: String {
+        detailManager.detail.trimp.formatted()
+    }
+    
+    var avgHeartRateReserveString: String {
+        Int(detailManager.detail.avgHeartRateReserve * 100).formatted(.percent)
     }
     
     var distanceString: String {
@@ -328,7 +348,7 @@ struct DetailGridView: View {
     var detailColor = Color.primary
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 2.0) {
+        VStack(alignment: .leading, spacing: 2) {
             Group {
                 Text(text)
                 Text(detail)
@@ -342,13 +362,13 @@ struct DetailGridView: View {
 }
 
 struct DetailView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
-    static let workout = StorageProvider.sampleWorkout(moc: viewContext)
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
+    static let workout = WorkoutsProvider.sampleWorkout(moc: viewContext)
     static let purchaseManager = IAPManagerPreview.manager(isActive: true)
     
     static var previews: some View {
         NavigationView {
-            DetailView(viewModel: workout.detailViewModel)
+            DetailView(workoutID: workout.workoutIdentifier)
                 .environment(\.managedObjectContext, viewContext)
                 .environmentObject(purchaseManager)
         }

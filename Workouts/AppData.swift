@@ -25,6 +25,9 @@ let MetadataKeyMaxHeartRate = "BWMaxHeartRate"
 let MetadataKeyStartLatitude = "BWStartLatitude"
 let MetadataKeyStartLongitude = "BWStartLongitude"
 
+// Added 7/12/22
+let MetadataKeyEnergyBurned = "BWEnergyBurned"
+
 // MARK: - Sample Metadata
 
 let MetadataKeySampleCadence = "BWCadence"
@@ -41,7 +44,7 @@ struct Constants {
 }
 
 struct URLStrings {
-    static let faq = "https://betterworkouts.app/faq/"
+    static let faq = "https://betterworkouts.helpscoutdocs.com"
     static let about = "https://betterworkouts.app/about/"
     static let privacy = "https://betterworkouts.app/privacy/"
     static let iTunesReview = "http://itunes.apple.com/app/id1553807643?action=write-review"
@@ -57,5 +60,3 @@ enum GlobalError: Error {
     case data
     case database
 }
-
-

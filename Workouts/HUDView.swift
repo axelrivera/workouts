@@ -11,16 +11,16 @@ struct HUDView: View {
     var body: some View {
         ProgressView()
             .progressViewStyle(CircularProgressViewStyle())
-            .scaleEffect(x: 2.0, y: 2.0, anchor: .center)
             .padding()
-            .frame(width: 100.0, height: 100, alignment: .center)
             .background(Material.regularMaterial)
             .cornerRadius(12.0)
+            .scaleEffect(x: 1.5, y: 1.5, anchor: .center)
     }
 }
 
 struct HUDView_Previews: PreviewProvider {
     static var previews: some View {
         HUDView()
+            .preferredColorScheme(.dark)
     }
 }

@@ -18,11 +18,12 @@ struct WorkoutsView: View {
 
 struct WorkoutsContentView: View {
     enum ActiveCoverSheet: Hashable, Identifiable {
-        case settings, add
+        case settings
         var id: Self { self }
     }
     
     enum ActiveSheet: Hashable, Identifiable {
+        case add
         case filter
         case tagsToAll
         case tags(identifier: UUID, sport: Sport)
@@ -45,9 +46,7 @@ struct WorkoutsContentView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var activeCoverSheet: ActiveCoverSheet?
     @State private var activeAlert: ActiveAlert?
-    
-    @State private var selectedWorkout: UUID?
-        
+            
     init(filterManager: WorkoutsFilterManager) {
         _filterManager = StateObject(wrappedValue: filterManager)
         fetchRequest = DataProvider.fetchFetquest(for: filterManager.filterPredicate())
@@ -67,24 +66,10 @@ struct WorkoutsContentView: View {
                 LazyVStack(spacing: 0.0, pinnedViews: [.sectionHeaders]) {
                     Section(header: sectionHeader()) {
                         ForEach(workouts, id: \.objectID) { workout in
-                            NavigationLink(
-                                tag: workout.workoutIdentifier,
-                                selection: $selectedWorkout,
-                                destination: { DetailView(viewModel: workout.detailViewModel) }) {
-                                    WorkoutMapCell(viewModel: workoutManager.storage.viewModel(forWorkout: workout))
-                            }
-                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFindRelevantTransactions)) { notification in
-                                    workoutManager.storage.refreshAllWorkouts()
-                                }
-                                .onReceive(NotificationCenter.default.publisher(for: Notification.Name.didFinishProcessingDuplicates)) { notification in
-                                    workoutManager.storage.refreshAllWorkouts()
-                                }
-                                .onReceive(NotificationCenter.default.publisher(for: WorkoutStorage.viewModelUpdatedNotification)) { notification in
-                                    if let viewModel = notification.userInfo?[WorkoutStorage.viewModelKey] as? WorkoutViewModel,
-                                       viewModel.id == workout.workoutIdentifier {
-                                        viewContext.refresh(workout, mergeChanges: true)
-                                    }
-                                    
+                            NavigationLink(destination: DetailView(workoutID: workout.workoutIdentifier)) {
+                                WorkoutMapCell(viewModel: workoutManager.viewModel(for: workout))
+                                    .padding([.leading, .trailing])
+                                    .padding([.top, .bottom], CGFloat(5))
                             }
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {
@@ -112,9 +97,6 @@ struct WorkoutsContentView: View {
             }
             .overlay(emptyOverlay())
             .overlay(processOverlay())
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name.refreshWorkoutsFilter)) { _ in
-                refreshFilter()
-            }
             .navigationTitle("Workouts")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -124,7 +106,7 @@ struct WorkoutsContentView: View {
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: { activeCoverSheet = .add}) {
+                    Button(action: { activeSheet = .add}) {
                         Image(systemName: "plus")
                     }
                     .disabled(isAddDisabled)
@@ -136,6 +118,8 @@ struct WorkoutsContentView: View {
             }
             .sheet(item: $activeSheet) { item in
                 switch item {
+                case .add:
+                    ImportView()
                 case .filter:
                     WorkoutsFilterView()
                         .environmentObject(filterManager)
@@ -152,8 +136,6 @@ struct WorkoutsContentView: View {
                 case .settings:
                     SettingsView()
                         .environmentObject(purchaseManager)
-                case .add:
-                    ImportView()
                 }
             }
             .alert(item: $activeAlert) { alert in
@@ -173,15 +155,24 @@ struct WorkoutsContentView: View {
                     )
                 }
             }
+            .onReceive(filterPublisher, perform: refreshFilterOnReceive)
+            .onReceive(duplicatesPublisher, perform: refreshAllWorkoutsOnReceive)
         }
+    }
+    
+    var showHeader: Bool {
+        filterManager.isFilterActive ||
+        workoutManager.showNoWorkoutsAlert ||
+        workoutManager.showProcessingRemoteDataLoading ||
+        workoutManager.isProcessingMapImages
     }
     
     @ViewBuilder
     func sectionHeader() -> some View {
-        if filterManager.isFilterActive || workoutManager.showUpdatingRemoteLocationDataLoading || workoutManager.showNoWorkoutsAlert {
+        if showHeader {
             VStack(spacing: 0) {
-                if workoutManager.showUpdatingRemoteLocationDataLoading {
-                    ProcessingLocationView()
+                if workoutManager.showProcessingRemoteDataLoading  || workoutManager.isProcessingMapImages {
+                    ProcessingWorkoutDataView()
                 }
                 
                 if workoutManager.showNoWorkoutsAlert {
@@ -266,7 +257,7 @@ struct WorkoutsContentView: View {
     
     @ViewBuilder
     func processOverlay() -> some View {
-        if workoutManager.showProcessingRemoteDataLoading || filterManager.isProcessingActions {
+        if filterManager.isProcessingActions {
             HUDView()
         }
     }
@@ -275,7 +266,7 @@ struct WorkoutsContentView: View {
 extension WorkoutsContentView {
     
     var isAddDisabled: Bool {
-        !workoutManager.isAuthorized || workoutManager.isProcessing
+        !workoutManager.isAuthorized || workoutManager.isProcessingRemoteData
     }
         
     func refreshFilter() {
@@ -295,10 +286,36 @@ extension WorkoutsContentView {
         refreshFilter()
     }
     
+    func refreshFilterOnReceive(_ notification: Notification) {
+        refreshFilter()
+    }
+    
+    func refreshAllWorkoutsOnReceive(_ notification: Notification) {
+        DispatchQueue.main.async {
+            workoutManager.storage.refreshAllWorkouts()
+        }
+    }
+    
 }
 
+// MARK: Publishers
+
+extension WorkoutsContentView {
+    
+    var duplicatesPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: .didFinishProcessingDuplicates)
+    }
+    
+    var filterPublisher: NotificationCenter.Publisher {
+        NotificationCenter.default.publisher(for: .refreshWorkoutsFilter)
+    }
+    
+}
+
+// MARK: - Previews
+
 struct WorkoutsView_Previews: PreviewProvider {
-    static var viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static var viewContext = WorkoutsProvider.preview.container.viewContext
     static var workoutManager: WorkoutManager = {
         let manager = WorkoutManagerPreview.manager(context: viewContext)
         //manager.state = .notAvailable

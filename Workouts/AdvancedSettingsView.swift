@@ -10,35 +10,69 @@ import CoreData
 
 struct AdvancedSettingsView: View {
     enum ActiveAlert: Identifiable {
-        case regenerateWorkouts, resetCachedImages
+        case regenerateWorkouts
+        case resetHeartRateZones
+        case regenerateWorkoutImages
         var id: Int { hashValue }
     }
     
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var workoutManager: WorkoutManager
+    private let provider = HealthProvider.shared
     
     @State private var activeAlert: ActiveAlert?
+    @State private var maxHeartRate: Double = 0
     
     var body: some View {
         Form {
-            Section(footer: Text("Regenerate your local workout data from Apple Health.")) {
-                Button(action: { activeAlert = .regenerateWorkouts }) {
-                    Text("Reset Workout Data")
+            Section {
+                HStack {
+                    Button(action: { activeAlert = .regenerateWorkouts }) {
+                        Text("Reset Workout Data")
+                    }
+                    
+                    if workoutManager.isProcessingRemoteData {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    }
                 }
+            } footer: {
+                Text("Regenerate your local workout data from Apple Health.")
             }
             
-            Section(footer: Text("Regenerates all cached maps in Workouts feed.")) {
-                Button(action: { activeAlert = .resetCachedImages }) {
-                    Text("Reset Maps")
+            Section {
+                Button(action: { activeAlert = .resetHeartRateZones }) {
+                    Text("Reset Heart Rate Zones")
                 }
+            } footer: {
+                Text("Regenerate heart rate zones for all workouts using current settings and max heart rate of \(maxHeartRateString).")
             }
             
-            Section(footer: Text("Clear tags from existing workouts.")) {
+            Section {
+                HStack {
+                    Button(action: { activeAlert = .regenerateWorkoutImages }) {
+                        Text("Regenerate Workout Maps")
+                    }
+                    
+                    if workoutManager.isProcessingMapImages {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                    }
+                }
+            } footer: {
+                Text("Regnerate maps in workout feeds.")
+            }
+            
+            Section {
                 NavigationLink("Tags", destination: TagsResetView())
+            } footer: {
+                Text("Clear tags from existing workouts.")
             }
         }
-        .disabled(workoutManager.isProcessingRemoteData)
-        .overlay(processOverlay())
+        .onAppear(perform: load)
+        .disabled(isDisabled)
         .navigationTitle("Advanced Settings")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
@@ -47,42 +81,58 @@ struct AdvancedSettingsView: View {
                 let title = "Reset Workouts"
                 let message = "This action will reset and regenerate your local workout data from Apple Health."
                 
+                return Alert.showAlertWithTitle(title, message: message, action: regenerate)
+            case .resetHeartRateZones:
+                let title = "Reset Heart Rate Zones"
+                let message = "This action will reset and regenerate the heart rate zones for all your workouts using current settings."
+                
                 let action = {
-                    DispatchQueue.main.async {
-                        WorkoutMetadata.fixDuplicates(in: viewContext)
-                        
-                        NotificationCenter.default.post(
-                            name: .shouldFetchRemoteData,
-                            object: nil,
-                            userInfo: [ Notification.regenerateDataKey: true ]
-                        )
-                    }
+                    Synchronizer.resetHeartRateZones()
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
-            case .resetCachedImages:
-                let title = "Reset Map Images"
-                let message = "This action will reset all cached map images used in the workouts feed."
+            case .regenerateWorkoutImages:
+                let title = "Regenerate Workout Maps"
+                let message = "This action will regenerate maps for all workout feeds."
                 
                 let action = {
-                    let cache = MapImageCache.getImageCache()
-                    cache.resetAll()
+                    Synchronizer.resetImages()
                 }
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
             }
         }
     }
+}
+
+extension AdvancedSettingsView {
     
-    @ViewBuilder func processOverlay() -> some View {
-        if workoutManager.isProcessingRemoteData {
-            HUDView()
-        }
+    func load() {
+        self.maxHeartRate = Double(provider.maxHeartRate())
     }
+    
+    func regenerate() {
+        do {
+            FileManager.deleteImageCacheDirectory()
+            try FileManager.createImagesCacheDirectoryIfNeeded()
+        } catch {
+            Log.debug("error deleting images directory: \(error.localizedDescription)")
+        }
+        Synchronizer.fetchRemoteData(regenerate: true)
+    }
+    
+    var maxHeartRateString: String {
+        formattedHeartRateString(for: maxHeartRate)
+    }
+    
+    var isDisabled: Bool {
+        workoutManager.isProcessingRemoteData || workoutManager.isProcessingMapImages
+    }
+    
 }
 
 struct AdvancedSettingsView_Previews: PreviewProvider {
-    static let viewContext = StorageProvider.preview.persistentContainer.viewContext
+    static let viewContext = WorkoutsProvider.preview.container.viewContext
     
     static var previews: some View {
         NavigationView {
