@@ -44,26 +44,26 @@ struct WorkoutsTagSelectorContent: View {
                 do {
                     try manager.toggle(tag: tag)
                 } catch {
-                    activeAlert = .error(message: "Unable to update tag \(tag.name).")
+                    activeAlert = .error(message: TagStrings.updateErrorMessage(name: tag.name))
                 }
             }
             .onAppear { manager.reload() }
-            .navigationTitle("Select Tags")
+            .navigationTitle(NSLocalizedString("Select Tags", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.cancel, action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
+                    Button(ActionStrings.save, action: save)
                 }
                 
                 ToolbarItemGroup(placement: .bottomBar) {
                     Spacer()
                     
                     Button(action: { activeSheet = .add }) {
-                        Label("New Tag", systemImage: "plus.circle.fill")
+                        Label(ActionStrings.newTag, systemImage: "plus.circle.fill")
                             .labelStyle(TitleAndIconLabelStyle())
                     }
                 }
@@ -79,9 +79,9 @@ struct WorkoutsTagSelectorContent: View {
                 switch alert {
                 case .error(let message):
                     return Alert(
-                        title: Text("Update Error"),
+                        title: Text(TagStrings.updateErrorTitle),
                         message: Text(message),
-                        dismissButton: Alert.Button.default(Text("Ok"))
+                        dismissButton: Alert.Button.default(Text(ActionStrings.ok))
                     )
                 }
             }

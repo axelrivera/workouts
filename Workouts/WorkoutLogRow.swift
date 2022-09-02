@@ -51,7 +51,7 @@ struct WorkoutLogIntervalStack: View {
     @ViewBuilder
     func overlayIfNeeded() -> some View {
         if isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .offset(x: 0, y: -20.0)
                 .foregroundColor(.secondary)
         }
@@ -155,7 +155,7 @@ struct WorkoutLogItem: View {
             DetailView(workoutID: identifier)
         } else {
             StatsWorkoutsView(identifiers: day.remoteIdentifiers)
-                .navigationTitle("Workouts")
+                .navigationTitle(LabelStrings.workouts)
         }
     }
 }

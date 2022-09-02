@@ -46,7 +46,7 @@ extension WorkoutSharable {
     
     var distanceTitle: String {
         if showTitle {
-            return "Distance"
+            return LabelStrings.distance
         } else {
             return viewModel.sport.altName
         }

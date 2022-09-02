@@ -34,7 +34,13 @@ final class WorkoutsFilterManager: ObservableObject {
         case date, distance, duration
         var id: String { rawValue }
         
-        var title: String { rawValue.capitalized }
+        var title: String {
+            switch self {
+            case .date: return LabelStrings.date
+            case .distance: return LabelStrings.distance
+            case .duration: return LabelStrings.duration
+            }
+        }
     }
     
     private let nonDecimalCharacters = CharacterSet.decimalDigits.inverted
@@ -204,9 +210,9 @@ extension WorkoutsFilterManager {
 }
 
 extension WorkoutsFilterManager {
-    
+        
     var totalString: String {
-        "\(total.formatted()) Workouts"
+        WorkoutStrings.workoutCount(for: total)
     }
     
     var distanceString: String {

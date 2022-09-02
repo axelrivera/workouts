@@ -231,7 +231,7 @@ struct WorkoutMapCell_Previews: PreviewProvider {
                 }
             }
             .listStyle(PlainListStyle())
-            .navigationTitle("Workouts")
+            .navigationTitle(LabelStrings.workouts)
             .navigationBarTitleDisplayMode(.inline)
         }
     }

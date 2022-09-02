@@ -92,15 +92,15 @@ extension TagProvider {
     static func addTag(viewModel: TagEditViewModel, position: Int?, context: NSManagedObjectContext) {
         Tag.insert(into: context, viewModel: viewModel, position: position)
     }
-    
+        
     static func createDefaultTags(in context: NSManagedObjectContext) {
         context.performAndWait {
             let viewModels = [
-                Tag.addViewModel(name: "My Bike", gearType: .bike, color: .accentColor),
-                Tag.addViewModel(name: "My Shoes", gearType: .shoes, color: .ruby),
-                Tag.addViewModel(name: "Workout", gearType: .none, color: .amber),
-                Tag.addViewModel(name: "Commute", gearType: .none, color: .citrine),
-                Tag.addViewModel(name: "Long Run", gearType: .shoes, color: .emerald)
+                Tag.addViewModel(name: NSLocalizedString("My Bike", comment: "Tag name"), gearType: .bike, color: .accentColor),
+                Tag.addViewModel(name: NSLocalizedString("My Shoes", comment: "Tag name"), gearType: .shoes, color: .ruby),
+                Tag.addViewModel(name: NSLocalizedString("Workout", comment: "Tag name"), gearType: .none, color: .amber),
+                Tag.addViewModel(name: NSLocalizedString("Commute", comment: "Tag name"), gearType: .none, color: .citrine),
+                Tag.addViewModel(name: NSLocalizedString("Long Run", comment: "Tag name"), gearType: .shoes, color: .emerald)
             ]
             
             viewModels.enumerated().forEach { (index, viewModel) in

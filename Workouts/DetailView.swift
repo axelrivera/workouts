@@ -83,12 +83,12 @@ struct DetailContentView: View {
             
             VStack(alignment: .leading) {
                 HStack {
-                    Text("Tags")
+                    Text(LabelStrings.tags)
                         .font(.body)
                     
                     if !detailManager.tags.isEmpty {
                         Spacer()
-                        Button("Edit", action: {
+                        Button(ActionStrings.edit, action: {
                             AnalyticsManager.shared.updateWorkoutTags(workouts: false)
                             activeSheet = .tags
                         })
@@ -101,7 +101,7 @@ struct DetailContentView: View {
                         AnalyticsManager.shared.updateWorkoutTags(workouts: false)
                         activeSheet = .tags
                     }) {
-                        Label("Add Tags", systemImage: "tag")
+                        Label(ActionStrings.addTags, systemImage: "tag")
                             .padding([.top, .bottom], CGFloat(10.0))
                             .frame(maxWidth: .infinity)
                     }
@@ -114,7 +114,7 @@ struct DetailContentView: View {
             .buttonStyle(PlainButtonStyle())
             
             HStack {
-                Text("Source")
+                Text(LabelStrings.source)
                 Spacer()
                 Text(workout.source)
                     .foregroundColor(.secondary)
@@ -122,7 +122,7 @@ struct DetailContentView: View {
             
             if let device = workout.device {
                 HStack {
-                    Text("Device")
+                    Text(LabelStrings.device)
                     Spacer()
                     Text(device)
                         .foregroundColor(.secondary)
@@ -170,9 +170,9 @@ struct DetailContentView: View {
             switch alert {
             case .error(let message):
                 return Alert(
-                    title: Text("Workout Error"),
+                    title: Text(WorkoutStrings.errorTitle),
                     message: Text(message),
-                    dismissButton: Alert.Button.default(Text("Ok"))
+                    dismissButton: Alert.Button.default(Text(ActionStrings.ok))
                 )
             }
         }
@@ -190,7 +190,7 @@ struct DetailContentView: View {
         do {
             try detailManager.toggleFavorite()
         } catch {
-            activeAlert = .error(message: "Unable to update favorite status.")
+            activeAlert = .error(message: WorkoutStrings.errorMessageFavoriteStatus)
         }
     }
 }
@@ -200,7 +200,7 @@ extension DetailContentView {
     @ViewBuilder
     func analysisButton() -> some View {
         Button(action: { activeSheet = .analysis }) {
-            Label("Analysis", systemImage: "flame")
+            Label(LabelStrings.analysis, systemImage: "flame")
                 .padding([.top, .bottom], CGFloat(10.0))
                 .frame(maxWidth: .infinity)
         }
@@ -210,7 +210,7 @@ extension DetailContentView {
     @ViewBuilder
     func splitsButton() -> some View {
         Button(action: { activeSheet = .laps }) {
-            Label("Splits", systemImage: "arrow.2.squarepath")
+            Label(LabelStrings.splits, systemImage: "arrow.2.squarepath")
                 .padding([.top, .bottom], CGFloat(10.0))
                 .frame(maxWidth: .infinity)
             
@@ -232,7 +232,7 @@ extension DetailContentView {
     func row1View() -> some View {
         HStack {
             if workout.distance > 0 {
-                DetailGridView(text: "Distance", detail: distanceString, detailColor: .distance)
+                DetailGridView(text: LabelStrings.distance, detail: distanceString, detailColor: .distance)
             }
             DetailGridView(text: timeLabel, detail: timeString, detailColor: .time)
         }
@@ -242,13 +242,13 @@ extension DetailContentView {
     func row2View() -> some View {
         HStack {
             if sport.isCycling {
-                DetailGridView(text: "Avg Speed", detail: avgSpeedString, detailColor: .speed)
+                DetailGridView(text: LabelStrings.avgSpeed, detail: avgSpeedString, detailColor: .speed)
             } else if sport.isWalkingOrRunning {
-                DetailGridView(text: "Avg Pace", detail: avgPaceString, detailColor: .cadence)
+                DetailGridView(text: LabelStrings.avgPace, detail: avgPaceString, detailColor: .cadence)
             }
             
             if sport.isCycling {
-                DetailGridView(text: "Avg Cadence", detail: avgCadenceString, detailColor: .cadence)
+                DetailGridView(text: LabelStrings.avgCadence, detail: avgCadenceString, detailColor: .cadence)
             }
         }
     }
@@ -256,14 +256,14 @@ extension DetailContentView {
     @ViewBuilder
     func row3View() -> some View {
         HStack {
-            DetailGridView(text: "Avg Heart Rate", detail: avgHeartRateString, detailColor: .calories)
-            DetailGridView(text: "Max Heart Rate", detail: maxHeartRateString, detailColor: .calories)
+            DetailGridView(text: LabelStrings.avgHeartRate, detail: avgHeartRateString, detailColor: .calories)
+            DetailGridView(text: LabelStrings.maxHeartRate, detail: maxHeartRateString, detailColor: .calories)
         }
         
         if detailManager.detail.trimp > 0 {
             HStack {
-                DetailGridView(text: "Training Load", detail: trimpString, detailColor: .load)
-                DetailGridView(text: "Heart Rate Reserve", detail: avgHeartRateReserveString, detailColor: .heartRateReserve)
+                DetailGridView(text: LabelStrings.trainingLoad, detail: trimpString, detailColor: .load)
+                DetailGridView(text: LabelStrings.heartRateReserve, detail: avgHeartRateReserveString, detailColor: .heartRateReserve)
             }
         }
     }
@@ -271,9 +271,9 @@ extension DetailContentView {
     @ViewBuilder
     func row4View() -> some View {
         HStack {
-            DetailGridView(text: "Calories", detail: caloriesString, detailColor: .calories)
+            DetailGridView(text: LabelStrings.calories, detail: caloriesString, detailColor: .calories)
             if workout.coordinates.isPresent {
-                DetailGridView(text: "Elevation", detail: elevationString, detailColor: .elevation)
+                DetailGridView(text: LabelStrings.elevation, detail: elevationString, detailColor: .elevation)
             }
         }
     }

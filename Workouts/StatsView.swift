@@ -54,8 +54,8 @@ struct StatsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Picker("Workouts", selection: $sport.animation(.none)) {
-                        Text("All Workouts").tag(nil as Sport?)
+                    Picker(LabelStrings.workouts, selection: $sport.animation(.none)) {
+                        Text(LabelStrings.allWorkouts).tag(nil as Sport?)
                         
                         Divider()
                                             
@@ -65,7 +65,7 @@ struct StatsView: View {
                         }
                     }
                 } label: {
-                    Text(sport?.activityName ?? "All Workouts")
+                    Text(statsManager.sport?.activityName ?? LabelStrings.allWorkouts)
                 }
             }
         }
@@ -84,9 +84,9 @@ extension StatsView {
     func avgLabel(forTimeframe timeframe: StatsSummary.Timeframe) -> String {
         switch timeframe {
         case .week:
-            return String(format: "%@ /week", statsManager.avgWeeklyTotal.formatted())
+            return String(format: "%@ %@", statsManager.avgWeeklyTotal.formatted(), ProgressStrings.perWeek)
         case .month:
-            return String(format: "%@ /month", statsManager.avgMonthlyTotal.formatted())
+            return String(format: "%@ %@", statsManager.avgMonthlyTotal.formatted(), ProgressStrings.perMonth)
         default:
             return ""
         }
@@ -131,7 +131,7 @@ extension StatsView {
                         .foregroundColor(.secondary)
                     Spacer()
                     NavigationLink(destination: recentDestination(for: stats)) {
-                        Text("Show More")
+                        Text(ActionStrings.showMore)
                     }
                 }
             }
@@ -166,8 +166,8 @@ extension StatsView {
         case .yearToDate:
             StatsTimelineView(
                 source: .progress,
-                title: "Year to Date",
-                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                title: ProgressStrings.yearToDate,
+                subtitle: statsManager.sport?.activityName ?? LabelStrings.allWorkouts,
                 sport: statsManager.sport,
                 interval: statsManager.yearToDateInterval,
                 timeframe: .month,
@@ -177,8 +177,8 @@ extension StatsView {
         case .allTime:
             StatsTimelineView(
                 source: .progress,
-                title: "All Time",
-                subtitle: statsManager.sport?.activityName ?? "All Workouts",
+                title: ProgressStrings.allTime,
+                subtitle: statsManager.sport?.activityName ?? LabelStrings.allWorkouts,
                 sport: statsManager.sport,
                 interval: statsManager.allTimeDateInterval,
                 timeframe: .year,
@@ -208,7 +208,7 @@ struct StatsView_Previews: PreviewProvider {
             ScrollView {
                 StatsView()
             }
-            .navigationTitle("Progress")
+            .navigationTitle(NSLocalizedString("Progress", comment: "Screen title"))
         }
         .colorScheme(.dark)
         .environmentObject(StatsManager(context: viewContext))
@@ -228,7 +228,7 @@ struct StatsSummaryView: View {
         VStack(alignment: .leading, spacing: 15.0) {
             HStack(spacing: 20.0) {
                 StatsSummaryItem(
-                    text: "Distance",
+                    text: LabelStrings.distance,
                     detail: distance,
                     average: avgDistance,
                     detailColor: .distance,
@@ -238,7 +238,7 @@ struct StatsSummaryView: View {
                 Divider()
                 
                 StatsSummaryItem(
-                    text: "Time",
+                    text: LabelStrings.time,
                     detail: time,
                     average: avgTime,
                     detailColor: .time,
@@ -250,7 +250,7 @@ struct StatsSummaryView: View {
                         
             HStack(spacing: 20.0) {
                 StatsSummaryItem(
-                    text: "Calories",
+                    text: LabelStrings.calories,
                     detail: calories,
                     average: avgCalories,
                     detailColor: .calories,
@@ -260,7 +260,7 @@ struct StatsSummaryView: View {
                 Divider()
                 
                 StatsSummaryItem(
-                    text: "Elevation Gain",
+                    text: LabelStrings.elevationGain,
                     detail: elevation,
                     average: avgElevation,
                     detailColor: .elevation,
@@ -332,7 +332,7 @@ struct StatsSummaryItem: View {
                 HStack {
                     Text(average)
                         .foregroundColor(detailColor)
-                    Text(timeframe == .week ? "/week" : "/month")
+                    Text(timeframe == .week ? ProgressStrings.perWeek : ProgressStrings.perMonth)
                         .foregroundColor(.secondary)
                 }
                 .font(.fixedSubheadline)

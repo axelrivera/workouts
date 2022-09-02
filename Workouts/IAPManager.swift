@@ -94,17 +94,18 @@ extension IAPManager {
     
     var packageSupportString: String {
         if packagePrice == 0 {
-            return "FREE for a limited time!"
+            return NSLocalizedString("FREE for a limited time!", comment: "Text")
         } else {
-            return "All features for a one time payment!"
+            return NSLocalizedString("All features for a one time payment!", comment: "Text")
         }
     }
     
     var packageBuyString: String {
         if packagePrice == 0 {
-            return "Upgrade FREE"
+            return NSLocalizedString("Upgrade FREE", comment: "Action")
         } else {
-            return String(format: "Upgrade for %@", packagePriceString)
+            let string = NSLocalizedString( "Upgrade for %@", comment: "Action [amount]")
+            return String(format: string, packagePriceString)
         }
     }
     
@@ -253,13 +254,13 @@ extension IAPManager.PurchaseError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingProduct:
-            return "Missing Product"
+            return NSLocalizedString("Missing Product", comment: "Error")
         case .userCancelled:
-            return "User Cancelled Purchase"
+            return NSLocalizedString("User Cancelled Purchase", comment: "Error")
         case .packageNotFound:
-            return "Package Not Found"
+            return NSLocalizedString("Package Not Found", comment: "Error")
         case .invalidPurchase:
-            return "Invalid Purchase"
+            return NSLocalizedString("Invalid Purchase", comment: "Error")
         case .server(let error):
             return error.localizedDescription
         }

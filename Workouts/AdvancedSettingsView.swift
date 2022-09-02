@@ -28,7 +28,7 @@ struct AdvancedSettingsView: View {
             Section {
                 HStack {
                     Button(action: { activeAlert = .regenerateWorkouts }) {
-                        Text("Reset Workout Data")
+                        Text(NSLocalizedString("Reset All Workouts", comment: "Action"))
                     }
                     
                     if workoutManager.isProcessingRemoteData {
@@ -38,21 +38,27 @@ struct AdvancedSettingsView: View {
                     }
                 }
             } footer: {
-                Text("Regenerate your local workout data from Apple Health.")
+                Text(NSLocalizedString("Regenerate your local workout data from Apple Health.", comment: "Footer"))
             }
             
             Section {
                 Button(action: { activeAlert = .resetHeartRateZones }) {
-                    Text("Reset Heart Rate Zones")
+                    Text(NSLocalizedString("Reset Heart Rate Zones", comment: "Action"))
                 }
             } footer: {
-                Text("Regenerate heart rate zones for all workouts using current settings and max heart rate of \(maxHeartRateString).")
+                Text(
+                    String(
+                        format: "%@ %@",
+                        NSLocalizedString("Regenerate heart rate zones for all workouts using current settings and max heart rate of %@.", comment: "Text"),
+                        maxHeartRateString
+                    )
+                )
             }
             
             Section {
                 HStack {
                     Button(action: { activeAlert = .regenerateWorkoutImages }) {
-                        Text("Regenerate Workout Maps")
+                        Text(NSLocalizedString("Regenerate Workout Maps", comment: "Action"))
                     }
                     
                     if workoutManager.isProcessingMapImages {
@@ -62,29 +68,29 @@ struct AdvancedSettingsView: View {
                     }
                 }
             } footer: {
-                Text("Regnerate maps in workout feeds.")
+                Text(NSLocalizedString("Regnerate maps in workout feeds.", comment: "Footer"))
             }
             
             Section {
-                NavigationLink("Tags", destination: TagsResetView())
+                NavigationLink(LabelStrings.tags, destination: TagsResetView())
             } footer: {
-                Text("Clear tags from existing workouts.")
+                Text(NSLocalizedString("Clear tags from existing workouts.", comment: "Footer"))
             }
         }
         .onAppear(perform: load)
         .disabled(isDisabled)
-        .navigationTitle("Advanced Settings")
+        .navigationTitle(NSLocalizedString("Advanced Settings", comment: "Screen title"))
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
             switch alert {
             case .regenerateWorkouts:
-                let title = "Reset Workouts"
-                let message = "This action will reset and regenerate your local workout data from Apple Health."
+                let title = NSLocalizedString("Reset All Workouts", comment: "Alert title")
+                let message = NSLocalizedString("This action will reset and regenerate your local workout data from Apple Health.", comment: "Alert message")
                 
                 return Alert.showAlertWithTitle(title, message: message, action: regenerate)
             case .resetHeartRateZones:
-                let title = "Reset Heart Rate Zones"
-                let message = "This action will reset and regenerate the heart rate zones for all your workouts using current settings."
+                let title = NSLocalizedString("Reset Heart Rate Zones", comment: "Alert title")
+                let message = NSLocalizedString("This action will reset and regenerate the heart rate zones for all your workouts using current settings.", comment: "Alert message")
                 
                 let action = {
                     Synchronizer.resetHeartRateZones()
@@ -92,8 +98,8 @@ struct AdvancedSettingsView: View {
                 
                 return Alert.showAlertWithTitle(title, message: message, action: action)
             case .regenerateWorkoutImages:
-                let title = "Regenerate Workout Maps"
-                let message = "This action will regenerate maps for all workout feeds."
+                let title = NSLocalizedString("Regenerate Workout Maps", comment: "Alert title")
+                let message = NSLocalizedString("This action will regenerate maps for all workout feeds.", comment: "Alert message")
                 
                 let action = {
                     Synchronizer.resetImages()

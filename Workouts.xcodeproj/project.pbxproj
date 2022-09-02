@@ -225,8 +225,6 @@
 		167D2E632604E0BA00A4A299 /* String+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E612604E0BA00A4A299 /* String+Additions.swift */; };
 		167D2E9F2607E91500A4A299 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E9E2607E91500A4A299 /* FileUtils.swift */; };
 		167D2EA02607E91500A4A299 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2E9E2607E91500A4A299 /* FileUtils.swift */; };
-		167D2EA82608E1C100A4A299 /* WeightInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EA72608E1C100A4A299 /* WeightInputView.swift */; };
-		167D2EA92608E1C100A4A299 /* WeightInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2EA72608E1C100A4A299 /* WeightInputView.swift */; };
 		167D2ED8260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
 		167D2ED9260C103000A4A299 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D2ED7260C103000A4A299 /* PaywallView.swift */; };
 		167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 167D2EE626110DB300A4A299 /* StoreKit.framework */; };
@@ -427,6 +425,8 @@
 		16DE5BED272F39C6006FF803 /* TagManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DE5BEB272F39C6006FF803 /* TagManager.swift */; };
 		16DF29D9274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DF29D8274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift */; };
 		16DF29DA274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DF29D8274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift */; };
+		16DFD60728B90E7900712EAD /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DFD60628B90E7900712EAD /* Localization.swift */; };
+		16DFD60828B90E7900712EAD /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DFD60628B90E7900712EAD /* Localization.swift */; };
 		16E37B4C26E82D0D0075178E /* ShareSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E37B4B26E82D0D0075178E /* ShareSettings.swift */; };
 		16E37B4D26E82D0D0075178E /* ShareSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E37B4B26E82D0D0075178E /* ShareSettings.swift */; };
 		16E4C7D626C1FC6B00A4C0E6 /* Polyline in Frameworks */ = {isa = PBXBuildFile; productRef = 16E4C7D526C1FC6B00A4C0E6 /* Polyline */; };
@@ -588,7 +588,6 @@
 		167D0BA526E25D4F00055D54 /* StatsWorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsWorkoutsView.swift; sourceTree = "<group>"; };
 		167D2E612604E0BA00A4A299 /* String+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Additions.swift"; sourceTree = "<group>"; };
 		167D2E9E2607E91500A4A299 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
-		167D2EA72608E1C100A4A299 /* WeightInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightInputView.swift; sourceTree = "<group>"; };
 		167D2ED7260C103000A4A299 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		167D2EE626110DB300A4A299 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		167D2EEB2611104800A4A299 /* IAPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPManager.swift; sourceTree = "<group>"; };
@@ -688,6 +687,7 @@
 		16D861EB2715D6D800C09AC5 /* HealthOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthOnboarding.swift; sourceTree = "<group>"; };
 		16DE5BEB272F39C6006FF803 /* TagManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagManager.swift; sourceTree = "<group>"; };
 		16DF29D8274BD6D800AE9CC5 /* WorkoutsTagSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsTagSelectorView.swift; sourceTree = "<group>"; };
+		16DFD60628B90E7900712EAD /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		16E37B4B26E82D0D0075178E /* ShareSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSettings.swift; sourceTree = "<group>"; };
 		16E4C7D926C2042A00A4C0E6 /* WorkoutInterval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutInterval.swift; sourceTree = "<group>"; };
 		16E4C7DC26C204CA00A4C0E6 /* HealthProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthProvider.swift; sourceTree = "<group>"; };
@@ -805,6 +805,7 @@
 				1645B92F25B3510A00B04478 /* Model + Data */,
 				1645B93725B3533600B04478 /* Services */,
 				1645B93025B3511800B04478 /* Views */,
+				16DFD60528B90E4900712EAD /* Localization */,
 				164D0AC0266096A2000A56AD /* Core Data */,
 				1645B93125B3514000B04478 /* Utilities */,
 				1645B93225B3515500B04478 /* Supporting Files */,
@@ -970,7 +971,6 @@
 			children = (
 				16240566273B2B3E00FC4864 /* Tags */,
 				16864BE22685EA350005E7D8 /* Heart Rate */,
-				16864BE32685EA550005E7D8 /* Weight */,
 				1645B91925B350BB00B04478 /* SettingsView.swift */,
 				166A39B62696495E00413F71 /* AdvancedSettingsView.swift */,
 			);
@@ -1221,14 +1221,6 @@
 			name = "Heart Rate";
 			sourceTree = "<group>";
 		};
-		16864BE32685EA550005E7D8 /* Weight */ = {
-			isa = PBXGroup;
-			children = (
-				167D2EA72608E1C100A4A299 /* WeightInputView.swift */,
-			);
-			name = Weight;
-			sourceTree = "<group>";
-		};
 		1694BE9C2773CFD300E76D82 /* Tags */ = {
 			isa = PBXGroup;
 			children = (
@@ -1344,6 +1336,14 @@
 				16CCDBA3272E042600C75BD4 /* TagsView.swift */,
 			);
 			name = Tags;
+			sourceTree = "<group>";
+		};
+		16DFD60528B90E4900712EAD /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				16DFD60628B90E7900712EAD /* Localization.swift */,
+			);
+			name = Localization;
 			sourceTree = "<group>";
 		};
 		16E759E825BB9B60007E6FE6 /* WorkoutsTests */ = {
@@ -1544,7 +1544,6 @@
 				167B75D527998E2600C20049 /* UIImage+Filter.swift in Sources */,
 				16FB84D825F80C1E00CF22ED /* LineChart.swift in Sources */,
 				165D6493261962390015744C /* SystemUtils.swift in Sources */,
-				167D2EA92608E1C100A4A299 /* WeightInputView.swift in Sources */,
 				16CA68E726B050360056C1BA /* WorkoutLogUtils.swift in Sources */,
 				160BB06E25DD61700059E493 /* UTType+Additions.swift in Sources */,
 				160B652A28721F1600C265A9 /* WorkoutProcessor.swift in Sources */,
@@ -1588,6 +1587,7 @@
 				160BB07725DD61700059E493 /* TimePicker.swift in Sources */,
 				1694A51D2733263F00DEAD8B /* MetadataProvider.swift in Sources */,
 				160BB07825DD61700059E493 /* MKCoordinateRegion+Additions.swift in Sources */,
+				16DFD60828B90E7900712EAD /* Localization.swift in Sources */,
 				166973FC289891CF00D1942C /* WorkoutImageProvider.swift in Sources */,
 				16864BCC268363C80005E7D8 /* HRZonesView.swift in Sources */,
 				168C203426DD09210095CC3B /* MKMapView+Additions.swift in Sources */,
@@ -1759,7 +1759,6 @@
 				167B75D427998E2600C20049 /* UIImage+Filter.swift in Sources */,
 				16FB84D725F80C1E00CF22ED /* LineChart.swift in Sources */,
 				165D6492261962390015744C /* SystemUtils.swift in Sources */,
-				167D2EA82608E1C100A4A299 /* WeightInputView.swift in Sources */,
 				16CA68E626B050360056C1BA /* WorkoutLogUtils.swift in Sources */,
 				1645B92225B350BB00B04478 /* UTType+Additions.swift in Sources */,
 				160B652928721F1600C265A9 /* WorkoutProcessor.swift in Sources */,
@@ -1803,6 +1802,7 @@
 				1645B94925B3669E00B04478 /* TimePicker.swift in Sources */,
 				1694A51C2733263F00DEAD8B /* MetadataProvider.swift in Sources */,
 				16A065EC25C3715300019096 /* MKCoordinateRegion+Additions.swift in Sources */,
+				16DFD60728B90E7900712EAD /* Localization.swift in Sources */,
 				166973FB289891CF00D1942C /* WorkoutImageProvider.swift in Sources */,
 				16864BCB268363C80005E7D8 /* HRZonesView.swift in Sources */,
 				168C203326DD09210095CC3B /* MKMapView+Additions.swift in Sources */,
@@ -2003,11 +2003,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MARKETING_VERSION = 2.3;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2032,11 +2034,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MARKETING_VERSION = 2.3;
 				OTHER_SWIFT_FLAGS = "-D DEVELOPMENT_BUILD";
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.WorkoutsDev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2096,11 +2100,13 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "";
 			};
@@ -2153,10 +2159,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LOCALIZED_STRING_SWIFTUI_SUPPORT = NO;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "";

@@ -75,9 +75,9 @@ extension WorkoutDetailViewModel {
     var shouldUseMovingTime: Bool {
         movingTime < duration
     }
-    
+        
     var totalTimeLabel: String {
-        shouldUseMovingTime ? "Moving Time" : "Time"
+        shouldUseMovingTime ? LabelStrings.movingTime : LabelStrings.time
     }
     
     var totalTime: Double {
@@ -87,15 +87,15 @@ extension WorkoutDetailViewModel {
     var pausedTime: Double {
         duration - movingTime
     }
-    
+        
     var detailTitle: String {
         switch sport {
         case .cycling:
-            return "Ride"
+            return LabelStrings.ride
         case .running:
-            return "Run"
+            return LabelStrings.run
         case .walking:
-            return "Walk"
+            return LabelStrings.walk
         default:
             return ""
         }

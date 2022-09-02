@@ -18,13 +18,13 @@ extension TagManagerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .maxReached:
-            return "Maximum number of tags reached."
+            return NSLocalizedString("Maximum number of tags reached.", comment: "Tag error")
         case .notUnique:
-            return "There's a tag with the same name."
+            return NSLocalizedString("There's a tag with the same name.", comment: "Tag error")
         case .notFound:
-            return "Workout not found."
+            return NSLocalizedString("Workout not found.", comment: "Tag error")
         case .missingIdentifier:
-            return "Missing workout identifier."
+            return NSLocalizedString("Missing workout identifier.", comment: "Tag error")
         }
     }
 }
@@ -143,12 +143,7 @@ extension TagManager {
         
         try context.performAndWait {
             if updateName {
-                let newName = String(
-                    format: "%@ - Restored %@",
-                    tag.name,
-                    Date().formatted(date: .numeric, time: .standard)
-                )
-                tag.name = newName
+                tag.name = TagStrings.restoreMessage(name: tag.name, date: Date())
             }
             
             tag.restoreTag()

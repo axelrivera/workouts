@@ -44,7 +44,7 @@ struct PaywallView: View {
                 .frame(width: 50.0, height: 50.0)
 
             VStack {
-                Text("Better Workouts Pro")
+                Text(NSLocalizedString("Better Workouts Pro", comment: "Label"))
                     .font(.fixedTitle)
 
                 Text(purchaseManager.packageSupportString)
@@ -67,7 +67,7 @@ struct PaywallView: View {
             .disabled(isProcessing)
 
             Button(action: restore) {
-                Text("Restore Purchases")
+                Text(NSLocalizedString("Restore Purchases", comment: "Action"))
                     .font(.fixedBody)
                     .underline()
             }
@@ -84,7 +84,7 @@ struct PaywallView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section(header: headerView()) {
-                        Text("Upgrade to unlock all these PRO features.")
+                        Text(NSLocalizedString("Upgrade to unlock all these PRO features.", comment: "Text"))
                             .font(.fixedHeadline)
                             .foregroundColor(.orange)
                             .multilineTextAlignment(.center)
@@ -118,16 +118,16 @@ struct PaywallView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Not Now", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(NSLocalizedString("Not Now", comment: "Action"), action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
             .alert(item: $activeAlert) { alert in
                 switch alert {
                 case .error(let message):
                     return Alert(
-                        title: Text("Purchase Error"),
+                        title: Text(NSLocalizedString("Purchase Error", comment: "Alert title")),
                         message: Text(message),
-                        dismissButton: Alert.Button.cancel(Text("Ok"))
+                        dismissButton: Alert.Button.cancel(Text(ActionStrings.ok))
                     )
                 }
             }

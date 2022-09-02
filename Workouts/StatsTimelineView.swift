@@ -120,7 +120,7 @@ struct StatsTimelineContentView: View {
     @ViewBuilder
     func emptyOverlay() -> some View {
         if manager.stats.isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .foregroundColor(.secondary)
         }
     }

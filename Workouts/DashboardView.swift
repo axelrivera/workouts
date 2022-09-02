@@ -44,19 +44,23 @@ struct DashboardView: View {
             ScrollView {
                 Group {
                     LazyVGrid(columns: metricColumns) {
-                        Section(header: sectionHeader(metricHeaderString, showButton: true)) {
+                        Section {
                             ForEach(manager.metrics, id: \.self) { viewModel in
                                 metricView(viewModel: viewModel)
                             }
+                        } header: {
+                            sectionHeader(metricHeaderString, showButton: true)
                         }
                     }
                     
                     if manager.activities.isPresent {
                         LazyVGrid(columns: activityColumns) {
-                            Section(header: sectionHeader("Workout Summary", showButton: false)) {
+                            Section {
                                 ForEach(manager.activities, id: \.self) { viewModel in
                                     activityView(viewModel: viewModel)
                                 }
+                            } header: {
+                                sectionHeader(LabelStrings.workoutSummary, showButton: false)
                             }
                         }
                     }
@@ -126,7 +130,7 @@ extension DashboardView {
             VStack(spacing: CGFloat(10)) {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                Text("LOADING")
+                Text(LabelStrings.loadingCapitalized)
                     .font(.caption)
             }
         }
@@ -224,7 +228,7 @@ extension DashboardView {
     @ViewBuilder
     func emptyMetrics() -> some View {
         if manager.showEmptyMetrics {
-            Text("No Metrics")
+            Text(LabelStrings.noMetrics)
                 .foregroundColor(.secondary)
         }
     }
@@ -233,7 +237,7 @@ extension DashboardView {
         if let image = manager.image {
             return AnyView(ImageActivitySheet(image: image, imageType: .png, imageName: imageName))
         } else {
-            return AnyView(Text("Image Missing"))
+            return AnyView(Text(LabelStrings.imageMissing))
         }
     }
     

@@ -25,8 +25,8 @@ extension PaywallItem {
         PaywallItem(
             imageName: "calendar",
             imageColor: .accentColor,
-            title: "Training Calendar",
-            description: "Compare your weekly workouts relative to each other by distance or time."
+            title: NSLocalizedString("Training Calendar", comment: "Paywall item label"),
+            description: NSLocalizedString("Compare your weekly workouts relative to each other by distance or time.", comment: "Paywall item label")
         )
     }
     
@@ -34,8 +34,8 @@ extension PaywallItem {
         PaywallItem(
             imageName: "timer",
             imageColor: .orange,
-            title: "Interactive Splits",
-            description: "Analyze your splits using multiple distance intervals."
+            title: NSLocalizedString("Interactive Splits", comment: "Paywall item label"),
+            description: NSLocalizedString("Analyze your splits using multiple distance intervals.", comment: "Paywall item label")
         )
     }
     
@@ -43,8 +43,8 @@ extension PaywallItem {
         PaywallItem(
             imageName: "sum",
             imageColor: .purple,
-            title: "Additional Metrics",
-            description: "Analyze your metrics using multiple time frames in Tags and Progress sections."
+            title: NSLocalizedString("Additional Metrics", comment: "Paywall item label"),
+            description: NSLocalizedString("Analyze your metrics using multiple time frames in Tags and Progress sections.", comment: "Paywall item label")
         )
     }
     
@@ -52,8 +52,8 @@ extension PaywallItem {
         PaywallItem(
             imageName: "chart.line.uptrend.xyaxis",
             imageColor: .green,
-            title: "Progress Charts",
-            description: "Keep track of your progress using weekly and monthly charts."
+            title: NSLocalizedString("Progress Charts", comment: "Paywall item label"),
+            description: NSLocalizedString("Keep track of your progress using weekly and monthly charts.", comment: "Paywall item label")
         )
     }
     
@@ -61,8 +61,8 @@ extension PaywallItem {
         PaywallItem(
             imageName: "star.fill",
             imageColor: .orange,
-            title: "Support Indie Work",
-            description: "Purchasing supports current and future development of Better Workouts."
+            title: NSLocalizedString("Support Indie Work", comment: "Paywall item label"),
+            description: NSLocalizedString("Purchasing supports current and future development of Better Workouts.", comment: "Paywall item label")
         )
     }
     

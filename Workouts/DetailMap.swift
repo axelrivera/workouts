@@ -55,13 +55,13 @@ extension DetailMap {
         
         if let coordinate = points.first {
             let start = WorkoutAnnotation(annotationType: .start, coordinate: coordinate)
-            start.title = "Start"
+            start.title = LabelStrings.start
             view.addAnnotation(start)
         }
         
         if let coordinate = points.last, points.count > 1 {
             let end = WorkoutAnnotation(annotationType: .end, coordinate: coordinate)
-            end.title = "End"
+            end.title = LabelStrings.end
             view.addAnnotation(end)
         }
     }

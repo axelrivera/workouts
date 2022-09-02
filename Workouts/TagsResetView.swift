@@ -18,7 +18,7 @@ struct TagsResetView: View {
 
 struct TagsResetContentView: View {
     enum ActiveAlert: Hashable, Identifiable {
-        case allConformation
+        case allConfirmation
         case tagConfirmation(tag: Tag)
         var id: Self { self }
     }
@@ -28,46 +28,52 @@ struct TagsResetContentView: View {
     
     var body: some View {
         List {
-            Section(footer: Text("Clears all tag assignments for all workouts.")) {
-                Button("Reset All Tags", role: .destructive, action: { activeAlert = .allConformation })
+            Section {
+                Button(ActionStrings.resetAllTags, role: .destructive, action: { activeAlert = .allConfirmation })
                     .disabled(manager.isProcessing)
+            } footer: {
+                Text(TagStrings.resetAllTagsFooter)
             }
             
             if manager.tags.isPresent {
-                Section(header: Text("Active Tags")) {
+                Section {
                     ForEach(manager.tags, id: \.uuid) { tag in
                         row(for: tag)
                     }
+                } header: {
+                    Text(LabelStrings.activeTags)
                 }
             }
             
             if manager.archived.isPresent {
-                Section(header: Text("Archived Tags")) {
+                Section {
                     ForEach(manager.archived, id: \.uuid) { tag in
                         row(for: tag)
                     }
+                } header: {
+                    Text(LabelStrings.archivedTags)
                 }
             }
         }
         .listStyle(InsetGroupedListStyle())
         .overlay(processOverlay())
         .onAppear { manager.reload() }
-        .navigationTitle("Reset Tags")
+        .navigationTitle(NSLocalizedString("Reset Tags", comment: "Screen title"))
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $activeAlert) { alert in
             switch alert {
-            case .allConformation:
+            case .allConfirmation:
                 return Alert(
-                    title: Text("Are You Sure?"),
-                    message: Text("Do you want to reset tag assignements for all workouts? This will clear tags for all existing workouts and cannot be undone."),
-                    primaryButton: Alert.Button.destructive(Text("Reset All"), action: manager.resetAllTags),
+                    title: Text(TagStrings.areYouSureTitle),
+                    message: Text(TagStrings.allResetConfirmationMessage),
+                    primaryButton: Alert.Button.destructive(Text(ActionStrings.resetAll), action: manager.resetAllTags),
                     secondaryButton: Alert.Button.cancel()
                 )
             case .tagConfirmation(let tag):
                 return Alert(
-                    title: Text("Are You Sure?"),
-                    message: Text("Do you want to reset tag \(tag.name) from all workouts? This will clear tag \(tag.name) from workouts using it and cannot be undone."),
-                    primaryButton: Alert.Button.destructive(Text("Reset"), action: { manager.resetTags(for: tag.uuid) }),
+                    title: Text(TagStrings.areYouSureTitle),
+                    message: Text(TagStrings.singleResetConfirmationMessage(for: tag.name)),
+                    primaryButton: Alert.Button.destructive(Text(ActionStrings.reset), action: { manager.resetTags(for: tag.uuid) }),
                     secondaryButton: Alert.Button.cancel()
                 )
             }
@@ -79,7 +85,7 @@ struct TagsResetContentView: View {
         HStack {
             Text(tag.name)
             Spacer()
-            Button("Reset", role: .destructive, action: { activeAlert = .tagConfirmation(tag: tag) })
+            Button(ActionStrings.reset, role: .destructive, action: { activeAlert = .tagConfirmation(tag: tag) })
                 .foregroundColor(.red)
                 .disabled(manager.isProcessing)
         }

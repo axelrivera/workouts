@@ -15,8 +15,13 @@ struct WriteDeniedView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 100, height: 100, alignment: .center)
                 .foregroundColor(.red)
-            Text("Health data is not available on this device or writing permission is disabled. To enable writing permissions open the Health app. Then go to Profile, Apps, and select the Better Workouts icon.")
-                .multilineTextAlignment(.center)
+            Text(
+                NSLocalizedString(
+                    "Health data is not available on this device or writing permission is disabled. To enable writing permissions open the Health app. Then go to Profile, Apps, and select the Better Workouts icon.",
+                    comment: "Workout write denied message"
+                )
+            )
+            .multilineTextAlignment(.center)
         }
         .padding()
     }

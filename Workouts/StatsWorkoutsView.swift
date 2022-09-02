@@ -39,14 +39,14 @@ struct StatsWorkoutsView: View {
         }
         .overlay(emptyOverlay())
         .listStyle(PlainListStyle())
-        .navigationTitle(title ?? "Workouts")
+        .navigationTitle(title ?? LabelStrings.workouts)
         .navigationBarTitleDisplayMode(.inline)
     }
     
     @ViewBuilder
     func emptyOverlay() -> some View {
         if workouts.isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .foregroundColor(.secondary)
         }
     }

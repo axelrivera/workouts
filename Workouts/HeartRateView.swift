@@ -26,7 +26,7 @@ struct HeartRateView: View {
             Section {
                 HStack {
                     Label {
-                        Text("Max Heart Rate")
+                        Text(LabelStrings.maxHeartRate)
                             .foregroundColor(.secondary)
                     } icon: {
                         Image(systemName: "bolt.heart.fill")
@@ -40,7 +40,7 @@ struct HeartRateView: View {
                 
                 HStack {
                     Label {
-                        Text("Resting Heart Rate")
+                        Text(LabelStrings.restingHeartRate)
                             .foregroundColor(.secondary)
                     } icon: {
                         Image(systemName: "heart.fill")
@@ -53,11 +53,11 @@ struct HeartRateView: View {
                 }
                 
                 Button(action: { activeSheet = .edit }) {
-                    Text("Edit Heart Rate")
+                    Text(ActionStrings.editHeartRate)
                 }
             } header: {
                 HStack {
-                    Text("Heart Rate")
+                    Text(LabelStrings.heartRate)
                     Spacer()
                     Button(action: { activeSheet = .info }) {
                         Image(systemName: "info.circle")
@@ -65,7 +65,7 @@ struct HeartRateView: View {
                     }
                 }
             } footer: {
-                Text("Max and resting heart rates are used to calculate heart rate zones and training load.")
+                Text(NSLocalizedString("Max and resting heart rates are used to calculate heart rate zones and training load.", comment: "Heart rate footer"))
             }
             
             Section {
@@ -74,11 +74,11 @@ struct HeartRateView: View {
                 }
                 
                 Button(action: { activeSheet = .editZones }) {
-                    Text("Edit Heart Rate Zones")
+                    Text(ActionStrings.editHeartRateZones)
                 }
             } header: {
                 HStack {
-                    Text("Heart Rate Zones")
+                    Text(LabelStrings.heartRateZones)
                     Spacer()
                     Button(action: { activeSheet = .explanation }) {
                         Image(systemName: "info.circle")
@@ -88,7 +88,7 @@ struct HeartRateView: View {
             }
         }
         .onAppear(perform: load)
-        .navigationTitle("Heart")
+        .navigationTitle(NSLocalizedString("Heart", comment: "Screen title"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $activeSheet, onDismiss: load) { sheet in
             switch sheet {

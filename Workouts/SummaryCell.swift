@@ -110,6 +110,8 @@ struct SummaryCellProcessor {
 extension SummaryCellProcessor {
     typealias Row = SummaryCell.Row
     typealias Object = SummaryCell.Object
+    typealias Strings = Localization.Labels
+    typealias WorkoutStrings = Localization.Workouts
         
     var showSpeed: Bool {
         if let gearType = viewModel.gearValue {
@@ -134,27 +136,27 @@ extension SummaryCellProcessor {
     var activityLabel: String {
         if let gearType = viewModel.gearValue {
             switch gearType {
-            case .bike: return "Rides"
-            default: return "Workouts"
+            case .bike: return Localization.Labels.rides
+            default: return Localization.Labels.workouts
             }
         } else if let sport = viewModel.sportValue {
             switch sport {
-            case .cycling: return "Rides"
-            case .running: return "Runs"
-            case .walking: return "Walks"
-            case .hiking: return "Hikes"
-            default: return "Workouts"
+            case .cycling: return Strings.rides
+            case .running: return Strings.runs
+            case .walking: return Strings.walks
+            case .hiking: return Strings.hikes
+            default: return Strings.workouts
             }
         } else {
-            return "Workouts"
+            return Strings.workouts
         }
     }
     
     func headerObjects() -> [Object] {
         [
             .init(text: ""),
-            .init(text: "Total", color: .secondary),
-            .init(text: "Average", color: .secondary)
+            .init(text: Strings.total, color: .secondary),
+            .init(text: Strings.average, color: .secondary)
         ]
     }
     
@@ -168,7 +170,7 @@ extension SummaryCellProcessor {
     
     func distanceObjects() -> [Object] {
         [
-            .init(text: "Distance"),
+            .init(text: LabelStrings.distance),
             .init(text: active ? viewModel.distanceString : zeroDistance, color: .distance),
             .init(text: active ? viewModel.avgDistanceString : zeroDistance, color: .distance)
         ]
@@ -176,7 +178,7 @@ extension SummaryCellProcessor {
     
     func timeObjects() -> [Object] {
         [
-            .init(text: "Time"),
+            .init(text: Strings.time),
             .init(text: active ? viewModel.durationString : zeroDuration, color: .time),
             .init(text: active ? viewModel.avgDurationString : zeroDuration, color: .time)
         ]
@@ -184,7 +186,7 @@ extension SummaryCellProcessor {
     
     func calorieObjects() -> [Object] {
         [
-            .init(text: "Calories"),
+            .init(text: LabelStrings.calories),
             .init(text: active ? viewModel.caloriesString : zeroCalories, color: .calories),
             .init(text: active ? viewModel.avgCaloriesString : zeroCalories, color: .calories)
         ]
@@ -192,7 +194,7 @@ extension SummaryCellProcessor {
     
     func elevationObjects() -> [Object] {
         [
-            .init(text: "Elevation"),
+            .init(text: LabelStrings.elevation),
             .init(text: active ? viewModel.elevationString : zeroElevation, color: .elevation),
             .init(text: active ? viewModel.avgElevationString : zeroElevation, color: .elevation)
         ]
@@ -200,7 +202,7 @@ extension SummaryCellProcessor {
     
     func speedObjects() -> [Object] {
         [
-            .init(text: "Speed"),
+            .init(text: LabelStrings.speed),
             .init(text: ""),
             .init(text: active ? viewModel.avgSpeedString : zeroSpeed, color: .speed)
         ]
@@ -208,7 +210,7 @@ extension SummaryCellProcessor {
     
     func paceObjects() -> [Object] {
         [
-            .init(text: "Pace"),
+            .init(text: LabelStrings.pace),
             .init(text: ""),
             .init(text: active ? viewModel.avgPaceString : zeroPace, color: .pace)
         ]

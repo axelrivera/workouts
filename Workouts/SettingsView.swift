@@ -35,43 +35,59 @@ struct SettingsView: View {
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 
-                Section(header: Text("Application Preferences")) {
+                Section(header: Text(NSLocalizedString("Application Preferences", comment: "Label"))) {
                     NavigationLink(destination: TagsManageView()) {
-                        Label("Manage Tags", systemImage: "tag.fill")
+                        Label(NSLocalizedString("Manage Tags", comment: "Label"), systemImage: "tag.fill")
                     }
                     
                     NavigationLink(destination: HeartRateView()) {
-                        Label("Heart Rate", systemImage: "heart.fill")
+                        Label(LabelStrings.heartRate, systemImage: "heart.fill")
                     }
                     
                     NavigationLink(destination: AdvancedSettingsView()) {
-                        Label("Advanced", systemImage: "gearshape.2.fill")
+                        Label(NSLocalizedString("Advanced", comment: "Label"), systemImage: "gearshape.2.fill")
                     }
                 }
                 
-                Section(header: Text("Help Center"), footer: Text("Suggestions and feature requests are welcome.")) {
-                    Button("Frequently Asked Questions", action: { activeSheet = .website(urlString: URLStrings.faq, reader: false) })
-                    Button("Send Feedback", action: feedbackAction)
+                Section {
+                    Button(NSLocalizedString("Frequently Asked Questions", comment: "Label"), action: { activeSheet = .website(urlString: URLStrings.faq, reader: false) })
+                    Button(NSLocalizedString("Send Feedback", comment: "Label"), action: feedbackAction)
+                } header: {
+                    Text(NSLocalizedString("Help Center", comment: "Label"))
+                } footer: {
+                    Text(NSLocalizedString("Suggestions and feature requests are welcome.", comment: "Footer"))
                 }
                 
-                Section(header: Text("Better Workouts"), footer: footerView()) {
-                    Button("About Rivera Labs", action: { activeSheet = .website(urlString: URLStrings.about) })
-                    Button("Review on the App Store", action: reviewAction)
-                    Button("Share with Friends", action: { activeSheet = .share })
-                    Button("Privacy Policy", action: { activeSheet = .website(urlString: URLStrings.privacy) })
+                Section {
+                    Button(NSLocalizedString("About Rivera Labs", comment: "Action"), action: { activeSheet = .website(urlString: URLStrings.about) })
+                    Button(NSLocalizedString("Review on the App Store", comment: "Action"), action: reviewAction)
+                    Button(NSLocalizedString("Share with Friends", comment: "Action"), action: { activeSheet = .share })
+                    Button(NSLocalizedString("Privacy Policy", comment: "Action"), action: { activeSheet = .website(urlString: URLStrings.privacy) })
                     HStack {
-                        Text("Version")
+                        Text(NSLocalizedString("Version", comment: "Label"))
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(systemVersionAndBuildString())
                     }
+                } header: {
+                    Text(NSLocalizedString("Better Workouts", comment: "Label"))
+                } footer: {
+                    VStack(spacing: 5.0) {
+                        Text(NSLocalizedString("© 2021 Rivera Labs LLC", comment: "Text"))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        Text(NSLocalizedString("Made with ❤️ in Orlando, FL", comment: "Text"))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .font(.subheadline)
+                    .padding(.top, CGFloat(15.0))
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(NSLocalizedString("Settings", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
             .sheet(item: $activeSheet) { sheet in
@@ -92,33 +108,17 @@ struct SettingsView: View {
             .alert(item: $activeAlert) { alert in
                 switch alert {
                 case .emailError:
-                    let message = String(format: "Unable to send email from this device. If you need support please send me an email to %@", Emails.support)
+                    let string = NSLocalizedString("Unable to send email from this device. If you need support please send me an email to %@", comment: "Email error message")
+                    let message = String(format: string, Emails.support)
                     return Alert(
-                        title:  Text("Email Error"),
+                        title:  Text(NSLocalizedString("Email Error", comment: "Alert title")),
                         message: Text(message),
-                        dismissButton: .default(Text("Ok"))
+                        dismissButton: .default(Text(ActionStrings.ok))
                     )
                 }
             }
         }
     }
-}
-
-extension SettingsView {
-    
-    @ViewBuilder
-    func footerView() -> some View {
-        VStack(spacing: 5.0) {
-            Text("© 2021 Rivera Labs LLC")
-                .frame(maxWidth: .infinity, alignment: .center)
-            Text("Made with ❤️ in Orlando, FL")
-                .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .font(.subheadline)
-        .padding(.top, CGFloat(15.0))
-        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-    }
-    
 }
 
 extension SettingsView {

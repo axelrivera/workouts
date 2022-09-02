@@ -8,9 +8,16 @@
 import SwiftUI
 
 struct LogWeekView: View {
-    
     let distances: [CGFloat] = [0, 20, 30.5, 0, 10, 2.3, 0]
-    let days = ["M", "T", "W", "T", "F", "S", "S"]
+    let days = [
+        NSLocalizedString("M", comment: "Monday"),
+        NSLocalizedString("T", comment: "Tuesday"),
+        NSLocalizedString("W", comment: "Wednesday"),
+        NSLocalizedString("T", comment: "Thursday"),
+        NSLocalizedString("F", comment: "Friday"),
+        NSLocalizedString("S", comment: "Saturday"),
+        NSLocalizedString("S", comment: "Sunday")
+    ]
     
     var maxDistance: CGFloat {
         distances.max() ?? 0
@@ -48,47 +55,6 @@ struct LogWeekView: View {
     }
     
 }
-
-//struct CircleView: View {
-//    let distance: CGFloat
-//    let maxDistance: CGFloat
-//    let color: Color = .accentColor
-//
-//    var body: some View {
-//        GeometryReader { proxy in
-//            Color.clear
-//                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .center)
-//                .background(circle(diameter: diameter(for: proxy)))
-//
-//        }
-//    }
-//
-//    func diameter(for proxy: GeometryProxy) -> CGFloat {
-//        let factor = max(distance / maxDistance, 0.5)
-//        let width = proxy.size.width * factor
-//        return width
-//    }
-//
-//    @ViewBuilder
-//    func circle(diameter: CGFloat) -> some View {
-//        if distance > 0 {
-//            Circle()
-//                .foregroundColor(color)
-//                .overlay(
-//                    Text(String(format: "%0.1f", distance))
-//                        .font(.caption)
-//                        .foregroundColor(.white)
-//                        .minimumScaleFactor(0.01)
-//                        .padding(.all, 2)
-//                )
-//                .frame(width: diameter, height: diameter, alignment: .center)
-//        } else {
-//            Text("•")
-//                .foregroundColor(.secondary)
-//        }
-//    }
-//
-//}
 
 struct LogWeekView_Previews: PreviewProvider {
     

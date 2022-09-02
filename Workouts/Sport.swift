@@ -131,15 +131,15 @@ enum Sport: String, Identifiable, CaseIterable {
     var name: String {
         switch self {
         case .cycling:
-            return "Cycle"
+            return NSLocalizedString("Cycle", comment: "Label")
         case .running:
-            return "Run"
+            return NSLocalizedString("Run", comment: "Label")
         case .walking:
-            return "Walk"
+            return NSLocalizedString("Walk", comment: "Label")
         case .hiking:
-            return "Hike"
+            return NSLocalizedString("Hike", comment: "Label")
         case .other:
-            return "Other Activity"
+            return NSLocalizedString("Other Activity", comment: "Label")
         default:
             return activityType.name
         }
@@ -148,15 +148,15 @@ enum Sport: String, Identifiable, CaseIterable {
     var altName: String {
         switch self {
         case .cycling:
-            return "Ride"
+            return NSLocalizedString("Ride", comment: "Label")
         case .running:
-            return "Run"
+            return NSLocalizedString("Run", comment: "Label")
         case .walking:
-            return "Walk"
+            return NSLocalizedString("Walk", comment: "Label")
         case .hiking:
-            return "Hike"
+            return NSLocalizedString("Hike", comment: "Label")
         case .other:
-            return "Other Activity"
+            return NSLocalizedString("Other Activity", comment: "Label")
         default:
             return activityType.name
         }

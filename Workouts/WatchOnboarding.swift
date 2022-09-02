@@ -12,13 +12,13 @@ struct WatchOnboarding: View {
     
     var body: some View {
         VStack(spacing: 25) {
-            Text("Welcome to Better Workouts")
+            Text(NSLocalizedString("Welcome to Better Workouts", comment: "Watch onboarding title"))
                 .font(.largeTitle)
                 .multilineTextAlignment(.center)
                 .padding(.top)
             
             VStack(spacing: 40.0) {
-                Text("A simple yet powerful app\nto visualize your workouts!")
+                Text(NSLocalizedString("A simple yet powerful app\nto visualize your workouts!", comment: "Watch onboarding line 1. (Notice new line character)"))
                     .font(.title2)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -31,13 +31,13 @@ struct WatchOnboarding: View {
             }
             .frame(maxHeight: .infinity)
             
-            Text("Better Workouts reads Health data stored by the Workout app from your Apple Watch.")
+            Text(NSLocalizedString("Better Workouts reads Health data stored by the Workout app from your Apple Watch.", comment: "Watch onboardine line 2"))
                 .font(.subheadline)
                 .foregroundColor(.time)
                 .multilineTextAlignment(.center)
             
             Button(action: action) {
-                Text("Next")
+                Text(ActionStrings.next)
                     .padding()
                     .frame(maxWidth: .infinity)
             }

@@ -24,7 +24,7 @@ struct StatsContainer: View {
             ScrollView {
                 StatsView()
             }
-            .navigationTitle("Progress")
+            .navigationTitle(NSLocalizedString("Progress", comment: "Screen title"))
             .navigationViewStyle(StackNavigationViewStyle())
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

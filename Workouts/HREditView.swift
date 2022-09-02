@@ -30,14 +30,14 @@ struct HREditView: View {
             Form {
                 Section {
                     HStack {
-                        Text("Max Heart Rate")
+                        Text(LabelStrings.maxHeartRate)
                             .foregroundColor(isMaxHeartRateValid ? .secondary : .red)
                         Spacer()
                         
                         if manager.useFormulaMaxHeartRate {
                             Text(estimateHeartRateString)
                         } else {
-                            TextField("bpm", text: $maxHeartRate.animation())
+                            TextField(LabelStrings.bpm, text: $maxHeartRate.animation())
                                 .focused($focusedField, equals: .max)
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
@@ -52,22 +52,22 @@ struct HREditView: View {
                         }
                     }
                     
-                    Toggle("Use Formula", isOn: $manager.useFormulaMaxHeartRate)
+                    Toggle(HeartRateStrings.useFormula, isOn: $manager.useFormulaMaxHeartRate)
                         .foregroundColor(.secondary)
                 } footer: {
-                    Text("Estimate Max Heart Rate using formula. Date of Birth is required.")
+                    Text(NSLocalizedString("Estimate Max Heart Rate using formula. Date of Birth is required.", comment: "Heart rate footer"))
                 }
                 
                 Section {
                     HStack {
-                        Text("Resting Heart Rate")
+                        Text(LabelStrings.restingHeartRate)
                             .foregroundColor(isRestingHeartRateValid ? .secondary : .red)
                         Spacer()
                         
                         if manager.useHealthRestingHeartRate {
                             Text(recentRestingHeartRateString)
                         } else {
-                            TextField("bpm", text: $restingHeartRate.animation())
+                            TextField(LabelStrings.bpm, text: $restingHeartRate.animation())
                                 .focused($focusedField, equals: .resting)
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.numberPad)
@@ -81,53 +81,53 @@ struct HREditView: View {
                         }
                     }
                     
-                    Toggle("Use Recent Value", isOn: $manager.useHealthRestingHeartRate)
+                    Toggle(HeartRateStrings.useRecentValue, isOn: $manager.useHealthRestingHeartRate)
                         .foregroundColor(.secondary)
                 } footer: {
                     if manager.useHealthRestingHeartRate {
                         if let _ = manager.recentRestingHeartRate {
-                            Text("Using your avg resting heart rate over the past 30 days.")
+                            Text(NSLocalizedString("Using your avg resting heart rate over the past 30 days.", comment: "Heart rate footer"))
                         } else {
-                            Text("Your resting heart rate is not available on Apple Health. Better Workouts will use a default value but results are different for every individual. Please update your resting heart rate manually to get better results.")
+                            Text(NSLocalizedString("Your resting heart rate is not available on Apple Health. Better Workouts will use a default value but results are different for every individual. Please update your resting heart rate manually to get better results.", comment: "heart rate footer"))
                                 .foregroundColor(.red)
                         }
                     } else {
                         if let _ = manager.recentRestingHeartRate {
-                            Text("The avg resting heart rate over the past 30 days is \(recentRestingHeartRateString).")
+                            Text(String(format: NSLocalizedString("The avg resting heart rate over the past 30 days is %@.", comment: "Footer"), recentRestingHeartRateString))
                         }
                     }
                 }
                 
                 Section {
-                    row(text: "Date of Birth", detail: dateOfBirthString)
-                    row(text: "Sex", detail: genderString)
+                    row(text: NSLocalizedString("Date of Birth", comment: "Label"), detail: dateOfBirthString)
+                    row(text: NSLocalizedString("Sex", comment: "Label"), detail: genderString)
                 } header: {
-                    Text("Health Details")
+                    Text(NSLocalizedString("Health Details", comment: "Label"))
                 } footer: {
-                    Text("Use the Health App to configure your date of birth and gender. The values are needed to calculate your max heart rate and training load.")
+                    Text(NSLocalizedString("Use the Health App to configure your date of birth and gender. The values are needed to calculate your max heart rate and training load.", comment: "Footer"))
                 }
             }
-            .navigationTitle("Heart Rate")
+            .navigationTitle(LabelStrings.heartRate)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done", action: { focusedField = nil })
+                    Button(ActionStrings.done, action: { focusedField = nil })
                 }
                 
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: dismiss)
+                    Button(ActionStrings.cancel, action: dismiss)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
+                    Button(ActionStrings.save, action: save)
                 }
             }
             .onAppear(perform: loadValues)
-            .alert("Validation Error", isPresented: $isPresentingValidationError, actions: {
-                Button("Ok", role: .cancel) {}
+            .alert(NSLocalizedString("Validation Error", comment: "Alert title"), isPresented: $isPresentingValidationError, actions: {
+                Button(ActionStrings.ok, role: .cancel) {}
             }, message: {
-                Text("Max heart rate and resting heart rate cannot be empty.")
+                Text(NSLocalizedString("Max heart rate and resting heart rate cannot be empty.", comment: "Alert message"))
             })
         }
     }

@@ -79,7 +79,7 @@ struct WorkoutMapCard: View, WorkoutSharable {
                             metricView(text: distanceTitle, detail: distance, color: .distance)
                         }
 
-                        metricView(text: "Time", detail: viewModel.duration, color: timeColor)
+                        metricView(text: LabelStrings.time, detail: viewModel.duration, color: timeColor)
                         
                         if let text = metric1.displayTitle, let detail = viewModel.value(for: metric1) {
                             metricView(text: text, detail: detail, color: color(for: metric1))

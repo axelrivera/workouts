@@ -17,6 +17,7 @@ extension WorkoutImport {
 }
 
 extension WorkoutImport.Status: Equatable, Identifiable, Hashable {
+    typealias Strings = Localization.WorkoutImport
     
     var id: Self { self }
     
@@ -26,14 +27,14 @@ extension WorkoutImport.Status: Equatable, Identifiable, Hashable {
     
     var title: String {
         switch self {
-        case .new: return "New Workout"
-        case .duplicate: return "Duplicate Workout"
-        case .processing: return "Processing…"
-        case .processed: return "Import Complete"
-        case .notSupported: return "Sport Not Supported"
-        case .failed: return "Import Failed"
-        case .invalid: return "Invalid File"
-        case .empty: return "Missing Workout"
+        case .new: return Strings.statusNew
+        case .duplicate: return Strings.statusDuplicate
+        case .processing: return Strings.statusProcessing
+        case .processed: return Strings.statusProcessed
+        case .notSupported: return Strings.statusNotSupported
+        case .failed: return Strings.statusFailed
+        case .invalid: return Strings.statusInvalid
+        case .empty: return Strings.statusEmpty
         }
     }
     

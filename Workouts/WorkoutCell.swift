@@ -78,7 +78,7 @@ struct WorkoutCell_Previews: PreviewProvider {
                 WorkoutCell(viewModel: workout.detailViewModel)
             }
             .listStyle(PlainListStyle())
-            .navigationTitle("Workouts")
+            .navigationTitle(LabelStrings.workouts)
         }
         .preferredColorScheme(.dark)
     }

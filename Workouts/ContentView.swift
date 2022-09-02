@@ -43,23 +43,23 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selected) {
             WorkoutsView()
-                .tabItem { Label("Workouts", systemImage: "flame") }
+                .tabItem { Label(NSLocalizedString("Workouts", comment: "Tab"), systemImage: "flame") }
                 .tag(Tabs.workouts)
 
             WorkoutLogView()
-                .tabItem { Label("Calendar", systemImage: "calendar") }
+                .tabItem { Label(NSLocalizedString("Calendar", comment: "Tab"), systemImage: "calendar") }
                 .tag(Tabs.log)
 
             StatsContainer()
-                .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
+                .tabItem { Label(NSLocalizedString("Progress", comment: "Tab"), systemImage: "chart.line.uptrend.xyaxis") }
                 .tag(Tabs.stats)
             
             DashboardView()
-                .tabItem { Label("Dashboard", systemImage: "rectangle.grid.2x2") }
+                .tabItem { Label(NSLocalizedString("Dashboard", comment: "Tab"), systemImage: "rectangle.grid.2x2") }
                 .tag(Tabs.dashboard)
             
             TagsView()
-                .tabItem { Label("Tags", systemImage: "tag") }
+                .tabItem { Label(NSLocalizedString("Tags", comment: "Tab"), systemImage: "tag") }
                 .tag(Tabs.tags)
         }
         .onOpenURL { url in

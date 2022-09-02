@@ -18,7 +18,7 @@ struct StatsRecentView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section(header: headerView()) {
+                Section {
                     ForEach(summaries, id: \.self) { summary in
                         NavigationLink(destination: StatsWorkoutsView(identifiers: summary.workouts, title: summary.title)) {
                             VStack(spacing: 10.0) {
@@ -55,6 +55,8 @@ struct StatsRecentView: View {
                         .buttonStyle(WorkoutPlainButtonStyle())
                         Divider()
                     }
+                } header: {
+                    headerView()
                 }
             }
         }
@@ -67,7 +69,7 @@ struct StatsRecentView: View {
                 VStack {
                     Text(timeframe.recentTitle)
                         .font(.system(size: 13.0, weight: .semibold, design: .default))
-                    Text(sport?.activityName ?? "All Workouts")
+                    Text(sport?.activityName ?? LabelStrings.allWorkouts)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -106,7 +108,7 @@ struct StatsRecentView: View {
     @ViewBuilder
     func emptyOverlay() -> some View {
         if summaries.isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .foregroundColor(.secondary)
         }
     }
@@ -115,7 +117,7 @@ struct StatsRecentView: View {
 extension StatsRecentView {
     
     private var rangeString: String {
-        guard let start = summaries.last?.interval.start, let end = summaries.first?.interval.end else { return "No Workouts" }
+        guard let start = summaries.last?.interval.start, let end = summaries.first?.interval.end else { return LabelStrings.noWorkouts }
         return formattedRangeString(start: start, end: end)
     }
     

@@ -76,7 +76,7 @@ struct WorkoutLogView: View {
             }
             .onAppear { reload() }
             .overlay(emptyOverlay())
-            .navigationTitle("Training Calendar")
+            .navigationTitle(NSLocalizedString("Training Calendar", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -86,9 +86,9 @@ struct WorkoutLogView: View {
                 }
                 
                 ToolbarItem(placement: .principal) {
-                    Picker("Display", selection: $manager.displayType.animation()) {
+                    Picker(LabelStrings.display, selection: $manager.displayType.animation()) {
                         ForEach(LogManager.DisplayType.allCases, id: \.self) { dataType in
-                            Text(dataType.rawValue.capitalized)
+                            Text(dataType.title)
                         }
                     }
                     .onChange(of: manager.displayType, perform: { newValue in
@@ -130,7 +130,7 @@ struct WorkoutLogView: View {
     @ViewBuilder
     func emptyOverlay() -> some View {
         if manager.intervals.isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .foregroundColor(.secondary)
         }
     }

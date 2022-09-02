@@ -41,7 +41,7 @@ struct TagsManageContentView: View {
                 switch selectedSegment {
                 case .active:
                     if editMode.isEditing && manager.tags.isEmpty {
-                        Text("No Tags")
+                        Text(LabelStrings.noTags)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                     } else {
@@ -49,7 +49,7 @@ struct TagsManageContentView: View {
                     }
                 case .archived:
                     if manager.archived.isEmpty {
-                        Text("No Archived Tags")
+                        Text(LabelStrings.noArchivedTags)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                     } else {
@@ -62,7 +62,7 @@ struct TagsManageContentView: View {
         .onAppear { manager.reloadData() }
         .listStyle(InsetGroupedListStyle())
         .overlay(emptyOverlay())
-        .navigationTitle("Tags")
+        .navigationTitle(LabelStrings.tags)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -74,7 +74,7 @@ struct TagsManageContentView: View {
                 Spacer()
                 
                 Button(action: { activeSheet = .add }) {
-                    Label("New Tag", systemImage: "plus.circle.fill")
+                    Label(ActionStrings.newTag, systemImage: "plus.circle.fill")
                         .labelStyle(TitleAndIconLabelStyle())
                 }
                 .disabled(isNewButtonDisabled)
@@ -95,21 +95,21 @@ struct TagsManageContentView: View {
             switch alert {
             case .delete(let message, let offsets):
                 let deleteButton = Alert.Button.destructive(
-                    Text("Delete"),
+                    Text(ActionStrings.delete),
                     action: { delete(at: offsets) }
                 )
                 
                 return Alert(
-                    title: Text("Confirmation"),
+                    title: Text(LabelStrings.confirmation),
                     message: Text(message),
                     primaryButton: deleteButton,
                     secondaryButton: Alert.Button.cancel()
                 )
             case .error(let message):
                 return Alert(
-                    title: Text("Tag Error"),
+                    title: Text(TagStrings.errorTitle),
                     message: Text(message),
-                    dismissButton: Alert.Button.default(Text("Ok"))
+                    dismissButton: Alert.Button.default(Text(ActionStrings.ok))
                 )
             }
         }
@@ -161,7 +161,7 @@ struct TagsManageContentView: View {
     @ViewBuilder
     func header() -> some View {
         VStack(spacing: 20.0) {
-            Picker("Tags", selection: $selectedSegment) {
+            Picker(LabelStrings.tags, selection: $selectedSegment) {
                 ForEach(TagPickerSegment.allCases, id: \.self) { segment in
                     Text(segment.title)
                 }
@@ -176,7 +176,7 @@ struct TagsManageContentView: View {
     @ViewBuilder
     func editFooter() -> some View {
         if editMode == .active {
-            Text("Deleted tags cannot be restored.")
+            Text(NSLocalizedString("Deleted tags cannot be restored.", comment: "Tag error message"))
         }
     }
     
@@ -219,7 +219,7 @@ extension TagsManageContentView {
         do {
             try manager.deleteTags(atOffsets: offsets)
         } catch {
-            activeAlert = .error(message: "Error deleting tag.")
+            activeAlert = .error(message: NSLocalizedString("Error deleting tag.", comment: "Tag error message"))
         }
         
     }

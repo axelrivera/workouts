@@ -32,13 +32,13 @@ extension WorkoutDataStore.DataError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingData:
-            return "missing data"
+            return NSLocalizedString("Missing Data", comment: "Error")
         case .missingValue:
-            return "missing value"
+            return NSLocalizedString("Missing Value", comment: "Error")
         case .failure:
-            return "failure"
+            return NSLocalizedString("Failure", comment: "Error")
         case .sportNotSupported:
-            return "sport not supported"
+            return NSLocalizedString("Sport Not Supported", comment: "Error")
         case .system(let error):
             return "system error: \(error.localizedDescription)"
         }

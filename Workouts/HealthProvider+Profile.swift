@@ -33,9 +33,9 @@ enum UserGender: String {
     
     var title: String {
         switch self {
-        case .male: return "Male"
-        case .female: return "Female"
-        case .none: return "Not Available"
+        case .male: return Localization.Labels.male
+        case .female: return Localization.Labels.female
+        case .none: return Localization.Labels.notAvailable
         }
     }
 }

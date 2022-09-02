@@ -16,16 +16,16 @@ extension DashboardViewManager {
         
         var title: String {
             switch self {
-            case .today: return "Today"
-            case .yesterday: return "Yesterday"
-            case .week: return "Current Week"
-            case .prevWeek: return "Last Week"
-            case .month: return "Current Month"
-            case .prevMonth: return "Last Month"
-            case .year: return "Current Year"
-            case .prevYear: return "Last Year"
-            case .all: return "All Time"
-            case .range: return "Dates"
+            case .today: return DashboardStrings.today
+            case .yesterday: return DashboardStrings.yesterday
+            case .week: return DashboardStrings.currentWeek
+            case .prevWeek: return DashboardStrings.lastWeek
+            case .month: return DashboardStrings.currentMonth
+            case .prevMonth: return DashboardStrings.lastMonth
+            case .year: return DashboardStrings.currentYear
+            case .prevYear: return DashboardStrings.lastYear
+            case .all: return DashboardStrings.allTime
+            case .range: return DashboardStrings.dates
             }
         }
     }
@@ -75,13 +75,13 @@ extension DashboardViewManager {
         if currentInterval == .range {
             let dateInterval = currentDateInterval()
             if dateInterval.isSameDay {
-                return "Day"
+                return LabelStrings.day
             } else if dateInterval.isFullWeek {
-                return "Week"
+                return LabelStrings.week
             } else if dateInterval.isFullMonth {
-                return "Month"
+                return LabelStrings.month
             } else if dateInterval.isFullYear {
-                return "Year"
+                return LabelStrings.year
             } else {
                 return currentInterval.title
             }
@@ -103,7 +103,7 @@ extension DashboardViewManager {
             return DateFormatter.year.string(from: dateInterval.start)
         case .all:
             let start = originDate ?? appleWatchDate
-            return String(format: "Since %@", DateFormatter.medium.string(from: start))
+            return String(format: "%@ %@", LabelStrings.since, DateFormatter.medium.string(from: start))
         case .range:
             if dateInterval.isSameDay {
                 return DateFormatter.longDayShortMonthFormatter.string(from: dateInterval.start)
@@ -113,7 +113,7 @@ extension DashboardViewManager {
                 return DateFormatter.monthYear.string(from: dateInterval.start)
             } else if dateInterval.isFullYear {
                 let year = DateFormatter.year.string(from: dateInterval.start)
-                return String(format: "Year %@", year)
+                return String(format: "%@ %@", LabelStrings.year, year)
             } else {
                 return formattedRangeString(start: dateInterval.start, end: dateInterval.end)
             }
@@ -124,26 +124,26 @@ extension DashboardViewManager {
         let dateInterval = currentDateInterval()
         switch currentInterval {
         case .today, .yesterday:
-            return "Daily Stats"
+            return DashboardStrings.dailyStats
         case .week, .prevWeek:
-            return "Weekly Stats"
+            return DashboardStrings.weeklyStats
         case .month, .prevMonth:
-            return "Monthly Stats"
+            return DashboardStrings.monthlyStats
         case .year, .prevYear:
-            return "Yearly Stats"
+            return DashboardStrings.yearlyStats
         case .all:
-            return "All Time Stats"
+            return DashboardStrings.allTimeStats
         case .range:
             if dateInterval.isSameDay {
-                return "Daily Stats"
+                return DashboardStrings.dailyStats
             } else if dateInterval.isFullWeek {
-                return "Weekly Stats"
+                return DashboardStrings.weeklyStats
             } else if dateInterval.isFullMonth {
-                return "Monthly Stats"
+                return DashboardStrings.monthlyStats
             } else if dateInterval.isFullYear {
-                return "Yearly Stats"
+                return DashboardStrings.yearlyStats
             } else {
-                return "Fitness Stats"
+                return DashboardStrings.fitnessStats
             }
         }
     }

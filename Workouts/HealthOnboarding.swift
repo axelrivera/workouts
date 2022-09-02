@@ -15,7 +15,7 @@ struct HealthOnboarding: View {
     var body: some View {
         
         VStack(spacing: 25) {
-            Text("Health Permissions")
+            Text(NSLocalizedString("Health Permissions", comment: "health onboarding title"))
                 .font(.largeTitle)
                 .padding(.top)
             
@@ -30,12 +30,17 @@ struct HealthOnboarding: View {
             }
             .frame(maxHeight: .infinity)
             
-            Text("Better Workouts needs permission to read your workout data from the Apple Health app. Some profile data is also used to calculate heart rate zones and training load.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+            Text(
+                NSLocalizedString(
+                    "Better Workouts needs permission to read your workout data from the Apple Health app. Some profile data is also used to calculate heart rate zones and training load.",
+                    comment: "Health onboarding line 1"
+                )
+            )
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(.center)
             
-            Text("The data will always stay on your phone and never be uploaded to a server.")
+            Text(NSLocalizedString("The data will always stay on your phone and never be uploaded to a server.", comment: "Health onboarding line 2"))
                 .foregroundColor(.time)
                 .multilineTextAlignment(.center)
             
@@ -45,7 +50,7 @@ struct HealthOnboarding: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                     } else {
-                        Text("Request Permission")
+                        Text(NSLocalizedString("Request Permission", comment: "Action"))
                     }
                 }
                 .padding()

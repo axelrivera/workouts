@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 enum LapDistance: Identifiable, CaseIterable {
     case option1, option2, option3, option4
     var id: Int { hashValue }

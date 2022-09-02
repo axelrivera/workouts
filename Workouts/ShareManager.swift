@@ -16,7 +16,12 @@ extension ShareManager {
         case photo
         
         var id: String { rawValue }
-        var title: String { rawValue.capitalized }
+        var title: String {
+            switch self {
+            case .map: return NSLocalizedString("Map", comment: "Label")
+            case .photo: return NSLocalizedString("Photo", comment: "Label")
+            }
+        }
     }
     
     enum MapColor: String, Identifiable, CaseIterable {
@@ -24,7 +29,12 @@ extension ShareManager {
         case light
         
         var id: String { rawValue }
-        var title: String { rawValue.capitalized }
+        var title: String {
+            switch self {
+            case .dark: return NSLocalizedString("Dark", comment: "Label")
+            case .light: return NSLocalizedString("Light", comment: "Label")
+            }
+        }
     }
 }
 

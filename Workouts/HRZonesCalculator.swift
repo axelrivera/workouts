@@ -218,10 +218,12 @@ extension HRZonesCalculator {
     
     static func stringForRange(_ range: ZoneRange) -> String {
         if range.low > 0 && range.high == 0 {
-            return String(format: "%d - ∞ bpm", range.low)
+            let string = NSLocalizedString("%d - ∞ bpm", comment: "Range [low]")
+            return String(format: string, range.low)
         }
         
-        return String(format: "%d - %d bpm", range.low, range.high)
+        let string = NSLocalizedString("%d - %d bpm", comment: "Range [low], [high]")
+        return String(format: string, range.low, range.high)
     }
     
 }
@@ -247,16 +249,18 @@ extension HRZonesCalculator {
     private func percent(for value: Int) -> Int {
         Self.percentForValue(value, maxHeartRate: maxHeartRate)
     }
-    
+        
     static func stringForPercentRange(_ range: ZonePercentRange) -> String {
         let low = Double(range.low)
         let high = Double(range.high)
         
         if low > 0 && high == 0 {
-            return String(format: "> %.0f%% of HR max", low)
+            let string = NSLocalizedString("> %.0f%% of HR max", comment: "Percent range string [low]")
+            return String(format: string, low)
         }
         
-        return String(format: "%.0f - %.0f%% of HR max", low, high)
+        let string = NSLocalizedString("%.0f - %.0f%% of HR max", comment: "Percent range string [low], [high]")
+        return String(format: string, low, high)
     }
     
 }

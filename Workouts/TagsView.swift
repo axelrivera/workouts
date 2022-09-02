@@ -56,7 +56,7 @@ struct TagsContentView: View {
                         }
                         .contextMenu {
                             Button(action: { editTag(viewModel.id) }) {
-                                Label("Edit", systemImage: "pencil")
+                                Label(ActionStrings.edit, systemImage: "pencil")
                             }
                         }
                         .buttonStyle(WorkoutPlainButtonStyle())
@@ -66,7 +66,7 @@ struct TagsContentView: View {
             }
             .onAppear { reload() }
             .overlay(emptyView())
-            .navigationTitle("Tags")
+            .navigationTitle(NSLocalizedString("Tags", comment: "Screen title"))
             .onChange(of: currentSegment) { newValue in
                 reload()
             }
@@ -79,7 +79,7 @@ struct TagsContentView: View {
                 
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        Picker("State", selection: $currentSegment.animation(.none)) {
+                        Picker(LabelStrings.state, selection: $currentSegment.animation(.none)) {
                             ForEach(TagPickerSegment.allCases, id: \.self) { item in
                                 Text(item.title).tag(item)
                             }
@@ -107,9 +107,9 @@ struct TagsContentView: View {
                 switch alert {
                 case .error:
                     return Alert(
-                        title: Text("Tag Error"),
-                        message: Text("Error processing action."),
-                        dismissButton: Alert.Button.cancel(Text("Ok"))
+                        title: Text(TagStrings.errorTitle),
+                        message: Text(NSLocalizedString("Error processing action.", comment: "Alert message")),
+                        dismissButton: Alert.Button.cancel(Text(ActionStrings.ok))
                     )
                 }
             }
@@ -121,7 +121,7 @@ struct TagsContentView: View {
         if currentSegment == .active && tags.isEmpty {
             EmptyTagsView(displayType: .tags, onCreate: reload)
         } else if currentSegment == .archived && tags.isEmpty {
-            Text("No Tags")
+            Text(LabelStrings.noTags)
                 .foregroundColor(.secondary)
         }
     }
@@ -131,7 +131,7 @@ struct TagsContentView: View {
         StatsTimelineView(
             source: .tags,
             title: viewModel.title,
-            subtitle: viewModel.gearType == .none ? "Tag" : viewModel.gearType.rawValue.capitalized,
+            subtitle: viewModel.gearType == .none ? LabelStrings.tag : viewModel.gearType.title,
             sport: viewModel.gearType.displaySport,
             interval: manager.dataProvider.dateIntervalForActiveWorkouts(),
             timeframe: .year,

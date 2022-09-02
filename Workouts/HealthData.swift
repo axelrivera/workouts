@@ -30,11 +30,11 @@ extension HealthData.DataError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .dataNotAvailable:
-            return "Data Not Available"
+            return NSLocalizedString("Data Not Available", comment: "Error")
         case .failed:
-            return "Reques Failed"
+            return NSLocalizedString("Request Failed", comment: "Error")
         case .permissionDenied:
-            return "Permission Denied"
+            return NSLocalizedString("Permission Denied", comment: "Error")
         case .unknown(let error):
             return error.localizedDescription
         }

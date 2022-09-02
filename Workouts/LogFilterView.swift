@@ -22,14 +22,14 @@ struct LogFilterView: View {
         NavigationView {
             Form {
                 Section {
-                    Picker("Date", selection: $dateFilter.animation()) {
+                    Picker(LabelStrings.date, selection: $dateFilter.animation()) {
                         ForEach(DateFilter.allCases, id: \.self) { filter in
                             Text(filter.title)
                         }
                     }
                     
                     if dateFilter == .byYear {
-                        Picker("Select Year", selection: $filterYear) {
+                        Picker(LabelStrings.selectYear, selection: $filterYear) {
                             ForEach(years, id: \.self) { year in
                                 Text(year)
                             }
@@ -37,7 +37,7 @@ struct LogFilterView: View {
                     }
                 }
                 
-                Section(header: header("Workout")) {
+                Section {
                     ForEach(availableSports) { sport in
                         Button(action: { togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
@@ -47,33 +47,30 @@ struct LogFilterView: View {
                             .foregroundColor(.primary)
                         }
                     }
+                } header: {
+                    Text(LabelStrings.workout)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .padding([.top, .bottom])
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 .textCase(nil)
             }
             .onAppear(perform: load)
-            .navigationTitle("Filter")
+            .navigationTitle(LabelStrings.filter)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Reset", action: reset)
+                    Button(ActionStrings.reset, action: reset)
                         .tint(.red)
                         .disabled(isResetButtonDisabled)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
         }
-    }
-    
-    @ViewBuilder
-    func header(_ title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundColor(.primary)
-            .padding([.top, .bottom])
-            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
     
 }

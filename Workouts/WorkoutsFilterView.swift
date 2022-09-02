@@ -18,7 +18,7 @@ struct WorkoutsFilterView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: header("Workout")) {
+                Section {
                     ForEach(manager.supportedSports) { sport in
                         Button(action: { manager.togggleSport(sport) }) {
                             Label(title: { Text(sport.altName) }) {
@@ -28,36 +28,38 @@ struct WorkoutsFilterView: View {
                             .foregroundColor(.primary)
                         }
                     }
+                } header: {
+                    header(LabelStrings.workout)
                 }
                 .textCase(nil)
                 
                 Section {
                     Toggle(isOn: $manager.showFavorites) {
-                        Label("Favorites", systemImage: "heart.fill")
+                        Label(LabelStrings.favorites, systemImage: "heart.fill")
                     }
                     
                     Toggle(isOn: $manager.showDateRange.animation()) {
-                        Label("Date Range", systemImage: "calendar")
+                        Label(LabelStrings.dateRange, systemImage: "calendar")
                     }
                     
                     if manager.showDateRange {
-                        DatePicker("Start", selection: $manager.startDate, in: manager.dateRange, displayedComponents: .date)
-                        DatePicker("End", selection: $manager.endDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker(LabelStrings.start, selection: $manager.startDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker(LabelStrings.end, selection: $manager.endDate, in: manager.dateRange, displayedComponents: .date)
                     }
                     
                     VStack(alignment: .leading) {
-                        Text("Distance")
+                        Text(LabelStrings.distance)
                             .foregroundColor(.secondary)
                         HStack {
                             HStack(spacing: CGFloat(15.0)) {
-                                Text("Min")
+                                Text(LabelStrings.min)
                                 TextField(distanceUnitString(), text: $manager.minDistance)
                                     .focused($isMinDistanceShowing)
                                     .keyboardType(.numberPad)
                             }
                             
                             HStack(spacing: CGFloat(15.0)) {
-                                Text("Max")
+                                Text(LabelStrings.max)
                                 TextField(distanceUnitString(), text: $manager.maxDistance)
                                     .focused($isMaxDistanceShowing)
                                     .keyboardType(.numberPad)
@@ -68,10 +70,10 @@ struct WorkoutsFilterView: View {
                 }
                 .textCase(nil)
                 
-                Section(header: header("Location")) {
+                Section {
                     Button(action: { manager.updateWorkoutLocation(for: .indoor) }) {
                         HStack {
-                            Text("Indoor")
+                            Text(LabelStrings.indoor)
                                 .foregroundColor(.primary)
                             
                             if manager.workoutLocation == .indoor {
@@ -83,7 +85,7 @@ struct WorkoutsFilterView: View {
                     }
                     Button(action: { manager.updateWorkoutLocation(for: .outdoor) }) {
                         HStack {
-                            Text("Outdoor")
+                            Text(LabelStrings.outdoor)
                                 .foregroundColor(.primary)
                             
                             if manager.workoutLocation == .outdoor {
@@ -93,13 +95,15 @@ struct WorkoutsFilterView: View {
                             }
                         }
                     }
+                } header: {
+                    header(LabelStrings.location)
                 }
                 .textCase(nil)
                 
-                Section(header: header("Day of Week")) {
+                Section {
                     Button(action: { manager.updateDayOfWeek(for: .weekday) }) {
                         HStack {
-                            Text("Weekday")
+                            Text(LabelStrings.weekday)
                                 .foregroundColor(.primary)
                             
                             if manager.dayOfWeek == .weekday {
@@ -111,7 +115,7 @@ struct WorkoutsFilterView: View {
                     }
                     Button(action: { manager.updateDayOfWeek(for: .weekend) }) {
                         HStack {
-                            Text("Weekend")
+                            Text(LabelStrings.weekend)
                                 .foregroundColor(.primary)
                             
                             if manager.dayOfWeek == .weekend {
@@ -121,11 +125,13 @@ struct WorkoutsFilterView: View {
                             }
                         }
                     }
+                } header: {
+                    header(LabelStrings.dayOfWeek)
                 }
                 .textCase(nil)
                 
                 if manager.tags.isPresent {
-                    Section(header: header("Tags")) {
+                    Section {
                         ForEach(manager.tags) { tag in
                             Button(action: { manager.toggleTag(tag) }) {
                                 HStack(spacing: CGFloat(15.0)) {
@@ -139,11 +145,13 @@ struct WorkoutsFilterView: View {
                                 .foregroundColor(.primary)
                             }
                         }
+                    } header: {
+                        header(LabelStrings.tags)
                     }
                     .textCase(nil)
                 }
                 
-                Section(header: header("Sort By")) {
+                Section {
                     ForEach(WorkoutsFilterManager.SortBy.allCases, id: \.self) { sort in
                         Button(action: { manager.toggleSort(sort) }) {
                             HStack(spacing: CGFloat(15.0)) {
@@ -159,6 +167,8 @@ struct WorkoutsFilterView: View {
                             .foregroundColor(.primary)
                         }
                     }
+                } header: {
+                    header(LabelStrings.sortBy)
                 }
                 .textCase(nil)
             }
@@ -168,17 +178,17 @@ struct WorkoutsFilterView: View {
                 manager.reloadTags()
                 AnalyticsManager.shared.logPage(.workoutsFilter)
             }
-            .navigationTitle("Filter")
+            .navigationTitle(LabelStrings.filter)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Reset", action: resetFilter)
+                    Button(ActionStrings.reset, action: resetFilter)
                         .tint(.red)
                         .disabled(!manager.isFilterActive)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(ActionStrings.done) {
                         NotificationCenter.default.post(name: .refreshWorkoutsFilter, object: nil)
                         presentationMode.wrappedValue.dismiss()
                     }
@@ -186,11 +196,11 @@ struct WorkoutsFilterView: View {
                 
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-                    Button("Done", action: dismissKeyboard)
+                    Button(ActionStrings.done, action: dismissKeyboard)
                 }
                 
                 ToolbarItem(placement: .status) {
-                    Text("\(manager.count().formatted()) Results")
+                    Text(WorkoutStrings.resultsCount(for: manager.count()))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

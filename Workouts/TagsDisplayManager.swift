@@ -11,7 +11,13 @@ import CoreData
 enum TagPickerSegment: String, Hashable, Identifiable, CaseIterable {
     case active, archived
     var id: String { rawValue }
-    var title: String { rawValue.capitalized }
+    
+    var title: String {
+        switch self {
+        case .active: return NSLocalizedString("Active", comment: "Label")
+        case .archived: return NSLocalizedString("Archived", comment: "Label")
+        }
+    }
 }
 
 final class TagsDisplayManager: ObservableObject {
@@ -82,12 +88,7 @@ extension TagsDisplayManager {
             let updateName = totalTagsWithName > 0
             
             if updateName {
-                let newName = String(
-                    format: "%@ - Restored %@",
-                    tag.name,
-                    Date().formatted(date: .numeric, time: .standard)
-                )
-                tag.name = newName
+                tag.name = TagStrings.restoreMessage(name: tag.name, date: Date())
             }
             
             tag.restoreTag()

@@ -45,7 +45,7 @@ struct ImportContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: dismissSheet) {
-                        Text("Done")
+                        Text(ActionStrings.done)
                     }
                 }
                 
@@ -63,10 +63,10 @@ struct ImportContentView: View {
             { result in
                 processFiles(result)
             }
-            .alert("Import in Progress", isPresented: $isProcessingAlertVisible) {
-                Button("Ok", role: .cancel, action: {})
+            .alert(NSLocalizedString("Import in Progress", comment: "Alert title"), isPresented: $isProcessingAlertVisible) {
+                Button(ActionStrings.ok, role: .cancel, action: {})
             } message: {
-                Text("Please wait until import process ends.")
+                Text(NSLocalizedString("Please wait until import process ends.", comment: "Alert message"))
             }
 
         }

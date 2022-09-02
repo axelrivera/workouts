@@ -38,7 +38,7 @@ struct ShareView: View {
         NavigationView {
             VStack(spacing: 20.0) {
                 if viewModel.includesLocation {
-                    Picker("Style", selection: $shareManager.style) {
+                    Picker(LabelStrings.style, selection: $shareManager.style) {
                         ForEach(ShareStyle.allCases, id: \.self) { item in
                             Text(item.title)
                         }
@@ -59,7 +59,7 @@ struct ShareView: View {
                                 VStack(spacing: 10.0) {
                                     Image(systemName: "photo")
                                         .font(.largeTitle)
-                                    Text("No Photo")
+                                    Text(LabelStrings.noPhoto)
                                 }
                                 .foregroundColor(.white.opacity(0.7))
                             }
@@ -92,23 +92,23 @@ struct ShareView: View {
                 HStack {
                     if shareManager.style == .photo {
                         Button(action: { showingPhotoSelection = true }) {
-                            Label("Add Photo", systemImage: "photo")
+                            Label(ActionStrings.addPhoto, systemImage: "photo")
                                 .padding([.top, .bottom], CGFloat(10.0))
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
                         .confirmationDialog(
-                            "Add Background Photo",
+                            ActionStrings.addBackgroundPhoto,
                             isPresented: $showingPhotoSelection,
                             titleVisibility: .visible) {
-                                Button("Open Camera", action: { currentFullSheet = .camera })
-                                Button("Choose Photo", action: { currentSheet = .library })
-                                Button("Cancel", role: .cancel, action: {})
+                                Button(ActionStrings.openCamera, action: { currentFullSheet = .camera })
+                                Button(ActionStrings.choosePhoto, action: { currentSheet = .library })
+                                Button(ActionStrings.cancel, role: .cancel, action: {})
                         }
                     }
                     
                     Button(action: { currentSheet = .detail }) {
-                        Label("Details", systemImage: "slider.horizontal.3")
+                        Label(LabelStrings.details, systemImage: "slider.horizontal.3")
                             .padding([.top, .bottom], CGFloat(10.0))
                             .frame(maxWidth: .infinity)
                     }
@@ -119,15 +119,15 @@ struct ShareView: View {
             .task {
                 await shareManager.loadValues(viewModel: viewModel)
             }
-            .navigationTitle("Sharing Preview")
+            .navigationTitle(NSLocalizedString("Sharing Preview", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.close, action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Share", action: sheetAction)
+                    Button(ActionStrings.share, action: sheetAction)
                 }
             }
             .sheet(item: $currentSheet, onDismiss: { dismissAction() }) { sheet in
@@ -161,12 +161,12 @@ struct ShareView: View {
     func mapButtons() -> some View {
         if let region = MKCoordinateRegion(coordinates: viewModel.coordinates) {
             VStack(alignment: .leading) {
-                Text("Select Map Color")
+                Text(LabelStrings.selectMapColor)
                 
                 HStack(spacing: 20.0) {
                     Button(action: { shareManager.selectMapColor(.dark)} ) {
                         Map(coordinateRegion: .constant(region), interactionModes: [])
-                            .accessibilityHint("Dark")
+                            .accessibilityHint(LabelStrings.dark)
                             .frame(maxWidth: .infinity)
                             .cornerRadius(12.0)
                             .overlay(
@@ -178,7 +178,7 @@ struct ShareView: View {
                 
                     Button(action: { shareManager.selectMapColor(.light) }) {
                         Map(coordinateRegion: .constant(region), interactionModes: [])
-                            .accessibilityHint("Light")
+                            .accessibilityHint(LabelStrings.light)
                             .disabled(true)
                             .frame(maxWidth: .infinity)
                             .cornerRadius(12.0)
@@ -198,7 +198,7 @@ struct ShareView: View {
     func filterButtons() -> some View {
         if shareManager.filterPreviews.isPresent {
             VStack(alignment: .leading) {
-                Text("Select Filter")
+                Text(LabelStrings.selectFilter)
                 
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -245,7 +245,7 @@ extension ShareView {
         if let image = shareManager.sharedImage {
             return AnyView(ImageActivitySheet(image: image, imageType: imageType, imageName: imageName))
         } else {
-            return AnyView(Text("Image Missing"))
+            return AnyView(Text(LabelStrings.imageMissing))
         }
     }
     

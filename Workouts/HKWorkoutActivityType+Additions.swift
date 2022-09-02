@@ -14,96 +14,96 @@ extension HKWorkoutActivityType {
 
     var name: String {
         switch self {
-        case .americanFootball:             return "American Football"
-        case .archery:                      return "Archery"
-        case .australianFootball:           return "Australian Football"
-        case .badminton:                    return "Badminton"
-        case .baseball:                     return "Baseball"
-        case .basketball:                   return "Basketball"
-        case .bowling:                      return "Bowling"
-        case .boxing:                       return "Boxing"
-        case .climbing:                     return "Climbing"
-        case .crossTraining:                return "Cross Training"
-        case .curling:                      return "Curling"
-        case .cycling:                      return "Cycling"
-        case .dance:                        return "Dance"
-        case .danceInspiredTraining:        return "Dance Inspired Training"
-        case .elliptical:                   return "Elliptical"
-        case .equestrianSports:             return "Equestrian Sports"
-        case .fencing:                      return "Fencing"
-        case .fishing:                      return "Fishing"
-        case .functionalStrengthTraining:   return "Functional Strength Training"
-        case .golf:                         return "Golf"
-        case .gymnastics:                   return "Gymnastics"
-        case .handball:                     return "Handball"
-        case .hiking:                       return "Hiking"
-        case .hockey:                       return "Hockey"
-        case .hunting:                      return "Hunting"
-        case .lacrosse:                     return "Lacrosse"
-        case .martialArts:                  return "Martial Arts"
-        case .mindAndBody:                  return "Mind and Body"
-        case .mixedMetabolicCardioTraining: return "Mixed Metabolic Cardio Training"
-        case .paddleSports:                 return "Paddle Sports"
-        case .play:                         return "Play"
-        case .preparationAndRecovery:       return "Preparation and Recovery"
-        case .racquetball:                  return "Racquetball"
-        case .rowing:                       return "Rowing"
-        case .rugby:                        return "Rugby"
-        case .running:                      return "Running"
-        case .sailing:                      return "Sailing"
-        case .skatingSports:                return "Skating Sports"
-        case .snowSports:                   return "Snow Sports"
-        case .soccer:                       return "Soccer"
-        case .softball:                     return "Softball"
-        case .squash:                       return "Squash"
-        case .stairClimbing:                return "Stair Climbing"
-        case .surfingSports:                return "Surfing Sports"
-        case .swimming:                     return "Swimming"
-        case .tableTennis:                  return "Table Tennis"
-        case .tennis:                       return "Tennis"
-        case .trackAndField:                return "Track and Field"
-        case .traditionalStrengthTraining:  return "Strength Training"
-        case .volleyball:                   return "Volleyball"
-        case .walking:                      return "Walking"
-        case .waterFitness:                 return "Water Fitness"
-        case .waterPolo:                    return "Water Polo"
-        case .waterSports:                  return "Water Sports"
-        case .wrestling:                    return "Wrestling"
-        case .yoga:                         return "Yoga"
+        case .americanFootball:             return NSLocalizedString("American Football", comment: "Sport")
+        case .archery:                      return NSLocalizedString("Archery", comment: "Sport")
+        case .australianFootball:           return NSLocalizedString( "Australian Football", comment: "Sport")
+        case .badminton:                    return NSLocalizedString("Badminton", comment: "Sport")
+        case .baseball:                     return NSLocalizedString("Baseball", comment: "Sport")
+        case .basketball:                   return NSLocalizedString("Basketball", comment: "Sport")
+        case .bowling:                      return NSLocalizedString("Bowling", comment: "Sport")
+        case .boxing:                       return NSLocalizedString("Boxing", comment: "Sport")
+        case .climbing:                     return NSLocalizedString("Climbing", comment: "Sport")
+        case .crossTraining:                return NSLocalizedString("Cross Training", comment: "Sport")
+        case .curling:                      return NSLocalizedString("Curling", comment: "Sport")
+        case .cycling:                      return NSLocalizedString("Cycling", comment: "Sport")
+        case .dance:                        return NSLocalizedString("Dance", comment: "Sport")
+        case .danceInspiredTraining:        return NSLocalizedString("Dance Inspired Training", comment: "Sport")
+        case .elliptical:                   return NSLocalizedString("Elliptical", comment: "Sport")
+        case .equestrianSports:             return NSLocalizedString("Equestrian Sports", comment: "Sport")
+        case .fencing:                      return NSLocalizedString("Fencing", comment: "Sport")
+        case .fishing:                      return NSLocalizedString("Fishing", comment: "Sport")
+        case .functionalStrengthTraining:   return NSLocalizedString("Functional Strength Training", comment: "Sport")
+        case .golf:                         return NSLocalizedString("Golf", comment: "Sport")
+        case .gymnastics:                   return NSLocalizedString("Gymnastics", comment: "Sport")
+        case .handball:                     return NSLocalizedString("Handball", comment: "Sport")
+        case .hiking:                       return NSLocalizedString("Hiking", comment: "Sport")
+        case .hockey:                       return NSLocalizedString("Hockey", comment: "Sport")
+        case .hunting:                      return NSLocalizedString("Hunting", comment: "Sport")
+        case .lacrosse:                     return NSLocalizedString("Lacrosse", comment: "Sport")
+        case .martialArts:                  return NSLocalizedString("Martial Arts", comment: "Sport")
+        case .mindAndBody:                  return NSLocalizedString("Mind and Body", comment: "Sport")
+        case .mixedMetabolicCardioTraining: return NSLocalizedString("Mixed Metabolic Cardio Training", comment: "Sport")
+        case .paddleSports:                 return NSLocalizedString("Paddle Sports", comment: "Sport")
+        case .play:                         return NSLocalizedString("Play", comment: "Sport")
+        case .preparationAndRecovery:       return NSLocalizedString("Preparation and Recovery", comment: "Sport")
+        case .racquetball:                  return NSLocalizedString("Racquetball", comment: "Sport")
+        case .rowing:                       return NSLocalizedString("Rowing", comment: "Sport")
+        case .rugby:                        return NSLocalizedString("Rugby", comment: "Sport")
+        case .running:                      return NSLocalizedString("Running", comment: "Sport")
+        case .sailing:                      return NSLocalizedString("Sailing", comment: "Sport")
+        case .skatingSports:                return NSLocalizedString("Skating Sports", comment: "Sport")
+        case .snowSports:                   return NSLocalizedString("Snow Sports", comment: "Sport")
+        case .soccer:                       return NSLocalizedString("Soccer", comment: "Sport")
+        case .softball:                     return NSLocalizedString("Softball", comment: "Sport")
+        case .squash:                       return NSLocalizedString("Squash", comment: "Sport")
+        case .stairClimbing:                return NSLocalizedString("Stair Climbing", comment: "Sport")
+        case .surfingSports:                return NSLocalizedString("Surfing Sports", comment: "Sport")
+        case .swimming:                     return NSLocalizedString("Swimming", comment: "Sport")
+        case .tableTennis:                  return NSLocalizedString("Table Tennis", comment: "Sport")
+        case .tennis:                       return NSLocalizedString("Tennis", comment: "Sport")
+        case .trackAndField:                return NSLocalizedString("Track and Field", comment: "Sport")
+        case .traditionalStrengthTraining:  return NSLocalizedString("Strength Training", comment: "Sport")
+        case .volleyball:                   return NSLocalizedString("Volleyball", comment: "Sport")
+        case .walking:                      return NSLocalizedString("Walking", comment: "Sport")
+        case .waterFitness:                 return NSLocalizedString("Water Fitness", comment: "Sport")
+        case .waterPolo:                    return NSLocalizedString("Water Polo", comment: "Sport")
+        case .waterSports:                  return NSLocalizedString("Water Sports", comment: "Sport")
+        case .wrestling:                    return NSLocalizedString("Wrestling", comment: "Sport")
+        case .yoga:                         return NSLocalizedString("Yoga", comment: "Sport")
 
         // iOS 10
-        case .barre:                        return "Barre"
-        case .coreTraining:                 return "Core Training"
-        case .crossCountrySkiing:           return "Cross Country Skiing"
-        case .downhillSkiing:               return "Downhill Skiing"
-        case .flexibility:                  return "Flexibility"
-        case .highIntensityIntervalTraining:    return "HIIT"
-        case .jumpRope:                     return "Jump Rope"
-        case .kickboxing:                   return "Kickboxing"
-        case .pilates:                      return "Pilates"
-        case .snowboarding:                 return "Snowboarding"
-        case .stairs:                       return "Stairs"
-        case .stepTraining:                 return "Step Training"
-        case .wheelchairWalkPace:           return "Wheelchair Walk Pace"
-        case .wheelchairRunPace:            return "Wheelchair Run Pace"
+        case .barre:                        return NSLocalizedString("Barre", comment: "Sport")
+        case .coreTraining:                 return NSLocalizedString("Core Training", comment: "Sport")
+        case .crossCountrySkiing:           return NSLocalizedString("Cross Country Skiing", comment: "Sport")
+        case .downhillSkiing:               return NSLocalizedString("Downhill Skiing", comment: "Sport")
+        case .flexibility:                  return NSLocalizedString("Flexibility", comment: "Sport")
+        case .highIntensityIntervalTraining:    return NSLocalizedString("HIIT", comment: "Sport")
+        case .jumpRope:                     return NSLocalizedString("Jump Rope", comment: "Sport")
+        case .kickboxing:                   return NSLocalizedString("Kickboxing", comment: "Sport")
+        case .pilates:                      return NSLocalizedString("Pilates", comment: "Sport")
+        case .snowboarding:                 return NSLocalizedString("Snowboarding", comment: "Sport")
+        case .stairs:                       return NSLocalizedString("Stairs", comment: "Sport")
+        case .stepTraining:                 return NSLocalizedString("Step Training", comment: "Sport")
+        case .wheelchairWalkPace:           return NSLocalizedString("Wheelchair Walk Pace", comment: "Sport")
+        case .wheelchairRunPace:            return NSLocalizedString("Wheelchair Run Pace", comment: "Sport")
 
         // iOS 11
-        case .taiChi:                       return "Tai Chi"
-        case .mixedCardio:                  return "Mixed Cardio"
-        case .handCycling:                  return "Hand Cycling"
+        case .taiChi:                       return NSLocalizedString("Tai Chi", comment: "Sport")
+        case .mixedCardio:                  return NSLocalizedString("Mixed Cardio", comment: "Sport")
+        case .handCycling:                  return NSLocalizedString("Hand Cycling", comment: "Sport")
 
         // iOS 13
-        case .discSports:                   return "Disc Sports"
-        case .fitnessGaming:                return "Fitness Gaming"
+        case .discSports:                   return NSLocalizedString("Disc Sports", comment: "Sport")
+        case .fitnessGaming:                return NSLocalizedString("Fitness Gaming", comment: "Sport")
         
         // iOS 14
-        case .cardioDance:                  return "Cardio Dance"
-        case .socialDance:                  return "Social Dance"
-        case .pickleball:                   return "Pickleball"
-        case .cooldown:                     return "Cooldown"
+        case .cardioDance:                  return NSLocalizedString("Cardio Dance", comment: "Sport")
+        case .socialDance:                  return NSLocalizedString("Social Dance", comment: "Sport")
+        case .pickleball:                   return NSLocalizedString("Pickleball", comment: "Sport")
+        case .cooldown:                     return NSLocalizedString("Cooldown", comment: "Sport")
 
         // Catch-all
-        default:                            return "Other"
+        default:                            return NSLocalizedString("Other", comment: "Sport")
         }
     }
     

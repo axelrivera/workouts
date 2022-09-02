@@ -14,6 +14,14 @@ enum LogDisplayType: String, Identifiable, CaseIterable {
     
     var id: String { rawValue }
     
+    var title: String {
+        switch self {
+        case .distance: return NSLocalizedString("Distance", comment: "Calendar tab")
+        case .time: return NSLocalizedString("Time", comment: "Calendar tab")
+        case .load: return NSLocalizedString("Load", comment: "Calendar tab")
+        }
+    }
+    
     var color: Color {
         switch self {
         case .load:
@@ -35,11 +43,11 @@ extension LogManager {
         var title: String {
             switch self {
             case .recentMonths:
-                return "Last 12 Months"
+                return NSLocalizedString("Last 12 Months", comment: "Date filter")
             case .recentYears:
-                return "Last 5 Years"
+                return NSLocalizedString("Last 5 Years", comment: "Date filter")
             case .byYear:
-                return "By Year"
+                return NSLocalizedString( "By Year", comment: "Date filter")
             }
         }
     }
@@ -221,13 +229,13 @@ extension LogManager {
             string = dateFilter.title
         case .byYear:
             let yearString = displayYear.isEmpty ? "\(Date().year())" : displayYear
-            string = String(format: "Year %@", yearString)
+            string = String(format: "%@ %@", LabelStrings.year, yearString)
         }
         return string
     }
     
     var filterSportString: String {
-        if sports.isEmpty { return "All Workouts" }
+        if sports.isEmpty { return LabelStrings.allWorkouts }
         return sports.map({ $0.altName }).sorted().joined(separator: ", ")
     }
     

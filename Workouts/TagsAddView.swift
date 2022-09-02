@@ -18,20 +18,23 @@ struct TagsAddView: View {
         var message: String {
             switch self {
             case .archive(let name):
-                return "Do you want to archive \(name)? Archived tags will not be available for selection in workouts."
+                let string = NSLocalizedString("Do you want to archive %@? Archived tags will not be available for selection in workouts.", comment: "Tag confirmation")
+                return String(format: string, name)
             case .restore(let name):
-                return "Do you want to restore \(name)?"
+                let string = NSLocalizedString("Do you want to restore %@?", comment: "Tag confirmation")
+                return String(format: string, name)
             case .delete(let name):
-                return "Do you want to delete \(name)? Deleted tags cannot be restored."
+                let string = NSLocalizedString("Do you want to delete %@? Deleted tags cannot be restored.", comment: "Tag confirmation")
+                return String(format: string, name)
             }
         }
         
         func alertButton(action: @escaping () -> Void) -> Alert.Button {
             switch self {
             case .delete:
-                return Alert.Button.destructive(Text("Delete"), action: action)
+                return Alert.Button.destructive(Text(ActionStrings.delete), action: action)
             default:
-                return Alert.Button.default(Text("Continue"), action: action)
+                return Alert.Button.default(Text(ActionStrings.continue), action: action)
             }
         }
     }
@@ -62,7 +65,7 @@ struct TagsAddView: View {
             VStack(spacing: 0.0) {
                 Form {
                     Section {
-                        TextField("Name", text: $viewModel.name, prompt: Text("Tag Name"))
+                        TextField(LabelStrings.name, text: $viewModel.name, prompt: Text(LabelStrings.tagName))
                             .font(.title)
                             .multilineTextAlignment(.center)
                             .foregroundColor(isDisabled ? .secondary : viewModel.color)
@@ -82,10 +85,10 @@ struct TagsAddView: View {
                     
                     if viewModel.mode == .add {
                         if viewModel.availableGearTypes.isPresent {
-                            Section(footer: Text("Gear Type cannot be edited later.")) {
-                                Picker("Gear Type", selection: $viewModel.gearType) {
+                            Section(footer: Text(NSLocalizedString("Gear Type cannot be edited later.", comment: "Gear edit message"))) {
+                                Picker(LabelStrings.gearType, selection: $viewModel.gearType) {
                                     ForEach(viewModel.availableGearTypes, id: \.self) { gear in
-                                        Text(gear.rawValue.capitalized)
+                                        Text(gear.title)
                                     }
                                 }
                             }
@@ -93,16 +96,16 @@ struct TagsAddView: View {
                     } else {
                         Section {
                             HStack {
-                                Text("Gear Type")
+                                Text(LabelStrings.gearType)
                                 Spacer()
-                                Text(viewModel.gearType.rawValue.capitalized)
+                                Text(viewModel.gearType.title)
                                     .foregroundColor(.secondary)
                             }
                         }
                     }
                     
                     Section(footer: defaultValueFooter()) {
-                        Toggle("Default", isOn: $viewModel.isDefault)
+                        Toggle(LabelStrings.default, isOn: $viewModel.isDefault)
                             .foregroundColor(isDisabled ? .secondary : .primary)
                     }
                     .disabled(viewModel.isArchived)
@@ -113,14 +116,14 @@ struct TagsAddView: View {
                         HStack {
                             if viewModel.isArchived {
                                 Button(action: toggleRestore) {
-                                    Label("Restore", systemImage: "arrow.uturn.backward")
+                                    Label(ActionStrings.restore, systemImage: "arrow.uturn.backward")
                                         .frame(maxWidth: .infinity)
                                         .padding(.all, CGFloat(5.0))
                                 }
                                 .buttonStyle(.bordered)
                             } else {
                                 Button(action: toggleArchive) {
-                                    Label("Archive", systemImage: "archivebox")
+                                    Label(ActionStrings.archive, systemImage: "archivebox")
                                         .frame(maxWidth: .infinity)
                                         .padding(.all, CGFloat(5.0))
                                 }
@@ -128,7 +131,7 @@ struct TagsAddView: View {
                             }
                             
                             Button(action: toggleDelete) {
-                                Label("Delete", systemImage: "trash")
+                                Label(ActionStrings.delete, systemImage: "trash")
                                     .frame(maxWidth: .infinity)
                                     .padding(.all, CGFloat(5.0))
                             }
@@ -140,15 +143,15 @@ struct TagsAddView: View {
                 }
             }
             .interactiveDismissDisabled()
-            .navigationTitle(viewModel.mode == .add ? "New Tag" : "Edit Tag")
+            .navigationTitle(viewModel.mode == .add ? ActionStrings.newTag : ActionStrings.editTag)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.cancel, action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: saveTag)
+                    Button(ActionStrings.save, action: saveTag)
                         .disabled(viewModel.isArchived)
                 }
             }
@@ -156,16 +159,16 @@ struct TagsAddView: View {
                 switch alert {
                 case .confirmation(let confirmationType):
                     return Alert(
-                        title: Text("Confirmation"),
+                        title: Text(LabelStrings.confirmation),
                         message: Text(confirmationType.message),
                         primaryButton: confirmationType.alertButton(action: { confirmationAction(confirmationType) }),
                         secondaryButton: Alert.Button.cancel()
                     )
                 case .error(let message):
                     return Alert(
-                        title: Text("Tag Error"),
+                        title: Text(TagStrings.errorTitle),
                         message: Text(message),
-                        dismissButton: Alert.Button.default(Text("Ok"))
+                        dismissButton: Alert.Button.default(Text(ActionStrings.ok))
                     )
                 }
             }
@@ -176,9 +179,9 @@ struct TagsAddView: View {
     func defaultValueFooter() -> some View {
         switch viewModel.gearType {
         case .none:
-            Text("Default tags will be applied to all new workouts.")
+            Text(NSLocalizedString("Default tags will be applied to all new workouts.", comment: "Gear type none footer"))
         default:
-            Text("Default tags will be applied to new workouts based on gear type.")
+            Text(NSLocalizedString("Default tags will be applied to new workouts based on gear type.", comment: "Gear type footer"))
         }
     }
 }
@@ -223,7 +226,7 @@ extension TagsAddView {
         do {
             try tagManager.archiveTag(for: viewModel.uuid)
         } catch {
-            activeAlert = .error(message: "Unable to archive tag.")
+            activeAlert = .error(message: NSLocalizedString("Unable to archive tag.", comment: "Tag error"))
         }
     }
     
@@ -231,7 +234,7 @@ extension TagsAddView {
         do {
             try tagManager.restoreTag(for: viewModel.uuid)
         } catch {
-            activeAlert = .error(message: "Unable to restore tag.")
+            activeAlert = .error(message: NSLocalizedString("Unable to restore tag.", comment: "Tag error"))
         }
     }
     
@@ -239,7 +242,7 @@ extension TagsAddView {
         do {
             try tagManager.deleteTag(for: viewModel.uuid)
         } catch {
-            activeAlert = .error(message: "Unable to delete tag.")
+            activeAlert = .error(message: NSLocalizedString("Unable to delete tag.", comment: "Tag error"))
         }
     }
     

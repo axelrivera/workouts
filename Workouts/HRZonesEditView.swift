@@ -24,7 +24,7 @@ struct HRZonesEditView: View {
             Form {
                 Section {
                     HStack {
-                        Text("Max Heart Rate")
+                        Text(LabelStrings.maxHeartRate)
                         Spacer()
                         Text(manager.maxHeartRateString)
                             .foregroundColor(.secondary)
@@ -38,21 +38,23 @@ struct HRZonesEditView: View {
                     }
                 }
                 
-                Section(footer: Text("Resetting will use your Max Heart Rate to calculate new zones based on default values. You can adjust further to meet your training goals.")) {
-                    Button("Reset Zones", action: manager.autoCalculate)
+                Section {
+                    Button(NSLocalizedString("Reset Zones", comment: "Action"), action: manager.autoCalculate)
                         .accentColor(.red)
+                } footer: {
+                    Text(NSLocalizedString("Resetting will use your Max Heart Rate to calculate new zones based on default values. You can adjust further to meet your training goals.", comment: "Footer"))
                 }
             }
             .onAppear(perform: load)
-            .navigationTitle("Edit Zones")
+            .navigationTitle(NSLocalizedString("Edit Zones", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: dismiss)
+                    Button(ActionStrings.cancel, action: dismiss)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
+                    Button(ActionStrings.save, action: save)
                 }
             }
         }

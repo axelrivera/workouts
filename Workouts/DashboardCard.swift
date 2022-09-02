@@ -99,7 +99,7 @@ extension DashboardCard {
                     .frame(width: 4)
                 
                 HStack {
-                    Text("TOP WORKOUTS")
+                    Text(DashboardStrings.topWorkouts)
                         .foregroundColor(.white)
                         .bold()
                         .frame(maxWidth: .infinity, alignment: .leading)

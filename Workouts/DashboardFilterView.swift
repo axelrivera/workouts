@@ -20,7 +20,7 @@ struct DashboardFilterView: View {
         NavigationView {
             Form {
                 Section {
-                    Picker("Intervals", selection: $selected.animation()) {
+                    Picker(LabelStrings.intervals, selection: $selected.animation()) {
                         ForEach(DashboardViewManager.IntervalType.allCases, id: \.self) { interval in
                             Text(interval.title)
                         }
@@ -32,10 +32,10 @@ struct DashboardFilterView: View {
                 
                 if selected == .range {
                     Section {
-                        DatePicker("Start", selection: $startDate, in: manager.dateRange, displayedComponents: .date)
-                        DatePicker("End", selection: $endDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker(LabelStrings.start, selection: $startDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker(LabelStrings.end, selection: $endDate, in: manager.dateRange, displayedComponents: .date)
                     } header: {
-                        Text("Dates")
+                        Text(LabelStrings.dates)
                             .font(.headline)
                             .foregroundColor(.primary)
                             .padding([.top, .bottom])
@@ -48,11 +48,11 @@ struct DashboardFilterView: View {
                 load()
                 AnalyticsManager.shared.logPage(.dashboardFilter, properties: ["filter": selected.rawValue])
             }
-            .navigationTitle("Select Timeframe")
+            .navigationTitle(LabelStrings.selectTimeframe)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: dismiss)
+                    Button(ActionStrings.done, action: dismiss)
                 }
             }
         }

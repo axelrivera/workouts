@@ -25,12 +25,11 @@ struct AnalysisView: View {
         NavigationView {
             List {
                 Section {
-                    rowForText("Total Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.duration), detailColor: .time)
+                    rowForText(LabelStrings.totalTime, detail: formattedHoursMinutesSecondsDurationString(for: workout.duration), detailColor: .time)
                     
                     if workout.shouldUseMovingTime {
-                        rowForText("Moving Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.movingTime), detailColor: .time)
-                        
-                        rowForText("Paused Time", detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
+                        rowForText(LabelStrings.movingTime, detail: formattedHoursMinutesSecondsDurationString(for: workout.movingTime), detailColor: .time)
+                        rowForText(LabelStrings.pausedTime, detail: formattedHoursMinutesSecondsDurationString(for: workout.pausedTime), detailColor: .time)
                     }
                 }
                 
@@ -39,21 +38,21 @@ struct AnalysisView: View {
                         if detailManager.speedValues.isPresent {
                             chartArea(
                                 valueType: .speed,
-                                supportLabel1: "Average", supportValue1: formattedSpeedString(for: workout.avgMovingSpeed),
-                                supportLabel2: "Maximum", supportValue2: formattedSpeedString(for: workout.maxSpeed),
+                                supportLabel1: LabelStrings.average, supportValue1: formattedSpeedString(for: workout.avgMovingSpeed),
+                                supportLabel2: LabelStrings.maximum, supportValue2: formattedSpeedString(for: workout.maxSpeed),
                                 values: detailManager.speedValues, avgValue: localizedAvgSpeed,
                                 accentColor: .speed
                             )
                         } else {
-                            rowForText("Avg Speed", detail: formattedSpeedString(for: workout.avgMovingSpeed), detailColor: .speed)
+                            rowForText(LabelStrings.avgSpeed, detail: formattedSpeedString(for: workout.avgMovingSpeed), detailColor: .speed)
                             
                             if workout.maxSpeed > 0 {
-                                rowForText("Max Speed", detail: formattedSpeedString(for: workout.maxSpeed), detailColor: .speed)
+                                rowForText(LabelStrings.maxSpeed, detail: formattedSpeedString(for: workout.maxSpeed), detailColor: .speed)
                             }
                             
                         }
                     } header: {
-                        Text("Speed")
+                        Text(LabelStrings.speed)
                     }
                 }
                 
@@ -62,16 +61,16 @@ struct AnalysisView: View {
                         if detailManager.paceValues.isPresent {
                             chartArea(
                                 valueType: .pace,
-                                supportLabel1: "Average", supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
-                                supportLabel2: "Best", supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
+                                supportLabel1: LabelStrings.average, supportValue1: formattedRunningWalkingPaceString(for: workout.avgPace),
+                                supportLabel2: LabelStrings.best, supportValue2: formattedRunningWalkingPaceString(for: detailManager.bestPace),
                                 values: detailManager.paceValues, avgValue: workout.avgPace,
                                 accentColor: .pace
                             )
                         } else {
-                            rowForText("Avg Pace", detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .pace)
+                            rowForText(LabelStrings.avgPace, detail: formattedRunningWalkingPaceString(for: workout.avgPace), detailColor: .pace)
                         }
                     } header: {
-                        Text("Pace")
+                        Text(LabelStrings.pace)
                     }
                 }
                 
@@ -80,20 +79,20 @@ struct AnalysisView: View {
                         if detailManager.heartRateValues.isPresent {
                             chartArea(
                                 valueType: .heartRate,
-                                supportLabel1: "Average", supportValue1: formattedHeartRateString(for: workout.avgHeartRate),
-                                supportLabel2: "Maximum", supportValue2: formattedHeartRateString(for: workout.maxHeartRate),
+                                supportLabel1: LabelStrings.average, supportValue1: formattedHeartRateString(for: workout.avgHeartRate),
+                                supportLabel2: LabelStrings.maximum, supportValue2: formattedHeartRateString(for: workout.maxHeartRate),
                                 values: detailManager.heartRateValues, avgValue: workout.avgHeartRate,
                                 accentColor: .calories
                             )
                         } else {
-                            rowForText("Avg Heart Rate", detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
+                            rowForText(LabelStrings.avgHeartRate, detail: formattedHeartRateString(for: workout.avgHeartRate), detailColor: .calories)
                             
                             if workout.maxHeartRate > 0 {
-                                rowForText("Max Heart Rate", detail: formattedHeartRateString(for: workout.maxHeartRate), detailColor: .calories)
+                                rowForText(LabelStrings.maxHeartRate, detail: formattedHeartRateString(for: workout.maxHeartRate), detailColor: .calories)
                             }
                         }
                     } header: {
-                        Text("Heart Rate")
+                        Text(LabelStrings.heartRate)
                     }
                     
                     if detailManager.zones.isPresent {
@@ -101,7 +100,7 @@ struct AnalysisView: View {
                             HRZonesView(summaries: detailManager.zones)
                                 .padding([.top, .bottom])
                         } header: {
-                            Text("Heart Rate Zones")
+                            Text(LabelStrings.heartRateZones)
                         }
                     }
                 }
@@ -111,20 +110,20 @@ struct AnalysisView: View {
                         if detailManager.cyclingCadenceValues.isPresent {
                             chartArea(
                                 valueType: .cadence,
-                                supportLabel1: "Average", supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
-                                supportLabel2: "Maximum", supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
+                                supportLabel1: LabelStrings.average, supportValue1: formattedCyclingCadenceString(for: workout.avgCyclingCadence),
+                                supportLabel2: LabelStrings.maximum, supportValue2: formattedCyclingCadenceString(for: workout.maxCyclingCadence),
                                 values: detailManager.cyclingCadenceValues, avgValue: workout.avgCyclingCadence,
                                 accentColor: .cadence
                             )
                         } else {
-                            rowForText("Avg Cadence", detail: formattedCyclingCadenceString(for: workout.avgCyclingCadence), detailColor: .cadence)
+                            rowForText(LabelStrings.avgCadence, detail: formattedCyclingCadenceString(for: workout.avgCyclingCadence), detailColor: .cadence)
                             
                             if workout.maxCyclingCadence > 0 {
-                                rowForText("Max Cycling Cadence", detail: formattedCyclingCadenceString(for: workout.maxCyclingCadence), detailColor: .cadence)
+                                rowForText(LabelStrings.maxCadence, detail: formattedCyclingCadenceString(for: workout.maxCyclingCadence), detailColor: .cadence)
                             }
                         }
                     } header: {
-                        Text("Cadence")
+                        Text(LabelStrings.cadence)
                     }
                 }
 
@@ -133,22 +132,22 @@ struct AnalysisView: View {
                         if detailManager.includesLocation {
                             chartArea(
                                 valueType: .altitude,
-                                supportLabel1: "Minimum", supportValue1: formattedElevationString(for: detailManager.detail.minElevation),
-                                supportLabel2: "Maximum", supportValue2: formattedElevationString(for: detailManager.detail.maxElevation),
+                                supportLabel1: LabelStrings.minimum, supportValue1: formattedElevationString(for: detailManager.detail.minElevation),
+                                supportLabel2: LabelStrings.maximum, supportValue2: formattedElevationString(for: detailManager.detail.maxElevation),
                                 values: detailManager.altitudeValues, avgValue: nil,
                                 accentColor: .elevation
                             )
                         }
                         
                         if showElevationAscended {
-                            rowForText("Elevation Gain", detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
+                            rowForText(LabelStrings.elevationGain, detail: formattedElevationString(for: workout.elevationAscended), detailColor: .elevation)
                         }
                         
                         if showElevationDescended {
-                            rowForText("Elevation Loss", detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
+                            rowForText(LabelStrings.elevationLoss, detail: formattedElevationString(for: workout.elevationDescended), detailColor: .elevation)
                         }
                     } header: {
-                        Text("Elevation")
+                        Text(LabelStrings.elevation)
                     }
                 }
             }
@@ -160,7 +159,7 @@ struct AnalysisView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Text("Done")
+                        Text(ActionStrings.done)
                     }
                 }
             }

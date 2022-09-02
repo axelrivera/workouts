@@ -30,17 +30,17 @@ struct PaywallBanner: View {
                 .foregroundColor(isActive ? .red : .white)
             if isActive {
                 VStack {
-                    Text("Better Workouts Pro")
+                    Text(NSLocalizedString("Better Workouts Pro", comment: "Label"))
                         .font(isActive ? .fixedTitle2 : .fixedTitle)
-                    Text("Thank you for your support!")
+                    Text(NSLocalizedString("Thank you for your support!", comment: "Text"))
                         .font(.fixedSubheadline)
                         .foregroundColor(.secondary)
                 }
             } else {
                 VStack {
-                    Text("Better Workouts Pro")
+                    Text(NSLocalizedString("Better Workouts Pro", comment: "Label"))
                         .font(.fixedTitle)
-                    Text("All features for a one time payment!")
+                    Text(NSLocalizedString("All features for a one time payment!", comment: "Text"))
                         .font(.fixedBody)
                         .foregroundColor(.yellow)
                         .multilineTextAlignment(.center)
@@ -49,7 +49,7 @@ struct PaywallBanner: View {
                 VStack(alignment: .center) {
                     PaywallButton(action: action)
                         .buttonStyle(PlainButtonStyle())
-                    Text("Purchasing helps support future development.")
+                    Text(NSLocalizedString("Purchasing helps support future development.", comment: "Text"))
                         .font(.fixedSubheadline)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
@@ -96,7 +96,7 @@ struct PaywallButton: View {
     }
     
     var body: some View {
-        Button("Upgrade to Pro Now", action: action)
+        Button(NSLocalizedString("Upgrade to Pro Now", comment: "Action"), action: action)
             .buttonStyle(PaywallButtonStyle())
     }
     
@@ -141,7 +141,7 @@ struct PaywallLockButton: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: buttonSize, height: buttonSize, alignment: .center)
                 if showSample {
-                    Text("SAMPLE DATA")
+                    Text(NSLocalizedString("SAMPLE DATA", comment: "Label capitalized"))
                         .font(.fixedFootnote)
                         .foregroundColor(.black.opacity(0.75))
                 }

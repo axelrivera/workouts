@@ -19,13 +19,13 @@ struct ShareDetailView: View {
         NavigationView {
             Form {
                 Section {
-                    Picker("Display Metric 1", selection: $shareManager.selectedMetric1) {
+                    Picker(NSLocalizedString("Display Metric 1", comment: "Metric label"), selection: $shareManager.selectedMetric1) {
                         ForEach(allMetrics(), id: \.self) { metric in
                             Text(metric.title)
                         }
                     }
                     
-                    Picker("Display Metric 2", selection: $shareManager.selectedMetric2) {
+                    Picker(NSLocalizedString("Display Metric 2", comment: "Metric label"), selection: $shareManager.selectedMetric2) {
                         ForEach(allMetrics(), id: \.self) { metric in
                             Text(metric.title)
                         }
@@ -33,15 +33,15 @@ struct ShareDetailView: View {
                 }
                 
                 Section {
-                    Toggle("Show Title", isOn: $shareManager.showTitle)
-                    Toggle("Show Date", isOn: $shareManager.showDate)
+                    Toggle(NSLocalizedString("Show Title", comment: "Label"), isOn: $shareManager.showTitle)
+                    Toggle(NSLocalizedString("Show Date", comment: "Label"), isOn: $shareManager.showDate)
                 }
             }
-            .navigationTitle("Sharing Details")
+            .navigationTitle(NSLocalizedString("Sharing Details", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
         }

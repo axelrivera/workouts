@@ -9,6 +9,12 @@ import SwiftUI
 import CoreData
 
 struct EmptyTagsView: View {
+    struct Strings {
+        static let tags = Localization.Tags.emptyTagsMessage
+        static let selector = Localization.Tags.emptyTagsSelectorMessage
+        static let addDefaultTags = Localization.Tags.addDefaultTags
+    }
+    
     @Environment(\.managedObjectContext) var viewContext
     
     enum DisplayType {
@@ -21,9 +27,9 @@ struct EmptyTagsView: View {
     var description: String {
         switch displayType {
         case .tags:
-            return "Looks like you don't have any tags yet."
+            return Strings.tags
         case .selector:
-            return "Looks like you don't have any tags yet. Add some default values or create your own."
+            return Strings.selector
         }
     }
     
@@ -34,7 +40,7 @@ struct EmptyTagsView: View {
                 .multilineTextAlignment(.center)
             
             Button(action: createTags) {
-                Text("Add Default Tags")
+                Text(Strings.addDefaultTags)
             }
             .buttonStyle(.borderedProminent)
         }

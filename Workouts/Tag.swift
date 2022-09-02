@@ -20,6 +20,14 @@ extension Tag {
         case none, bike, shoes
         var id: String { rawValue }
         
+        var title: String {
+            switch self {
+            case .none: return NSLocalizedString("None", comment: "Label")
+            case .bike: return NSLocalizedString("Bike", comment: "Label")
+            case .shoes: return NSLocalizedString("Shoes", comment: "Label")
+            }
+        }
+        
         var displaySport: Sport? {
             switch self {
             case .none:

@@ -104,11 +104,11 @@ struct WorkoutPhotoCard: View, WorkoutSharable {
     
     var timeTitle: String {
         if let _ = viewModel.distance, showDistance {
-            return "Time"
+            return LabelStrings.time
         }
         
         if showTitle {
-            return "Time"
+            return LabelStrings.time
         } else {
             return viewModel.sport.altName
         }

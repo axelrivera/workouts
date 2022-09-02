@@ -14,7 +14,7 @@ struct NoWorkoutsView: View {
                 .font(.largeTitle)
                 .foregroundColor(.red)
             
-            Text("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.")
+            Text(NSLocalizedString("There are no workouts available on Apple Health or reading permissions are disabled. Open the Health app and go to to Profile, Apps, Workouts to enable reading permissions.", comment: "Text"))
                 .font(.footnote)
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
@@ -33,11 +33,11 @@ struct ProcessingWorkoutDataView: View {
             HStack(spacing: 10.0) {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
-                Text("Processing Workouts…")
+                Text(NSLocalizedString("Processing Workouts…", comment: "Label"))
                     .font(.subheadline)
                     .foregroundColor(.primary)
             }
-            Text("Some data may not be available while processing")
+            Text(NSLocalizedString("Some data may not be available while processing", comment: "Text"))
                 .font(.footnote)
                 .foregroundColor(.primary.opacity(0.8))
                 .multilineTextAlignment(.center)

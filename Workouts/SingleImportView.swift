@@ -34,7 +34,7 @@ struct SingleImportView: View {
         }
         .disabled(manager.isProcessing)
         .overlay(content: hudView)
-        .navigationTitle("Import Preview")
+        .navigationTitle(NSLocalizedString("Import Preview", comment: "Screen title"))
         .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -83,10 +83,10 @@ struct SingleImportView: View {
                 
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        rowItem(text: "Distance", detail: distanceString, color: .distance)
+                        rowItem(text: LabelStrings.distance, detail: distanceString, color: .distance)
                         
                         if let elevation = elevationString {
-                            rowItem(text: "Elevation Gain", detail: elevation, color: .elevation)
+                            rowItem(text: LabelStrings.elevationGain, detail: elevation, color: .elevation)
                         }
                     }
                     
@@ -94,20 +94,20 @@ struct SingleImportView: View {
                         Divider()
                         
                         HStack {
-                            rowItem(text: "Moving Time", detail: movingTimeString, color: .time)
+                            rowItem(text: LabelStrings.movingTime, detail: movingTimeString, color: .time)
                         }
                         
                         Divider()
                         
                         HStack {
-                            rowItem(text: "Paused Time", detail: pausedTimeString, color: .time)
-                            rowItem(text: "Total Time", detail: totalTimeString, color: .time)
+                            rowItem(text: LabelStrings.pausedTime, detail: pausedTimeString, color: .time)
+                            rowItem(text: LabelStrings.totalTime, detail: totalTimeString, color: .time)
                         }
                     } else {
                         Divider()
                         
                         HStack {
-                            rowItem(text: "Total Time", detail: totalTimeString, color: .time)
+                            rowItem(text: LabelStrings.totalTime, detail: totalTimeString, color: .time)
                         }
                     }
                 }
@@ -116,14 +116,14 @@ struct SingleImportView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .alert("Duplicate Workout", isPresented: $isDuplicateAlertVisible) {
-            Button("Cancel", role: .cancel, action: {})
-            Button("Import") {
+        .alert(NSLocalizedString("Duplicate Workout", comment: "Alert title"), isPresented: $isDuplicateAlertVisible) {
+            Button(ActionStrings.cancel, role: .cancel, action: {})
+            Button(ActionStrings.import) {
                 workout.status = .new
                 process()
             }
         } message: {
-            Text("Looks like this workout already exists in Apple Health. Importing it may result in duplicate health metrics. Are you sure you want to continue?")
+            Text(NSLocalizedString("Looks like this workout already exists in Apple Health. Importing it may result in duplicate health metrics. Are you sure you want to continue?", comment: "Alert message"))
         }
 
     }
@@ -132,7 +132,7 @@ struct SingleImportView: View {
     func bottomBar() -> some View {
         HStack {
             Button(action: processConfirmation) {
-                Text("Import")
+                Text(ActionStrings.import)
                     .padding(CGFloat(10))
                     .frame(maxWidth: .infinity)
             }
@@ -141,7 +141,7 @@ struct SingleImportView: View {
             .disabled(!manager.PROCESS_WHITELIST.contains(workout.status))
             
             Button(action: delete) {
-                Text("Discard")
+                Text(ActionStrings.discard)
                     .padding(CGFloat(10))
                     .frame(maxWidth: .infinity)
             }

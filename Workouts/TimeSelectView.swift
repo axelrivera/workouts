@@ -22,7 +22,7 @@ struct TimeSelectView: View {
     var body: some View {
         Form {
             if displayMode == .hourMinuteSecond {
-                Picker("Hours", selection: $selectedHours) {
+                Picker(NSLocalizedString("Hours", comment: "Label"), selection: $selectedHours) {
                     ForEach(hours, id: \.self) { hour in
                         Text("\(hour)")
                     }

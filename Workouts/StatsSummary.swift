@@ -27,9 +27,9 @@ extension StatsSummary {
         var recentTitle: String {
             switch self {
             case .week:
-                return "Last 12 Weeks"
+                return NSLocalizedString("Last 12 Weeks", comment: "Summary timeframe")
             case .month:
-                return "Last 12 Months"
+                return NSLocalizedString("Last 12 Months", comment: "Summary timeframe")
             default:
                 return ""
             }
@@ -38,9 +38,9 @@ extension StatsSummary {
         var menuTitle: String {
             switch self {
             case .month:
-                return "By Month"
+                return NSLocalizedString("By Month", comment: "Summary timeframe")
             case .week:
-                return "By Week"
+                return NSLocalizedString("By Week", comment: "Summary timeframe")
             default:
                 return ""
             }
@@ -99,9 +99,9 @@ extension StatsSummary: WorkoutSummary {
         case .year:
             return "\(interval.start.year())"
         case .yearToDate:
-            return "Year to Date"
+            return NSLocalizedString("Year to Date", comment: "Label")
         case .allTime:
-            return "All Time"
+            return NSLocalizedString("All Time", comment: "Label")
         }
     }
     
@@ -189,8 +189,8 @@ extension StatsSummary {
     var currentString: String? {
         guard isCurrentInterval else { return nil }
         switch timeframe {
-        case .week: return "Current Week"
-        case .month: return "Current Month"
+        case .week: return NSLocalizedString("Current Week", comment: "Label")
+        case .month: return NSLocalizedString("Current Month", comment: "Label")
         default: return nil
         }
     }
@@ -202,13 +202,13 @@ extension StatsSummary {
     var sportTitle: String {
         switch sport {
         case .cycling:
-            return isCountSingular ? "Ride" : "Rides"
+            return isCountSingular ? LabelStrings.ride : LabelStrings.rides
         case .running:
-            return isCountSingular ? "Run" : "Runs"
+            return isCountSingular ? LabelStrings.run : LabelStrings.runs
         case .walking:
-            return isCountSingular ? "Walk" : "Walks"
+            return isCountSingular ? LabelStrings.walk : LabelStrings.walks
         default:
-            return isCountSingular ? "Workout" : "Workouts"
+            return isCountSingular ? LabelStrings.workout : LabelStrings.workouts
         }
     }
     

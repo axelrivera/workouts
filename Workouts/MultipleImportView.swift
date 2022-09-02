@@ -31,7 +31,7 @@ struct MultipleImportView: View {
             bottomBar()
                 .disabled(manager.isProcessing)
         }
-        .navigationTitle("Import Workouts")
+        .navigationTitle(NSLocalizedString("Import Workouts", comment: "Screen title"))
         .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -46,7 +46,7 @@ struct MultipleImportView: View {
     func bottomBar() -> some View {
         HStack {
             Button(action: process) {
-                Text("Import All")
+                Text(NSLocalizedString("Import All", comment: "Action"))
                     .padding(CGFloat(10))
                     .frame(maxWidth: .infinity)
             }
@@ -54,7 +54,7 @@ struct MultipleImportView: View {
             .tint(.accentColor)
             
             Button(action: manager.discardAll) {
-                Text("Discard All")
+                Text(NSLocalizedString("Discard All", comment: "Action"))
                     .padding(CGFloat(10))
                     .frame(maxWidth: .infinity)
             }

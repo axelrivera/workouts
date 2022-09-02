@@ -20,26 +20,26 @@ extension WorkoutCardViewModel {
         static let runningMetrics: [Metric] = [.none, .pace, .heartRate, maxHeartRate, .calories]
         static let indoorMetrics: [Metric] = [.none, .heartRate, maxHeartRate, .calories]
         static let otherMetrics: [Metric] = [.none, .heartRate, maxHeartRate, .calories]
-        
+                
         private static let titleDictionary: [Metric: String] = [
-            .none: "No Metric",
-            .speed: "Avg Speed",
-            .maxSpeed: "Max Speed",
-            .pace: "Pace",
-            .heartRate: "Avg Heart Rate",
-            .maxHeartRate: "Max Heart Rate",
-            .elevation: "Elevation",
-            .calories: "Calories"
+            .none: NSLocalizedString("No Metric", comment: "Label"),
+            .speed: LabelStrings.avgSpeed,
+            .maxSpeed: LabelStrings.maxSpeed,
+            .pace: LabelStrings.pace,
+            .heartRate: LabelStrings.avgHeartRate,
+            .maxHeartRate: LabelStrings.maxHeartRate,
+            .elevation: LabelStrings.elevation,
+            .calories: LabelStrings.calories
         ]
         
         private static let displayDictionary: [Metric: String] = [
-            .speed: "Avg Speed",
-            .maxSpeed: "Max Speed",
-            .pace: "Avg Pace",
-            .heartRate: "Avg HR",
-            .maxHeartRate: "Max HR",
-            .elevation: "Elevation",
-            .calories: "Calories"
+            .speed: LabelStrings.avgSpeed,
+            .maxSpeed: LabelStrings.maxSpeed,
+            .pace: LabelStrings.avgPace,
+            .heartRate: NSLocalizedString("Avg HR", comment: "Label - HR abbreviation"),
+            .maxHeartRate: NSLocalizedString("Max HR", comment: "Label - HR abbreviation"),
+            .elevation: LabelStrings.elevation,
+            .calories: LabelStrings.calories
         ]
     }
 }

@@ -40,18 +40,18 @@ struct TagSelectorView: View {
                 toggleTag(tag)
             }
             .onAppear { tagManager.reloadData() }
-            .navigationTitle("Select Tags")
+            .navigationTitle(NSLocalizedString("Select Tags", comment: "Screen title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
                 
                 ToolbarItemGroup(placement: .bottomBar) {
                     Spacer()
                     
                     Button(action: { activeSheet = .add }) {
-                        Label("New Tag", systemImage: "plus.circle.fill")
+                        Label(ActionStrings.newTag, systemImage: "plus.circle.fill")
                             .labelStyle(TitleAndIconLabelStyle())
                     }
                 }
@@ -67,9 +67,9 @@ struct TagSelectorView: View {
                 switch alert {
                 case .error(let message):
                     return Alert(
-                        title: Text("Update Error"),
+                        title: Text(TagStrings.updateErrorTitle),
                         message: Text(message),
-                        dismissButton: Alert.Button.default(Text("Ok"))
+                        dismissButton: Alert.Button.default(Text(ActionStrings.ok))
                     )
                 }
             }
@@ -85,7 +85,7 @@ extension TagSelectorView {
                 try tagManager.toggle(tag: tag)
                 action?()
             } catch {
-                activeAlert = .error(message: "Unable to update tag \(tag.name).")
+                activeAlert = .error(message: TagStrings.updateErrorMessage(name: tag.name))
             }
         }
     }

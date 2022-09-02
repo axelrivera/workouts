@@ -63,13 +63,13 @@ extension DashboardActivityViewModel {
     private var altLabel: String {
         switch activity {
         case .cycling:
-            return isCountSingular ? "Ride" : "Rides"
+            return isCountSingular ? LabelStrings.ride : LabelStrings.rides
         case .running:
-            return isCountSingular ? "Run" : "Runs"
+            return isCountSingular ? LabelStrings.run : LabelStrings.runs
         case .walking:
-            return isCountSingular ? "Walk" : "Walks"
+            return isCountSingular ? LabelStrings.walk : LabelStrings.walks
         default:
-            return isCountSingular ? "Workout" : "Workouts"
+            return isCountSingular ? LabelStrings.workout : LabelStrings.workouts
         }
     }
     

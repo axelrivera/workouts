@@ -18,7 +18,13 @@ struct DetailMapView: View {
             self = Self.mapType(for: systemType)
         }
         
-        var title: String { rawValue.capitalized }
+        var title: String {
+            switch self {
+            case .standard: return NSLocalizedString("Standard", comment: "Label")
+            case .satellite: return NSLocalizedString("Satellite", comment: "Label")
+            case .hybrid: return NSLocalizedString("Hybrid", comment: "Label")
+            }
+        }
         
         var systemType: MKMapType {
             Self.systemType(for: self)
@@ -63,7 +69,7 @@ struct DetailMapView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel", action: { presentationMode.wrappedValue.dismiss() })
+                        Button(ActionStrings.cancel, action: { presentationMode.wrappedValue.dismiss() })
                     }
                     
                     ToolbarItem(placement: .primaryAction) {

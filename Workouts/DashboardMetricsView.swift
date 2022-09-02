@@ -16,14 +16,14 @@ struct DashboardMetricsView: View {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                     Section {
                         VStack {
-                            Text("Dashboard metrics help you get a better picture of your fitness stats by displaying additional data stored in the Health app on your iPhone.")
+                            Text(DashboardStrings.metricsDescription)
                                 .foregroundColor(.secondary)
                         }
                         .padding([.top, .bottom])
                         .padding([.leading, .trailing], CGFloat(10))
                             
                     }
-                    Section(header: header(for: "Supported Metrics")) {
+                    Section {
                         ForEach(DashboardMetric.allCases, id: \.self) { metric in
                             HStack {
                                 Image(uiImage: metric.image)
@@ -38,27 +38,23 @@ struct DashboardMetricsView: View {
                             .background(.background)
                             Divider()
                         }
+                    } header: {
+                        Text(LabelStrings.supportedMetrics)
+                            .font(.title2)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Material.bar)
                     }
                 }
             }
-            .navigationTitle("Metrics")
+            .navigationTitle(LabelStrings.metrics)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
         }
-    }
-    
-    @ViewBuilder
-    func header(for text: String) -> some View {
-        Text(text)
-            .font(.title2)
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Material.bar)
-            
     }
 }
 

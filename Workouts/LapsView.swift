@@ -22,22 +22,24 @@ struct LapsView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    Section(header: headerView()) {
+                    Section {
                         ForEach(detailManager.selectedLaps(), id: \.self) { lap in
                             rowView(lap: lap)
                             Divider()
                         }
+                    } header: {
+                        headerView()
                     }
                 }
             }
             .onAppear { AnalyticsManager.shared.logPage(.workoutSplits) }
             .overlay(overlayView())
             .paywallButtonOverlay(source: .workoutSplits, sample: false)
-            .navigationTitle("Splits")
+            .navigationTitle(LabelStrings.splits)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: { presentationMode.wrappedValue.dismiss() })
+                    Button(ActionStrings.done, action: { presentationMode.wrappedValue.dismiss() })
                 }
             }
         }
@@ -50,7 +52,7 @@ struct LapsView: View {
                 .progressViewStyle(CircularProgressViewStyle())
         } else {
             if selectedLaps.isEmpty {
-                Text("No Data Available")
+                Text(LabelStrings.noDataAvailable)
                     .foregroundColor(.secondary)
             }
         }
@@ -64,28 +66,28 @@ struct LapsView: View {
                 .foregroundColor(.secondary)
             
             HStack {
-                detailView(text: "Distance", detail: selectedDistance, detailColor: .distance)
+                detailView(text: LabelStrings.distance, detail: selectedDistance, detailColor: .distance)
                 detailView(text: detailManager.detail.totalTimeLabel, detail: selectedTime, detailColor: .time)
             }
 
             HStack {
                 if detailManager.sport.isCycling {
-                    detailView(text: "Avg Speed", detail: selectedAvgSpeed, detailColor: .speed)
+                    detailView(text: LabelStrings.avgSpeed, detail: selectedAvgSpeed, detailColor: .speed)
                 } else if detailManager.sport.isWalkingOrRunning {
-                    detailView(text: "Avg Pace", detail: selectedAvgPace, detailColor: .pace)
+                    detailView(text: LabelStrings.avgPace, detail: selectedAvgPace, detailColor: .pace)
                 }
 
                 if detailManager.sport.isCycling {
-                    detailView(text: "Avg Cadence", detail: selectedAvgCadence, detailColor: .cadence)
+                    detailView(text: LabelStrings.avgCadence, detail: selectedAvgCadence, detailColor: .cadence)
                 }
             }
 
             HStack {
-                detailView(text: "Avg Heart Rate", detail: selectedAvgHeartRate, detailColor: .calories)
-                detailView(text: "Max Heart Rate", detail: selectedMaxHeartRate, detailColor: .calories)
+                detailView(text: LabelStrings.avgHeartRate, detail: selectedAvgHeartRate, detailColor: .calories)
+                detailView(text: LabelStrings.maxHeartRate, detail: selectedMaxHeartRate, detailColor: .calories)
             }
                         
-            Picker("Display", selection: $detailManager.selectedLapDistance) {
+            Picker(LabelStrings.display, selection: $detailManager.selectedLapDistance) {
                 ForEach(LapDistance.allCases, id: \.self) { distance in
                     Text(distance.title(for: detailManager.sport))
                 }
@@ -162,7 +164,7 @@ extension LapsView {
     
     var selectedLapTitle: String {
         guard let selected = selectedLap else { return detailManager.detail.title }
-        return "Lap \(selected.lapNumber)"
+        return WorkoutStrings.lapNumber(selected.lapNumber)
     }
     
     var selectedDistance: String {

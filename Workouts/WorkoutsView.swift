@@ -74,11 +74,11 @@ struct WorkoutsContentView: View {
                             .contextMenu {
                                 if isFavorite(workout.workoutIdentifier) {
                                     Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
-                                        Label("Unfavorite", systemImage: "heart.slash")
+                                        Label(ActionStrings.unfavorite, systemImage: "heart.slash")
                                     }
                                 } else {
                                     Button(action: { workoutManager.toggleFavorite(workout.workoutIdentifier) }) {
-                                        Label("Favorite", systemImage: "heart")
+                                        Label(ActionStrings.favorite, systemImage: "heart")
                                     }
                                 }
                                 
@@ -86,7 +86,7 @@ struct WorkoutsContentView: View {
                                     AnalyticsManager.shared.updateWorkoutTags(workouts: true)
                                     activeSheet = .tags(identifier: workout.workoutIdentifier, sport: workout.sport)
                                 }) {
-                                    Label("Tags", systemImage: "tag")
+                                    Label(LabelStrings.tags, systemImage: "tag")
                                 }
                             }
                             .buttonStyle(WorkoutPlainButtonStyle())
@@ -97,7 +97,7 @@ struct WorkoutsContentView: View {
             }
             .overlay(emptyOverlay())
             .overlay(processOverlay())
-            .navigationTitle("Workouts")
+            .navigationTitle(NSLocalizedString("Workouts", comment: "Screen title"))
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeCoverSheet = .settings }) {
@@ -142,16 +142,16 @@ struct WorkoutsContentView: View {
                 switch alert {
                 case .tagConfirmation:
                     return Alert(
-                        title: Text("Apply Tags"),
-                        message: Text("Apply tags to all \(workouts.count.formatted()) results in filter? Some tags may be ignored based on gear type."),
+                        title: Text(TagStrings.applyAllTitle),
+                        message: Text(TagStrings.applyConfirmationMessage(tagCount: workouts.count)),
                         primaryButton: Alert.Button.default(
-                            Text("Continue"),
+                            Text(ActionStrings.continue),
                             action: {
                                 AnalyticsManager.shared.capture(.tagAll)
                                 activeSheet = .tagsToAll
                             }
                         ),
-                        secondaryButton: Alert.Button.cancel(Text("Cancel"))
+                        secondaryButton: Alert.Button.cancel(Text(ActionStrings.cancel))
                     )
                 }
             }
@@ -178,11 +178,11 @@ struct WorkoutsContentView: View {
                 if workoutManager.showNoWorkoutsAlert {
                     NoWorkoutsView()
                 }
-                
+                                
                 if filterManager.isFilterActive {
                     VStack(alignment: .leading, spacing: 10.0) {
                         HStack(spacing: 20.0) {
-                            Text("\(workouts.count.formatted()) Workouts")
+                            Text(WorkoutStrings.workoutCount(for: workouts.count))
                             Spacer()
                             Text(filterManager.distanceString)
                                 .foregroundColor(.distance)
@@ -193,22 +193,22 @@ struct WorkoutsContentView: View {
                         .foregroundColor(.secondary)
                         
                         HStack {
-                            Button("Reset Filter", role: .destructive, action: resetFilter)
+                            Button(ActionStrings.resetFilter, role: .destructive, action: resetFilter)
                             Spacer()
                             Menu {
                                 Button(action: filterManager.favoriteAll) {
-                                    Label("Favorite All", systemImage: "heart")
+                                    Label(ActionStrings.favoriteAll, systemImage: "heart")
                                 }
                                 
                                 Button(action: filterManager.unfavoriteAll) {
-                                    Label("Unfavorite All", systemImage: "heart.slash")
+                                    Label(ActionStrings.unfavoriteAll, systemImage: "heart.slash")
                                 }
                                 
                                 Button(action: {activeAlert = .tagConfirmation }) {
-                                    Label("Tag All", systemImage: "tag")
+                                    Label(ActionStrings.tagAll, systemImage: "tag")
                                 }
                                 
-                                Picker("Sort By", selection: $filterManager.sortBy) {
+                                Picker(LabelStrings.sortBy, selection: $filterManager.sortBy) {
                                     ForEach(WorkoutsFilterManager.SortBy.allCases, id: \.self) { sort in
                                         HStack {
                                             Text(sort.title)
@@ -249,7 +249,7 @@ struct WorkoutsContentView: View {
     @ViewBuilder
     func emptyOverlay() -> some View {
         if workouts.isEmpty {
-            Text("No Workouts")
+            Text(LabelStrings.noWorkouts)
                 .font(.title2)
                 .foregroundColor(.secondary)
         }
