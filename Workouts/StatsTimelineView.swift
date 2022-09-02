@@ -86,7 +86,7 @@ struct StatsTimelineContentView: View {
                     EmptyView()
                 } else {
                     Menu {
-                        Picker(selection: $manager.timeframe) {
+                        Picker(selection: $manager.timeframe.animation(.none)) {
                             ForEach(manager.menuOptions, id: \.self) { item in
                                 Text(item.menuTitle)
                             }

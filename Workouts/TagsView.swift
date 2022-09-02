@@ -36,11 +36,7 @@ struct TagsContentView: View {
     @EnvironmentObject var purchaseManager: IAPManager
     @StateObject var manager: TagsDisplayManager
     
-    @State private var currentSegment = TagPickerSegment.active {
-        didSet {
-            reload()
-        }
-    }
+    @State private var currentSegment = TagPickerSegment.active
     
     @State private var tags = [TagSummaryViewModel]()
     
@@ -71,6 +67,9 @@ struct TagsContentView: View {
             .onAppear { reload() }
             .overlay(emptyView())
             .navigationTitle("Tags")
+            .onChange(of: currentSegment) { newValue in
+                reload()
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { activeCover = .settings }) {
@@ -80,12 +79,9 @@ struct TagsContentView: View {
                 
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
-                        ForEach(TagPickerSegment.allCases) { segment in
-                            Button(action: { currentSegment = segment }) {
-                                Text(segment.title)
-                                if currentSegment == segment {
-                                    Image(systemName: "checkmark")
-                                }
+                        Picker("State", selection: $currentSegment.animation(.none)) {
+                            ForEach(TagPickerSegment.allCases, id: \.self) { item in
+                                Text(item.title).tag(item)
                             }
                         }
                     } label: {
@@ -195,14 +191,9 @@ struct TagsView_Previews: PreviewProvider {
     static var purchaseManager = IAPManagerPreview.manager(isActive: true)
         
     static var previews: some View {
-        NavigationView {
-            ScrollView {
-                TagsView()
-            }
-            .navigationTitle("Tags")
-        }
-        .environment(\.managedObjectContext, viewContext)
-        .environmentObject(purchaseManager)
-        .preferredColorScheme(.dark)
+        TagsView()
+            .environment(\.managedObjectContext, viewContext)
+            .environmentObject(purchaseManager)
+            .preferredColorScheme(.dark)
     }
 }

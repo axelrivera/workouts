@@ -78,6 +78,7 @@ extension DetailManager {
                 samples = try await healthProvider.fetchDistanceSamples(distanceType: .distanceWalkingRunning(), interval: interval, source: source)
             }
         } catch {
+            Log.debug("failed distance samples: \(error.localizedDescription)")
             samples = []
         }
 
@@ -93,6 +94,8 @@ extension DetailManager {
         }
         
         Task(priority: .userInitiated) {
+            Log.debug("DETAIL: processing workout")
+            
             await context.perform {
                 let viewModel = Workout.find(using: self.id, in: self.context)?.detailViewModel ?? WorkoutDetailViewModel.empty()
                 let isFavorite = self.metaProvider.isFavorite(self.id)
@@ -104,6 +107,8 @@ extension DetailManager {
                     self.tags = tags
                 }
             }
+            
+            Log.debug("DETAIL: processing metrics")
             
             await process()
             await processLaps()
@@ -117,6 +122,8 @@ extension DetailManager {
             }
             
             let samples = await defaultDistanceSamples(remoteWorkout: remoteWorkout)
+            Log.debug("DETAIL: distance samples \(samples.count)")
+            
             let processor = WorkoutIntervalProcessor(workout: remoteWorkout)
             let intervals = await processor.intervalsForDistanceSamples(samples, lapDistance: sport.defaultDistanceValue)
             
@@ -158,7 +165,7 @@ extension DetailManager {
                 }
             }
         } catch {
-            Log.debug("unable to process intervals")
+            Log.debug("DETAIL: unable to process intervals: \(error.localizedDescription)")
             
             DispatchQueue.main.async {
                 withAnimation {

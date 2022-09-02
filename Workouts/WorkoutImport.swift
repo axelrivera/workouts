@@ -167,8 +167,18 @@ class WorkoutImport: ObservableObject, Identifiable, Hashable {
         
         // Records
         records = fitFile.messages(forMessageType: .record).compactMap { .init(message: $0) }
-        locations = records.compactMap { $0.location }
-        coordinates = locations.map { $0.coordinate }
+        
+        var locations = [CLLocation]()
+        var coordinates = [CLLocationCoordinate2D]()
+        
+        for record in records {
+            guard let location = record.location else { continue }
+            locations.append(location)
+            coordinates.append(location.coordinate)
+        }
+        
+        self.locations = locations
+        self.coordinates = coordinates
         
         // Events
         events = fitFile.messages(forMessageType: .event).compactMap { (message) -> Event? in

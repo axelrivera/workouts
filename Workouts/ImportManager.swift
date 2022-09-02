@@ -136,7 +136,7 @@ extension ImportManager {
         var existingWorkouts = self.workouts.filter({ PROCESS_WHITELIST.contains($0.status) })
         
         for document in documents {
-            await document.open()
+            let _ = await document.open()
             
             if let file = await document.fitFile, let workout = WorkoutImport(fitFile: file) {
                 guard existingWorkouts.filter({ $0.id == workout.id }).isEmpty else {

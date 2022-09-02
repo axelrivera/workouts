@@ -355,6 +355,10 @@
 		16B321D426C127D1007CCE70 /* LapDistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B321D226C127D1007CCE70 /* LapDistance.swift */; };
 		16B5904B27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
 		16B5904C27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
+		16B5E39928BEF936002798A4 /* WeatherProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5E39828BEF936002798A4 /* WeatherProvider.swift */; };
+		16B5E39A28BEF936002798A4 /* WeatherProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5E39828BEF936002798A4 /* WeatherProvider.swift */; };
+		16B86AC928C1F79200349744 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16B86AC828C1F79200349744 /* Charts */; };
+		16B86ACB28C1F7AE00349744 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16B86ACA28C1F7AE00349744 /* Charts */; };
 		16BA33FA288359F900823A6C /* Schemas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33F9288359F900823A6C /* Schemas.swift */; };
 		16BA33FB288359F900823A6C /* Schemas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33F9288359F900823A6C /* Schemas.swift */; };
 		16BA33FD2883652600823A6C /* Dictionary+RawRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33FC2883652600823A6C /* Dictionary+RawRepresentable.swift */; };
@@ -460,8 +464,6 @@
 		16F5B6CF273EE508005152E0 /* WorkoutsFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6CD273EE508005152E0 /* WorkoutsFilterView.swift */; };
 		16F5B6D12740543F005152E0 /* WorkoutsFilterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6D02740543F005152E0 /* WorkoutsFilterManager.swift */; };
 		16F5B6D22740543F005152E0 /* WorkoutsFilterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6D02740543F005152E0 /* WorkoutsFilterManager.swift */; };
-		16FB84BF25F699D400CF22ED /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16FB84BE25F699D400CF22ED /* Charts */; };
-		16FB84C425F699EB00CF22ED /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16FB84C325F699EB00CF22ED /* Charts */; };
 		16FB84D725F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84D825F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84E825F8321F00CF22ED /* Charts+Additions.swift */; };
@@ -657,6 +659,7 @@
 		16B321CC26C121C1007CCE70 /* LapsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapsView.swift; sourceTree = "<group>"; };
 		16B321D226C127D1007CCE70 /* LapDistance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LapDistance.swift; sourceTree = "<group>"; };
 		16B5904A27E81B580083D869 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
+		16B5E39828BEF936002798A4 /* WeatherProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherProvider.swift; sourceTree = "<group>"; };
 		16BA33F9288359F900823A6C /* Schemas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schemas.swift; sourceTree = "<group>"; };
 		16BA33FC2883652600823A6C /* Dictionary+RawRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dictionary+RawRepresentable.swift"; sourceTree = "<group>"; };
 		16BA33FF2884A63300823A6C /* SyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncOperation.swift; sourceTree = "<group>"; };
@@ -721,7 +724,7 @@
 			files = (
 				160BB09A25DD61700059E493 /* HealthKit.framework in Frameworks */,
 				16E4C7D826C1FC8800A4C0E6 /* Polyline in Frameworks */,
-				16FB84C425F699EB00CF22ED /* Charts in Frameworks */,
+				16B86ACB28C1F7AE00349744 /* Charts in Frameworks */,
 				16BAD10F280E233A00D1ADCC /* PostHog in Frameworks */,
 				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
@@ -735,9 +738,9 @@
 			files = (
 				1696420C260419ED00E68A45 /* FitFileParser in Frameworks */,
 				16E4C7D626C1FC6B00A4C0E6 /* Polyline in Frameworks */,
+				16B86AC928C1F79200349744 /* Charts in Frameworks */,
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
 				16BAD10A280E1FF000D1ADCC /* PostHog in Frameworks */,
-				16FB84BF25F699D400CF22ED /* Charts in Frameworks */,
 				167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */,
 				16CA62812720518B002A2D92 /* CloudKit.framework in Frameworks */,
 			);
@@ -1010,6 +1013,7 @@
 				16F47AE028971D3600F2EA43 /* HRZonesProvider.swift */,
 				16F47AE32897282200F2EA43 /* HRZonesCalculator.swift */,
 				166973FA289891CF00D1942C /* WorkoutImageProvider.swift */,
+				16B5E39828BEF936002798A4 /* WeatherProvider.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -1378,9 +1382,9 @@
 			name = "Workouts Dev";
 			packageProductDependencies = (
 				160BB06225DD61700059E493 /* FitFileParser */,
-				16FB84C325F699EB00CF22ED /* Charts */,
 				16E4C7D726C1FC8800A4C0E6 /* Polyline */,
 				16BAD10E280E233A00D1ADCC /* PostHog */,
+				16B86ACA28C1F7AE00349744 /* Charts */,
 			);
 			productName = Workouts;
 			productReference = 160BB0A225DD61700059E493 /* Workouts Dev.app */;
@@ -1400,10 +1404,10 @@
 			);
 			name = Workouts;
 			packageProductDependencies = (
-				16FB84BE25F699D400CF22ED /* Charts */,
 				1696420B260419ED00E68A45 /* FitFileParser */,
 				16E4C7D526C1FC6B00A4C0E6 /* Polyline */,
 				16BAD109280E1FF000D1ADCC /* PostHog */,
+				16B86AC828C1F79200349744 /* Charts */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Better Workouts.app */;
@@ -1456,10 +1460,10 @@
 			);
 			mainGroup = 161FDB5925B34D4B00929433;
 			packageReferences = (
-				16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */,
 				1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */,
 				16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */,
 				16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */,
 			);
 			productRefGroup = 161FDB6325B34D4B00929433 /* Products */;
 			projectDirPath = "";
@@ -1572,6 +1576,7 @@
 				160BB07425DD61700059E493 /* WorkoutImport+Events.swift in Sources */,
 				160BB07525DD61700059E493 /* AppSettings.swift in Sources */,
 				16B321D426C127D1007CCE70 /* LapDistance.swift in Sources */,
+				16B5E39A28BEF936002798A4 /* WeatherProvider.swift in Sources */,
 				164D0AED26611D6F000A56AD /* CoreData+Additions.swift in Sources */,
 				165D6481261957310015744C /* WebContent.swift in Sources */,
 				16CA68D826ADF26A0056C1BA /* GoalView.swift in Sources */,
@@ -1786,6 +1791,7 @@
 				16A0660E25C48FB500019096 /* WorkoutImport+Events.swift in Sources */,
 				16E8321D25D2096100382545 /* AppSettings.swift in Sources */,
 				16B321D326C127D1007CCE70 /* LapDistance.swift in Sources */,
+				16B5E39928BEF936002798A4 /* WeatherProvider.swift in Sources */,
 				164D0AEC26611D6F000A56AD /* CoreData+Additions.swift in Sources */,
 				165D6480261957310015744C /* WebContent.swift in Sources */,
 				16CA68D726ADF26A0056C1BA /* GoalView.swift in Sources */,
@@ -1992,7 +1998,7 @@
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Workouts/DevInfo.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2021,7 +2027,7 @@
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Workouts/DevInfo.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2089,7 +2095,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2146,7 +2152,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -2170,7 +2176,7 @@
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Workouts/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2197,9 +2203,10 @@
 				CURRENT_PROJECT_VERSION = 95;
 				DEVELOPMENT_ASSET_PATHS = "\"Workouts/Preview Content\"";
 				DEVELOPMENT_TEAM = C2Q5BUZ3MX;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = C2Q5BUZ3MX;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Workouts/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2209,6 +2216,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = me.axelrivera.Workouts;
 				PRODUCT_NAME = "Better Workouts";
 				PROVISIONING_PROFILE_SPECIFIER = "me.axelrivera.Workouts Release";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "me.axelrivera.Workouts Release";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2315,6 +2323,14 @@
 				minimumVersion = 1.4.3;
 			};
 		};
+		16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/PostHog/posthog-ios";
@@ -2331,14 +2347,6 @@
 				minimumVersion = 5.0.2;
 			};
 		};
-		16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/danielgindi/Charts.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -2351,6 +2359,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
+		};
+		16B86AC828C1F79200349744 /* Charts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = Charts;
+		};
+		16B86ACA28C1F7AE00349744 /* Charts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = Charts;
 		};
 		16BAD109280E1FF000D1ADCC /* PostHog */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -2371,16 +2389,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */;
 			productName = Polyline;
-		};
-		16FB84BE25F699D400CF22ED /* Charts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = Charts;
-		};
-		16FB84C325F699EB00CF22ED /* Charts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16FB84BD25F699D400CF22ED /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = Charts;
 		};
 /* End XCSwiftPackageProductDependency section */
 

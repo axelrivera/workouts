@@ -14,6 +14,8 @@ struct StatsView: View {
     @EnvironmentObject var workoutManager: WorkoutManager
     @EnvironmentObject var purchaseManager: IAPManager
     @EnvironmentObject var statsManager: StatsManager
+    
+    @State private var sport: Sport?
         
     var body: some View {
         LazyVStack(spacing: 0.0) {
@@ -45,36 +47,25 @@ struct StatsView: View {
             if isProcessing { return }
             statsManager.refresh()
         }
+        .onChange(of: sport) { newValue in
+            statsManager.sport = newValue
+        }
+        .onAppear(perform: load)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Button(action: {
-                        statsManager.sport = nil
-                    }, label: {
-                        HStack {
-                            Text("All Workouts")
-                            if statsManager.sport == nil {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
+                    Picker("Workouts", selection: $sport.animation(.none)) {
+                        Text("All Workouts").tag(nil as Sport?)
+                        
+                        Divider()
+                                            
+                        ForEach(statsManager.availableSports, id: \.self) { item in
+                            Text(item.activityName)
+                                .tag(item as Sport?)
                         }
-                    })
-                    
-                    Divider()
-                     
-                    ForEach(statsManager.availableSports) { sport in
-                        Button(action: {
-                            statsManager.sport = sport
-                        }, label: {
-                            Text(sport.activityName)
-                            if statsManager.sport == sport {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
-                        })
                     }
                 } label: {
-                    Text(statsManager.sport?.activityName ?? "All Workouts")
+                    Text(sport?.activityName ?? "All Workouts")
                 }
             }
         }
@@ -85,6 +76,10 @@ struct StatsView: View {
 // MARK: - Methods
 
 extension StatsView {
+    
+    func load() {
+        sport = statsManager.sport
+    }
     
     func avgLabel(forTimeframe timeframe: StatsSummary.Timeframe) -> String {
         switch timeframe {

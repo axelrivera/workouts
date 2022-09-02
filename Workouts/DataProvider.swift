@@ -156,6 +156,9 @@ extension DataProvider {
         context.performAndWait {
             let distance = expressionDescription(for: .distance, function: .sum)
             let duration = expressionDescription(for: .duration, function: .sum)
+            
+            let countRequest = Workout.defaultFetchRequest()
+            countRequest.predicate = predicate
 
             let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
             request.returnsObjectsAsFaults = false
@@ -164,7 +167,7 @@ extension DataProvider {
             request.propertiesToFetch = [distance, duration]
             
             do {
-                let count = try context.count(for: request)
+                let count = try context.count(for: countRequest)
                 let results = try context.fetch(request)
                 guard let first = results.first, let dictionary = first as? [String: Double] else {
                     throw DataError.missingPropertyDictionary
@@ -194,6 +197,9 @@ extension DataProvider {
             let energy = expressionDescription(for: .energyBurned, function: .sum)
             let avgEnergy = expressionDescription(for: .avgEnergyBurned, function: .avg)
             
+            let countRequest = Workout.defaultFetchRequest()
+            countRequest.predicate = predicate
+            
             let request = NSFetchRequest<NSFetchRequestResult>(entityName: Workout.entityName)
             request.returnsObjectsAsFaults = false
             request.resultType = .dictionaryResultType
@@ -206,7 +212,7 @@ extension DataProvider {
             var resultDictionary = [String: Any]()
             
             do {
-                let count = try context.count(for: request)
+                let count = try context.count(for: countRequest)
                 let results = try context.fetch(request)
                 guard let first = results.first, let dictionary = first as? [String: Double] else {
                     throw DataError.missingPropertyDictionary

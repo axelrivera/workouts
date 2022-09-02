@@ -90,12 +90,8 @@ struct DashboardView: View {
             .sheet(item: $activeSheet, onDismiss: { manager.reload() }) { item in
                 switch item {
                 case .filter:
-                    DashboardFilterView(
-                        selected: $manager.currentInterval,
-                        startDate: $manager.startDate,
-                        endDate: $manager.endDate,
-                        dateRange: $manager.dateRange
-                    )
+                    DashboardFilterView()
+                        .environmentObject(manager)
                 case .activity:
                     activityView()
                         .onAppear { AnalyticsManager.shared.sharedDashboard(filter: manager.currentInterval) }

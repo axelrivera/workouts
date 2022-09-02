@@ -10,10 +10,11 @@ import SwiftUI
 struct DashboardFilterView: View {
     @Environment(\.presentationMode) var presentationMode
     
-    @Binding var selected: DashboardViewManager.IntervalType
-    @Binding var startDate: Date
-    @Binding var endDate: Date
-    @Binding var dateRange: ClosedRange<Date>
+    @EnvironmentObject var manager: DashboardViewManager
+    
+    @State private var selected: DashboardViewManager.IntervalType = .month
+    @State private var startDate: Date = Date()
+    @State private var endDate: Date = Date()
     
     var body: some View {
         NavigationView {
@@ -30,48 +31,57 @@ struct DashboardFilterView: View {
                 .textCase(nil)
                 
                 if selected == .range {
-                    Section(header: header("Dates")) {
-                        DatePicker("Start", selection: $startDate, in: dateRange, displayedComponents: .date)
-                        DatePicker("End", selection: $endDate, in: dateRange, displayedComponents: .date)
+                    Section {
+                        DatePicker("Start", selection: $startDate, in: manager.dateRange, displayedComponents: .date)
+                        DatePicker("End", selection: $endDate, in: manager.dateRange, displayedComponents: .date)
+                    } header: {
+                        Text("Dates")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .padding([.top, .bottom])
+                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                     .textCase(nil)
                 }
             }
             .onAppear {
+                load()
                 AnalyticsManager.shared.logPage(.dashboardFilter, properties: ["filter": selected.rawValue])
             }
             .navigationTitle("Select Timeframe")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", action: {presentationMode.wrappedValue.dismiss() })
+                    Button("Done", action: dismiss)
                 }
             }
         }
     }
     
-    @ViewBuilder
-    func header(_ title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundColor(.primary)
-            .padding([.top, .bottom])
-            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+}
+
+extension DashboardFilterView {
+    
+    func load() {
+        selected = manager.currentInterval
+        startDate = manager.startDate
+        endDate = manager.endDate
+    }
+    
+    func dismiss() {
+        manager.currentInterval = selected
+        manager.startDate = startDate
+        manager.endDate = endDate
+        presentationMode.wrappedValue.dismiss()
     }
     
 }
 
 struct DashboardFilterView_Previews: PreviewProvider {
-    static let dateRange = Date.distantPast...Date()
-    static let interval = DateInterval.lastSixMonths()
-    @State static var selected = DashboardViewManager.IntervalType.month
+    static var manager = DashboardViewManager()
     
     static var previews: some View {
-        DashboardFilterView(
-            selected: $selected,
-            startDate: .constant(interval.start),
-            endDate: .constant(interval.end),
-            dateRange: .constant(dateRange)
-        )
+        DashboardFilterView()
+            .environmentObject(manager)
     }
 }

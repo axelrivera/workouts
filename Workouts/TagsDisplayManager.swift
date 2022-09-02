@@ -8,7 +8,7 @@
 import SwiftUI
 import CoreData
 
-enum TagPickerSegment: String, Identifiable, CaseIterable {
+enum TagPickerSegment: String, Hashable, Identifiable, CaseIterable {
     case active, archived
     var id: String { rawValue }
     var title: String { rawValue.capitalized }
