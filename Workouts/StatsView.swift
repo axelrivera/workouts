@@ -16,6 +16,7 @@ struct StatsView: View {
     @EnvironmentObject var statsManager: StatsManager
     
     @State private var sport: Sport?
+    @State private var menuID = UUID()
         
     var body: some View {
         LazyVStack(spacing: 0.0) {
@@ -49,16 +50,18 @@ struct StatsView: View {
         }
         .onChange(of: sport) { newValue in
             statsManager.sport = newValue
+            menuID = UUID()
         }
         .onAppear(perform: load)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    Picker(LabelStrings.workouts, selection: $sport.animation(.none)) {
-                        Text(LabelStrings.allWorkouts).tag(nil as Sport?)
+                    Picker(LabelStrings.workouts, selection: $sport) {
+                        Text(LabelStrings.allWorkouts)
+                            .tag(nil as Sport?)
                         
                         Divider()
-                                            
+                        
                         ForEach(statsManager.availableSports, id: \.self) { item in
                             Text(item.activityName)
                                 .tag(item as Sport?)
@@ -67,6 +70,7 @@ struct StatsView: View {
                 } label: {
                     Text(statsManager.sport?.activityName ?? LabelStrings.allWorkouts)
                 }
+                .id(menuID)
             }
         }
     }

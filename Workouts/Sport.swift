@@ -8,7 +8,7 @@
 import SwiftUI
 import HealthKit
 
-enum Sport: String, Identifiable, CaseIterable {
+enum Sport: String, Identifiable, CaseIterable, Hashable {
     case cycling, running, walking, other
     case hiking, yoga, pilates, mindAndBody, cooldown
     case tennis, pickleball, squash
