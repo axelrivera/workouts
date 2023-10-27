@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Charts
+import DGCharts
 
 struct RecentChart: UIViewRepresentable {
     var values: [ChartInterval]

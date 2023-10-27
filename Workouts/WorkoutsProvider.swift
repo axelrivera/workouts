@@ -316,7 +316,7 @@ extension WorkoutsProvider {
         let restingHR = await healthProvider.restingHeartRate()
         let gender = healthProvider.userGender()
         
-        let chunked = Array(remoteWorkouts.chunks(ofCount: 5))
+        let chunked = remoteWorkouts.chunked(into: 5)
         
         var index = 0
         let total = chunked.count

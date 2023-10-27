@@ -24,7 +24,7 @@ extension WorkoutImport {
     
     func samples() -> [Sample] {
         let samples = normalizedSamples()
-        let chunked = samples.chunks(ofCount: Sample.CHUNK_COUNT)
+        let chunked = samples.chunked(into: Sample.CHUNK_COUNT)
         
         var resultSamples: [Sample] = chunked.compactMap { chunk in
             guard chunk.count == Sample.CHUNK_COUNT else { return nil }

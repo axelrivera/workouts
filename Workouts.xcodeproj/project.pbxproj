@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -216,7 +216,6 @@
 		167B75D22799823E00C20049 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167B75D02799823E00C20049 /* ImagePicker.swift */; };
 		167B75D427998E2600C20049 /* UIImage+Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167B75D327998E2600C20049 /* UIImage+Filter.swift */; };
 		167B75D527998E2600C20049 /* UIImage+Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167B75D327998E2600C20049 /* UIImage+Filter.swift */; };
-		167B75D72799AAC300C20049 /* image_preview.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 167B75D62799AAC300C20049 /* image_preview.jpg */; };
 		167C43C927DE387300949F8F /* FontAwesome.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 167C43C827DE387300949F8F /* FontAwesome.xcassets */; };
 		167C43CA27DE387300949F8F /* FontAwesome.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 167C43C827DE387300949F8F /* FontAwesome.xcassets */; };
 		167D0BA626E25D4F00055D54 /* StatsWorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167D0BA526E25D4F00055D54 /* StatsWorkoutsView.swift */; };
@@ -355,8 +354,6 @@
 		16B5904C27E81B580083D869 /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5904A27E81B580083D869 /* ActivitySheet.swift */; };
 		16B5E39928BEF936002798A4 /* WeatherProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5E39828BEF936002798A4 /* WeatherProvider.swift */; };
 		16B5E39A28BEF936002798A4 /* WeatherProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5E39828BEF936002798A4 /* WeatherProvider.swift */; };
-		16B86AC928C1F79200349744 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16B86AC828C1F79200349744 /* Charts */; };
-		16B86ACB28C1F7AE00349744 /* Charts in Frameworks */ = {isa = PBXBuildFile; productRef = 16B86ACA28C1F7AE00349744 /* Charts */; };
 		16BA33FA288359F900823A6C /* Schemas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33F9288359F900823A6C /* Schemas.swift */; };
 		16BA33FB288359F900823A6C /* Schemas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33F9288359F900823A6C /* Schemas.swift */; };
 		16BA33FD2883652600823A6C /* Dictionary+RawRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16BA33FC2883652600823A6C /* Dictionary+RawRepresentable.swift */; };
@@ -464,6 +461,8 @@
 		16F5B6CF273EE508005152E0 /* WorkoutsFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6CD273EE508005152E0 /* WorkoutsFilterView.swift */; };
 		16F5B6D12740543F005152E0 /* WorkoutsFilterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6D02740543F005152E0 /* WorkoutsFilterManager.swift */; };
 		16F5B6D22740543F005152E0 /* WorkoutsFilterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F5B6D02740543F005152E0 /* WorkoutsFilterManager.swift */; };
+		16F851B92AEC443F0038F992 /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = 16F851B82AEC443F0038F992 /* DGCharts */; };
+		16F851BB2AEC44540038F992 /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = 16F851BA2AEC44540038F992 /* DGCharts */; };
 		16FB84D725F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84D825F80C1E00CF22ED /* LineChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84D625F80C1E00CF22ED /* LineChart.swift */; };
 		16FB84E925F8321F00CF22ED /* Charts+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16FB84E825F8321F00CF22ED /* Charts+Additions.swift */; };
@@ -583,7 +582,6 @@
 		1678145E25DFFFBD0012531D /* StatsSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsSummary.swift; sourceTree = "<group>"; };
 		167B75D02799823E00C20049 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		167B75D327998E2600C20049 /* UIImage+Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Filter.swift"; sourceTree = "<group>"; };
-		167B75D62799AAC300C20049 /* image_preview.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; name = image_preview.jpg; path = ../../../../Downloads/image_preview.jpg; sourceTree = "<group>"; };
 		167C43C827DE387300949F8F /* FontAwesome.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = FontAwesome.xcassets; sourceTree = "<group>"; };
 		167D0BA526E25D4F00055D54 /* StatsWorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsWorkoutsView.swift; sourceTree = "<group>"; };
 		167D2E612604E0BA00A4A299 /* String+Additions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Additions.swift"; sourceTree = "<group>"; };
@@ -722,9 +720,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16F851B92AEC443F0038F992 /* DGCharts in Frameworks */,
 				160BB09A25DD61700059E493 /* HealthKit.framework in Frameworks */,
 				16E4C7D826C1FC8800A4C0E6 /* Polyline in Frameworks */,
-				16B86ACB28C1F7AE00349744 /* Charts in Frameworks */,
 				16BAD10F280E233A00D1ADCC /* PostHog in Frameworks */,
 				167D2EE826110DBF00A4A299 /* StoreKit.framework in Frameworks */,
 				160BB09B25DD61700059E493 /* FitFileParser in Frameworks */,
@@ -738,10 +736,10 @@
 			files = (
 				1696420C260419ED00E68A45 /* FitFileParser in Frameworks */,
 				16E4C7D626C1FC6B00A4C0E6 /* Polyline in Frameworks */,
-				16B86AC928C1F79200349744 /* Charts in Frameworks */,
 				161FDB7825B34DF000929433 /* HealthKit.framework in Frameworks */,
 				16BAD10A280E1FF000D1ADCC /* PostHog in Frameworks */,
 				167D2EE726110DB300A4A299 /* StoreKit.framework in Frameworks */,
+				16F851BB2AEC44540038F992 /* DGCharts in Frameworks */,
 				16CA62812720518B002A2D92 /* CloudKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -934,7 +932,6 @@
 		1645B93225B3515500B04478 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				167B75D62799AAC300C20049 /* image_preview.jpg */,
 				161FDB7525B34DF000929433 /* Workouts.entitlements */,
 				16BAD110280EDBFA00D1ADCC /* Products.storekit */,
 				161FDB6925B34D4E00929433 /* Assets.xcassets */,
@@ -1384,7 +1381,7 @@
 				160BB06225DD61700059E493 /* FitFileParser */,
 				16E4C7D726C1FC8800A4C0E6 /* Polyline */,
 				16BAD10E280E233A00D1ADCC /* PostHog */,
-				16B86ACA28C1F7AE00349744 /* Charts */,
+				16F851B82AEC443F0038F992 /* DGCharts */,
 			);
 			productName = Workouts;
 			productReference = 160BB0A225DD61700059E493 /* Workouts Dev.app */;
@@ -1407,7 +1404,7 @@
 				1696420B260419ED00E68A45 /* FitFileParser */,
 				16E4C7D526C1FC6B00A4C0E6 /* Polyline */,
 				16BAD109280E1FF000D1ADCC /* PostHog */,
-				16B86AC828C1F79200349744 /* Charts */,
+				16F851BA2AEC44540038F992 /* DGCharts */,
 			);
 			productName = Workouts;
 			productReference = 161FDB6225B34D4B00929433 /* Better Workouts.app */;
@@ -1437,8 +1434,9 @@
 		161FDB5A25B34D4B00929433 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1230;
-				LastUpgradeCheck = 1230;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					161FDB6125B34D4B00929433 = {
 						CreatedOnToolsVersion = 12.3;
@@ -1481,7 +1479,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				167B75D72799AAC300C20049 /* image_preview.jpg in Resources */,
 				16A544F826B6461100CB6160 /* Launch Screen.storyboard in Resources */,
 				160BB0C125DD65DA0059E493 /* Assets.xcassets in Resources */,
 				167C43CA27DE387300949F8F /* FontAwesome.xcassets in Resources */,
@@ -2085,6 +2082,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2150,6 +2148,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2335,8 +2334,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/danielgindi/Charts.git";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
 			};
 		};
 		16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
@@ -2368,16 +2367,6 @@
 			package = 1696420A260419ED00E68A45 /* XCRemoteSwiftPackageReference "FitFileParser" */;
 			productName = FitFileParser;
 		};
-		16B86AC828C1F79200349744 /* Charts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = Charts;
-		};
-		16B86ACA28C1F7AE00349744 /* Charts */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
-			productName = Charts;
-		};
 		16BAD109280E1FF000D1ADCC /* PostHog */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 16BAD108280E1FEF00D1ADCC /* XCRemoteSwiftPackageReference "posthog-ios" */;
@@ -2397,6 +2386,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 16E4C7D426C1FC6B00A4C0E6 /* XCRemoteSwiftPackageReference "Polyline" */;
 			productName = Polyline;
+		};
+		16F851B82AEC443F0038F992 /* DGCharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGCharts;
+		};
+		16F851BA2AEC44540038F992 /* DGCharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16B86AC728C1F79200349744 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGCharts;
 		};
 /* End XCSwiftPackageProductDependency section */
 

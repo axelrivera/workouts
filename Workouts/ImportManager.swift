@@ -220,7 +220,7 @@ extension ImportManager {
             }
         }
         
-        let chunks = newWorkouts.chunks(ofCount: IMPORT_CHUNK_SIZE)
+        let chunks = newWorkouts.chunked(into: IMPORT_CHUNK_SIZE)
         for chunk in chunks {
             let _ = await withTaskGroup(of: WorkoutImport.self) { group in
                 var workouts = [WorkoutImport]()

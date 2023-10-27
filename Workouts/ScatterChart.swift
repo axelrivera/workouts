@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Charts
+import DGCharts
 
 struct ScatterChart: UIViewRepresentable {
     typealias DrawOrder = CombinedChartView.DrawOrder

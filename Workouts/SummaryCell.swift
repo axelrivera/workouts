@@ -51,22 +51,22 @@ struct SummaryCell: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10.0) {
-            if let title = viewModel.title {
-                HStack {
-                    Text(title)
-                        .font(.title2)
-                    
-                    Spacer()
-                    
-                    if let gearType = viewModel.gearValue {
-                        GearImage(gearType: gearType)
-                    }
-                    
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.secondary)
-                }
-                .foregroundColor(viewModel.titleColor)
-            }
+//            if let title = viewModel.title {
+//                HStack {
+//                    Text(title)
+//                        .font(.title2)
+//
+//                    Spacer()
+//
+//                    if let gearType = viewModel.gearValue {
+//                        GearImage(gearType: gearType)
+//                    }
+//
+//                    Image(systemName: "chevron.right")
+//                        .foregroundColor(.secondary)
+//                }
+//                .foregroundColor(viewModel.titleColor)
+//            }
             
             VStack(alignment: .leading, spacing: 5.0) {
                 ForEach(rows) { row in

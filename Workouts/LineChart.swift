@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Charts
+import DGCharts
 
 struct LineChart: UIViewRepresentable {
     var valueType: ChartInterval.ValueType

@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import Charts
+import DGCharts
 import CoreData
 
 struct AnalysisView: View {
